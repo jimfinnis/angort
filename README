@@ -1,3 +1,15 @@
+Build with
+    mkdir build
+    cd build
+    cmake ..
+    make
+    
+Will build the executable in cli/angortcli
+
+
+
+
+
 Define new words with
     :newword .... ;
 as in Forth. If you want to recurse, forward-declare the word with "defer"
