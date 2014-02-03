@@ -1,0 +1,24 @@
+
+defer fib
+:fib |x:|
+    ?x 2 < if
+        ?x
+    else
+        ?x 1 - fib
+        ?x 2 - fib +
+    then
+;
+
+0 fib 0 = "fib0" assert
+1 fib 1 = "fib1" assert
+2 fib 1 = "fib3" assert
+3 fib 2 = "fib4" assert
+4 fib 3 = "fib5" assert
+5 fib 5 = "fib6" assert
+6 fib 8 = "fib7" assert
+7 fib 13 = "fib8" assert
+8 fib 21 = "fib9" assert
+
+
+
+quit

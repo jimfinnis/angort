@@ -1,0 +1,39 @@
+cmake_minimum_required(VERSION 2.6)
+
+
+
+project(ANGORTLIB)
+
+# would be awesome if these could live in an angort cmake module
+
+set(WORDFILELIST)
+# this macro generates a custom build step which takes the files passed in,
+# passes them through Angort's 'makeWords.pl' script, and compiles *those*.
+# The files generated are added to WORDFILELIST, which should then be put
+# into the SOURCES. So, Angort word files should be added with this.
+
+macro(add_words_files)
+    foreach(file ${ARGV})
+        add_custom_command(
+            OUTPUT ${file}.cpp
+            DEPENDS ${file}
+            COMMAND pwd
+            COMMAND perl ../../makeWords.pl ${CMAKE_SOURCE_DIR}/lib/${file} >${file}.cpp
+        )
+        set(WORDFILELIST ${WORDFILELIST} ${file}.cpp)
+    endforeach(file)
+endmacro(add_words_files)
+
+add_words_files(stdWords.cpp)
+
+include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib)
+add_definitions(-g)
+
+set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp ser.cpp cvset.cpp
+    types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
+    types/range.cpp types/code.cpp types/iter.cpp types/list.cpp
+    ${WORDFILELIST})
+
+add_library(angort ${SOURCE})
+
+

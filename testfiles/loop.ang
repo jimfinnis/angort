@@ -1,0 +1,43 @@
+0 0 { 1 + dup 23 = ifleave swap over + swap }
+drop 253 = "loop1" assert
+
+global a
+global b 0!b
+global t 0!t
+
+# remember that the entire loop has to appear on a single line
+# or be in a function, because the compile context is reset on
+# newline.
+
+:foo
+    0 !a
+    {
+        0 !b
+        {
+            ?b ?t + !t
+            ?b 1+ !b
+            ?b 5 = if leave then # long form
+        }
+        ?a 1+ !a
+        ?a 20 = ifleave
+    }
+    ?t 
+;
+
+foo 200 = "loop2" assert
+
+0!t
+10 times { ?t 1+ !t }
+?t 10 = "times" assert
+
+0!t
+10 times { ?t 1000 + !t 5 times { ?t 1+ !t }}
+
+?t 10050 = "nestedtimes" assert
+
+
+# this can crash
+:infiniteloop { } ;
+
+    
+quit

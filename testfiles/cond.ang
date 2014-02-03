@@ -1,0 +1,27 @@
+
+global t
+999 !t
+1 if 45 !t then 	?t 45  = "if1" assert
+
+999 !t
+0 if 45 !t then		?t 999 = "if2" assert
+
+1 if 45 else 64 then     45  = "else1" assert
+0 if 45 else 64 then     64  = "else2" assert
+
+# if-then can't do multiline outside functions
+    
+:foo |x,y:|
+    ?x if
+        ?y if 23 else 32 then
+    else
+        ?y if 61 else 39 then
+    then
+;
+
+0 0 foo 39 = "elseif1" assert
+0 1 foo 61 = "elseif2" assert
+1 0 foo 32 = "elseif3" assert
+1 1 foo 23 = "elseif4" assert
+
+quit

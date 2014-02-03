@@ -1,0 +1,19 @@
+"foo" "foo" = "streq" assert
+"foob" "foo" != "streq" assert
+"foo" "bar" + "foobar" = "strconc" assert
+
+"foo" 1 + "foo1" = "strconv" assert
+
+global a
+global b
+
+"foo" dup !a !b
+?a "foo" = "strdup1" assert
+?b "foo" = "strdup2" assert
+?a "bar" + !b 
+?a "foo" = "strdup3" assert
+?b "foobar" = "strdup4" assert
+
+quit
+
+

@@ -1,0 +1,118 @@
+; -!- emf -!-
+; This is part of the JASSPA MicroEmacs macro files
+; Copyright (C) 1999-2009 JASSPA (www.jasspa.com)
+; See the file me.emf for copying and conditions.
+;
+; Created:     99/03/28
+; Synopsis:    Angort mode
+; Authors:     
+;
+define-macro fhook-angort
+    set-variable $buffer-mask "luh1"
+    @# buffer-init "angort"
+    buffer-init-hooks
+!emacro
+
+set-variable .fhook-angort.name "Angort"
+set-variable .fhook-angort.setup &reg "/history/fhook/angort" "dfghnopx"
+set-variable .fhook-angort.setup-mask "adefghikmnoptux"
+set-variable .fhook-angort.comment "|;||;|; | ;|r|"
+
+set-variable .fhook-angort.item-list-s1 "^[ \t]*proc*[ \t]+\\(\\w+\\)"
+set-variable .fhook-angort.item-list-r1 "Proc \ecB\\1\ecA"
+
+set-variable .fhook-angort.collapse-open  "^proc "
+set-variable .fhook-angort.collapse-close "^endp"
+set-variable .fhook-angort.collapse-mclose "1"
+set-variable .fhook-angort.collapse-mnext "-1"
+
+!if &not &exist .hilight.angort
+    set-variable .hilight.angort &pinc .hilight.next 1
+    ; set up the osd tool menu & help dialog
+    set-variable .osd.angort-help &pinc .osd.next 1
+    set-variable .osd.angort-tool &pinc .osd.next 1
+!endif
+!if &not &exist .hilight.angort
+    set-variable .hilight.angort &pinc .hilight.next 1
+!endif
+!if &and &sin "h" .fhook-angort.setup &band .hilight.flags 0x02
+    0 hilight .hilight.angort 0                $global-scheme
+    
+    hilight .hilight.angort 2 "#"             .scheme.comment
+    hilight   .hilight.angort 0 "'\\\\''"      .scheme.quote
+    hilight   .hilight.angort 1 "="            .scheme.operator
+    hilight   .hilight.angort 1 "<"            .scheme.operator
+    hilight   .hilight.angort 1 ">"            .scheme.operator
+    hilight   .hilight.angort 1 "~"            .scheme.operator
+    hilight   .hilight.angort 1 ">"            .scheme.operator
+    hilight   .hilight.angort 1 "-"            .scheme.operator
+    hilight   .hilight.angort 1 "/"            .scheme.operator
+    hilight   .hilight.angort 1 "*"            .scheme.operator
+    hilight   .hilight.angort 1 ","            .scheme.operator
+    hilight   .hilight.angort 1 "%"            .scheme.operator
+    hilight   .hilight.angort 1 ":"            .scheme.operator
+    hilight   .hilight.angort 1 "|"            .scheme.operator
+    hilight   .hilight.angort 1 "&"            .scheme.operator
+    hilight   .hilight.angort 1 "@"            .scheme.operator
+    hilight   .hilight.angort 1 "`"            .scheme.operator
+
+    ;
+    ; Keywords
+    hilight   .hilight.angort 1 "global"          .scheme.keyword
+    
+    hilight   .hilight.angort 1 "if"          .scheme.keyword
+    hilight   .hilight.angort 1 "then"          .scheme.keyword
+    hilight   .hilight.angort 1 "else"         .scheme.keyword
+    hilight   .hilight.angort 1 "leave"          .scheme.keyword
+    hilight   .hilight.angort 1 "dup"          .scheme.keyword
+    hilight   .hilight.angort 1 "call"          .scheme.keyword
+    hilight   .hilight.angort 1 "swap"         .scheme.keyword
+    hilight   .hilight.angort 1 "drop"          .scheme.keyword    
+    hilight   .hilight.angort 1 "not"          .scheme.keyword
+    hilight   .hilight.angort 1 "and"        .scheme.keyword
+    hilight   .hilight.angort 1 "times"        .scheme.keyword
+    hilight   .hilight.angort 1 "ifleave"         .scheme.keyword
+    hilight   .hilight.angort 1 "load"         .scheme.keyword
+    hilight   .hilight.angort 1 "for"         .scheme.keyword
+    hilight   .hilight.angort 1 "load"         .scheme.keyword
+    hilight   .hilight.angort 1 "const"         .scheme.keyword
+    hilight   .hilight.angort 1 "over"         .scheme.keyword
+    hilight   .hilight.angort 1 "defer"         .scheme.keyword
+    
+    hilight   .hilight.angort 1 "p"         .scheme.keyword
+    hilight   .hilight.angort 1 "x"         .scheme.keyword
+    hilight   .hilight.angort 1 "nl"         .scheme.keyword
+    hilight   .hilight.angort 1 "quit"         .scheme.keyword
+    
+    hilight   .hilight.angort 4 ":" "\\W" ""     .scheme.function
+    hilight   .hilight.angort 4 "\\[" "\\]" ""     .scheme.function
+    hilight   .hilight.angort 4 "\|" "\|" ""     .scheme.function
+    hilight   .hilight.angort 4 "?" "\\W" ""     .scheme.variable
+    hilight   .hilight.angort 4 "!" "\\W" ""     .scheme.variable
+    
+    !if &band .hilight.flags 0x08
+        hilight .hilight.angort 1 "[[:digit:]]+"       .scheme.constant
+        hilight .hilight.angort 1 "-[[:digit:]]+"      .scheme.constant
+        hilight .hilight.angort 1 "0[xX][[:xdigit:]]+" .scheme.constant
+    !endif
+    hilight .hilight.angort    4 "\"" "\"" "\\" .scheme.string
+
+!endif
+
+!if &sin "d" .fhook-angort.setup
+    0 indent  .hilight.angort 0 10
+    indent .hilight.angort n "^:"  t
+    indent .hilight.angort o ";" -t
+    indent .hilight.angort n "{"  t
+    indent .hilight.angort o "}" -t
+    indent .hilight.angort n "("  t
+    indent .hilight.angort o ")" -t
+    indent .hilight.angort e "\"" "\"" "\\"
+    indent .hilight.angort b "\\[" "\\]"
+    indent .hilight.angort n "[^[:alnum:]]if[^[:alnum:]]" t
+    indent .hilight.angort s "[^[:alnum:]]else[^[:alnum:]]" -t
+    indent .hilight.angort o "[^[:alnum:]]then[^[:alnum:]]" -t
+    
+!endif
+
+buffer-init-fhook "angort"

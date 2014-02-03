@@ -1,0 +1,50 @@
+Values know what they are by a pointer to a Type object (I could have
+used subclasses of Value, but that would have led to big VFTs among other
+complications.) These are singletons, set up at the end of lib/types.cpp.
+
+The types themselves are declared in include/types/ and defined in lib/types/.
+
+There are three subclasses of Type from which all types descend:
+* Type itself is used for primitives or types with no garbage collection;
+* BlockAllocType is used for types which have a simple block of memory
+  which needs to be collected, there are no references to other objects -
+  it allocates a block of memory with the reference count at the front.
+  Don't use it, it's really for strings.
+* GCType is used for types whose data may contain references to other entities,
+  or are allocated by new. 
+  
+
+Creating a GCType
+=================
+
+Types should go in include/types/, methods should go in lib/types/.
+
+GC Types consist of:
+    * a datum type, which holds the actual data
+    * a type class, which defines how the type works.
+
+Define a datum type for the value data, which should be subclassed
+from GarbageCollected. Then define the type class, which should
+be a subclass of GCType. This should have a constructor which sets
+the type name, and a set() method. The implementation for the set
+method looks like this:
+
+void MyType::set(Value *v,<extra params here>){
+    v->clr();
+    v->t = this;
+   
+    MyDatum *r = new MyDatum();
+    ... fill in r with data...
+    v->v.gc = r;
+
+    incRef(v);
+}
+
+To access the type from a word, it's just
+
+    (MyType *)v->v.gc
+    
+but remember to v->v.gc->incRefCt() if you hang on to it (and decrement
+when you let go.)
+
+To make the type iterable, see ITERATORS.
