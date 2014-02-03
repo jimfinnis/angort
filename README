@@ -68,6 +68,20 @@ int literals: 123
 required. @ to call the codeblock or closure on the stack (so "?foo@" will
 call foo's value) There's also "call" which is the same as "@"
 
+Note that closures are mutable copy closures:
+> :mkcounter [:x] 0!x (?x 1+ . !x);
+> mkcounter !R
+> ?R@ 
+1
+> ?R@
+2
+
+works as expected, but
+> :foo |:x| 4!x (?x 1+ !x)@ ?x .;
+> foo
+prints "4" and not "5", because the lambda modifies its closure's copy and not
+the original
+
 
 Iterators:
 
