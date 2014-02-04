@@ -71,12 +71,12 @@ void BlockAllocType::loadValue(Serialiser *ser, Value *v){
 
 void GCType::incRef(Value *v){
     v->v.gc->incRefCt();
-//    printf("incrementing ref count of %p, now %d\n",v->v.gc,v->v.gc->refct);
+//    printf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
 }
     
 void GCType::decRef(Value *v){
     bool b = v->v.gc->decRefCt();
-//    printf("decrementing ref count of %p, now %d\n",v->v.gc,v->v.gc->refct);
+//    printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
         delete v->v.gc;
 //        printf("  AND DELETING\n");

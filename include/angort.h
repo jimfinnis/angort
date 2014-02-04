@@ -340,6 +340,7 @@ struct CodeBlock {
         closureMap=NULL;
     }
     
+    
     void save(Serialiser *ser) const;
     CodeBlock(Serialiser *ser);
     
@@ -556,8 +557,7 @@ public:
         words.clear();
         consts.clear();
         globals.clear();
-    }              
-        
+    }          
     
     /// clear the stack
     void clearStack(){

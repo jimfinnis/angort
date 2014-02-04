@@ -41,7 +41,6 @@ public:
     
     Stack(){
         ct=0;
-        capacity=N;
     }
     
     /// get an item from the top of the stack, discarding n items first.
@@ -119,10 +118,9 @@ public:
         ct=0;
     }
     
-    /// left public for debugging handiness and stuff (such as VirtualMachine::cleanAndFlush())
+    /// left public for debugging handiness and stuff
     T stack[N];
     int ct;
-    int capacity;
 };
 
 
