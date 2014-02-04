@@ -1,3 +1,12 @@
+Angort is a (primarily) robot control language, inspired by Forth
+but with many features designed to help the coder. These features
+include:
+* local variables and parameters in words
+* garbage collected lists, ranges and iterators
+* anonymous functions
+* mutable copy closures
+
+#Building 
 Build with
     mkdir build
     cd build
