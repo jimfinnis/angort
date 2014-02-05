@@ -255,25 +255,35 @@ void Angort::run(const Instruction *ip){
                     if(!cmp)
                         pushFloat(r);
                 } else {
-                    int r;
-                    int p = a->toInt();
-                    int q = b->toInt();
+                    int p,q,r;
                     switch(opcode){
                     case OP_MOD:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = p%q;break;
                     case OP_ADD:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = p+q;break;
                     case OP_SUB:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = p-q;break;
                     case OP_DIV:
+                        p = a->toInt();
+                        q = b->toInt();
                         if(!q)throw DivZeroException();
                         r = p/q;break;
                     case OP_MUL:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = p*q;break;
                     case OP_EQUALS:
-                        r = (p==q);break;
+                        r = (a->v.s == b->v.s);
+                        break;
                     case OP_NEQUALS:
-                        r = (p!=q);break;
+                        r = (a->v.s != b->v.s);
+                        break;
                     case OP_AND:
                         r = (p&&q);break;
                     case OP_OR:
