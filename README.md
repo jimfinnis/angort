@@ -18,13 +18,17 @@ Will build the executable in cli/angortcli
 
 
 
-##Basic use 
+##Immediate mode
 
 Start angort with 
 
     cli/angortcli
 
-inside the build directory. You can now type words at the prompt. The two numbers in the prompt are the number of garbage-collectable objects in the system and the number of items on the stack.
+inside the build directory. You are now in "immediate mode" and can type words at the prompt. The two numbers in the prompt are the number of garbage-collectable objects in the system and the number of items on the stack.
+
+Note that in "immediate mode", when you're not defining a new word (i.e. a function), control constructs like if..else..then or loops cannot span more than one line. Inside a word definition you can do what you like.
+
+##The stack
 
 Angort is a stack-based language: most words do things to the stack. For example,
 
@@ -54,7 +58,7 @@ This will duplicate the number on the stack and then multiply the top two number
 
     4 square .
     
-will print 16.
+will print 16. As mentioned above, you can use multiple lines for a word definition:
 
     defer factorial
     :factorial |x:|
@@ -65,7 +69,7 @@ will print 16.
         then
     ;
     
-is the factorial function - there's a parameter "x" and a conditional there.
+is the factorial function - there's a parameter "x" and a conditional there, and I'll cover those in a moment.
 
 ## Word parameters and local variables
 
@@ -85,8 +89,6 @@ We push the value of a local or parameter onto the stack with a question mark fo
     :foo |x,y:z| ?x ?y + !z;
     
 is a word which will add the two parameters, store them in the local z and then throw everything away.
-
-
 
 ##Conditions
 
@@ -109,13 +111,10 @@ will just print an incrementing count until you hit ^C. Take a few minutes to tr
     :countTo |x:i| 0!i { ?i dup . ?x = ifleave ?i 1+ !i} ;
     10 countTo
     
-will count from 0 to 10. A better way to define countTo is:
+will count from 0 to 10. As an aside, a better way to define countTo is to use a range (see below):
 
     :countTo |x:| 0 ?x 1 range each {i .}
-    
-
-Note that in "immediate mode", when you're not defining a word, a control construct like if..else..then or loops cannot span more than one line. Inside a word definition you can do what you like.
-    
+        
     
 ##Ranges and iterators
 The "range" word pushes an integer range object onto the stack:
@@ -150,17 +149,72 @@ Because each "each" has its own iterator, we can do the following:
     
 The range is used twice, with two separate iterators.
 
+### Nested loops
+In a nested loop, it's possible to access the current variables of the outer loops by using "j" and "k":
+
+    :foo |:r|
+        0 10 1 range !r         # store a range
+        ?r each {               # outer loop
+            ?r each {           # inner loop
+                i j + .         # add inner and outer iterators
+            }
+        }
+    ;
+
+
+
+## Globals and constants
+Global variables are defined in two ways. The "polite" way is to use the global keyword, which creates a new global with that name. Once defined, you use globals the same way as local variables:
+
+    global foo
+    5 !foo
+    ?foo .
+
+will print 5. The other way to define globals is simply to access a variable whose name starts with a capital letter. If no global or local exists with that name, a new global is defined (initially with the special 'none' value):
+
+     5 !Foo
+     ?Foo .
+
+Constants are similar to globals, but with three differences:
+* they are defined and set using the const keyword - this will pop a value off the stack and set the new constant to that value;
+* they can only be read, and cannot be redefined;
+* they do not require the ? sigil to access them.
+
+Here's an example:
+
+     3.1415927 const pi
+     :degs2rads pi 180.0 / * ;
+
+## Stack manipulators
+There are a number of words whose sole purpose is to manipulate the stack. To explain these, I'll use the bracket notation from Forth:
+
+###Bracket notation
+We describe the action of a word in terms of two states: the state before the word, and the state afterwards. These are written in a pair of brackets, separated by --, with the top of the stack to the right. For example, the "dup" word duplicates the value on top of the stack. We write this as
+
+    (a -- a a)
+
+The "." word pops an item off the stack, so its action as far as the stack is concerned is
+
+    (a --)
+
+(the bracket notation doesn't describe what a word does by way of side effects.) The "range" word takes three values and turns them into a range:
+
+    (start end step -- range)
+
+Our stack manipulators are:
+
+word | action
+--------|----------
+dup | (a -- a a)
+drop | (a --)
+swap | (a b -- b a)
+over | (a b -- a b a)
+
+I've not implemented words like roll, nip, and tuck used in standard Forths because the local variable system means you really shouldn't need them. I wasn't sure about "over" to be honest.
+
 # To do
 Everything below here is rough notes.
         
-        
-     
-
-
-Stack manipulators:
-
-    dup, swap, drop, over
-
 binary operators:
 
     + - * / = and or < >
@@ -180,7 +234,9 @@ Set constant called fish to 1.0:
 
 
 string literals : "foo"
+
 float literals 123.0
+
 int literals: 123
 
 `word to stack a reference to a word (but not a native)
@@ -200,30 +256,11 @@ Note that closures are mutable copy closures:
 works as expected, but
 > :foo |:x| 4!x (?x 1+ !x)@ ?x .;
 > foo
+
 prints "4" and not "5", because the lambda modifies its closure's copy and not
 the original
 
 
-Iterators:
-
-create a range iterator from 1 to 10 (inclusive), step 2:
-    1 10 2 range
-    
-iterate over the range 1 to 10:
-    1 10 1 range each { ... }
-
-Print each item (i gets current item)
-    1 10 1 range each { i . }
-
-Nested:
-    1 10 1 range each { 1 10 1 range each {j p " " p i .}}
-(i gets innermost loop current, j the next loop out, k the third loop)
-
-Ranges are objects in themselves, separate from their iterators,
-so you can do
-
-1 10 1 range !R
-?R each { ?R each {j p " " p i.}}
 
 
 Other words:
