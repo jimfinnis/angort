@@ -17,7 +17,7 @@
 
 int GarbageCollected::globalCt=0;
 
-WORDS(std);
+WORDS(std);WORDS(lists);
 
 Angort::Angort() {
     Types::createTypes();
@@ -27,6 +27,7 @@ Angort::Angort() {
     tok.setcommentlinesequence("#");
     
     REGWORDS((*this),std);
+    REGWORDS((*this),lists);
     
     defining = false;
     debug=false;

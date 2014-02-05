@@ -36,8 +36,15 @@ struct Value {
     
     
     Value(){
+        init();
+    }
+    
+    /// do not use this on a variable which may already contain a value;
+    /// use clr instead.
+    void init(){
         t = Types::tNone;
     }
+        
     
     ~Value(){
         clr();

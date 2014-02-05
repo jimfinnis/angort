@@ -11,7 +11,6 @@
 
 %name std
 
-static char buf[1024];
 
 %word version ( -- version ) version number
 {
@@ -20,6 +19,7 @@ static char buf[1024];
 
 %word dump ( title -- ) dump the stack
 {
+    char buf[1024];
     const char *s = a->popval()->toString(buf,1024);
     a->dumpStack(s);
 }
@@ -33,6 +33,7 @@ static char buf[1024];
 
 %word p ( v -- ) print a value
 {
+    char buf[1024];
     Value *v = a->popval();
     fputs(v->toString(buf,1024),stdout);
 }
@@ -67,6 +68,7 @@ static char buf[1024];
 
 %word disasm (name -- ) disassemble word
 {
+    char buf[1024];
     const char *name = a->popval()->toString(buf,1024);
     a->disasm(name);
 }
@@ -88,6 +90,7 @@ public:
 
 %word assert (bool desc --) throw exception with string 'desc' if bool is false
 {
+    char buf[1024];
     const char *desc = a->popval()->toString(buf,1024);
     if(!a->popInt()){
         if(a->assertDebug)printf("Assertion failed: %s\n",desc);
@@ -182,31 +185,6 @@ public:
 %word list (--) List everything
 {
     a->list();
-}
-
-%word dumplist (list --) Dump a list
-{
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    
-    for(int i=0;i<list->count();i++){
-        const char *s = list->get(i)->toString(buf,1024);
-        printf("%d: %s\n",i,s);
-    }
-}
-
-%word get (idx list --) get an item from a list
-{
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    int idx = a->popInt();
-    
-    Value *v = a->pushval();
-    v->copy(list->get(idx));
-}
-%word count (list --) get count
-{
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    Value *v = a->pushval();
-    Types::tInteger->set(v,list->count());
 }
 
 
