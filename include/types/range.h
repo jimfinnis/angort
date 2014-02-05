@@ -20,6 +20,7 @@ public:
     RangeType(){
         add("range","RANG");
     }
+    
     void set(Value *v,int start,int end,int step);
 
     /// serialise the data for a reference type - that is, the data

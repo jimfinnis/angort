@@ -73,8 +73,7 @@ struct Value {
     }
     
     const char * toString(char *buf,int len) const {
-        strncpy(buf,t->toString(buf,len,this),len);
-        return buf;
+        return t->toString(buf,len,this);
     }
     
     float toFloat(){

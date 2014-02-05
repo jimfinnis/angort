@@ -5,7 +5,7 @@
 Type *Type::head = NULL;
 
 const char *Type::toString(char *outBuf,int len,const Value *v) const{
-    snprintf(outBuf,len,"<TYPE %s:?%x?>",name,v->v.i);
+    snprintf(outBuf,len,"<TYPE %s>",name);
     return outBuf;
 }
 

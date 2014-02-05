@@ -106,11 +106,12 @@ public:
     void set(int n,T *v){
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
-            for(int i=ct;i<=capacity;i++){
+            for(int i=ct;i<capacity;i++){
                 data[i].init();
             }
             ct=n+1;
         }
+
         data[n].copy(v);
     }
     
@@ -127,19 +128,18 @@ private:
     /// reallocate the list if required by the given new count and copy
     /// all items over. Will NOT change ct.
     void reallocateifrequired(int newct){
-        printf("Reallocate: capacity currently %d\n",capacity);
         T *newdata;
 //        printf("ct %d, cap %d\n",newct,capacity);
         if(newct>=capacity){
             // need to grow the list
             capacity = newct + (newct>>3) + (newct<9?3:6);
-            printf("GROW to %d\n",capacity);
+//            printf("GROW to %d\n",capacity);
         } else if(capacity>16 && newct<(capacity>>1)) {
             // need to shrink the list. New capacity should still
             // have at least one empty space left at the end, for popped
             // items!
             capacity = capacity>>1;
-            printf("SHRINK to %d\n",capacity);
+//            printf("SHRINK to %d\n",capacity);
         } else
             return;
         
