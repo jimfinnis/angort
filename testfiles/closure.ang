@@ -92,6 +92,7 @@ mkcounter !a
 mkcounter !b
 
 "GCCOUNT=" p gccount p nl
+2 gccount = "stacked closure GC count" assert
 
 ?a@ 1 = "mutclosa1" assert
 ?a@ 2 = "mutclosa2" assert
@@ -105,4 +106,5 @@ mkcounter !b
 0 !b
 0 !t
 "GCCOUNT=" p gccount p nl
+0 gccount = "GC count zero at end of closure tests" assert
 quit
