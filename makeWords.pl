@@ -39,9 +39,10 @@ while(<>){
 }
 
 print "\n\n";
+print "static const char *_modulename_$listname = \"$listname\";\n";
 print "AngortWordDef _wordlist_$listname"."[]={\n";
 foreach $v (@list) {
     $t = $descs{$v};
-    print "    {\"$v\",\"$t\",_word__$v},\n";
+    print "    {_modulename_$listname, \"$v\",\"$t\",_word__$v},\n";
 }
 print "    {NULL,NULL} };\n";

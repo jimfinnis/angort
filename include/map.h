@@ -33,6 +33,7 @@ template <class T> class StringMapIterator;
 
 template <class T> class StringMap {
     friend class StringMapIterator<T>;
+    int size;
 private:
     StringMapEnt<T> *head;
     
@@ -59,6 +60,7 @@ public:
     StringMap(){
         head=NULL;
         foundEnt=NULL;
+        size=0;
     }
     
     // useful for when you have primitives in here, so a NULL return
@@ -103,6 +105,7 @@ public:
             p->next = head;
             head = p;
         }
+        size++;
     }
     
     void clear(){
@@ -112,6 +115,12 @@ public:
             delete p;
         }
         head=NULL;
+        size=0;
+    }
+    
+    void listKeys();
+    int count(){
+        return size;
     }
 };
 
@@ -143,6 +152,25 @@ private:
     StringMapEnt<T> *ptr;
     
 };
+
+template<class T> void StringMap<T>::listKeys(){
+    StringMapIterator<T> iter(this);
+    
+    int lengthSoFar=-1;
+    for(iter.first();!iter.isDone();iter.next()){
+        if(lengthSoFar<0){
+            printf("    ");lengthSoFar++;
+        } else if(lengthSoFar>50){
+            puts("");
+            printf("    ");
+            lengthSoFar=0;
+        }
+        const char *s = iter.current()->key;
+        lengthSoFar+=strlen(s);
+        printf("%s ",s,lengthSoFar);
+    }
+    if(lengthSoFar>0)puts("");
+}
 
 
 #endif /* __MAP_H */

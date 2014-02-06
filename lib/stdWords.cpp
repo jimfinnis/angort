@@ -116,6 +116,23 @@ public:
     }
 }
 
+%word neg (x --) negate
+{
+    Value *v = a->popval();
+    if(v->t == Types::tInteger){
+        int i;
+        i = v->toInt();
+        a->pushInt(-i);
+    } else if(v->t == Types::tFloat){
+        float f;
+        f = v->toFloat();
+        a->pushFloat(-f);
+    } else {
+        throw RUNT("bad type for 'neg'");
+    }
+}
+    
+
 %word isnone (val -- bool) is a value NONE
 {
     Value *s = a->stack.peekptr();

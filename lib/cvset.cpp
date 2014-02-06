@@ -9,18 +9,7 @@
 
 
 void ContiguousValueSet::list(){
-    StringMapIterator<int>iter(&locations);
-    int lengthSoFar=0;
-    for(iter.first();!iter.isDone();iter.next()){
-        const char *s = iter.current()->key;
-        lengthSoFar+=strlen(s);
-        if(lengthSoFar>60){
-            puts("\n");
-            lengthSoFar=0;
-        }
-        printf("%s ",s);
-    }
-    if(lengthSoFar)puts("");
+    locations.listKeys();
 }
 
 void ContiguousValueSet::visit(ValueVisitor *visitor){

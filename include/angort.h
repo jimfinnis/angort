@@ -19,7 +19,7 @@
 #include "cvset.h"
 
 /// the version number has the lowest two digits as minor version.
-#define ANGORT_VERSION 202
+#define ANGORT_VERSION 203
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
@@ -52,6 +52,7 @@ struct Closure : public GarbageCollected {
 /// be passed to registerWords().
 
 struct AngortWordDef {
+    const char *modname; //!< the name of the module in which this lives
     const char *name; //!< word name
     const char *desc; //!< description text
     NativeFunc f; //!< function pointer
@@ -427,8 +428,17 @@ public:
     }
 };
 
-
-
+/// a module is a set of native functions grouped by functionality
+struct Module {
+    /// the name of the module - may be "" if the module was registered
+    /// directly with registerFunc() with no optional module name
+    const char *module;
+    
+    /// the functions
+    StringMap<NativeFunc> funcs;
+    /// and the properties
+    StringMap<Property *> props; 
+};
 
 class Angort {
     friend class Serialiser;
@@ -443,8 +453,7 @@ private:
     Stack<int,32> cstack;
     Stack<Value,8> loopIterStack; // stack of loop iterators
     
-    StringMap<NativeFunc> funcs;
-    StringMap<Property *> props;
+    StringMap<Module *> modules; //!< a list of modules
     
     ContiguousValueSet consts;
     ContiguousValueSet globals;
@@ -454,6 +463,10 @@ private:
     VarStack locals;
     Value *closureTable; //!< the current closure table
     
+    /// the functions, duplicates of the module entries
+    StringMap<NativeFunc> funcs;
+    /// and the properties, duplicates of the module entries
+    StringMap<Property *> props; 
     
     /// the current compile context
     CompileContext *context;
@@ -606,20 +619,35 @@ public:
     const char *popString(char *buf,int len){
         return popval()->toString(buf,len);
     }
-        
     
-    void registerFunc(const char *name,NativeFunc f){
+    Module *findOrCreateModule(const char *n){
+        Module *m;
+        
+        if(!n)n="";
+        if(!modules.find(n)){
+            m = new Module();
+            modules.set(n,m);
+        } else
+            m = modules.found();
+        return m;
+    }
+    
+    void registerFunc(const char *name,NativeFunc f,const char *module=NULL){
+        Module *m = findOrCreateModule(module);
+        m->funcs.set(name,f);
         funcs.set(name,f);
     }
     
-    void registerProperty(const char *name, Property *p){
+    void registerProperty(const char *name, Property *p, const char *module=NULL){
+        Module *m = findOrCreateModule(module);
+        m->props.set(name,p);
         props.set(name,p);
     }
     
     /// register a whole bunch of words
     void registerWords(AngortWordDef *first){
         while(first->name){
-            funcs.set(first->name,first->f);
+            registerFunc(first->name,first->f,first->modname);
             first++;
         }
     }

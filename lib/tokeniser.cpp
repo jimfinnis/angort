@@ -233,13 +233,14 @@ loop:
             {
                 if(i && i==len-1 && isalpha(val.s[i])){
                     // special weird case - a num-zero length numeric string terminated by a letter.
-                    // This is an integer with a base character: 15h or 0010b. Characters
+                    // This is an integer with a base character: 15x or 0010b. Characters
                     // supported are d, x, b, o for bases 10,16,2,8.
                     char basechar = val.s[i];
                     val.s[i]=0;
                     int x;
                     switch(basechar){
                     case 'd':x=atoi(val.s);break;
+                    case 'h':
                     case 'x':x=strtol(val.s,NULL,16);break;
                     case 'b':x=strtol(val.s,NULL,2);break;
                     case 'o':x=strtol(val.s,NULL,8);break;

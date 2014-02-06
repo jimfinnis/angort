@@ -19,6 +19,8 @@ int GarbageCollected::globalCt=0;
 
 WORDS(std);WORDS(lists);
 
+
+
 Angort::Angort() {
     Types::createTypes();
     
@@ -987,13 +989,29 @@ void Angort::disasm(const char *name){
 }
 
 void Angort::list(){
-    printf("GLOBALS -------------------------\n");
+    printf("GLOBALS:\n");
     globals.list();
-    printf("CONSTANTS -----------------------\n");
+    printf("CONSTANTS:\n");
     consts.list();
-    printf("WORDS --------------------------\n");
+    printf("WORDS:\n");
     words.list();
+    
+    StringMapIterator<Module *> iter(&modules);
+    for(iter.first();!iter.isDone();iter.next()){
+        const char *name = iter.current()->key;
+        Module *m = iter.current()->value;
+        
+        if(m->funcs.count()>0){
+            printf("MODULE %s WORDS:\n",*name?name:"(none)");
+            m->funcs.listKeys();
+        }
+        if(m->props.count()>0){
+            printf("MODULE %s PROPS:\n",*name?name:"(none)");
+            m->props.listKeys();
+        }
+    }
 }
+
 
 void Angort::visitGlobalData(ValueVisitor *visitor){
     globals.visit(visitor);

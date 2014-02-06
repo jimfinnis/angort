@@ -211,9 +211,11 @@ swap | (a b -- b a)
 over | (a b -- a b a)
 
 I've not implemented words like roll, nip, and tuck used in standard Forths because the local variable system means you really shouldn't need them. I wasn't sure about "over" to be honest.
-## Types
+## Types and literals
 * Primitive types are 32 bit signed integers, 32 bit floats and strings.
-* Literal integers are numbers without a decimal point
+* Literal integers are numbers without a decimal point - they may also be
+suffixed with a base character, one of "dxhbo": "16x" or "16h" will be interpreted
+as "16 in hexadecimal".
 * Literal floats have decimal points
 * Strings are a reference counted and immutable (copy on write)
 * Other types include lists, functions (and closures), ranges and (internally) iterators.
