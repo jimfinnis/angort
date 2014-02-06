@@ -280,20 +280,34 @@ void Angort::run(const Instruction *ip){
                         p = a->toInt();
                         q = b->toInt();
                         r = p*q;break;
-                    case OP_EQUALS:
-                        r = (a->v.s == b->v.s);
-                        break;
-                    case OP_NEQUALS:
-                        r = (a->v.s != b->v.s);
-                        break;
                     case OP_AND:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = (p&&q);break;
                     case OP_OR:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = (p||q);break;
                     case OP_GT:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = (p>q);break;
                     case OP_LT:
+                        p = a->toInt();
+                        q = b->toInt();
                         r = (p<q);break;
+                    case OP_EQUALS:
+                        if(a->getType() == Types::tInteger || b->getType() == Types::tInteger)
+                            r = a->toInt() == b->toInt();
+                        else
+                            r = (a->v.s == b->v.s);
+                        break;
+                    case OP_NEQUALS:
+                        if(a->getType() == Types::tInteger || b->getType() == Types::tInteger)
+                            r = a->toInt() != b->toInt();
+                        else
+                            r = (a->v.s != b->v.s);
+                        break;
                         
                     }
                     pushInt(r);
