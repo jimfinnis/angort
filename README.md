@@ -211,65 +211,113 @@ swap | (a b -- b a)
 over | (a b -- a b a)
 
 I've not implemented words like roll, nip, and tuck used in standard Forths because the local variable system means you really shouldn't need them. I wasn't sure about "over" to be honest.
+## Types
+* Primitive types are 32 bit signed integers, 32 bit floats and strings.
+* Literal integers are numbers without a decimal point
+* Literal floats have decimal points
+* Strings are a reference counted and immutable (copy on write)
+* Other types include lists, functions (and closures), ranges and (internally) iterators.
 
-# To do
-Everything below here is rough notes.
+## Binary operators
+In the following operations, these conversions take place:
+* if one of the operands is a string, the other will be converted to a string. Only "+" and comparison operators will be valid.
+* If one of the operands is a float and the other is an integer, the integer will be converted to a float and the result will be a float.
+* The comparison operators will do identity checks on objects (lists, ranges etc.), not deep comparisons.
+* The comparison functions actually return integers, with non-zero indicating falsehood.
+
+word | action|notes
+-----|----|-----
++    | (a b -- a+b)|
+-    | (a b -- a-b)|
+*    | (a b -- a-b)|
+/    | (a b -- a/b)|
+%    | (a b -- a%b) | remainder ("mod") operator
+>    | (a b -- a>b)| string comparison works as expected
+<    | (a b -- a<b)| string comparison works as expected
+=    | (a b -- a=b)| string comparison works as expected
+!=   | (a b -- a!=b)| string comparison works as expected
+
+## Functional stuff
+
+Anonymous functions are defined with brackets, which will push an object representing that function (and any closure created) onto the stack. This can then be called with "call" or "@" for short. Such functions may have parameters and local variables.
+
+For example, to here's a function run a function over a range of numbers, printing the result:
+
+    :over1to10 |func:|
+        1 10 1 range each { i ?func@ . } ;
         
-binary operators:
+and here's how it could be used to show the squares of the numbers:
 
-    + - * / = and or < >
+    (|x:| ?x ?x *) over1to10
+            
+If we want to stack a reference to a word instead of running it, we can precede the word with a backtick:
 
-Declare global called foo:
+    :square dup * ;    # more efficient than the above anonymous!
+    `square over1to10
 
-    global foo
+This will NOT WORK with builtin functions, however.
 
-Can now access variable using ?foo and !foo to get and put.
+### Closures
 
-Alternatively, using a undefined variable whose name begins with a capital letter immediately defines it as global.
+Anonymous functions can refer to variables in their enclosing function, in which case a closure is created to store the value when the enclosing function exits. This closure is mutable - its value can be changed by the anonymous function. For example:
 
-Set constant called fish to 1.0:
+    :mkcounter |:x|     # declare a local variable x
+        0!x             # set it to zero
+        (               # create a function
+            ?x dup .    # which prints the local
+            1+ !x       # and increments it
+        );
+    mkcounter !F        # run it and store the returned function+closure
 
-    1.0 const fish
+Now, if we run
 
+    ?F @
+    
+a few times, we'll get an incrementing count - the value in the closure persists and is being incremented. We can call mkcounter several times and each time we'll get a new closure.
 
+It's important to note that closures are copy closures - the anonymous function makes a copy of the local, and all changes inside the anonymous function happen to that copy, not the local in the parent:
 
-string literals : "foo"
+    :foo |:x| 4!x       # store 4 in the local x
+        (10 !x)         # store 10 in the closure's version of x
+        @               # run the anonymous function
+        ?x .            # this will print 4, because the local hasn't changed.
+        ;
+        
+This is slightly annoying behaviour, but rather difficult to change given Angort's simple syntax.
 
-float literals 123.0
+##Lists
+A list is defined by enclosing Angort expressions in square brackets separated by commas. The result is a list on the stack. Lists can be iterated:
 
-int literals: 123
+    []                      # creates an empty list
+    [1,2,3]                 # creates a list of three integers
+    ["foo",bar"] each {i.}  # iterates over a list
+    
+Lists can contain lists, and can of course be stored in variables. Lists are mutable, and members can be set and retrieved using the "put" and "get" words. The words for lists are:
 
-`word to stack a reference to a word (but not a native)
+name | stack action | side-effects and notes
+-----|--------------|----------
+[    | (-- list)    | creates a new list
+,    | (list item -- list) | appends an item to the list
+]    | (list item -- list) | appends an item to the list
+get | (n list -- item) | get the nth item from the list
+put | (item n list --) | set the nth item in the list
 
-() to define anonymous words, and there is now full lexical closure if
-required. @ to call the codeblock or closure on the stack (so "?foo@" will
-call foo's value) There's also "call" which is the same as "@"
+Here's a nice example - the "map" function:
 
-Note that closures are mutable copy closures:
-> :mkcounter [:x] 0!x (?x 1+ . !x);
-> mkcounter !R
-> ?R@ 
-1
-> ?R@
-2
+    :map |list,func:| [] ?list each { i ?func@ ,} ;
+    
+With this, we can map over any iterable to produce a list. Try defining it, and then type:
 
-works as expected, but
-> :foo |:x| 4!x (?x 1+ !x)@ ?x .;
-> foo
+    0 10 1 range (100*) map each {i.}
+        
+##Some other builtin words
 
-prints "4" and not "5", because the lambda modifies its closure's copy and not
-the original
+name | stack action | side-effects and notes
+-----|--------------|----------
+type | (x -- type) | get a string giving the type of a value
+reset | (--)    | delete everything
+save | (filename --) | save the running image (words, globals etc.) to a file
+load | (filename --) | reset and load an image (words, globals etc.) from a file
+list | (--) | list all defined words, locals and constants
 
-
-
-
-Other words:
-
-type        get the type of a value
-reset       deletes everything
-"foo" save  saves code and data to an image
-"foo" load  loads code and data
-list        lists all user words, constants and globals
-
-
-gccount,abs,assert,disasm,debug,rawp..
+There are quite a few more - look in the std.*.cpp files in angort/lib and angort/cli for their definitions, and also note how they're defined in a special variant of C++!
