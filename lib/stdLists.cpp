@@ -44,4 +44,40 @@
     Types::tInteger->set(v,list->count());
 }
 
+%word remove (idx list --) remove an item by index
+{
+}
+
+
+%word shift (list -- item) remove and return the first item of the list
+{
+    ArrayList<Value> *list = Types::tList->get(a->popval());
+    Value *v = a->pushval();
+    
+    v->copy(list->get(list->count()-1));
+    list->remove(list->count()-1);
+}
+
+%word unshift (item list --) prepend an item to a list
+{
+    ArrayList<Value> *list = Types::tList->get(a->popval());
+    Value *v = a->popval();
+    list->insert(0)->copy(v);
+}
+
+%word pop (list -- item) pop an item from the end of the list
+{
+    ArrayList<Value> *list = Types::tList->get(a->popval());
+    Value *v = a->pushval();
+    v->copy(list->get(list->count()-1));
+    list->remove(list->count()-1);
+}
+
+
+%word push (item list --) append an item to a list
+{
+    ArrayList<Value> *list = Types::tList->get(a->popval());
+    Value *v = a->popval();
+    list->append()->copy(v);
+}
 
