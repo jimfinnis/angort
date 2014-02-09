@@ -44,8 +44,14 @@
     Types::tInteger->set(v,list->count());
 }
 
-%word remove (idx list --) remove an item by index
+%word remove (idx list -- item) remove an item by index, returning it
 {
+    ArrayList<Value> *list = Types::tList->get(a->popval());
+    int i = a->popInt();
+    
+    Value *v = a->pushval();
+    v->copy(list->get(i));
+    list->remove(i);
 }
 
 

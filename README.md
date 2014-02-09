@@ -303,6 +303,11 @@ name | stack action | side-effects and notes
 ]    | (list item -- list) | appends an item to the list
 get | (n list -- item) | get the nth item from the list
 put | (item n list --) | set the nth item in the list
+remove | (n list -- item) | remove and return the nth item
+shift | (list -- item) | remove and return the first item
+unshift | (item list --) | prepend an item
+pop | (list -- item) | remove and return the last item
+push | (item list --) | append an item
 
 Here's a nice example - the "map" function:
 
@@ -317,9 +322,16 @@ With this, we can map over any iterable to produce a list. Try defining it, and 
 name | stack action | side-effects and notes
 -----|--------------|----------
 type | (x -- type) | get a string giving the type of a value
+isnone | (v -- bool) | return nonzero if value is None
 reset | (--)    | delete everything
 save | (filename --) | save the running image (words, globals etc.) to a file
 load | (filename --) | reset and load an image (words, globals etc.) from a file
-list | (--) | list all defined words, locals and constants
+list | (--) | list all defined words (including builtins), locals and constants
+clear | (--) | clear the stack entirely
+debug | (bool --) | turn debugging on or off
+neg | (n -- -n) | negate an integer or float
+abs | (n -- abs(n)) | absolute value
+p | (x --) | print without newline
+nl | (--) | print just a newline
 
 There are quite a few more - look in the std.*.cpp files in angort/lib and angort/cli for their definitions, and also note how they're defined in a special variant of C++!

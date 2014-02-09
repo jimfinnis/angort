@@ -199,6 +199,14 @@ public:
     a->clear();
 }
 
+%word clear (--) Clear the stack, and also set all values to None
+{
+    while(!a->stack.isempty()){
+        Value *v = a->popval();
+        v->clr();
+    }
+}
+
 %word list (--) List everything
 {
     a->list();
