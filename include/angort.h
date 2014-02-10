@@ -19,7 +19,7 @@
 #include "cvset.h"
 
 /// the version number has the lowest two digits as minor version.
-#define ANGORT_VERSION 203
+#define ANGORT_VERSION 204
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
@@ -136,10 +136,12 @@ class CompileContext {
     
     CompileContext *parent; //!< pointer to containing context or NULL, set up by pushCompileContext
     int leaveListHead; //!< the head of a leave list - the index of the first OP_LEAVE etc. instruction, or -1.
+    const char *spec; //!< specification string
     
 public:
     
     CompileContext(){
+        spec=NULL;
         reset(NULL);
     }
     
@@ -152,6 +154,10 @@ public:
         paramCt=0;
         localTokenCt=0;
         closureMapCt=0;
+        if(spec){
+            free((void *)spec);
+            spec=NULL;
+        }
         leaveListHead = -1;
         cstack.clear();
     }
@@ -310,6 +316,16 @@ public:
         compileBuf[idx].d.i = (compileCt-idx)+offset;
     }
     
+    /// copy a specification string in
+    void setSpec(const char *s){
+        spec = (const char *)strdup(s);
+    }
+    
+    /// get the spec, which (if not null) we will have allocated
+    const char *getSpec(){
+        return spec;
+    }
+    
 };
 
 
@@ -337,8 +353,10 @@ struct CodeBlock {
     void clear(){
         if(ip) delete[] ip;
         if(closureMap) delete[] closureMap;
+        if(spec)free((void *)spec);
         ip=NULL;
         closureMap=NULL;
+        spec=NULL;
     }
     
     
@@ -351,6 +369,7 @@ struct CodeBlock {
     
     CodeBlock(const Instruction *i){
         ip=i;
+        spec = NULL;
         size=0;
         locals = 0;
         params = 0;
@@ -358,7 +377,8 @@ struct CodeBlock {
         closureMap=NULL;
     }
     
-    const Instruction *ip;
+    const Instruction *ip; //!< the instructions themselves, must be delete[]ed
+    const char *spec; //!< the specification --- null by default, but if present must be freed
     int size;
     int locals,params;
     ClosureMapEntry *closureMap;
@@ -465,8 +485,10 @@ private:
     
     /// the functions, duplicates of the module entries
     StringMap<NativeFunc> funcs;
+    StringMap<const char *> funcSpecs;
     /// and the properties, duplicates of the module entries
     StringMap<Property *> props; 
+    StringMap<const char *> propSpecs;
     
     /// the current compile context
     CompileContext *context;
@@ -632,22 +654,24 @@ public:
         return m;
     }
     
-    void registerFunc(const char *name,NativeFunc f,const char *module=NULL){
+    void registerFunc(const char *name,NativeFunc f,const char *module=NULL,const char *spec=NULL){
         Module *m = findOrCreateModule(module);
         m->funcs.set(name,f);
+        funcSpecs.set(name,spec);
         funcs.set(name,f);
     }
     
-    void registerProperty(const char *name, Property *p, const char *module=NULL){
+    void registerProperty(const char *name, Property *p, const char *module=NULL,const char *spec=NULL){
         Module *m = findOrCreateModule(module);
         m->props.set(name,p);
+        propSpecs.set(name,spec);
         props.set(name,p);
     }
     
     /// register a whole bunch of words
     void registerWords(AngortWordDef *first){
         while(first->name){
-            registerFunc(first->name,first->f,first->modname);
+            registerFunc(first->name,first->f,first->modname,first->desc);
             first++;
         }
     }
@@ -677,6 +701,9 @@ public:
     
     /// list all words, globals and consts
     void list();
+    
+    /// get the spec string for a word or native
+    const char *getSpec(const char *s);
     
     /// load an image file
     void loadImage(const char *name);

@@ -572,6 +572,7 @@ void Angort::define(const char *name,CompileContext *c){
     Value *wordVal = words.get(idx);
     
     CodeBlock *cb = new CodeBlock(c);
+    cb->spec = strdup(c->getSpec());
     
     Types::tCode->set(wordVal,cb);
 }
@@ -705,6 +706,12 @@ void Angort::feed(const char *buf){
                 defining = true;
                 if(!tok.getnextident(defineName))
                     throw SyntaxException("expected a word name");
+                if(tok.getnext()==T_COLON){
+                    char spec[1024];
+                    if(!tok.getnextstring(spec))
+                        throw SyntaxException("expected spec string after ':'");
+                    context->setSpec(spec);
+                } else tok.rewind();
                 break;
             case T_DOT:
                 compile(OP_DOT);
@@ -925,6 +932,7 @@ void Angort::feed(const char *buf){
                     // required.
                     
                     compile(OP_LITERALCODE)->d.cb = new CodeBlock(lambdaContext);
+                    lambdaContext->reset(NULL);
                 }
                 break;
             case T_END:
@@ -999,6 +1007,22 @@ void Angort::disasm(const char *name){
         printf("\n");
         if(opcode == OP_END)break;
     }
+}
+
+const char *Angort::getSpec(const char *s){
+    int idx;
+    const char *spec;
+    
+    if((idx=words.get(s))>=0){
+        Value *v = words.get(idx);
+        return v->v.cb->spec;
+    } else if(spec=funcSpecs.get(s)){
+        return spec;
+    } else if(spec=propSpecs.get(s)){
+        return spec;
+    }
+    
+    return NULL;
 }
 
 void Angort::list(){

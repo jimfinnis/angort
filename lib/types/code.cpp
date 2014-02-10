@@ -39,6 +39,7 @@ void CodeBlock::save(Serialiser *ser) const {
     f->write16(locals);
     f->write16(params);
     f->write16(closureMapCt);
+    f->writeString(spec);
     
     // save closure map
     for(int i=0;i<closureMapCt;i++){
@@ -120,6 +121,7 @@ CodeBlock::CodeBlock(Serialiser *ser){
     locals = f->read16();
     params = f->read16();
     closureMapCt = f->read16();
+    spec = f->readStringAlloc();
     
     printf("Reading %d, locals %d, params %d, closureMapCt %d\n",
            size,locals,params,closureMapCt);
