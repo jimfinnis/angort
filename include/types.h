@@ -246,8 +246,10 @@ struct Types {
     static CodeType *tCode;
     /// v.closure is a closure, which is garbage collected
     static ClosureType *tClosure;
-    /// v.range is a range object
-    static RangeType *tRange;
+    /// v.irange is a range object
+    static RangeType<int> *tIRange;
+    /// v.frange is a range object
+    static RangeType<float> *tFRange;
     /// v.iter is an iterator object
     static IteratorType *tIter;
     /// v.list is a list object

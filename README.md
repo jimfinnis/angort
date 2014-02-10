@@ -113,21 +113,26 @@ will just print an incrementing count until you hit ^C. Take a few minutes to tr
     
 will count from 0 to 10. As an aside, a better way to define countTo is to use a range (see below):
 
-    :countTo |x:| 0 ?x 1 range each {i .}
+    :countTo |x:| 0 ?x range each {i .}
         
     
 ##Ranges and iterators
-The "range" word pushes an integer range object onto the stack:
+The "range" and "srange" words push integer range objects onto the stack:
 
-    <start> <end> <step> range
+    <start> <end> range
+    <start> <end> <step> srange
     
-This can be stored in a variable, duplicated, printed (although you'll just get a range ID) and so on - it's just a value. "each {}" can then be used to create an "iterator loop" over the range:
+The only difference is that srange takes a step value. The step can be positive or negative. In
+the normal range word, the step is 1 or -1 depending on whether the start is less than or greater
+than the end value.
 
-    0 10 1 range each { i . }
+A range can be stored in a variable, duplicated, printed (although you'll just get a range ID) and so on - it's just a value. "each {}" can then be used to create an "iterator loop" over the range:
+
+    0 10 range each { i . }
     
 The "i" word will put the current iterator's value on the stack. We can nest iterators:
 
-    0 10 1 range each { "  " p i . 0 2 1 range each {i.}}
+    0 10 range each { "  " p i . 0 2 range each {i.}}
     
 will show two nested loops. Note that 
 
@@ -138,7 +143,7 @@ That stacks a literal string (of two spaces), and then prints it without a newli
 Because each "each" has its own iterator, we can do the following:
 
     :foo |:r|
-        0 10 1 range !r         # store a range
+        0 10 range !r         # store a range
         ?r each {               # outer loop
             i .
             ?r each {           # inner loop
@@ -149,11 +154,18 @@ Because each "each" has its own iterator, we can do the following:
     
 The range is used twice, with two separate iterators.
 
+We also have floating point ranges, using the frange word:
+   
+    0 1 0.1 frange each {i.}
+    
+
+
+
 ### Nested loops
 In a nested loop, it's possible to access the current variables of the outer loops by using "j" and "k":
 
     :foo |:r|
-        0 10 1 range !r         # store a range
+        0 10 range !r         # store a range
         ?r each {               # outer loop
             ?r each {           # inner loop
                 i j + .         # add inner and outer iterators
@@ -199,7 +211,7 @@ The "." word pops an item off the stack, so its action as far as the stack is co
 
 (the bracket notation doesn't describe what a word does by way of side effects.) The "range" word takes three values and turns them into a range:
 
-    (start end step -- range)
+    (start end  -- range)
 
 Our stack manipulators are:
 
@@ -246,7 +258,7 @@ Anonymous functions are defined with brackets, which will push an object represe
 For example, to here's a function run a function over a range of numbers, printing the result:
 
     :over1to10 |func:|
-        1 10 1 range each { i ?func@ . } ;
+        1 10 range each { i ?func@ . } ;
         
 and here's how it could be used to show the squares of the numbers:
 
@@ -315,7 +327,7 @@ Here's a nice example - the "map" function:
     
 With this, we can map over any iterable to produce a list. Try defining it, and then type:
 
-    0 10 1 range (100*) map each {i.}
+    0 10 range (100*) map each {i.}
         
 ##Some other builtin words
 

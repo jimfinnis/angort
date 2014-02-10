@@ -10,35 +10,55 @@
 #include "file.h"
 #include "ser.h"
 
-void RangeType::set(Value *v,int start,int end,int step){
+template<> RangeType<int>::RangeType(){
+    add("range","RANG");
+}
+template<> RangeType<float>::RangeType(){
+    add("frange","FRNG");
+}
+
+template <> void RangeType<float>::set(Value *v, float start,float end,float step){
     v->clr();
     v->t = this;
    
-    Range *r = new Range();
+    Range<float> *r = new Range<float>();
     r->start = start;
     r->end = end;
     r->step = step;
-    v->v.range = r;
+    v->v.frange = r;
+    
+    incRef(v);
+}
+template <> void RangeType<int>::set(Value *v, int start,int end,int step){
+    v->clr();
+    v->t = this;
+   
+    Range<int> *r = new Range<int>();
+    r->start = start;
+    r->end = end;
+    r->step = step;
+    v->v.irange = r;
     
     incRef(v);
 }
 
-struct RangeIterator : public Iterator<Value *>{
+
+
+struct IntRangeIterator : public Iterator<Value *>{
     Value v; //!< the current value, as an actual value
-    Range *range; //!< the range we're iterating over
+    Range<int> *range; //!< the range we're iterating over
 public:
     /// create a range iterator for a range
-    RangeIterator(Range *r){
+    IntRangeIterator(Range<int> *r){
         range = r;
         /// increment the range's reference count
         range->incRefCt();
-        
-        /// initialise the current value to integer
         Types::tInteger->set(&v,range->start);
+        
     }
     
     /// on destruction, delete the iterator
-    ~RangeIterator(){
+    ~IntRangeIterator(){
         range->decRefCt();
     }
     
@@ -52,7 +72,7 @@ public:
     }
     /// return true if we're out of bounds
     virtual bool isDone() const{
-        return v.v.i > range->end;
+        return range->step < 0 ? (v.v.i < range->end) : (v.v.i > range->end);
     }
     
     /// return the current value
@@ -61,20 +81,74 @@ public:
     }
 };
 
-Iterator<Value *> *RangeType::makeValueIterator(Value *v){
-    return new RangeIterator(v->v.range);
+
+struct FloatRangeIterator : public Iterator<Value *>{
+    Value v; //!< the current value, as an actual value
+    Range<float> *range; //!< the range we're iterating over
+public:
+    /// create a range iterator for a range
+    FloatRangeIterator(Range<float> *r){
+        range = r;
+        /// increment the range's reference count
+        range->incRefCt();
+        Types::tFloat->set(&v,range->start);
+        
+    }
+    
+    /// on destruction, delete the iterator
+    ~FloatRangeIterator(){
+        range->decRefCt();
+    }
+    
+    /// set the current value to the first item
+    virtual void first(){
+        v.v.f = range->start;
+    }
+    /// set the current value to the next item
+    virtual void next(){
+        v.v.f += range->step;
+    }
+    /// return true if we're out of bounds
+    virtual bool isDone() const{
+        return range->step < 0 ? (v.v.f < range->end) : (v.v.f > range->end);
+    }
+    
+    /// return the current value
+    virtual Value *current(){
+        return &v;
+    }
+};
+
+template <> Iterator<Value *> *RangeType<int>::makeValueIterator(Value *v){
+    return new IntRangeIterator(v->v.irange);
+}
+template <> Iterator<Value *> *RangeType<float>::makeValueIterator(Value *v){
+    return new FloatRangeIterator(v->v.frange);
 }
 
-void RangeType::saveDataBlock(Serialiser *ser,const void *v){
-    Range *r = (Range *)v;
+template <> void RangeType<int>::saveDataBlock(Serialiser *ser,const void *v){
+    Range<int> *r = (Range<int> *)v;
     ser->file->writeInt(r->start);
     ser->file->writeInt(r->end);
     ser->file->writeInt(r->step);
 }
-void *RangeType::loadDataBlock(Serialiser *ser){
-    Range *r = new Range();
+template <> void RangeType<float>::saveDataBlock(Serialiser *ser,const void *v){
+    Range<float> *r = (Range<float> *)v;
+    ser->file->writeFloat(r->start);
+    ser->file->writeFloat(r->end);
+    ser->file->writeFloat(r->step);
+}
+template <> void *RangeType<int>::loadDataBlock(Serialiser *ser){
+    Range<int> *r = new Range<int>();
     r->start = ser->file->readInt();
     r->end = ser->file->readInt();
     r->step = ser->file->readInt();
+    return (void *)r;
+}
+template <> void *RangeType<float>::loadDataBlock(Serialiser *ser){
+    Range<float> *r = new Range<float>();
+    r->start = ser->file->readFloat();
+    r->end = ser->file->readFloat();
+    r->step = ser->file->readFloat();
     return (void *)r;
 }

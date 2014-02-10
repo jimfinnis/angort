@@ -144,13 +144,30 @@ public:
     a->pushInt(GarbageCollected::getGlobalCount());
 }
 
-%word range (start end step -- range) TEST build a range object
+%word range (start end -- range) build a range object
+{
+    int end = a->popInt();
+    int start = a->popInt();
+    Value *v = a->pushval();
+    Types::tIRange->set(v,start,end,end>=start?1:-1);
+}
+
+%word srange (start end step -- range) build a range object with step
 {
     int step = a->popInt();
     int end = a->popInt();
     int start = a->popInt();
     Value *v = a->pushval();
-    Types::tRange->set(v,start,end,step);
+    Types::tIRange->set(v,start,end,step);
+}
+
+%word frange (start end step -- range) build a float range object with step
+{
+    float step = a->popFloat();
+    float end = a->popFloat();
+    float start = a->popFloat();
+    Value *v = a->pushval();
+    Types::tFRange->set(v,start,end,step);
 }
 
 %word i (-- current) get current iterator value

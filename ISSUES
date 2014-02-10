@@ -1,3 +1,12 @@
+Leaving an iterator loop early leaves GC stuff, because the iterator stack is
+not popped:
+
+    range 1 10 1 each {i 5> ifleave i.}
+
+Solution - push NULL onto the iterator stack when we enter a non-iterator loop,
+and when we leave, pop that stack and clear the value if it's not null.
+
+
 Closures have a problem:
     :foo |:x| 4!x (?x 1+ !x)@ ?x .;
     foo
@@ -5,45 +14,4 @@ prints "4" and not "5", because the lambda modifies its closure's copy
 and not the original. This is usually the right thing to do, of course.
 
 
-
-
-
-Need collection type and syntax change ([] params and locals -> ||) 
-
-List and map syntax:
-
-[1 2 3]
-[key:val key:val key:val]
-
-This is no good, you need commas -- otherwise how would you add expressions?
-
-So
-
-[1,2,3 4 +]
-
-This would compile to
-
-STARTLIST (pushes the current list, creates a new one and stores the stack count somewhere)
-1         (push 1 onto the stack
-,         (pop the stack, append to current list if there is one)
-2         (push 1 onto the stack
-,         (pop the stack, append to current list if there is one)
-...
-ENDLIST   (if the stack count is higher than at the start, pop and append.
-           Pop the current list from the list stack, push it onto the main stack.)
-           
-So we have a new item --- the value (currentlist,startingstackval) which needs to be
-stacked every time we start a new list.
-
-
-
-
-Maps are pretty unpleasant. Ideas
-
-"1 2 :" generates a "mapping object" on the stack. When the putative list is empty, if
-the first item to be added is a mapping object, we create a map. Otherwise we create a list.
-But that's pretty grim too; how do we create an empty map?
-
-"[: 4 5, 6 9 :]" could work analogously to lists, except we stack a map! Then an empty
-map becomes [: :]. Or perhaps some other token pair... "map/endmap"? 
 

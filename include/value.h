@@ -27,7 +27,8 @@ struct Value {
         const struct CodeBlock *cb;
         struct Closure *closure;
         
-        struct Range *range;
+        struct Range<int> *irange;
+        struct Range<float> *frange;
         class ListObject *list;
         class GarbageCollected *gc;
         class IteratorObject *iter;

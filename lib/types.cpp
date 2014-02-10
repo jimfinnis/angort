@@ -119,8 +119,10 @@ CodeType *Types::tCode = &_Code;
 static ClosureType _Closure;
 ClosureType *Types::tClosure = &_Closure;
 
-static RangeType _Range;
-RangeType *Types::tRange = &_Range;
+static RangeType<int> _IRange;
+RangeType<int> *Types::tIRange = &_IRange;
+static RangeType<float> _FRange;
+RangeType<float> *Types::tFRange = &_FRange;
 
 static ListType _List;
 ListType *Types::tList = &_List;
