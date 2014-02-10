@@ -129,7 +129,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
 void Angort::runValue(const Value *v){
     const Instruction *ip=call(v,NULL);
     run(ip);
-    locals.pop(); // pop locals, but no need to pop return stack because it won't be pushed
+//    locals.pop(); 
 }
 
 void Angort::dumpStack(const char *s){
@@ -572,7 +572,7 @@ void Angort::define(const char *name,CompileContext *c){
     Value *wordVal = words.get(idx);
     
     CodeBlock *cb = new CodeBlock(c);
-    cb->spec = strdup(c->getSpec());
+    cb->spec = c->getSpec() ? strdup(c->getSpec()) : NULL;
     
     Types::tCode->set(wordVal,cb);
 }

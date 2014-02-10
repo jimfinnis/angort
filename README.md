@@ -345,6 +345,8 @@ neg | (n -- -n) | negate an integer or float
 abs | (n -- abs(n)) | absolute value
 p | (x --) | print without newline
 nl | (--) | print just a newline
+map | (iter func -- list) | apply a function to an iterable, giving a list
+inject (start iter func -- result) | see Ruby's docs on this :)
 
 
 There are quite a few more - look in the std.*.cpp files in angort/lib and angort/cli for their definitions, and also note how they're defined in a special variant of C++!
