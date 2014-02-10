@@ -196,16 +196,16 @@ public:
 
 %word save (name --) Hopefully save an image
 {
-    char name[1024];
-    a->popval()->toString(name,1024);
+    char b[1024];
+    const char *name = a->popval()->toString(b,1024);
     Serialiser ser;
     
     ser.save(a,name);
 }
 %word load (name --) Hopefully load an image
 {
-    char name[1024];
-    a->popval()->toString(name,1024);
+    char b[1024];
+    const char *name = a->popval()->toString(b,1024);
     Serialiser ser;
     
     ser.load(a,name);
@@ -227,6 +227,15 @@ public:
 %word list (--) List everything
 {
     a->list();
+}
+
+%word help (s --) get help on a word or native function
+{
+    char b[1024];
+    const char *name = a->popval()->toString(b,1024);
+    const char *s = a->getSpec(name);
+    if(!s)s="no help found";
+    printf("%s: %s\n",name,s);
 }
 
 

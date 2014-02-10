@@ -1,10 +1,15 @@
 Leaving an iterator loop early leaves GC stuff, because the iterator stack is
 not popped:
-
     range 1 10 1 each {i 5> ifleave i.}
-
 Solution - push NULL onto the iterator stack when we enter a non-iterator loop,
 and when we leave, pop that stack and clear the value if it's not null.
+
+Save doesn't work!
+
+Code and word specs
+
+Some way of doing map/insert etc?
+
 
 
 Closures have a problem:
