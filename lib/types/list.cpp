@@ -8,7 +8,7 @@
 #include "file.h"
 #include "ser.h"
 
-void ListType::set(Value *v){
+ArrayList<Value> *ListType::set(Value *v){
     v->clr();
     v->t = this;
     
@@ -16,6 +16,7 @@ void ListType::set(Value *v){
     v->v.list = p;
     
     incRef(v);
+    return &p->list;
 }
 
 ArrayList<Value> *ListType::get(Value *v){

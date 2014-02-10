@@ -29,7 +29,6 @@ public:
     virtual void *loadDataBlock(Serialiser *ser);
     
     
-protected:
     virtual Iterator<Value *> *makeValueIterator(Value *v);
 };
 

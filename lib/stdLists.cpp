@@ -87,3 +87,37 @@
     list->append()->copy(v);
 }
 
+%word map (iter func -- list) apply a function to an iterable, giving a list
+{
+    Value func;
+    func.copy(a->popval()); // need a local copy
+    Value *iterable = a->popval();
+    
+    Iterator<Value *> *iter = iterable->t->makeValueIterator(iterable);
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current());
+        a->runValue(&func);
+        Value *v = list->append();
+        v->copy(a->popval());
+    }
+    delete iter;
+}
+
+%word inject (start iter func -- list) fol
+{
+    Value func;
+    func.copy(a->popval()); // need a local copy
+    
+    Value *iterable = a->popval();
+    Iterator<Value *> *iter = iterable->t->makeValueIterator(iterable);
+    
+    // accumulator is already on the stack
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current()); // stack the iterator on top of the accum
+        a->runValue(&func); // run the function, leaving the new accumulator
+    }
+    delete iter;
+}

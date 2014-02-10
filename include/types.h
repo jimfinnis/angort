@@ -130,16 +130,17 @@ public:
         throw WTF;
     }
     
-protected:
-    /// create the low-level iterator if possible; do not use directly.
+    /// create the low-level iterator if possible
     virtual Iterator<Value *> *makeKeyIterator(Value *v){
         throw RUNT("cannot iterate a non-iterable type");
     }
     
-    /// create the low-level iterator if possible; do not use directly.
+    /// create the low-level iterator if possible
     virtual Iterator<Value *> *makeValueIterator(Value *v){
         throw RUNT("cannot iterate a non-iterable type");
     }
+    
+protected:
     
 };
 

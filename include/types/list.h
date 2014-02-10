@@ -26,7 +26,7 @@ public:
     ArrayList<Value> *get(Value *v);
     
     /// create a new list
-    void set(Value *v);
+    ArrayList<Value> *set(Value *v);
     /// serialise the data for a reference type - that is, the data
     /// which is held external to the Value union.
     virtual void saveDataBlock(Serialiser *ser,const void *v);
@@ -36,7 +36,6 @@ public:
     
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
     
-protected:
     virtual Iterator<Value *> *makeValueIterator(Value *v);
 };
 
