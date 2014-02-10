@@ -87,7 +87,8 @@
     list->append()->copy(v);
 }
 
-%word map (iter func -- list) apply a function to an iterable, giving a list
+/*
+%cccword map (iter func -- list) apply a function to an iterable, giving a list
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -105,7 +106,7 @@
     delete iter;
 }
 
-%word inject (start iter func -- list) fol
+%cccword inject (start iter func -- list) fol
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -121,3 +122,4 @@
     }
     delete iter;
 }
+*/

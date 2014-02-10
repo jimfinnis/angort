@@ -81,9 +81,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     
     GarbageCollected *toPushOntoGCRStack=NULL;
     
-    if(returnip){
-        closureStack.push(closureTable); // we *might* be changing the closure table
-    }
+    closureStack.push(closureTable); // we *might* be changing the closure table
     
     
     locals.push(); // switch to new locals frame
@@ -120,10 +118,9 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     
     gcrstack.push(toPushOntoGCRStack);
     
-    // stack the return ip and return the new one
-    if(returnip){
-        rstack.push(returnip);
-    }
+    // stack the return ip and return the new one.
+    // This might be null, and in that case we ignore it when we pop it.
+    rstack.push(returnip);
     
     debugwordbase = cb->ip;
     return cb->ip;
@@ -436,6 +433,8 @@ void Angort::run(const Instruction *ip){
                     //                printf("CLOSURE SNARK POP\n");
                     debugwordbase = ip;
                     locals.pop();
+                    if(!ip)
+                        return;
                 }
                 break;
             case OP_IF:
