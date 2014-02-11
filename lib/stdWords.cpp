@@ -258,7 +258,7 @@ public:
         time(&t);
         srand(t);
     } else 
-        srand(a->popInt());
+        srand(v);
 }
 
 
