@@ -9,6 +9,8 @@
 #include "angort.h"
 #include "ser.h"
 
+#include <time.h>
+
 %name std
 
 
@@ -246,4 +248,21 @@ public:
     
     v = a->pushval();
     Types::tString->set(v,name);
+}
+
+%word srand (i --) set the random number generator seed. If -1, use the timestamp.
+{
+    int v = a->popInt();
+    if(v==-1){
+        long t;
+        time(&t);
+        srand(t);
+    } else 
+        srand(v);
+}
+
+
+%word rand (-- i) stack an integer random number
+{
+    a->pushInt(rand());
 }

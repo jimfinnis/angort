@@ -1,0 +1,24 @@
+[
+    (+),
+    (-),
+    (*)
+] !Ops
+
+10 srand
+
+:f rand ?Ops count % ?Ops get @;
+
+:run 
+    0
+    1 100 range `f inject
+    ;
+
+run -243286016 = "pre-save inject" assert
+
+"tmp1" save
+"tmp1" load
+
+10 srand
+run -243286016 = "post-save inject" assert
+
+quit

@@ -87,8 +87,8 @@
     list->append()->copy(v);
 }
 
-/*
-%cccword map (iter func -- list) apply a function to an iterable, giving a list
+
+%word map (iter func -- list) apply a function to an iterable, giving a list
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -106,7 +106,7 @@
     delete iter;
 }
 
-%cccword inject (start iter func -- list) fol
+%word inject (start iter func -- result) see Ruby's docs on this :)
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -122,4 +122,3 @@
     }
     delete iter;
 }
-*/

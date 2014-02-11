@@ -255,7 +255,7 @@ word | action|notes
 
 Anonymous functions are defined with brackets, which will push an object representing that function (and any closure created) onto the stack. This can then be called with "call" or "@" for short. Such functions may have parameters and local variables.
 
-For example, to here's a function run a function over a range of numbers, printing the result:
+For example, here's a function to run a function over a range of numbers, printing the result:
 
     :over1to10 |func:|
         1 10 range each { i ?func@ . } ;
@@ -320,12 +320,16 @@ shift | (list -- item) | remove and return the first item
 unshift | (item list --) | prepend an item
 pop | (list -- item) | remove and return the last item
 push | (item list --) | append an item
+map | (iter func -- list) | apply a function to an iterable, giving a list
+inject (start iter func -- result) | see Ruby's docs on this :)
 
-Here's a nice example - the "map" function:
+As an example, here's an Angort implementation of the map function (which is actually
+defined in as a native word):
 
-    :map |list,func:| [] ?list each { i ?func@ ,} ;
+    :amap |list,func:| [] ?list each { i ?func@ ,} ;
     
-With this, we can map over any iterable to produce a list. Try defining it, and then type:
+With this, we can map over any iterable to produce a list. Here's how you might use the map word
+to multiply all the numbers between 0 and 10 by 100:
 
     0 10 range (100*) map each {i.}
         
@@ -347,4 +351,10 @@ p | (x --) | print without newline
 nl | (--) | print just a newline
 
 
-There are quite a few more - look in the std.*.cpp files in angort/lib and angort/cli for their definitions, and also note how they're defined in a special variant of C++!
+There are quite a few more. To get a list of all the builtin words, use "list";
+and to get help on an individual word, use 
+
+    "word" help
+
+If you're interested in extending Angort, look in the std.*.cpp files in angort/lib and angort/cli for
+word definitions, and note how they're defined in a special variant of C++.

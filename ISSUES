@@ -6,9 +6,6 @@ and when we leave, pop that stack and clear the value if it's not null.
 
 Code and word specs
 
-Some way of doing map/insert etc?
-
-
 
 Closures have a problem:
     :foo |:x| 4!x (?x 1+ !x)@ ?x .;
