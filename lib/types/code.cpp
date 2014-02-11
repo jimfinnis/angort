@@ -39,7 +39,7 @@ void CodeBlock::save(Serialiser *ser) const {
     f->write16(locals);
     f->write16(params);
     f->write16(closureMapCt);
-    f->writeString(spec);
+    f->writeString(spec?spec:"");
     
     // save closure map
     for(int i=0;i<closureMapCt;i++){
