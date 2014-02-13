@@ -374,7 +374,7 @@ unshift | (item list --) | prepend an item
 pop | (list -- item) | remove and return the last item
 push | (item list --) | append an item
 map | (iter func -- list) | apply a function to an iterable, giving a list
-inject (start iter func -- result) | see Ruby's docs on this :)
+inject | (start iter func -- result) | set an internal value (the accumulator) to "start", then iterate, applying the function (which must take two arguments) to the accumulator and the iterator's value, setting the accumulator to this new value before moving on.
 
 As an example, here's an Angort implementation of the map function (which is actually
 defined in as a native word):
