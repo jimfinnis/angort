@@ -838,7 +838,11 @@ void Angort::feed(const char *buf){
                     } else if((t = words.get(s))>=0){
                         compile(OP_WORD)->d.i = t;
                     } else
-                        throw SyntaxException(NULL)
+                        if(BAREWORDS){
+                            char *s = strdup(tok.getstring());
+                            compile(OP_LITERALSTRING)->d.s = s;
+                        } else
+                            throw SyntaxException(NULL)
                           .set("unknown identifier: %s",s);
                     break;
                 }

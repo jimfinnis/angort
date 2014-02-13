@@ -19,10 +19,13 @@
 #include "cvset.h"
 
 /// the version number has the lowest two digits as minor version.
-#define ANGORT_VERSION 204
+#define ANGORT_VERSION 205
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
+/// if this is defined, when an unknown identifier is encountered it
+/// is stacked as a literal string.
+#define BAREWORDS 1
 
 extern TokenRegistry tokens[];
 
