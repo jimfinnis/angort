@@ -6,6 +6,59 @@ include:
 * anonymous functions
 * mutable copy closures
 
+##Some examples
+Functions in Angort are called "words", borrowing the Forth terminology. Here are
+some of the word definitions I use to control our ExoMars rover prototype:
+
+    # set a constant range for the wheel numbers
+    1 6 range const wheels
+
+    # a word to set the drive speed on all wheels
+    :setdriveall |speed:| wheels each { ?speed i!drive };
+
+    # forwards and backwards control, and stop
+    :f 1500 setdriveall;
+    :b -1500 setdriveall;
+    :s 0 setdriveall;
+
+    # set the back wheels to turn one way and the front wheels to turn
+    # the opposite way
+    :turn |angle:start| 
+        ?angle dup 1!steer 2!steer
+        ?angle neg dup 5!steer 6!steer
+        0 dup 3!steer 4!steer;
+        
+        
+With these words, we can control the rover:
+
+    f 10 delay s        # drive forwards for 10 seconds and then stop
+    20 t 4 delay        # turn the wheels and wait for completion
+    f 10 delay s        # and another 10 seconds drive
+    
+The actual rover control words are more complex, doing things like waiting
+until the rover steering positions actually match the requested angles
+before proceeding.
+
+We can also do complex things with lists and anonymous functions. Here is
+a word for summing a enumerable:
+
+    :sum |list:| 0 ?list (+) inject;
+    
+so we can do
+
+    [1,2,3,4,5,6] sum .
+    
+or
+
+    0 1000 range sum .
+
+or even
+
+    1 1000 range (dup *) map sum .
+    
+to print the sum of the squares of the first 1000 integers.
+
+
 ##Building 
 Build with
 
