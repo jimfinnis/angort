@@ -127,8 +127,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
 }
 
 void Angort::runValue(const Value *v){
+    const Instruction *oldbase=debugwordbase;
     const Instruction *ip=call(v,NULL);
     run(ip);
+    debugwordbase=oldbase;
 //    locals.pop(); 
 }
 
@@ -153,7 +155,6 @@ void Angort::run(const Instruction *ip){
     try {
         for(;;){
             int opcode = ip->opcode;
-            
             if(debug){
                 showop(ip,debugwordbase);
                 printf(" ST [%d] : ",stack.ct);
@@ -837,7 +838,11 @@ void Angort::feed(const char *buf){
                     } else if((t = words.get(s))>=0){
                         compile(OP_WORD)->d.i = t;
                     } else
-                        throw SyntaxException(NULL)
+                        if(BAREWORDS){
+                            char *s = strdup(tok.getstring());
+                            compile(OP_LITERALSTRING)->d.s = s;
+                        } else
+                            throw SyntaxException(NULL)
                           .set("unknown identifier: %s",s);
                     break;
                 }
