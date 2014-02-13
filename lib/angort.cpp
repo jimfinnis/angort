@@ -127,8 +127,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
 }
 
 void Angort::runValue(const Value *v){
+    const Instruction *oldbase=debugwordbase;
     const Instruction *ip=call(v,NULL);
     run(ip);
+    debugwordbase=oldbase;
 //    locals.pop(); 
 }
 
@@ -153,7 +155,6 @@ void Angort::run(const Instruction *ip){
     try {
         for(;;){
             int opcode = ip->opcode;
-            
             if(debug){
                 showop(ip,debugwordbase);
                 printf(" ST [%d] : ",stack.ct);
