@@ -40,7 +40,7 @@ until the rover steering positions actually match the requested angles
 before proceeding.
 
 We can also do complex things with lists and anonymous functions. Here is
-a word for summing a enumerable:
+a word for summing a iterable value (such as a list or a range):
 
     :sum |list:| 0 ?list (+) inject;
     
