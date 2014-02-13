@@ -4,7 +4,9 @@ not popped:
 Solution - push NULL onto the iterator stack when we enter a non-iterator loop,
 and when we leave, pop that stack and clear the value if it's not null.
 
-Code and word specs
+Code and word specs ( :foo :"spec" needs documentation)
+
+GC cycles!
 
 
 Closures have a problem:
