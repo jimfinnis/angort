@@ -702,17 +702,18 @@ void Angort::feed(const char *buf){
                 }
                 break;
             case T_COLON:
-                if(defining)
-                    throw SyntaxException(": not allowed in a definition");
-                defining = true;
-                if(!tok.getnextident(defineName))
-                    throw SyntaxException("expected a word name");
-                if(tok.getnext()==T_COLON){
+                if(defining){
                     char spec[1024];
                     if(!tok.getnextstring(spec))
-                        throw SyntaxException("expected spec string after ':'");
+                        throw SyntaxException("expected spec string after second ':' in definition");
                     context->setSpec(spec);
-                } else tok.rewind();
+                } else {             
+                    defining = true;
+                    if(!tok.getnextident(defineName))
+                        throw SyntaxException("expected a word name");
+                    if(tok.getnext()==T_COLON){
+                    } else tok.rewind();
+                }
                 break;
             case T_DOT:
                 compile(OP_DOT);

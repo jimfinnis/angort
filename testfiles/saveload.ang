@@ -4,21 +4,24 @@
     (*)
 ] !Ops
 
-10 srand
+10 !Foo
+:getnextnum
+    ?Foo 7* 87+ 31% dup !Foo;
 
-:f rand ?Ops count % ?Ops get @;
+
+:f getnextnum ?Ops count % ?Ops get @ 1000%;
 
 :run 
     0
     1 100 range `f inject
     ;
 
-run -243286016 = "pre-save inject" assert
+run 628 = "pre-save inject" assert
 
 "tmp1" save
 "tmp1" load
 
-10 srand
-run -243286016 = "post-save inject" assert
+10 !Foo
+run 628 = "post-save inject" assert
 
 quit

@@ -66,7 +66,7 @@ int main(int argc,char *argv[]){
     
     a.assertDebug=true;
     
-    printf("Angort version %d.%d (c) Jim Finnis 2014\nUse 'help \"word\"' to get help on a word.\n",
+    printf("Angort version %d.%d (c) Jim Finnis 2014\nUse '\"word\" help' to get help on a word.\n",
            ANGORT_VERSION / 100,
            ANGORT_VERSION % 100);
     

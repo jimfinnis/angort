@@ -4,10 +4,7 @@
 /**
  * @file
  * Hash : An implementation of a hash table keyed on unsigned integer,
- * based on the Python dictionary. See Hash for a version with a general
- * key. The code is largely identical, but this version is faster. I
- * don't like the idea of code duplication on this scale, but it's
- * not really possible any other way.
+ * based on the Python dictionary.
  * 
  * Setting an item will run the constructor. Deleting an item will run the destructor (as
  * will emptying/destroying the table.) Overwriting an item will destroy the old item,
