@@ -34,6 +34,7 @@ Angort::Angort() {
     defining = false;
     debug=false;
     printLines=false;
+    emergencyStop=false;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
@@ -127,10 +128,12 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
 }
 
 void Angort::runValue(const Value *v){
-    const Instruction *oldbase=debugwordbase;
-    const Instruction *ip=call(v,NULL);
-    run(ip);
-    debugwordbase=oldbase;
+    if(!emergencyStop){
+        const Instruction *oldbase=debugwordbase;
+        const Instruction *ip=call(v,NULL);
+        run(ip);
+        debugwordbase=oldbase;
+    }
 //    locals.pop(); 
 }
 
@@ -140,6 +143,26 @@ void Angort::dumpStack(const char *s){
     for(int i=0;i<stack.ct;i++){
         stack.peekptr(i)->toString(buf,256);
         printf("  %s\n",buf);
+    }
+}
+
+const Instruction *Angort::ret()
+{
+    if(rstack.isempty()){
+        // sanity check --- the closure stack should also be zero
+        // when the return stack is empty
+        if(!closureStack.isempty())
+            throw RUNT("closure/return stack mismatch");
+        return NULL;
+    } else {
+        ip = rstack.pop();
+        if(GarbageCollected *gc = gcrstack.pop())
+            gc->decRefCt();
+        closureTable = closureStack.pop();
+        //                printf("CLOSURE SNARK POP\n");
+        debugwordbase = ip;
+        locals.pop();
+        return ip;
     }
 }
 
@@ -154,7 +177,13 @@ void Angort::run(const Instruction *ip){
     
     try {
         for(;;){
-            int opcode = ip->opcode;
+            if(emergencyStop){
+                ip = ret();
+                if(!ip)
+                    return;
+            }
+               
+               int opcode = ip->opcode;
             if(debug){
                 showop(ip,debugwordbase);
                 printf(" ST [%d] : ",stack.ct);
@@ -164,6 +193,7 @@ void Angort::run(const Instruction *ip){
                 }
                 printf("\n");
             }
+            
             
             
             switch(opcode){
@@ -420,23 +450,9 @@ void Angort::run(const Instruction *ip){
                 }
                 break;
             case OP_END:
-                if(rstack.isempty()){
-                    // sanity check --- the closure stack should also be zero
-                    // when the return stack is empty
-                    if(!closureStack.isempty())
-                        throw RUNT("closure/return stack mismatch");
+                ip=ret();
+                if(!ip)
                     return;
-                } else {
-                    ip = rstack.pop();
-                    if(GarbageCollected *gc = gcrstack.pop())
-                        gc->decRefCt();
-                    closureTable = closureStack.pop();
-                    //                printf("CLOSURE SNARK POP\n");
-                    debugwordbase = ip;
-                    locals.pop();
-                    if(!ip)
-                        return;
-                }
                 break;
             case OP_IF:
                 if(popInt())
@@ -670,6 +686,8 @@ const Instruction *Angort::compile(const char *s){
 }
 
 void Angort::feed(const char *buf){
+    resetStop();
+    
     if(printLines)
         printf(">>> %s\n",buf);
     

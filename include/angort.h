@@ -556,10 +556,14 @@ private:
         return i;
     }
     
-    
+    /// called at the end of a block of code,
+    /// or by emergency stop invocation. Returns
+    /// the new IP or NULL.
+    const Instruction *ret();
     
 public:
     Stack<Value,32>stack;
+    bool emergencyStop;
     bool defining;
     bool debug;
     /// make assertions print statements even when they pass just fine,
@@ -710,7 +714,19 @@ public:
     
     /// load an image file
     void loadImage(const char *name);
-
+    
+    /// stop any running code (call from a signal handler, or
+    /// code inside a word to terminate loops etc.)
+    void stop(){
+        emergencyStop=true;
+    }
+    
+    /// you'll have to reset the emergency stop when you get
+    /// control back (feed() will do it for you)
+    void resetStop(){
+        emergencyStop=false;
+    }
+    
 };
 
 
