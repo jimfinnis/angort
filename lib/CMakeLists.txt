@@ -32,7 +32,8 @@ add_words_files(stdWords.cpp stdLists.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp ser.cpp cvset.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
-    types/range.cpp types/code.cpp types/iter.cpp types/list.cpp
+    types/range.cpp      types/code.cpp      types/iter.cpp     types/list.cpp
+    types/hashtype.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})

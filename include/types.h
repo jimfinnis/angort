@@ -251,6 +251,7 @@ public:
 #include "types/range.h"
 #include "types/list.h"
 #include "types/iter.h"
+#include "types/hashtype.h"
 
 
 /// this is effectively a namespace for the type data
@@ -285,6 +286,8 @@ struct Types {
     static IteratorType *tIter;
     /// v.list is a list object
     static ListType *tList;
+    /// v.lhash is a list object
+    static HashType *tHash;
     
     /// v.gc is some unspecified garbage-collected type
     static GCType *tGC;

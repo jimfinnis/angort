@@ -30,6 +30,7 @@ struct Value {
         struct Range<int> *irange;
         struct Range<float> *frange;
         class ListObject *list;
+        class HashObject *hash;
         class GarbageCollected *gc;
         class IteratorObject *iter;
         uint32_t fixup;

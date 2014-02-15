@@ -498,7 +498,7 @@ void Angort::run(const Instruction *ip){
                 a = stack.popptr(); // the iterable object
                 // we make an iterator and push it onto the iterator stack
                 b = loopIterStack.pushptr();
-                a->t->createValueIterator(b,a);
+                a->t->createKeyIterator(b,a);
                 ip++;
                 break;
             }

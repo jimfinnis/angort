@@ -37,6 +37,9 @@ public:
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
     
     virtual Iterator<Value *> *makeValueIterator(Value *v);
+    virtual Iterator<Value *> *makeKeyIterator(Value *v){
+        return makeValueIterator(v);
+    }
 };
 
 

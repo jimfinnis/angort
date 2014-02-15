@@ -8,6 +8,7 @@
 
 #include "angort.h"
 #include "ser.h"
+#include "hash.h"
 
 %name lists
 
@@ -122,3 +123,30 @@
     }
     delete iter;
 }
+
+%word hash (-- hash) create a new hash
+{
+    Value *v = a->pushval();
+    Types::tHash->set(v);
+}
+
+%word hset (val key hash --) set a value in a hash
+{
+    Hash *h = Types::tHash->get(a->popval());
+    Value *k = a->popval();
+    Value *v = a->popval();
+    
+    h->set(k,v);
+    
+}
+
+%word hget (key hash --) get a value in a hash, or tNone
+{
+    Hash *h = Types::tHash->get(a->popval());
+    Value *k = a->stack.peekptr();
+    if(h->find(k))
+        k->copy(h->getval());
+    else 
+        k->clr();
+}
+

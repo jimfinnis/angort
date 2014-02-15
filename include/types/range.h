@@ -36,6 +36,9 @@ public:
     
     
     virtual Iterator<Value *> *makeValueIterator(Value *v);
+    virtual Iterator<Value *> *makeKeyIterator(Value *v){
+        return makeValueIterator(v);
+    }
 };
 
 #endif /* __RANGE_H */

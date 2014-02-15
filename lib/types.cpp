@@ -151,6 +151,9 @@ RangeType<float> *Types::tFRange = &_FRange;
 static ListType _List;
 ListType *Types::tList = &_List;
 
+static HashType _Hash;
+HashType *Types::tHash = &_Hash;
+
 
 static IteratorType _Iterator;
 IteratorType *Types::tIter = &_Iterator;
