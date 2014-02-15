@@ -26,7 +26,7 @@ endmacro(add_words_files)
 
 
 include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib)
-add_definitions(-g)
+#add_definitions(-g)
 
 add_words_files(stdWords.cpp stdLists.cpp)
 

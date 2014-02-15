@@ -27,13 +27,14 @@ public:
     void readBytes(void *buf,int len){
         if(!file)
             throw SerialisationException("file not open for reading");
-        fread(buf,1,len,file);
+        if(fread(buf,1,len,file)!=len)
+            throw SerialisationException("premature end of file");
     }
     void writeBytes(const void *buf,int len){
         if(!file)
             throw SerialisationException("file not open for writing");
         if(fwrite(buf,1,len,file)!=len)
-            throw SerialisationException("premature end of file");
+            throw SerialisationException("cannot write");
     }
     
     void writeInt(int i){
