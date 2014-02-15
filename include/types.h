@@ -82,6 +82,19 @@ public:
     /// create a low-level iterator and then wrap it in an iterator value
     void createKeyIterator(Value *dest,Value *src);
     
+    virtual uint32_t getHash(Value *v){
+        throw RUNT("type is not hashable");
+        return 0;
+    }
+    
+    virtual bool equalForHashTable(Value *a,Value *b){
+        throw RUNT("type is not hashable");
+        return false;
+    }
+        
+    
+    
+    
     /// increment the reference count, default does nothing
     virtual void incRef(Value *v){
     }
@@ -94,14 +107,6 @@ public:
     /// are reference types (GCType or BlockAllocType.) Does nothing
     /// for primitive types.
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor){
-    }
-    
-    /// find a type by ID
-    static Type *findByID(uint32_t id){
-        for(Type *p = head;p;p=p->next)
-            if(p->id == id)
-                return p;
-        return NULL;
     }
     
     /// save a value, but not the data associated with a reference
@@ -140,6 +145,15 @@ public:
         throw RUNT("cannot iterate a non-iterable type");
     }
     
+    
+    /// find a type by ID
+    static Type *findByID(uint32_t id){
+        for(Type *p = head;p;p=p->next)
+            if(p->id == id)
+                return p;
+        return NULL;
+    }
+    
 protected:
     
 };
@@ -166,6 +180,12 @@ public:
     /// decrement the reference count and delete if zero
     virtual void decRef(Value *v);
     
+    /// default hash is from address
+    virtual uint32_t getHash(Value *v);
+    
+    /// default equality test for hash keys is identity
+    virtual bool equalForHashTable(Value *a,Value *b);
+    
     /// allocate a block of memory plus 16 bits for refcount, 
     /// setting the refcount to 1, setting v.s to the start of the whole block,
     /// returning a pointer to just after the header.
@@ -185,6 +205,14 @@ public:
     virtual bool isReference(){
         return true;
     }
+    
+    
+    /// default hash is from address
+    virtual uint32_t getHash(Value *v);
+    
+    /// default equality test for hash keys is identity
+    virtual bool equalForHashTable(Value *a,Value *b);
+    
     
     /// standard fixup resolution
     virtual void saveValue(Serialiser *ser, Value *v);
@@ -231,6 +259,8 @@ struct Types {
     
     /// the null type object
     static Type *tNone;
+    /// the type object for deleted hash keys
+    static Type *tDeleted;
     /// not a real type; d.fixup gives the ID of a datum in the fixup table;
     /// used in serialisation
     static Type *tFixup;

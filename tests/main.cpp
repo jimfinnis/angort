@@ -10,8 +10,8 @@
  * \date $Date$
  */
 
-#include "test.h"
 
+#include "test.h"
 #include <unistd.h>
 
 Angort *newAngort(){
@@ -29,7 +29,8 @@ int main(int argc,char *argv[]){
     if(argc<2)
         throw Exception("requires a working directory to be passed in, containing test files");
     
-    chdir(argv[1]);
+    if(chdir(argv[1]))
+        throw Exception("cannot CD to test directory");
     
     if(suite.run() != suite.getCount())
         return 1;

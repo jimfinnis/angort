@@ -42,6 +42,25 @@ template <> void RangeType<int>::set(Value *v, int start,int end,int step){
     incRef(v);
 }
 
+// for hash keys, int ranges are equal if their members are equal
+template<> uint32_t RangeType<int>::getHash(Value *v){
+    return (uint32_t)(v->v.irange->start + v->v.irange->end*10000 + v->v.irange->step);
+}
+template<> bool RangeType<int>::equalForHashTable(Value *a,Value *b){
+    if(a->t != b->t)return false;
+    Range<int> *ra = a->v.irange;
+    Range<int> *rb = b->v.irange;
+    return ra->start == rb->start && ra->end == rb->end && ra->step == rb->step;
+}
+
+// for hash keys, float ranges are equal if they are the same range
+template<> uint32_t RangeType<float>::getHash(Value *v){
+    return (uint32_t)v->v.gc;
+}
+template<> bool RangeType<float>::equalForHashTable(Value *a,Value *b){
+    return a==b;
+}
+
 
 
 struct IntRangeIterator : public Iterator<Value *>{

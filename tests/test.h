@@ -29,6 +29,11 @@ public:
     const char *getName(){
         return name;
     }
+    
+    void die(const char *s){
+        throw AssertionFailedException(s);
+    }
+    
     virtual void run(Angort *a)=0;
 };
 

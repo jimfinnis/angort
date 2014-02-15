@@ -21,6 +21,12 @@ public:
     void set(Value *v,T start,T end,T step);
     RangeType();
 
+    /// get a hash key
+    virtual uint32_t getHash(Value *v);
+    
+    /// are these two equal
+    virtual bool equalForHashTable(Value *a,Value *b);
+    
     /// serialise the data for a reference type - that is, the data
     /// which is held external to the Value union.
     virtual void saveDataBlock(Serialiser *ser,const void *v);

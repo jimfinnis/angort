@@ -29,6 +29,12 @@ public:
     virtual float toFloat(const Value *v) const;
     virtual int toInt(const Value *v) const;
 
+    /// get a hash key
+    virtual uint32_t getHash(Value *v);
+    
+    /// are these two equal
+    virtual bool equalForHashTable(Value *a,Value *b);
+    
     /// serialise the data for a reference type - that is, the data
     /// which is held external to the Value union.
     virtual void saveDataBlock(Serialiser *ser,const void *v);

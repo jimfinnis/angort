@@ -80,7 +80,7 @@ struct Value {
     float toFloat(){
         return t->toFloat(this);
     }
-    float toInt(){
+    int toInt(){
         return t->toInt(this);
     }
     
@@ -105,6 +105,18 @@ struct Value {
         t = src->t;
         v = src->v;
         incRef();
+    }
+    
+    /// get a hash integer for this value
+    uint32_t getHash(){
+        return t->getHash(this);
+    }
+    
+    /// are these two equal (considered as keys for hashes?)
+    bool equalForHashTable(Value *other){
+        if(t != other->t)
+            return false;
+        return t->equalForHashTable(this,other);
     }
     
     /// part of serialisation

@@ -35,6 +35,23 @@ int StringType::toInt(const Value *v) const {
     return atoi(getData(v));
 }
 
+uint32_t StringType::getHash(Value *v){
+    // Fowler-Noll-Vo hash, variant 1a
+    const unsigned char *s = (const unsigned char *)getData(v);
+    uint32_t h = 2166136261U;
+    
+    while(*s){
+        h ^= *s++;
+        h *= 16777619U;
+    }
+    return h;
+}
+
+bool StringType::equalForHashTable(Value *a,Value *b){
+    if(a->t != b->t)return false;
+    return strcmp(getData(a),getData(b));
+}
+
 void StringType::saveDataBlock(Serialiser *ser, const void *v){
     ser->file->writeString((const char *)v);
 }

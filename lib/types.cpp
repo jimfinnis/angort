@@ -60,6 +60,17 @@ void BlockAllocType::decRef(Value *v){
     }
 }
 
+/// default hash is from address
+uint32_t BlockAllocType::getHash(Value *v){
+    return (uint32_t)v->v.block;
+}
+    
+/// default equality test for hash keys is identity
+bool BlockAllocType::equalForHashTable(Value *a,Value *b){
+    return a->v.block == b->v.block;
+}
+
+
 void BlockAllocType::saveValue(Serialiser *ser, Value *v){
     ser->file->write32(ser->getFixupByData(v->v.cb));
 }
@@ -84,6 +95,17 @@ void GCType::decRef(Value *v){
 }
 
 
+/// default hash is from address
+uint32_t GCType::getHash(Value *v){
+    return (uint32_t)v->v.gc;
+}
+    
+/// default equality test for hash keys is identity
+bool GCType::equalForHashTable(Value *a,Value *b){
+    return a->v.gc == b->v.gc;
+}
+
+
 void GCType::saveValue(Serialiser *ser, Value *v){
     ser->file->write32(ser->getFixupByData(v->v.gc));
 }
@@ -101,6 +123,8 @@ void GCType::loadValue(Serialiser *ser, Value *v){
 
 static Type _tNone;
 Type *Types::tNone= &_tNone;
+static Type _tDeleted;
+Type *Types::tDeleted= &_tDeleted;
 static Type _tFixup;
 Type *Types::tFixup= &_tFixup;
 
@@ -135,6 +159,7 @@ IteratorType *Types::tIter = &_Iterator;
 
 void Types::createTypes(){
     tNone->add("NONE","NONE");
+    tDeleted->add("DELETED","DELT");
     tFixup->add("fixup","FIXP");
     
 }

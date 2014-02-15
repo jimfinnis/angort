@@ -40,6 +40,15 @@ const char * IntegerType::toString(char *outBuf,int len,const Value *v) const {
     return outBuf;
 }
 
+uint32_t IntegerType::getHash(Value *v){
+    return (uint32_t)v->v.i;
+}
+
+bool IntegerType::equalForHashTable(Value *a,Value *b){
+    return a->toInt() == b->toInt();
+}
+
+
 void IntegerType::saveValue(Serialiser *ser, Value *v){
     ser->file->writeInt(get(v));
 }

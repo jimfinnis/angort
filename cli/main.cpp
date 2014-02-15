@@ -41,10 +41,13 @@ int main(int argc,char *argv[]){
             printf("cannot open file: %s\n",argv[1]);
             exit(1);
         }
-        uint32_t magic=0,version=0;
-        fread(&magic,4,1,f);
+        uint32_t magic,version;
+        if(!fread(&magic,4,1,f))
+            magic=0;
+            
         if(magic==ANGORT_MAGIC){
-            fread(&version,4,1,f);
+            if(!fread(&version,4,1,f))
+                version=0;
             fclose(f);
             if(version!=ANGORT_VERSION){
                 printf("image file version incorrect: %d\n",version);

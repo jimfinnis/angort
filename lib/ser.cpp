@@ -189,7 +189,7 @@ void Serialiser::save(Angort *a, const char *name){
     
     ValueVisitor *v = new BuildFixupTableVisitor(this);
     a->visitGlobalData(v);
-    delete(v);
+    delete v;
     
     file = new File(name,true);
     

@@ -20,6 +20,13 @@ public:
     /// set the value to the given int
     void set(Value *v,int f);
     
+    /// get a hash key
+    virtual uint32_t getHash(Value *v);
+    
+    /// are these two equal
+    virtual bool equalForHashTable(Value *a,Value *b);
+    
+    
     virtual int toInt(const Value *v) const;
     virtual float toFloat(const Value *v) const;
     virtual const char *toString(char *outBuf,int len,const Value *v) const;

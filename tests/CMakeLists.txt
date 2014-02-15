@@ -25,7 +25,7 @@ endmacro(add_words_files)
 
 add_words_files(wordsTest.cpp)
 
-set(SOURCES main.cpp null.cpp
+set(SOURCES main.cpp null.cpp hash.cpp
     ${WORDFILELIST})
 
 add_executable(tests ${SOURCES})
