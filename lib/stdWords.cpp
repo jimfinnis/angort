@@ -215,6 +215,10 @@ public:
 
 %word reset (--) Clear everything
 {
+    while(!a->stack.isempty()){
+        Value *v = a->popval();
+        v->clr();
+    }
     a->clear();
 }
 

@@ -37,9 +37,6 @@ struct HashEnt {
     /// the hash calculated from the key
     uint32_t hash;
     
-    /// the slot is initialised to free by setting the key value to None
-    HashEnt(){k.init();}
-    
     /// return whether this slot is actively used - i.e.
     /// is not deleted or unused.
     inline bool isUsed(){
@@ -220,7 +217,6 @@ public:
                 if(newent->k.t==Types::tNone){
                     fill++;
                     used++;
-                    // shouldn't need to incref the keys
                     newent->k.copy(&ent->k);
                     newent->v.copy(&ent->v);
                     newent->hash = ent->hash;

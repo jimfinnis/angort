@@ -41,7 +41,10 @@ public:
     
     /// on destruction, delete the iterator
     virtual ~ListIterator(){
-        list->decRefCt();
+        if(list->decRefCt()){
+            delete list;
+        }
+        v.clr();
     }
     
     /// set the current value to the first item
@@ -57,8 +60,9 @@ public:
         idx++;
         if(idx<list->list.count())
             v.copy(list->list.get(idx));
-        else
+        else{
             v.clr();
+        }
     }
     /// return true if we're out of bounds
     virtual bool isDone() const{

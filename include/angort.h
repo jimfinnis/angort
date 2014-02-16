@@ -419,6 +419,15 @@ public:
         next=0;
     }
     
+    void clear(){
+        base=0;
+        next=0;
+        for(int i=0;i<VSTACKSIZE;i++){
+            vars[i].clr();
+        }
+    }
+        
+    
     void push(){
         //        printf("pushing stack: curstate = base %d/next %d ",
         //               base,next);
@@ -600,6 +609,7 @@ public:
         words.clear();
         consts.clear();
         globals.clear();
+        locals.clear();
     }          
     
     /// clear the stack

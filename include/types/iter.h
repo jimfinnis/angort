@@ -17,9 +17,8 @@ public:
     /// another object will create the iterator, which we delete.
     IteratorObject(Iterator<Value *> *iter);
     
-    ~IteratorObject(){
-        delete iterator;
-    }
+    ~IteratorObject();
+
     Iterator<Value *> *iterator;
     /// we have to have this because of the way iterators and loops work;
     /// our loops go "leaveifdone next ... getcurrent.. "

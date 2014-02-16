@@ -13,13 +13,17 @@ IteratorObject::IteratorObject(Iterator<Value *> *iter) {
     current = new Value;
 }
 
+IteratorObject::~IteratorObject(){
+    delete iterator;
+    delete current;
+}
+
 
 void IteratorType::set(Value *v,Iterator<Value *> *iter){
     v->clr();
     v->t = this;
     v->v.gc = new IteratorObject(iter);
     incRef(v);
-    
 }
 
 Iterator<Value *> *IteratorType::get(Value *v){

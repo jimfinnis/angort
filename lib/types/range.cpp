@@ -78,7 +78,8 @@ public:
     
     /// on destruction, delete the iterator
     ~IntRangeIterator(){
-        range->decRefCt();
+        if(range->decRefCt())
+            delete range;
     }
     
     /// set the current value to the first item
@@ -116,7 +117,8 @@ public:
     
     /// on destruction, delete the iterator
     ~FloatRangeIterator(){
-        range->decRefCt();
+        if(range->decRefCt())
+            delete range;
     }
     
     /// set the current value to the first item
