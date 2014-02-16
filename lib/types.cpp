@@ -60,15 +60,6 @@ void BlockAllocType::decRef(Value *v){
     }
 }
 
-/// default hash is from address
-uint32_t BlockAllocType::getHash(Value *v){
-    return (uint32_t)v->v.block;
-}
-    
-/// default equality test for hash keys is identity
-bool BlockAllocType::equalForHashTable(Value *a,Value *b){
-    return a->v.block == b->v.block;
-}
 
 
 void BlockAllocType::saveValue(Serialiser *ser, Value *v){

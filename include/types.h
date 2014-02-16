@@ -180,11 +180,6 @@ public:
     /// decrement the reference count and delete if zero
     virtual void decRef(Value *v);
     
-    /// default hash is from address
-    virtual uint32_t getHash(Value *v);
-    
-    /// default equality test for hash keys is identity
-    virtual bool equalForHashTable(Value *a,Value *b);
     
     /// allocate a block of memory plus 16 bits for refcount, 
     /// setting the refcount to 1, setting v.s to the start of the whole block,
