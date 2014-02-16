@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "angort.h"
+#include "ser.h"
 
 // 5 in original
 #define PERTURB_SHIFT 5
@@ -78,6 +79,10 @@ public:
         fill=0;
     }
     
+    int count(){
+        return used;
+    }
+    
     ~Hash(){
         int s = mask+1;
         HashEnt *ent = table;
@@ -104,6 +109,7 @@ public:
             
             ent->k.copy(k); // store the key into the table
             ent->hash = hash;
+            
             used++; // increment used
         }
         // store the value - copy ctor will run, doing the required incref 
@@ -156,11 +162,27 @@ public:
 	return true;
     }
     
+    void save(Serialiser *ser);
+    void load(Serialiser *ser);
+    
+    
+    
     
     /// create a value iterator
     class Iterator<Value *> *createValueIterator();
     /// create a key iterator
     class Iterator<Value *> *createKeyIterator();
+    
+    void visitRefChildren(ValueVisitor *visitor){
+        HashEnt *ent = table;
+        for(unsigned int i=0;i<mask+1;i++,ent++){
+            if(ent->isUsed()){
+                ent->k.receiveVisitor(visitor);
+                ent->v.receiveVisitor(visitor);
+            }
+        }
+    }
+    
     
 #ifdef DEBUG
     int miss;
@@ -243,6 +265,7 @@ public:
                 freeslot = ent;
         }
     }
+    
 };
 
 /// Hash iterator - you probably won't access this

@@ -123,8 +123,8 @@ CodeBlock::CodeBlock(Serialiser *ser){
     closureMapCt = f->read16();
     spec = f->readStringAlloc();
     
-    printf("Reading %d, locals %d, params %d, closureMapCt %d\n",
-           size,locals,params,closureMapCt);
+//    printf("Reading %d, locals %d, params %d, closureMapCt %d\n",
+//           size,locals,params,closureMapCt);
     
     // load closure map
     closureMap = new ClosureMapEntry[closureMapCt];

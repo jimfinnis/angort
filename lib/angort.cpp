@@ -35,6 +35,7 @@ Angort::Angort() {
     debug=false;
     printLines=false;
     emergencyStop=false;
+    assertDebug=false;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();

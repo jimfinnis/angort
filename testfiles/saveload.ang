@@ -1,3 +1,23 @@
+# make a hash
+hash!H 0 200 range each { [i i *, i i i * *] i ?H hset }
+
+# bung a couple of strings in it too
+"foo" "bar" ?H hset
+"fish" "cot" ?H hset
+
+# save it
+"tmp1" save
+"tmp1" load
+
+# check that the strings came out OK
+"bar" ?H hget "foo" = "hash string load" assert
+
+# and check that we are able to retrieve each number's entry from the hash,
+# which will be a list.
+
+0 2 range each {i i i * * i ?H hget 1 swap get  = "list hash get" assert }
+
+
 [
     (+),
     (-),
@@ -17,6 +37,7 @@
     ;
 
 run 628 = "pre-save inject" assert
+
 
 "tmp1" save
 "tmp1" load

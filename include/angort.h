@@ -342,6 +342,7 @@ public:
 struct CodeBlock {
     
     void setFromContext(CompileContext *con){
+        spec = NULL;
         ip = con->copyInstructions();
         locals = con->getLocalCount();
         params = con->getParamCount();

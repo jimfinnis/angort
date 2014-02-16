@@ -42,30 +42,16 @@ Iterator<Value *> *HashType::makeKeyIterator(Value *v){
 }
 
 void HashType::saveDataBlock(Serialiser *ser,const void *v){
-    throw WTF;
     HashObject *r = (HashObject *)v;
+    r->hash->save(ser);
 }
 void *HashType::loadDataBlock(Serialiser *ser){
     HashObject *r = new HashObject();
-    throw WTF;
+    r->hash->load(ser);
     return (void *)r;
 }
 
 
 void HashType::visitRefChildren(Value *v,ValueVisitor *visitor){
-    Hash *h = v->v.hash->hash;
-    
-    Iterator<Value *> *iter=h->createKeyIterator();
-    
-    for(iter->first();!iter->isDone();iter->next()){
-        // first visit the key
-        Value *v = iter->current();
-        v->receiveVisitor(visitor);
-        // then the value
-        if(h->find(v))
-            h->getval()->receiveVisitor(visitor);
-        else
-            throw WTF;
-    }
-    delete iter;
+    v->v.hash->hash->visitRefChildren(visitor);
 }

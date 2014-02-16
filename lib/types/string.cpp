@@ -49,11 +49,12 @@ uint32_t StringType::getHash(Value *v){
 
 bool StringType::equalForHashTable(Value *a,Value *b){
     if(a->t != b->t)return false;
-    return strcmp(getData(a),getData(b));
+    return !strcmp(getData(a),getData(b));
 }
 
 void StringType::saveDataBlock(Serialiser *ser, const void *v){
-    ser->file->writeString((const char *)v);
+    BlockAllocHeader *h = (BlockAllocHeader *)v;
+    ser->file->writeString((const char *)(h+1));
 }
 void *StringType::loadDataBlock(Serialiser *ser){
     // using some extra knowledge of how strings are saved and 

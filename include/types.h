@@ -207,13 +207,6 @@ public:
     }
     
     
-    /// default hash is from address
-    virtual uint32_t getHash(Value *v);
-    
-    /// default equality test for hash keys is identity
-    virtual bool equalForHashTable(Value *a,Value *b);
-    
-    
     /// standard fixup resolution
     virtual void saveValue(Serialiser *ser, Value *v);
     /// standard fixup resolution

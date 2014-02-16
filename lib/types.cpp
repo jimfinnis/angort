@@ -95,17 +95,6 @@ void GCType::decRef(Value *v){
 }
 
 
-/// default hash is from address
-uint32_t GCType::getHash(Value *v){
-    return (uint32_t)v->v.gc;
-}
-    
-/// default equality test for hash keys is identity
-bool GCType::equalForHashTable(Value *a,Value *b){
-    return a->v.gc == b->v.gc;
-}
-
-
 void GCType::saveValue(Serialiser *ser, Value *v){
     ser->file->write32(ser->getFixupByData(v->v.gc));
 }
