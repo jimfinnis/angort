@@ -730,8 +730,6 @@ void Angort::feed(const char *buf){
                     defining = true;
                     if(!tok.getnextident(defineName))
                         throw SyntaxException("expected a word name");
-                    if(tok.getnext()==T_COLON){
-                    } else tok.rewind();
                 }
                 break;
             case T_DOT:

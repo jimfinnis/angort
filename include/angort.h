@@ -19,7 +19,7 @@
 #include "cvset.h"
 
 /// the version number has the lowest two digits as minor version.
-#define ANGORT_VERSION 205
+#define ANGORT_VERSION 207
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
