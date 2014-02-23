@@ -56,9 +56,9 @@ or
 
 or even
 
-    1 1000 range (dup *) map sum .
+    1 1001 range (dup *) map sum .
     
-to print the sum of the squares of the first 1000 integers.
+to print the sum of the squares of the first 1000 positive integers.
 
 
 ##Building 
@@ -69,7 +69,7 @@ Build with
     cmake ..
     make
     
-Will build the executable in cli/angortcli
+This will build the executable in build/cli/angortcli. You can install by copying this into a binary directory, or just run it from there. You will need to install the GNU readline dev files, but that's the only dependency.
 
 
 
@@ -126,7 +126,7 @@ will print 16. As mentioned above, you can use multiple lines for a word definit
     
 is the factorial function - there's a parameter "x" and a conditional there, and I'll cover those in a moment.
 
-## Word parameters and local variables
+### Word parameters and local variables
 
 Define these by putting a block of the form
 
@@ -145,7 +145,7 @@ We push the value of a local or parameter onto the stack with a question mark fo
     
 is a word which will add the two parameters, store them in the local z and then throw everything away.
 
-## Word documentation strings
+### Word documentation strings
 You can add documentation to words using the :"..." construction somewhere in
 the word (by convention, after any locals and parameters and before
 the actual code:
