@@ -10,8 +10,10 @@ include:
 Functions in Angort are called "words", borrowing the Forth terminology. Here are
 some of the word definitions I use to control our ExoMars rover prototype:
 
-    # set a constant range for the wheel numbers
-    1 6 range const wheels
+    # set a constant range for the wheel numbers, 1-6. That means the range
+    # we specify is 1<=x<7:
+    
+    1 7 range const wheels
 
     # a word to set the drive speed on all wheels
     :setdriveall |speed:| wheels each { ?speed i!drive };
