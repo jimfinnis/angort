@@ -1,15 +1,4 @@
-Leaving an iterator loop early leaves GC stuff, because the iterator stack is
-not popped:
-    range 1 10 1 each {i 5> ifleave i.}
-Solution - push NULL onto the iterator stack when we enter a non-iterator loop,
-and when we leave, pop that stack and clear the value if it's not null.
-Actually, this is more serious: leaving an iterator loop with "ifleave"
-or "leave" will not pop the iterator stack at all, so nested loops will
-fall over horribly.
-
 remove from hash
-
-serialisation - load partial image? (i.e. don't clear before load)
 
 Code and word specs ( :foo :"spec" needs documentation)
 

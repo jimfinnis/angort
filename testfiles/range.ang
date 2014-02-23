@@ -1,27 +1,31 @@
 #single range, totalling up
 
 0 
-1 10 range each { i + }
+1 11 range each { i + }
 55 = "range1" assert
 0 gccount = "range1gc" assert
 
+0
+0 0  range each { 1 +}
+0 = "rangenone" assert
+
 # nested ranges
 
-:mkrange 1 10 range ;
+:mkrange 1 11 range ;
 0 mkrange each { mkrange each {i j * + }}
 3025 = "range2"  assert
 0 gccount = "range2gc" assert
 
 # reiteration on a stored range
 global t
-1 5 range !t
+1 6 range !t
 0 ?t each {i +} 
 15 = "range3" assert
 1 gccount = "range3gc" assert # ?t holds a range
 
 # smoke test to screw up the stack
 0 
-1 10 range each { i + }
+1 11 range each { i + }
 55 = "range4" assert 
 
 # then try the stored range again
@@ -36,5 +40,17 @@ mkrange !t
 1 gccount = "range6gc" assert
 0 !t
 0 gccount = "range6gc2" assert
+
+# float range
+
+0
+0 1 0.1 frange each{ i+ } 
+4.5 = "frange" assert
+
+# step integer range
+
+0
+0 100 5 srange each { i+ dup.}
+950 = "srange" assert
 
 quit

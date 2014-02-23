@@ -26,15 +26,6 @@ global t 0!t
 
 foo 200 = "loop2" assert
 
-0!t
-10 times { ?t 1+ !t }
-?t 10 = "times" assert
-
-0!t
-10 times { ?t 1000 + !t 5 times { ?t 1+ !t }}
-
-?t 10050 = "nestedtimes" assert
-
 
 # this can crash
 :infiniteloop { } ;

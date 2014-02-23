@@ -54,7 +54,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         printf(" (%s)",funcs.getKey(ip->d.func));
     }
     if(ip->opcode == OP_JUMP||ip->opcode==OP_LEAVE||ip->opcode==OP_ITERLEAVEIFDONE||
-       ip->opcode==OP_DECLEAVENEG||ip->opcode==OP_IF){
+       ip->opcode==OP_IF){
         printf(" (offset %d)",ip->d.i);
     }
     else if(ip->opcode == OP_WORD){
@@ -473,28 +473,25 @@ void Angort::run(const Instruction *ip){
                 b->copy(a);
                 ip++;
                 break;
-            case OP_LEAVE: // special because of compilation of loops
+            case OP_LEAVE:
+                loopIterStack.popptr()->clr();
+                // fall through
             case OP_JUMP:
                 ip+=ip->d.i;
                 break;
             case OP_IFLEAVE:
                 if(popInt()){
+                    loopIterStack.popptr()->clr();
                     ip+=ip->d.i;
                 } else
                     ip++;
                 break;
-            case OP_DECLEAVENEG:{
-                a = stack.peekptr();
-                int q = a->toInt();
-                q--;
-                Types::tInteger->set(a,q);
-                if(q<0){
-                    stack.popptr();
-                    ip += ip->d.i;
-                } else
-                    ip++;
+            case OP_LOOPSTART:
+                // start of an infinite loop, so push a None iterator
+                a = loopIterStack.pushptr();
+                a->clr();
+                ip++;
                 break;
-            }
             case OP_ITERSTART:{
                 a = stack.popptr(); // the iterable object
                 // we make an iterator and push it onto the iterator stack
@@ -776,14 +773,6 @@ void Angort::feed(const char *buf){
                 context->resolveJumpForwards(t);
                 // no need for an actual opcode
                 break;
-            case T_TIMES:
-                if(tok.getnext()!=T_OCURLY)
-                    throw SyntaxException("times must be followed by {");
-                // stack the value
-                context->pushhere(); // this is our loop point
-                context->pushleave(); // and which loop we're in
-                context->compileAndAddToLeaveList(OP_DECLEAVENEG); // decrement and leave if neg
-                break;
             case T_EACH:
                 if(tok.getnext()!=T_OCURLY)
                     throw SyntaxException("each must be followed by {");
@@ -793,6 +782,7 @@ void Angort::feed(const char *buf){
                 context->compileAndAddToLeaveList(OP_ITERLEAVEIFDONE);
                 break;
             case T_OCURLY://start loop
+                context->compile(OP_LOOPSTART);
                 // stack the location
                 context->pushhere();
                 // and which loop we're in

@@ -143,6 +143,20 @@ We push the value of a local or parameter onto the stack with a question mark fo
     
 is a word which will add the two parameters, store them in the local z and then throw everything away.
 
+## Word documentation strings
+You can add documentation to words using the :"..." construction somewhere in
+the word (by convention, after any locals and parameters and before
+the actual code:
+
+    :dist |x1,y1,x2,y2:|
+        :"(x1 y1 x2 y2 -- d) calculate the distance between two points"
+        ?x1 ?x2 - abs dup *
+        ?y1 ?y2 - abs dup *
+        + sqrt
+    ;
+
+
+
 ##Conditions
 
 If .. then .. else conditions look like
@@ -179,10 +193,20 @@ The only difference is that srange takes a step value. The step can be positive 
 the normal range word, the step is 1 or -1 depending on whether the start is less than or greater
 than the end value.
 
-A range can be stored in a variable, duplicated, printed (although you'll just get a range ID) and so on - it's just a value. "each {}" can then be used to create an "iterator loop" over the range:
+
+A range can be stored in a variable, duplicated, printed (although you'll just
+get a range ID) and so on - it's just a value. "each {}" can then be used to
+create an "iterator loop" over the range:
 
     0 10 range each { i . }
     
+The range will run from <start> to <end>, and *does not include* the end. That is, the above
+code will show the values from 0 to 9, and
+
+    0 10 5 strange each {i.}
+    
+will just show 0 and 5.
+
 The "i" word will put the current iterator's value on the stack. We can nest iterators:
 
     0 10 range each { "  " p i . 0 2 range each {i.}}
@@ -209,9 +233,9 @@ The range is used twice, with two separate iterators.
 
 We also have floating point ranges, using the frange word:
    
-    0 1 0.1 frange each {i.}
+    0 1.001 0.1 frange each {i.}
     
-
+will show 0 to 1 in steps of 0.1 (we're using 1.001 so that the range will include the end value.)
 
 
 ### Nested loops

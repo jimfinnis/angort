@@ -19,7 +19,7 @@
 #include "cvset.h"
 
 /// the version number has the lowest two digits as minor version.
-#define ANGORT_VERSION 205
+#define ANGORT_VERSION 206
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
@@ -596,7 +596,11 @@ public:
     
     /// get the top iterator on the iterator stack (or the nth)
     IteratorObject *getTopIterator(int i=0){
-        return loopIterStack.peekptr(i)->v.iter;
+        Value *v = loopIterStack.peekptr(i);
+        if(v->t == Types::tIter)
+            return v->v.iter;
+        else
+            throw RUNT("attempt to get iterator of non-iterator loop");
     }
     
     /// visit the tree of all globally-accessible data,

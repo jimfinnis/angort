@@ -18,11 +18,11 @@ const char *opcodenames[]=
     "leave","dup","litstring","call",
     "litcode","globget","globset","propget",
     "propset","not","equals","nequals",
-    "swap","drop","and","or","lt","gt","ifleave","for","forjump",
-    "constset","constget","over","closureget","closureget",
-    "dot","iterlvifdone","iterstart",
-    "literalstr-fixup","literalcode-fixup",
-    "newlist","appendlist",
+    "swap","drop","and","or","lt","gt",
+    "ifleave","for","forjump","constset",
+    "constget","over","closureget","closureget","dot",
+    "iterlvifdone","iterstart","literalstr-fixup","literalcode-fixup","newlist",
+    "appendlist", "closelist","loopstart",
 };
 #endif
     
@@ -66,22 +66,27 @@ const char *opcodenames[]=
 #define OP_AND	30
 #define OP_OR	31
 #define OP_GT	32
+
 #define OP_LT   33
 #define OP_IFLEAVE  34
 #define OP_FOR	35
 #define OP_FORJUMP	36
 #define OP_CONSTSET	37
+
 #define OP_CONSTGET	38
 #define OP_OVER	39
 #define OP_CLOSUREGET 40
 #define OP_CLOSURESET 41
 #define OP_DOT 42
+
 #define OP_ITERLEAVEIFDONE	43
 #define OP_ITERSTART 44
 #define OP_LITERALSTRING_FIXUP 45
 #define OP_LITERALCODE_FIXUP 46
 #define OP_NEWLIST 47
+
 #define OP_APPENDLIST 48
 #define OP_CLOSELIST 49
+#define OP_LOOPSTART 50
 
 #endif /* __OPCODES_H */

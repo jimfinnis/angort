@@ -8,25 +8,29 @@
 
 %word cos (x -- cos x)
 {
-    FN(cos);
+    FN(cosf);
 }
 %word sin (x -- sin x)
 {
-    FN(sin);
+    FN(sinf);
 }
 %word tan (x -- tan x)
 {
-    FN(tan);
+    FN(tanf);
 }
 %word ln (x -- ln x)
 {
-    FN(log);
+    FN(logf);
 }
 %word log (x -- ln x)
 {
-    FN(log10);
+    FN(log10f);
 }
 %word log2 (x -- log2 x)
 {
-    FN(log2);
+    FN(log2f);
+}
+%word sqrt (x -- sqrt x)
+{
+    FN(sqrtf);
 }
