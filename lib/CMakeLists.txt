@@ -24,6 +24,13 @@ macro(add_words_files)
     endforeach(file)
 endmacro(add_words_files)
 
+# this command uses a python script to build the tokens files
+
+add_custom_command(
+    OUTPUT tokens.cpp tokens.h
+    DEPENDS tokens
+    COMMAND python gentoks tokens tokens)
+
 
 include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib)
 #add_definitions(-g)
