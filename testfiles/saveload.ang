@@ -33,7 +33,7 @@ hash!H 0 200 range each { [i i *, i i i * *] i ?H hset }
 
 :run 
     0
-    1 100 range `f inject
+    1 101 range `f inject
     ;
 
 run 628 = "pre-save inject" assert
