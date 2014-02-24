@@ -565,6 +565,9 @@ private:
             i = globals.add(name);
         return i;
     }
+    /// file inclusion mechanism
+    void include(const char *path);
+    
     
     /// called at the end of a block of code,
     /// or by emergency stop invocation. Returns

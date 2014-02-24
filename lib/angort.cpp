@@ -7,6 +7,10 @@
  */
 
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -683,6 +687,29 @@ const Instruction *Angort::compile(const char *s){
     return buf;
 }
 
+void Angort::include(const char *fh){
+    int oldDir = open(".",O_RDONLY); // get the FD for the current directory so we can go back
+    
+    // first, find the real path of the file
+    char *path=realpath(fh,NULL);
+    if(!path)
+        throw Exception().set("cannot open file : %s",fh);
+    
+    // now get the directory separator
+    char *file = strrchr(path,'/');
+    *file++ = 0; // and the file name
+    
+    // change to that directory, so all future reads are relative to there
+    chdir(path);
+    
+    fileFeed(file);
+    
+    
+    free(path);
+    fchdir(oldDir);
+    close(oldDir);
+}
+
 void Angort::feed(const char *buf){
     resetStop();
     
@@ -701,6 +728,14 @@ void Angort::feed(const char *buf){
             
             int t = tok.getnext();
             switch(t){
+            case T_INCLUDE:{
+                char buf[1024];
+                // will recurse
+                if(!tok.getnextstring(buf))
+                    throw SyntaxException("expected a filename after 'include'");
+                include(buf);
+                break;
+            }
             case T_CONST: // const syntax = <val> const <ident>
                 {
                     if(defining)

@@ -58,32 +58,33 @@ set-variable .fhook-angort.collapse-mnext "-1"
 
     ;
     ; Keywords
-    hilight   .hilight.angort 1 "global"          .scheme.keyword
-    
-    hilight   .hilight.angort 1 "if"          .scheme.keyword
-    hilight   .hilight.angort 1 "then"          .scheme.keyword
-    hilight   .hilight.angort 1 "else"         .scheme.keyword
-    hilight   .hilight.angort 1 "leave"          .scheme.keyword
-    hilight   .hilight.angort 1 "dup"          .scheme.keyword
-    hilight   .hilight.angort 1 "call"          .scheme.keyword
-    hilight   .hilight.angort 1 "swap"         .scheme.keyword
-    hilight   .hilight.angort 1 "drop"          .scheme.keyword    
-    hilight   .hilight.angort 1 "not"          .scheme.keyword
-    hilight   .hilight.angort 1 "and"        .scheme.keyword
-    hilight   .hilight.angort 1 "times"        .scheme.keyword
-    hilight   .hilight.angort 1 "ifleave"         .scheme.keyword
-    hilight   .hilight.angort 1 "load"         .scheme.keyword
-    hilight   .hilight.angort 1 "for"         .scheme.keyword
-    hilight   .hilight.angort 1 "load"         .scheme.keyword
-    hilight   .hilight.angort 1 "const"         .scheme.keyword
-    hilight   .hilight.angort 1 "over"         .scheme.keyword
-    hilight   .hilight.angort 1 "defer"         .scheme.keyword
+hilight   .hilight.monconf 1 "times" .scheme.keyword
+hilight   .hilight.monconf 1 "for" .scheme.keyword
+hilight   .hilight.monconf 1 "if" .scheme.keyword
+hilight   .hilight.monconf 1 "then" .scheme.keyword
+hilight   .hilight.monconf 1 "else" .scheme.keyword
+hilight   .hilight.monconf 1 "leave" .scheme.keyword
+hilight   .hilight.monconf 1 "dup" .scheme.keyword
+hilight   .hilight.monconf 1 "call" .scheme.keyword
+hilight   .hilight.monconf 1 "global" .scheme.keyword
+hilight   .hilight.monconf 1 "swap" .scheme.keyword
+hilight   .hilight.monconf 1 "drop" .scheme.keyword
+hilight   .hilight.monconf 1 "not" .scheme.keyword
+hilight   .hilight.monconf 1 "and" .scheme.keyword
+hilight   .hilight.monconf 1 "or" .scheme.keyword
+hilight   .hilight.monconf 1 "ifleave" .scheme.keyword
+hilight   .hilight.monconf 1 "const" .scheme.keyword
+hilight   .hilight.monconf 1 "over" .scheme.keyword
+hilight   .hilight.monconf 1 "defer" .scheme.keyword
+hilight   .hilight.monconf 1 "each" .scheme.keyword
+hilight   .hilight.monconf 1 "include" .scheme.keyword
     
     hilight   .hilight.angort 1 "p"         .scheme.keyword
     hilight   .hilight.angort 1 "x"         .scheme.keyword
     hilight   .hilight.angort 1 "nl"         .scheme.keyword
     hilight   .hilight.angort 1 "quit"         .scheme.keyword
     
+    hilight   .hilight.angort 4 ":\"" "\"" ""     .scheme.keyword
     hilight   .hilight.angort 4 ":" "\\W" ""     .scheme.function
     hilight   .hilight.angort 4 "\\[" "\\]" ""     .scheme.function
     hilight   .hilight.angort 4 "\|" "\|" ""     .scheme.function
