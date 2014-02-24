@@ -25,7 +25,7 @@
 
 /// if this is defined, when an unknown identifier is encountered it
 /// is stacked as a literal string.
-#define BAREWORDS 1
+//#define BAREWORDS
 
 extern TokenRegistry tokens[];
 

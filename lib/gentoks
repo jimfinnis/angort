@@ -14,7 +14,7 @@ infile = sys.argv[1]
 outfile = sys.argv[2]
 
 def gethkline(name):
-    return 'hilight   .hilight.monconf 1 "%s" .scheme.keyword\n' % name
+    return 'hilight   .hilight.angort 1 "%s" .scheme.keyword\n' % name
 
 with open(sys.argv[1]) as f:
     with open(outfile+".h","w") as hout:
