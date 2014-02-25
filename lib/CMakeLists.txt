@@ -29,10 +29,11 @@ endmacro(add_words_files)
 add_custom_command(
     OUTPUT tokens.cpp tokens.h
     DEPENDS tokens
-    COMMAND python gentoks tokens tokens)
+    COMMAND python ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/lib/tokens tokens)
 
-
-include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib)
+include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
+    ${ANGORT_SOURCE_DIR}/build/lib)
+    
 #add_definitions(-g)
 
 add_words_files(stdWords.cpp stdLists.cpp)
