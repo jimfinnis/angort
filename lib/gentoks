@@ -10,8 +10,6 @@ import os
 # Will also generate hkwords, containing keyword highlighting commands
 # for microemacs.
 
-print os.getcwd()
-
 infile = sys.argv[1]
 outfile = sys.argv[2]
 
