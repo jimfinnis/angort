@@ -17,16 +17,10 @@ int Type::toInt(const Value *v) const {
     throw BadConversionException(v->t->name,Types::tInteger->name);
 }
 
-void Type::createValueIterator(Value *dest,Value *src){
-    Iterator<Value *> *i = makeValueIterator(src);
+void Type::createIterator(Value *dest,Value *src){
+    Iterator<Value *> *i = makeIterator(src);
     i->first();
-    Types::tIter->set(dest,i);
-}
-
-void Type::createKeyIterator(Value *dest,Value *src){
-    Iterator<Value *> *i = makeKeyIterator(src);
-    i->first();
-    Types::tIter->set(dest,i);
+    Types::tIter->set(dest,src,i);
 }
 
 

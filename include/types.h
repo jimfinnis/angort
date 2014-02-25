@@ -77,10 +77,7 @@ public:
     virtual int toInt(const Value *v) const;
     
     /// create a low-level iterator and then wrap it in an iterator value
-    void createValueIterator(Value *dest,Value *src);
-    
-    /// create a low-level iterator and then wrap it in an iterator value
-    void createKeyIterator(Value *dest,Value *src);
+    void createIterator(Value *dest,Value *src);
     
     virtual uint32_t getHash(Value *v){
         throw RUNT("type is not hashable");
@@ -136,7 +133,7 @@ public:
     }
     
     /// create the low-level iterator if possible
-    virtual Iterator<Value *> *makeKeyIterator(Value *v){
+    virtual Iterator<Value *> *makeIterator(Value *v){
         throw RUNT("cannot iterate a non-iterable type");
     }
     

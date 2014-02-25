@@ -141,10 +141,10 @@ public:
     }
 };
 
-template <> Iterator<Value *> *RangeType<int>::makeValueIterator(Value *v){
+template <> Iterator<Value *> *RangeType<int>::makeIterator(Value *v){
     return new IntRangeIterator(v->v.irange);
 }
-template <> Iterator<Value *> *RangeType<float>::makeValueIterator(Value *v){
+template <> Iterator<Value *> *RangeType<float>::makeIterator(Value *v){
     return new FloatRangeIterator(v->v.frange);
 }
 

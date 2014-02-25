@@ -37,7 +37,6 @@
 *c`     :   T_BACKTICK
 
 
-times   :   T_TIMES
 for	:   T_FOR
 if	:   T_IF
 then	:   T_THEN

@@ -165,10 +165,8 @@ public:
     
     
     
-    /// create a value iterator
-    class Iterator<Value *> *createValueIterator();
     /// create a key iterator
-    class Iterator<Value *> *createKeyIterator();
+    class Iterator<Value *> *createIterator();
     
     void visitRefChildren(ValueVisitor *visitor){
         HashEnt *ent = table;
@@ -333,12 +331,8 @@ private:
     HashEnt *ent;
 };
 
-inline Iterator<Value *> *Hash::createKeyIterator() {
+inline Iterator<Value *> *Hash::createIterator() {
     return new HashKeyIterator(this);
-};
-
-inline Iterator<Value *> *Hash::createValueIterator() {
-    return new HashValueIterator(this);
 };
 
 

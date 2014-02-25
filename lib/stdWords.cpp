@@ -187,14 +187,14 @@ public:
     Value *p = a->pushval();
     p->copy(a->getTopIterator(2)->current);
 }
-    
 
-%word iter (iterable -- iterator) TEST word for creating an iterator
+%word iter (-- iterable) get the iterable which is currently being looped over
 {
-    Value *v = a->stack.peekptr();
-    v->t->createValueIterator(v,v);
+    Value *p = a->pushval();
+    IteratorObject *iterator = a->getTopIterator();
+    p->copy(iterator->iterable);
 }
-
+    
 
 %word save (name --) Hopefully save an image
 {

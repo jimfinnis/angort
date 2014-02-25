@@ -34,11 +34,7 @@ public:
     /// which is held external to the Value union.
     virtual void *loadDataBlock(Serialiser *ser);
     
-    
-    virtual Iterator<Value *> *makeValueIterator(Value *v);
-    virtual Iterator<Value *> *makeKeyIterator(Value *v){
-        return makeValueIterator(v);
-    }
+    virtual Iterator<Value *> *makeIterator(Value *v);
 };
 
 #endif /* __RANGE_H */

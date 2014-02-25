@@ -34,11 +34,8 @@ Hash *HashType::get(Value *v){
 }
 
 
-Iterator<Value *> *HashType::makeValueIterator(Value *v){
-    return v->v.hash->hash->createValueIterator();
-}
-Iterator<Value *> *HashType::makeKeyIterator(Value *v){
-    return v->v.hash->hash->createKeyIterator();
+Iterator<Value *> *HashType::makeIterator(Value *v){
+    return v->v.hash->hash->createIterator();
 }
 
 void HashType::saveDataBlock(Serialiser *ser,const void *v){

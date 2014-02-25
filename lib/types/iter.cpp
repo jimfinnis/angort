@@ -8,21 +8,23 @@
 
 #include "angort.h"
 
-IteratorObject::IteratorObject(Iterator<Value *> *iter) {
+IteratorObject::IteratorObject(Iterator<Value *> *iter, Value *src) {
     iterator = iter;
+    iterable = new Value;
     current = new Value;
+    iterable->copy(src);
 }
 
 IteratorObject::~IteratorObject(){
+    delete iterable;
     delete iterator;
     delete current;
 }
 
 
-void IteratorType::set(Value *v,Iterator<Value *> *iter){
+void IteratorType::set(Value *v,Value *src,Iterator<Value *> *iter){
     v->clr();
-    v->t = this;
-    v->v.gc = new IteratorObject(iter);
+    v->v.gc = new IteratorObject(iter,src);
     incRef(v);
 }
 
@@ -30,5 +32,3 @@ Iterator<Value *> *IteratorType::get(Value *v){
     IteratorObject *i = (IteratorObject *)v->v.gc;
     return i->iterator;
 }
-    
-    

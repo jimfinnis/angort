@@ -1,8 +1,6 @@
 /**
  * @file
- * brief description, full stop.
- *
- * long description, many sentences.
+ * Lists and hashes
  * 
  */
 

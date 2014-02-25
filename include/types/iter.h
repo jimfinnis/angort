@@ -15,7 +15,7 @@
 class IteratorObject : public GarbageCollected {
 public:
     /// another object will create the iterator, which we delete.
-    IteratorObject(Iterator<Value *> *iter);
+    IteratorObject(Iterator<Value *> *iter,Value *src);
     
     ~IteratorObject();
 
@@ -24,6 +24,9 @@ public:
     /// our loops go "leaveifdone next ... getcurrent.. "
     /// so we need to stash the actual current before we call next.
     Value *current;
+    
+    /// and here we keep a copy of the thing we're iterating over
+    Value *iterable;
 };
 
 
@@ -50,7 +53,7 @@ public:
         throw WTF;
     }
     
-    void set(Value *v,Iterator<Value *> *iter);
+    void set(Value *v,Value *src,Iterator<Value *> *iter);
     Iterator<Value *> *get(Value *v);
 };
 

@@ -75,7 +75,7 @@ public:
     }
 };
 
-Iterator<Value *> *ListType::makeValueIterator(Value *v){
+Iterator<Value *> *ListType::makeIterator(Value *v){
     return new ListIterator(v->v.list);
 }
 
