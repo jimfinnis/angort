@@ -25,6 +25,7 @@ IteratorObject::~IteratorObject(){
 void IteratorType::set(Value *v,Value *src,Iterator<Value *> *iter){
     v->clr();
     v->v.gc = new IteratorObject(iter,src);
+    v->t = Types::tIter;
     incRef(v);
 }
 

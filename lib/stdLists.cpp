@@ -93,7 +93,7 @@
     func.copy(a->popval()); // need a local copy
     Value *iterable = a->popval();
     
-    Iterator<Value *> *iter = iterable->t->makeValueIterator(iterable);
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
     for(iter->first();!iter->isDone();iter->next()){
@@ -111,7 +111,7 @@
     func.copy(a->popval()); // need a local copy
     
     Value *iterable = a->popval();
-    Iterator<Value *> *iter = iterable->t->makeValueIterator(iterable);
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
     
     // accumulator is already on the stack
     

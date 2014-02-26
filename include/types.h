@@ -137,12 +137,6 @@ public:
         throw RUNT("cannot iterate a non-iterable type");
     }
     
-    /// create the low-level iterator if possible
-    virtual Iterator<Value *> *makeValueIterator(Value *v){
-        throw RUNT("cannot iterate a non-iterable type");
-    }
-    
-    
     /// find a type by ID
     static Type *findByID(uint32_t id){
         for(Type *p = head;p;p=p->next)

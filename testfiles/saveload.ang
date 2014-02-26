@@ -1,10 +1,8 @@
 # make a hash
 hash!H 0 200 range each { [i i *, i i i * *] i ?H hset }
-
 # bung a couple of strings in it too
 "foo" "bar" ?H hset
 "fish" "cot" ?H hset
-
 # save it
 "tmp1" save
 "tmp1" load
@@ -28,7 +26,6 @@ hash!H 0 200 range each { [i i *, i i i * *] i ?H hset }
 :getnextnum
     ?Foo 7* 87+ 31% dup !Foo;
 
-
 :f getnextnum ?Ops count % ?Ops get @ 1000%;
 
 :run 
@@ -37,8 +34,6 @@ hash!H 0 200 range each { [i i *, i i i * *] i ?H hset }
     ;
 
 run 628 = "pre-save inject" assert
-
-
 "tmp1" save
 "tmp1" load
 

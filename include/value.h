@@ -139,6 +139,15 @@ struct Value {
         }
     }
     
+    /// debugging method - dump a value to stdout, using the string
+    /// from toString().
+    void dump(const char *prefix){
+        char buf[256];
+        const char *s;
+        s = toString(buf,256);
+        printf("%s: %s\n",prefix,buf);
+    }
+    
 private:    
     
     /// make sure the string gets copied on assignment
