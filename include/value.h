@@ -101,11 +101,25 @@ struct Value {
     /// to a bit of memory somewhere else, like a STRING or CLOSURE) will just copy the reference
     /// and increment the refct
     void copy(const Value *src){
+        // we do this weird stuff to avoid situation where we try to copy 
+        // a value out of a GC into a value which holds the GC itself with
+        // one reference. Here, the GC would actually get deleted by clr()
+        // before the copy. To avoid this, we artificially hike the refct
+        // before the copy, and drop it afterwards in a slightly odd operation.
+        // It may well slow things down, a little.
+        
+        Value old;
+        old.t = t;
+        old.v = v;
+        old.incRef();
+        
+        
         clr();
         
         t = src->t;
         v = src->v;
         incRef();
+        // "old" will decref on destruction
     }
     
     /// get a hash integer for this value

@@ -59,8 +59,8 @@
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->pushval();
     
-    v->copy(list->get(list->count()-1));
-    list->remove(list->count()-1);
+    v->copy(list->get(0));
+    list->remove(0);
 }
 
 %word unshift (item list --) prepend an item to a list
@@ -74,7 +74,8 @@
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->pushval();
-    v->copy(list->get(list->count()-1));
+    Value *src = list->get(list->count()-1);
+    v->copy(src);
     list->remove(list->count()-1);
 }
 
