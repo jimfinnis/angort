@@ -29,7 +29,7 @@
     Value *v = a->pushval();
     v->copy(list->get(idx));
 }
-%word put (val idx list --) put an item into a list
+%word set (val idx list --) put an item into a list
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     int idx = a->popInt();

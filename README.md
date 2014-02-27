@@ -393,7 +393,7 @@ name | stack action | side-effects and notes
 ,    | (list item -- list) | appends an item to the list
 ]    | (list item -- list) | appends an item to the list
 get | (n list -- item) | get the nth item from the list
-put | (item n list --) | set the nth item in the list
+set | (item n list --) | set the nth item in the list
 remove | (n list -- item) | remove and return the nth item
 shift | (list -- item) | remove and return the first item
 unshift | (item list --) | prepend an item
