@@ -455,6 +455,7 @@ void Angort::run(const Instruction *ip){
                 }
                 break;
             case OP_END:
+            case OP_STOP:
                 ip=ret();
                 if(!ip)
                     return;
@@ -1023,6 +1024,9 @@ void Angort::feed(const char *buf){
             case T_CSQB:
             case T_COMMA:
                 compile(OP_APPENDLIST);
+                break;
+            case T_STOP:
+                compile(OP_STOP);
                 break;
             default:
                 throw SyntaxException(NULL).set("unhandled token: %s",

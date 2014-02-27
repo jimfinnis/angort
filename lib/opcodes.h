@@ -22,7 +22,7 @@ const char *opcodenames[]=
     "ifleave","for","forjump","constset",
     "constget","over","closureget","closureget","dot",
     "iterlvifdone","iterstart","literalstr-fixup","literalcode-fixup","newlist",
-    "appendlist", "closelist","loopstart",
+    "appendlist", "closelist","loopstart","stop"
 };
 #endif
     
@@ -88,5 +88,6 @@ const char *opcodenames[]=
 #define OP_APPENDLIST 48
 #define OP_CLOSELIST 49
 #define OP_LOOPSTART 50
+#define OP_STOP 51
 
 #endif /* __OPCODES_H */
