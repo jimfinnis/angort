@@ -599,7 +599,10 @@ public:
     
     /// get the top iterator on the iterator stack (or the nth)
     IteratorObject *getTopIterator(int i=0){
-        return loopIterStack.peekptr(i)->v.iter;
+        Value *v = loopIterStack.peekptr(i);
+        if(v->t != Types::tIter)
+            throw RUNT("attempt to get i,j,k or iter when not in an iterable loop");
+        return v->v.iter;
     }
     
     /// visit the tree of all globally-accessible data,

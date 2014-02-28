@@ -1,0 +1,7 @@
+#
+# list tests, need expanding
+#
+
+[1,2,3] pop 3= "pop item" assert
+
+quit

@@ -29,7 +29,7 @@
     Value *v = a->pushval();
     v->copy(list->get(idx));
 }
-%word put (val idx list --) put an item into a list
+%word set (val idx list --) put an item into a list
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     int idx = a->popInt();
@@ -59,8 +59,8 @@
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->pushval();
     
-    v->copy(list->get(list->count()-1));
-    list->remove(list->count()-1);
+    v->copy(list->get(0));
+    list->remove(0);
 }
 
 %word unshift (item list --) prepend an item to a list
@@ -74,7 +74,8 @@
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->pushval();
-    v->copy(list->get(list->count()-1));
+    Value *src = list->get(list->count()-1);
+    v->copy(src);
     list->remove(list->count()-1);
 }
 
