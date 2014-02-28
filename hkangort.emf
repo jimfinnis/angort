@@ -85,7 +85,6 @@ set-variable .fhook-angort.collapse-mnext "-1"
     
     hilight   .hilight.angort 4 ":\"" "\"" ""     .scheme.keyword
     hilight   .hilight.angort 4 ":" "\\W" ""     .scheme.function
-    hilight   .hilight.angort 4 "\\[" "\\]" ""     .scheme.function
     hilight   .hilight.angort 4 "\|" "\|" ""     .scheme.function
     hilight   .hilight.angort 4 "?" "\\W" ""     .scheme.variable
     hilight   .hilight.angort 4 "!" "\\W" ""     .scheme.variable
