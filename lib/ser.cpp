@@ -209,15 +209,12 @@ void Serialiser::save(Angort *a, const char *name){
     
     // write the magic number and version
     file->write32(magicNumber);
-    file->write32(ANGORT_VERSION);
+    file->write32(a->getVersion());
     
     // now write the fixups
     saveFixups();
     // now the values
-    a->globals.save(this);
-    a->consts.save(this);
-    a->words.save(this);
-    
+    a->defaultNames.save(this);
     
     delete file;
     delete fixups;fixups=NULL;
@@ -232,7 +229,7 @@ void Serialiser::load(Angort *a,const char *name){
         throw SerialisationException("not an Angort image");
     }
     uint32_t d = file->read32();
-    if(d!=ANGORT_VERSION){
+    if(d!=a->getVersion()){
         delete file;file=NULL;
         throw SerialisationException("").set("wrong version: file is version %d",d);
     }    
@@ -241,10 +238,7 @@ void Serialiser::load(Angort *a,const char *name){
     // load the fixups
     loadFixups();
     // now the values
-    a->globals.load(this);
-    a->consts.load(this);
-    a->words.load(this);
-    
+    a->defaultNames.load(this);
     
     // load done, resolve fixups
     ValueVisitor *v = new ResolveFixupTableVisitor(this);

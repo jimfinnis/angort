@@ -18,8 +18,6 @@
 #include "value.h"
 #include "namespace.h"
 
-/// the version number has the lowest two digits as minor version.
-#define ANGORT_VERSION 207
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
@@ -488,9 +486,7 @@ private:
     
     StringMap<Module *> modules; //!< a list of modules
     
-    Namespace consts;
-    Namespace globals;
-    Namespace words;
+    Namespace defaultNames; //!< the default namespace
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;
@@ -509,12 +505,19 @@ private:
     Tokeniser tok;
     const Instruction *ip,*debugwordbase;
     
-    /// define a word from a context
-    void define(const char *name,class CompileContext *cb);
-    /// define a word just from a list of instructions
-    void define(const char *name,Instruction *i);
+    /// a pointer to the word currently being defined, whose
+    /// value is set at the end of the definition.
+    Value *wordVal;
     
-    char defineName[256]; //!< name of the word we're defining
+    /// this defines a word with no instructions, and sets
+    /// wordVal to point to the word's value. It's used at 
+    /// the start of a word definition,
+    void startDefine(const char *name);
+    
+    /// define a word from a context - startDefine() must have been called
+    void endDefine(class CompileContext *cb);
+    /// define a word just from a list of instructions - startDefine() must have been called
+    void endDefine(Instruction *i);
     
     char lastLine[1024]; //!< last line read
     
@@ -558,11 +561,11 @@ private:
     
     
     /// find a global or create one if it doesn't exist;
-    /// used for autoglobals (!! and ??)
+    /// used for autoglobals.
     int findOrCreateGlobal(const char *name){
-        int i = globals.get(name);
+        int i = defaultNames.get(name);
         if(i<0)
-            i = globals.add(name);
+            i = defaultNames.add(name);
         return i;
     }
     /// file inclusion mechanism
@@ -575,15 +578,24 @@ private:
     const Instruction *ret();
     
 public:
+    /// call this to get the version number. It's a denary integer,
+    /// the lowest two digits of which are the minor version. It's
+    /// a number because it's used in files.
+    static int getVersion();
+    
     Stack<Value,32>stack;
     bool emergencyStop;
-    bool defining;
     bool debug;
     /// make assertions print statements even when they pass just fine,
     /// used in testing.
     bool assertDebug;
     /// print each line we parse
     bool printLines;
+    
+    /// returns true if we are defining a word
+    bool isDefining(){
+        return wordVal!=NULL;
+    }
     
     /// only valid in feedFile()
     int lineNumber;
@@ -611,10 +623,8 @@ public:
     
     /// clear the entire system
     void clear(){
+        defaultNames.clear();
         stack.clear();
-        words.clear();
-        consts.clear();
-        globals.clear();
         locals.clear();
     }          
     

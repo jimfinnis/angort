@@ -13,18 +13,19 @@ void Namespace::list(){
 }
 
 void Namespace::visit(ValueVisitor *visitor){
-    for(int i=0;i<values.count();i++){
-        Value *v = values.get(i);
-        v->receiveVisitor(visitor,getName(i));
+    for(int i=0;i<entries.count();i++){
+        getEnt(i)->v.receiveVisitor(visitor,getName(i));
     }
 }
 
 void Namespace::save(Serialiser *ser){
     File *f = ser->file;
-    f->writeInt(values.count());
-    for(int i=0;i<values.count();i++){
+    f->writeInt(entries.count());
+    for(int i=0;i<entries.count();i++){
+        NamespaceEnt *e = getEnt(i);
         f->writeString(getName(i));
-        values.get(i)->save(ser);
+        f->write16(e->isConst ? 1:0);
+        e->v.save(ser);
     }
 }
 
@@ -40,8 +41,9 @@ void Namespace::load(Serialiser *ser){
     for(int i=0;i<size;i++){
         f->readString(buf,1024);
         int idx = add(buf);
-        Value *v = get(idx);
-        v->load(ser);
+        NamespaceEnt *e = getEnt(idx);
+        e->isConst = (f->read16()!=0);
+        e->v.load(ser);
     }
 }
 

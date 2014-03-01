@@ -255,26 +255,64 @@ In a nested loop, it's possible to access the current variables of the outer loo
 
 
 ## Globals and constants
-Global variables are defined in two ways. The "polite" way is to use the global keyword, which creates a new global with that name. Once defined, you use globals the same way as local variables:
+Global variables are defined in two ways. The "polite" way is to use the
+global keyword, which creates a new global with that name. Once defined, you
+use globals the same way as local variables:
 
     global foo
     5 !foo
     ?foo .
 
-will print 5. The other way to define globals is simply to access a variable whose name starts with a capital letter. If no global or local exists with that name, a new global is defined (initially with the special 'none' value):
+will print 5. The other way to define globals is simply to access a variable
+whose name starts with a capital letter. If no global or local exists with
+that name, a new global is defined (initially with the special 'none' value):
 
      5 !Foo
      ?Foo .
 
-Constants are similar to globals, but with three differences:
+Constants are similar to globals, but with two differences:
 * they are defined and set using the const keyword - this will pop a value off the stack and set the new constant to that value;
-* they can only be read, and cannot be redefined;
-* they do not require the ? sigil to access them.
+* they can only be read, and cannot be redefined.
+* they do not require the ? sigil to access them
 
 Here's an example:
 
      3.1415927 const pi
      :degs2rads pi 180.0 / * ;
+     
+###Words, globals and constants: the truth
+Globals, constants and words all share the same namespace, and are actually all the same kind of thing --- a global value.
+The const keyword and ":" definitions both create constant global variables. For example,
+
+    (3 +) const add3
+    
+and
+
+    :add3 3 + ;
+    
+both do exactly the same thing --- bind the name "add3" to a function which adds 3 to the number on top of the stack.
+Referring to a global using the "?name" syntax generates code to stack the global's value. Using the name of the global alone
+will check the type first, and if it's a "runnable" (that is, a function or closure) it will run it rather than stack it. So
+
+    add3
+    
+will run the add3 global's value (the function) while
+
+    ?add3
+    
+will push the function onto the stack. This is useful when we come to deal with functional programming.
+
+Of course, this means that the preceding section wasn't strictly true - you can refer to a global variable by name alone, and the
+value will be stacked. It is, however, good practice to use the "?name" notation to remind you you're dealing with a variable.
+
+You can also do something like this:
+
+    (dup *) !Square
+    
+to define a word called "Square" which can be run just like any other, but whose definition can be overriden later (unlike normal words).
+I have no idea why you would want to do this, but you can (although writing recursive words this way might be tricky).
+
+
 
 ## Stack manipulators
 There are a number of words whose sole purpose is to manipulate the stack. To explain these, I'll use the bracket notation from Forth:
@@ -309,7 +347,7 @@ suffixed with a base character, one of "dxhbo": "16x" or "16h" will be interpret
 as "16 in hexadecimal".
 * Literal floats have decimal points
 * Strings are a reference counted and immutable (copy on write)
-* Other types include lists, functions (and closures), ranges and (internally) iterators.
+* Other types include lists, functions (including words and closures), ranges and (internally) iterators.
 
 ## Binary operators
 In the following operations, these conversions take place:
@@ -352,7 +390,7 @@ This will NOT WORK with builtin functions, however.
 
 ### Closures
 
-Anonymous functions can refer to variables in their enclosing function, in which case a closure is created to store the value when the enclosing function exits. This closure is mutable - its value can be changed by the anonymous function. For example:
+Anonymous functions can refer to variables in their enclosing function or word, in which case a closure is created to store the value when the enclosing function exits. This closure is mutable - its value can be changed by the anonymous function. For example:
 
     :mkcounter |:x|     # declare a local variable x
         0!x             # set it to zero
@@ -411,6 +449,13 @@ With this, we can map over any iterable to produce a list. Here's how you might 
 to multiply all the numbers between 0 and 10 by 100:
 
     0 10 range (100*) map each {i.}
+    
+If you want to use a predefined word, you'll need to "quote" the word by preceding it with the question mark. This will put the word's value
+on the stack without checking to see if it's runnable (and running it if so) - treating it just like a standard global variable:
+
+    :square dup *;
+    0 10 range ?square map each {i.}
+
         
 ##Some other builtin words
 

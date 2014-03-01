@@ -16,7 +16,7 @@
 
 %word version ( -- version ) version number
 {
-    a->pushInt(ANGORT_VERSION);
+    a->pushInt(a->getVersion());
 }
 
 %word dump ( title -- ) dump the stack

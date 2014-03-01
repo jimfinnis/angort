@@ -49,7 +49,7 @@ int main(int argc,char *argv[]){
             if(!fread(&version,4,1,f))
                 version=0;
             fclose(f);
-            if(version!=ANGORT_VERSION){
+            if(version!=a.getVersion()){
                 printf("image file version incorrect: %d\n",version);
                 exit(1);
             }
@@ -68,14 +68,14 @@ int main(int argc,char *argv[]){
     }
     
     a.assertDebug=true;
-    
+    int vv = a.getVersion();
     printf("Angort version %d.%d (c) Jim Finnis 2014\nUse '\"word\" help' to get help on a word.\n",
-           ANGORT_VERSION / 100,
-           ANGORT_VERSION % 100);
+           vv / 100,
+           vv % 100);
     
     for(;;){
         char prompt=0;
-        if(a.defining)
+        if(a.isDefining())
             prompt = ':';
         else if(a.inSubContext())
             prompt = '*';

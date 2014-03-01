@@ -73,9 +73,7 @@ void CodeBlock::save(Serialiser *ser) const {
         case OP_LOCALGET:
         case OP_GLOBALSET:
         case OP_GLOBALGET:
-        case OP_CONSTSET:
-        case OP_CONSTGET:
-        case OP_WORD:
+        case OP_GLOBALDO:
         case OP_IF:
         case OP_LEAVE:
         case OP_IFLEAVE:
@@ -148,9 +146,7 @@ CodeBlock::CodeBlock(Serialiser *ser){
         case OP_LOCALGET:
         case OP_GLOBALSET:
         case OP_GLOBALGET:
-        case OP_CONSTSET:
-        case OP_CONSTGET:
-        case OP_WORD:
+        case OP_GLOBALDO:
         case OP_IF:
         case OP_LEAVE:
         case OP_IFLEAVE:

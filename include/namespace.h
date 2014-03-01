@@ -7,27 +7,52 @@
 #ifndef __NAMESPACE_H
 #define __NAMESPACE_H
 
+struct NamespaceEnt {
+    Value v;
+    bool isConst;
+    
+    NamespaceEnt(){
+        isConst=false;
+    }
+};
+
 /// this is a namespace - a set of values indexed both by number
 /// (inside opcodes) and name (when instructions are compiled).
+/// A problem with this is that once an entry has been added, it cannot be removed.
+/// This means (among other things) that syntax errors inside a word definition
+/// will leave the word defined as None.
 
 
 class Namespace {
     StringMap<int> locations;
-    ArrayList<Value> values;
+    ArrayList<NamespaceEnt> entries;
     
 public:
-    Namespace() : values(32) {
+    Namespace() : entries(32) {
     }
     
     int add(const char *name){
-        Value *v = values.append();
-        int idx = values.getIndexOf(v);
+        NamespaceEnt *e = entries.append();
+        e->isConst=false;
+        int idx = entries.getIndexOf(e);
+        locations.set(name,idx);
+        return idx;
+    }
+    
+    int addConst(const char *name){
+        NamespaceEnt *e = entries.append();
+        e->isConst=true;
+        int idx = entries.getIndexOf(e);
         locations.set(name,idx);
         return idx;
     }
     
     Value *get(int idx){
-        return values.get(idx);
+        return &(entries.get(idx)->v);
+    }
+    
+    NamespaceEnt *getEnt(int idx){
+        return entries.get(idx);
     }
     
     const char *getName(int i){
@@ -42,16 +67,18 @@ public:
     }
     
     int count(){
-        return values.count();
+        return entries.count();
     }
     
     /// wipe everything
     void clear(){
-        for(int i=0;i<values.count();i++){
-            values.get(i)->clr();
+        for(int i=0;i<entries.count();i++){
+            NamespaceEnt *e = entries.get(i);
+            e->v.clr();
+            e->isConst=false;
         }
         locations.clear();
-        values.clear();
+        entries.clear();
     }
     
     /// visit all the elements

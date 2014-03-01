@@ -12,15 +12,15 @@
 #if DEFOPCODENAMES
 const char *opcodenames[]=
 { "?","end","litint","litfloat",
-    "func","word","mod","localget",
+    "func","globaldo","mod","localget",
     "localset","decleaveneg","add","mul",
     "div","sub","if","jump",
     "leave","dup","litstring","call",
     "litcode","globget","globset","propget",
     "propset","not","equals","nequals",
     "swap","drop","and","or","lt","gt",
-    "ifleave","for","forjump","constset",
-    "constget","over","closureget","closureget","dot",
+    "ifleave","for","forjump","SPARE",
+    "SPARE","over","closureget","closureget","dot",
     "iterlvifdone","iterstart","literalstr-fixup","literalcode-fixup","newlist",
     "appendlist", "closelist","loopstart","stop"
 };
@@ -32,7 +32,7 @@ const char *opcodenames[]=
 #define OP_LITERALFLOAT 3
 
 #define OP_FUNC 4
-#define OP_WORD 5
+#define OP_GLOBALDO 5
 #define OP_MOD 6
 #define OP_LOCALGET 7
 
@@ -71,9 +71,9 @@ const char *opcodenames[]=
 #define OP_IFLEAVE  34
 #define OP_FOR	35
 #define OP_FORJUMP	36
-#define OP_CONSTSET	37
+#define OP_SPARE1	37
 
-#define OP_CONSTGET	38
+#define OP_SPARE2	38
 #define OP_OVER	39
 #define OP_CLOSUREGET 40
 #define OP_CLOSURESET 41

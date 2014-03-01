@@ -1,5 +1,4 @@
 
-defer fib
 :fib |x:|
     ?x 2 < if
         ?x
