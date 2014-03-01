@@ -214,7 +214,7 @@ void Serialiser::save(Angort *a, const char *name){
     // now write the fixups
     saveFixups();
     // now the values
-    a->defaultNames.save(this);
+    a->names.save(this);
     
     delete file;
     delete fixups;fixups=NULL;
@@ -238,7 +238,7 @@ void Serialiser::load(Angort *a,const char *name){
     // load the fixups
     loadFixups();
     // now the values
-    a->defaultNames.load(this);
+    a->names.load(this);
     
     // load done, resolve fixups
     ValueVisitor *v = new ResolveFixupTableVisitor(this);

@@ -486,7 +486,7 @@ private:
     
     StringMap<Module *> modules; //!< a list of modules
     
-    Namespace defaultNames; //!< the default namespace
+    NamespaceManager names; //!< the namespaces are all handled by the namespace manager
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;
@@ -563,9 +563,9 @@ private:
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.
     int findOrCreateGlobal(const char *name){
-        int i = defaultNames.get(name);
+        int i = names.get(name);
         if(i<0)
-            i = defaultNames.add(name);
+            i = names.add(name);
         return i;
     }
     /// file inclusion mechanism
@@ -625,7 +625,7 @@ public:
     
     /// clear the entire system
     void clear(){
-        defaultNames.clear();
+        names.clear();
         stack.clear();
         locals.clear();
     }          

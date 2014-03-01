@@ -33,6 +33,9 @@ int Angort::getVersion(){
 Angort::Angort() {
     Types::createTypes();
     
+    names.create("default"); // create the default namespace
+    names.set("default"); // and select it
+    
     tok.init();
     tok.settokens(tokens);
     tok.setcommentlinesequence("#");
@@ -67,7 +70,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         printf(" (offset %d)",ip->d.i);
     }
     else if(ip->opcode == OP_GLOBALDO || ip->opcode == OP_GLOBALSET || ip->opcode == OP_GLOBALGET){
-        printf(" (%s)",defaultNames.getName(ip->d.i));
+        printf(" (%s)",names.getName(ip->d.i));
     }
     else if(ip->opcode == OP_CLOSUREGET || ip->opcode == OP_CLOSURESET){
         printf(" (%p)",closureTable+ip->d.i);
@@ -396,7 +399,7 @@ void Angort::run(const Instruction *ip){
             case OP_GLOBALSET:
                 // SNARK - combine with consts
                 a = popval();
-                defaultNames.get(ip->d.i)->copy(a);
+                names.getVal(ip->d.i)->copy(a);
                 ip++;
                 break;
             case OP_PROPGET:
@@ -418,7 +421,7 @@ void Angort::run(const Instruction *ip){
                 ip++;
                 break;
             case OP_GLOBALDO:
-                a = defaultNames.get(ip->d.i);
+                a = names.getVal(ip->d.i);
                 if(a->t == Types::tCode){
                     cb = a->v.cb;
                     rstack.push(ip+1);
@@ -443,7 +446,7 @@ void Angort::run(const Instruction *ip){
                 break;
             case OP_GLOBALGET:
                 // like the above but does not run a codeblock/closure
-                a = defaultNames.get(ip->d.i);
+                a = names.getVal(ip->d.i);
                 b = stack.pushptr();
                 b->copy(a);
                 ip++;
@@ -592,12 +595,12 @@ void Angort::startDefine(const char *name){
     int idx;
     if(wordVal)
         throw SyntaxException("cannot define a word inside another");
-    if((idx = defaultNames.get(name))<0)
-        idx = defaultNames.addConst(name);
+    if((idx = names.get(name))<0)
+        idx = names.addConst(name);
     else
-        if(defaultNames.getEnt(idx)->isConst)
+        if(names.getEnt(idx)->isConst)
             throw SyntaxException("").set("cannot redefine constant '%s'",name);
-    wordVal = defaultNames.get(idx);
+    wordVal = names.getVal(idx);
 }
     
 
@@ -759,10 +762,10 @@ void Angort::feed(const char *buf){
                     if(tok.getnext()!=T_IDENT)
                         throw SyntaxException("expected an identifier");
                     
-                    if(defaultNames.get(tok.getstring())>=0)
+                    if(names.get(tok.getstring())>=0)
                         throw Exception().set("const %s already set",tok.getstring());
                     
-                    int n = defaultNames.addConst(tok.getstring());
+                    int n = names.addConst(tok.getstring());
                     // we write an instruction to 
                     // store this const
                     compile(OP_GLOBALSET)->d.i=n;
@@ -884,7 +887,7 @@ void Angort::feed(const char *buf){
             case T_IDENT:
                 {
                     char *s = tok.getstring();
-                    if((t = defaultNames.get(s))>=0){
+                    if((t = names.get(s))>=0){
                         compile(OP_GLOBALDO)->d.i = t;
                     }  else if(NativeFunc f = funcs.get(s)){
                         compile(OP_FUNC)->d.func = f;
@@ -920,7 +923,7 @@ void Angort::feed(const char *buf){
                         compile(OP_CLOSUREGET)->d.i=t;
                     } else if(Property *p = props.get(tok.getstring())){
                         compile(OP_PROPGET)->d.prop = p;
-                    } else if((t = defaultNames.get(tok.getstring()))>=0){
+                    } else if((t = names.get(tok.getstring()))>=0){
                         // it's a global; use it - but don't call it if it's a function
                         compile(OP_GLOBALGET)->d.i = t;
                     } else if(isupper(*tok.getstring())){
@@ -951,8 +954,8 @@ void Angort::feed(const char *buf){
                         compile(OP_CLOSURESET)->d.i=t;
                     } else if(Property *p = props.get(tok.getstring())){
                         compile(OP_PROPSET)->d.prop = p;
-                    } else if((t = defaultNames.get(tok.getstring()))>=0){
-                        if(defaultNames.getEnt(t)->isConst)
+                    } else if((t = names.get(tok.getstring()))>=0){
+                        if(names.getEnt(t)->isConst)
                             throw RUNT("").set("attempt to set constant %s",tok.getstring());
                         // it's a global; use it
                         compile(OP_GLOBALSET)->d.i = t;
@@ -971,8 +974,8 @@ void Angort::feed(const char *buf){
                     throw SyntaxException(NULL)
                       .set("expected an identifier, got %s",tok.getstring());
                 
-                if(defaultNames.get(tok.getstring())<0)// ignore multiple defines
-                    defaultNames.add(tok.getstring());
+                if(names.get(tok.getstring())<0)// ignore multiple defines
+                    names.add(tok.getstring());
                 break;
             case T_OPREN:// open lambda
                 //                printf("Pushing: context is %p, ",context);
@@ -1048,10 +1051,10 @@ void Angort::clearAtEndOfFeed(){
 }    
 
 void Angort::disasm(const char *name){
-    int idx = defaultNames.get(name);
+    int idx = names.get(name);
     if(idx<0)
         throw RUNT("unknown function");
-    Value *v = defaultNames.get(idx);
+    Value *v = names.getVal(idx);
     if(v->t != Types::tCode)
         throw RUNT("not a function");
           
@@ -1070,8 +1073,8 @@ const char *Angort::getSpec(const char *s){
     int idx;
     const char *spec;
     
-    if((idx=defaultNames.get(s))>=0){
-        Value *v = defaultNames.get(idx);
+    if((idx=names.get(s))>=0){
+        Value *v = names.getVal(idx);
         if(v->t != Types::tCode)
             return "<not a function>";
         else
@@ -1086,7 +1089,7 @@ const char *Angort::getSpec(const char *s){
 
 void Angort::list(){
     printf("GLOBALS:\n");
-    defaultNames.list();
+    names.list();
     
     StringMapIterator<Module *> iter(&modules);
     for(iter.first();!iter.isDone();iter.next()){
@@ -1106,7 +1109,7 @@ void Angort::list(){
 
 
 void Angort::visitGlobalData(ValueVisitor *visitor){
-    defaultNames.visit(visitor);
+    names.visit(visitor);
 }
 
 
