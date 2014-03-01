@@ -190,14 +190,8 @@ public:
         }
     }
     
-    void load(Serialiser *ser){
-        // not really sure we want to write code to save and load EVERYTHING.
-        RUNT("not yet supported");
-    }
-    
-    void save(Serialiser *ser){
-        RUNT("not yet supported");
-    }
+    void save(Serialiser *ser);
+    void load(Serialiser *ser);
     
     //////////////////// manipulating the current namespace ///////////
     

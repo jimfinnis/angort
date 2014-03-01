@@ -48,3 +48,32 @@ void Namespace::load(Serialiser *ser){
 }
 
 
+void NamespaceManager::save(Serialiser *ser){
+    File *f = ser->file;
+    f->write16(spaces.count());
+    
+    for(int i=0;i<spaces.count();i++){
+        f->writeString(spaces.getName(i));
+        spaces.getEnt(i)->save(ser);
+    }
+}
+
+void NamespaceManager::load(Serialiser *ser){
+    File *f = ser->file;
+    int n = f->read16();
+    
+    for(int i=0;i<n;i++){
+        char buf[256];
+        f->readString(buf,256);
+        
+        // create namespace if it doesn't exist
+        if(spaces.get(buf)<0)
+            create(buf);
+        
+        // get it as current, and load it
+        set(buf);
+        Namespace *n = spaces.getEnt(spaces.get(buf));
+        n->load(ser);
+    }
+}
+
