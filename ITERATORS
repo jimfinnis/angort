@@ -1,9 +1,7 @@
 To create an iterator for a GarbageCollected type, add to the type's
 declaration:
 
-    virtual Iterator<Value *> *makeValueIterator(Value *v);
-and/or    
-    virtual Iterator<Value *> *makeKeyIterator(Value *v);
+    virtual Iterator<Value *> *makeIterator(Value *v);
 
 Then, in the .cpp file for the type, declare a subclass of
 Iterator<Value *> to do the iteration. The constructor for this
@@ -17,8 +15,8 @@ Then fill it the pure methods first(), next(), isDone() and current().
 
 The iterator creation sequence goes like this:
 
-    Type::createValueIterator(dest,src) is called
-        makeValueIterator() is called in the type class, returning the iterator
+    Type::createIterator(dest,src) is called
+        makeIterator() is called in the type class, returning the iterator
         an iterator object is created, wrapped around this iterator.
 
 THERE MAY BE MORE INVOLVED with iterating over GC types, and cycles and that.

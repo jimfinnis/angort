@@ -1,5 +1,5 @@
 /**
- * @file cvset.cpp
+ * @file namespace.cpp
  * @brief  Brief description of file.
  *
  */
@@ -8,18 +8,18 @@
 #include "ser.h"
 
 
-void ContiguousValueSet::list(){
+void Namespace::list(){
     locations.listKeys();
 }
 
-void ContiguousValueSet::visit(ValueVisitor *visitor){
+void Namespace::visit(ValueVisitor *visitor){
     for(int i=0;i<values.count();i++){
         Value *v = values.get(i);
         v->receiveVisitor(visitor,getName(i));
     }
 }
 
-void ContiguousValueSet::save(Serialiser *ser){
+void Namespace::save(Serialiser *ser){
     File *f = ser->file;
     f->writeInt(values.count());
     for(int i=0;i<values.count();i++){
@@ -28,7 +28,7 @@ void ContiguousValueSet::save(Serialiser *ser){
     }
 }
 
-void ContiguousValueSet::load(Serialiser *ser){
+void Namespace::load(Serialiser *ser){
     char buf[1024];
           
     File *f = ser->file;

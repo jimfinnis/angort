@@ -38,7 +38,7 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
 
 add_words_files(stdWords.cpp stdLists.cpp)
 
-set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp ser.cpp cvset.cpp
+set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp ser.cpp namespace.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp      types/iter.cpp     types/list.cpp
     types/hashtype.cpp

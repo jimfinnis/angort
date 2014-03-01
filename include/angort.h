@@ -16,7 +16,7 @@
 #include "map.h"
 #include "types.h"
 #include "value.h"
-#include "cvset.h"
+#include "namespace.h"
 
 /// the version number has the lowest two digits as minor version.
 #define ANGORT_VERSION 207
@@ -488,9 +488,9 @@ private:
     
     StringMap<Module *> modules; //!< a list of modules
     
-    ContiguousValueSet consts;
-    ContiguousValueSet globals;
-    ContiguousValueSet words;
+    Namespace consts;
+    Namespace globals;
+    Namespace words;
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;

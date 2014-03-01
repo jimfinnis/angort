@@ -1,22 +1,22 @@
 /**
- * @file cvset.h
+ * @file namespace.h
  * @brief  Brief description of file.
  *
  */
 
-#ifndef __CVSET_H
-#define __CVSET_H
+#ifndef __NAMESPACE_H
+#define __NAMESPACE_H
 
-/// this is a type used for globals and constants, which
-/// are indexed by number in instructions. Essentially,
-/// it's a set which is indexed by string (slowly) and int (quickly).
+/// this is a namespace - a set of values indexed both by number
+/// (inside opcodes) and name (when instructions are compiled).
 
-class ContiguousValueSet {
+
+class Namespace {
     StringMap<int> locations;
     ArrayList<Value> values;
     
 public:
-    ContiguousValueSet() : values(32) {
+    Namespace() : values(32) {
     }
     
     int add(const char *name){
@@ -62,4 +62,4 @@ public:
 };
 
 
-#endif /* __CVSET_H */
+#endif /* __NAMESPACE_H */
