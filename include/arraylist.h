@@ -1,6 +1,9 @@
 #ifndef __ARRAYLIST_H
 #define __ARRAYLIST_H
 
+// we need placement new, sadly.
+#include <new> 
+
 /** @file
  * ArrayList, An array list implementation
  */
@@ -13,7 +16,12 @@ public:
 
 /// array list with random access get at  O(1). Insertion at O(n)
 /// except at the end of the list where it's O(1). List will occasionally
-/// resize, more often on grow than on shrink. Docs need improving :)
+/// resize, more often on grow than on shrink. Docs need improving.
+/// Another hideousness - we actually use malloc and free here,
+/// because of the resizing issue. Bad things happen to garbage
+/// counts when the system resizes the array; we want resizing to 
+/// not run the destructors and constructors. We do run these
+/// when the list is created or destroyed, however.
 
 template <class T> class ArrayList {
 public:
@@ -21,12 +29,18 @@ public:
     ArrayList(int n){
         capacity = n;
         ct = 0;
-        data = new T [n];
+        data = (T*)malloc(sizeof(T)*n);
+        // don't run constructors until there are items there!
     }
     
     /// destroy a list
     ~ArrayList() {
-        delete [] data;
+        // inplace destruction of only those items
+        // which exist
+        for(int i=0;i<ct;i++)
+            data[i].~T();
+        free(data);
+        
     }
     
     /// add an item to the end of the list, return a pointer to
@@ -34,6 +48,7 @@ public:
     /// resizing.
     T *append(){
         reallocateifrequired(ct+1);
+        new (data+ct) T(); // inplace construction of new item
         return data+(ct++);
     }
     
@@ -46,33 +61,18 @@ public:
         reallocateifrequired(ct+1);
         memmove(data+n+1,data+n,(ct-n)*sizeof(T));
         ct++;
+        new (data+n) T(); // inplace construction of new item
         return data+n;
     }
-    
-    /// remove an item from the list, runs in O(1) time, unless there's a resize
-    T *pop(){
-        if(!ct) throw ArrayListException("pop on empty list");
-        // make DAMN SURE we still have the old item!
-        reallocateifrequired(ct-1);
-        ct--;
-        return data+ct;
-    }
-    
-    /// peek an item from the list, runs in O(1) time
-    T *peek(){
-        if(!ct) throw ArrayListException("peek on empty list");
-        // make DAMN SURE we still have the old item!
-        return data+(ct-1);
-    }
-    
     
     /// remove an item from somewhere in the list in O(n) time
     bool remove(int n=-1){
         if(n<0||n>=ct)
             return false;
-        data[n].clr();
         reallocateifrequired(ct-1);
         ct--;
+        // destruct the item we're about to remove
+        data[n].~T();
         if(n>=0 && n!=ct)
             memmove(data+n,data+n+1,(ct-n)*sizeof(T));
         return true;
@@ -106,12 +106,12 @@ public:
     void set(int n,T *v){
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
-            for(int i=ct;i<capacity;i++){
-                data[i].init();
+            // initialise the new values!
+            for (int i=ct;i<capacity;i++){
+                new (data+i)T();
             }
             ct=n+1;
         }
-
         data[n].copy(v);
     }
     
@@ -144,11 +144,12 @@ private:
             return;
         
         // do the resize
-        newdata = new T [capacity];
+        newdata = (T*)malloc(sizeof(T)*capacity);
+        for(int i=0;i<capacity;i++)
+            new (newdata+i) T();
         memcpy(newdata,data,sizeof(T)*ct);
-        delete [] data;
+        free(data); // without running dtors because they've been moved
         data = newdata;
-
     }
     
     /// the data area

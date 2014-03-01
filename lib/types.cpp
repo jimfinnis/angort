@@ -5,7 +5,7 @@
 Type *Type::head = NULL;
 
 const char *Type::toString(char *outBuf,int len,const Value *v) const{
-    snprintf(outBuf,len,"<TYPE %s>",name);
+    snprintf(outBuf,len,"<TYPE %s:%p>",name,v->v.s);
     return outBuf;
 }
 
@@ -65,6 +65,8 @@ void BlockAllocType::loadValue(Serialiser *ser, Value *v){
 
 
 
+
+
 void GCType::incRef(Value *v){
     v->v.gc->incRefCt();
 //    printf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
@@ -74,8 +76,8 @@ void GCType::decRef(Value *v){
     bool b = v->v.gc->decRefCt();
 //    printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
+//        printf("  AND DELETING %s:%p\n",name,v->v.gc);
         delete v->v.gc;
-//        printf("  AND DELETING\n");
     }
 }
 

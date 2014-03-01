@@ -75,6 +75,9 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
     else if(ip->opcode == OP_PROPGET || ip->opcode == OP_PROPSET){
         printf(" (%s)",props.getKey(ip->d.prop));
     }
+    else if(ip->opcode == OP_LITERALSTRING){
+        printf(" (%s)",ip->d.s);
+    }
     
 }
 
@@ -993,14 +996,14 @@ void Angort::feed(const char *buf){
                 }
                 break;
             case T_END:
-                // just return if we're still defining.
+                // just return if we're still defining
                 if(!wordVal && !inSubContext()){
                     // otherwise run the buffer we just made
                     compile(OP_END);
                     run(context->getCode());
-                    context->reset(NULL);
+                    clearAtEndOfFeed();
                 }
-                return;// and quit
+                return;
             case T_PIPE:
                 compileParamsAndLocals();
                 break;
@@ -1023,19 +1026,26 @@ void Angort::feed(const char *buf){
             }
         }
     } catch(Exception e){
-        // make sure we tidy up any state
-        contextStack.clear(); // clear the context stack
-        context = contextStack.pushptr();
-        context->reset(NULL); // reset the old context
-        wordVal=NULL; // stop definition
-        // make sure the return stack gets cleared otherwise
-        // really strange things can happen on the next processed
-        // line
-        rstack.clear(); 
-        closureStack.clear();
+        clearAtEndOfFeed();
         throw e; // and rethrow
     }
 }
+
+void Angort::clearAtEndOfFeed(){
+    // make sure we tidy up any state
+    contextStack.clear(); // clear the context stack
+    context = contextStack.pushptr();
+    context->reset(NULL); // reset the old context
+    wordVal=NULL; // stop definition
+    // make sure the return stack gets cleared otherwise
+    // really strange things can happen on the next processed
+    // line
+    rstack.clear(); 
+    // destroy any iterators left lying around
+    while(!loopIterStack.isempty())
+        loopIterStack.popptr()->clr();
+    closureStack.clear();
+}    
 
 void Angort::disasm(const char *name){
     int idx = defaultNames.get(name);

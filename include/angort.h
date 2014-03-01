@@ -577,6 +577,8 @@ private:
     /// the new IP or NULL.
     const Instruction *ret();
     
+    /// clear all stacks etc.
+    void clearAtEndOfFeed();
 public:
     /// call this to get the version number. It's a denary integer,
     /// the lowest two digits of which are the minor version. It's
@@ -753,6 +755,7 @@ public:
     void resetStop(){
         emergencyStop=false;
     }
+    
     
 };
 

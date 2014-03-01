@@ -58,6 +58,8 @@ public:
 
     /// decrement the reference count returning true if it became zero
     bool decRefCt(){
+        if(refct<=0)
+            throw Exception().set("ERROR - already deleted: %p!",this);
         --refct;
         --globalCt;
         dfprintf("-- decrementing count for %p, now %d\n",this,refct);
