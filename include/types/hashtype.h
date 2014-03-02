@@ -40,6 +40,11 @@ public:
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
     
     virtual Iterator<Value *> *makeIterator(Value *v);
+    
+    virtual void setValue(Value *coll,Value *k,Value *v);
+    virtual void getValue(Value *coll,Value *k,Value *result);
+    virtual int getCount(Value *coll);
+    virtual void removeAndReturn(Value *coll,Value *k,Value *result);
 };
 
     

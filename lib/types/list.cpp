@@ -106,3 +106,27 @@ void ListType::visitRefChildren(Value *v,ValueVisitor *visitor){
         r->list.get(i)->receiveVisitor(visitor);
     }
 }
+
+void ListType::setValue(Value *coll,Value *k,Value *v){
+    ListObject *r = coll->v.list;
+    int i = k->toInt();
+    r->list.set(i,v);
+}
+
+void ListType::getValue(Value *coll,Value *k,Value *result){
+    ListObject *r = coll->v.list;
+    int i = k->toInt();
+    result->copy(r->list.get(i));
+}
+
+int ListType::getCount(Value *coll){
+    ListObject *r = coll->v.list;
+    return r->list.count();
+}
+void ListType::removeAndReturn(Value *coll,Value *k,Value *result){
+    ListObject *r = coll->v.list;
+    int i = k->toInt();
+    // will throw if out of range
+    result->copy(r->list.get(i));
+    r->list.remove(i);
+}

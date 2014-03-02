@@ -19,6 +19,11 @@
     a->pushInt(a->getVersion());
 }
 
+%word barewords (v --) turn bare words on or off
+{
+    a->barewords = a->popInt()?true:false;
+}
+
 %word dump ( title -- ) dump the stack
 {
     char buf[1024];

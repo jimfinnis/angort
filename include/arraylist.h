@@ -105,6 +105,8 @@ public:
     
     /// set a value in the list
     void set(int n,T *v){
+        if(n<0)
+            throw ArrayListException("set out of range");
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
             // initialise the new values!
@@ -132,16 +134,16 @@ private:
         T *newdata;
         if(newct>=capacity){
             // need to grow the list
-            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
+//            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
             capacity = newct + (newct>>3) + (newct<9?3:6);
-            printf("GROW to %d\n",capacity);
+//            printf("GROW to %d\n",capacity);
         } else if(capacity>baseCapacity && newct<(capacity>>1)) {
             // need to shrink the list. New capacity should still
             // have at least one empty space left at the end, for popped
             // items!
-            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
+//            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
             capacity = capacity>>1;
-            printf("SHRINK to %d\n",capacity);
+//            printf("SHRINK to %d\n",capacity);
         } else
             return;
         

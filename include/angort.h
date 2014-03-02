@@ -21,10 +21,6 @@
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
-/// if this is defined, when an unknown identifier is encountered it
-/// is stacked as a literal string.
-//#define BAREWORDS
-
 extern TokenRegistry tokens[];
 
 typedef void (*NativeFunc)(class Angort *a);
@@ -588,6 +584,9 @@ public:
     
     Stack<Value,32>stack;
     bool emergencyStop;
+    /// if true, unidentified idents will be converted to strings
+    bool barewords;
+    /// show operations as they run
     bool debug;
     /// make assertions print statements even when they pass just fine,
     /// used in testing.

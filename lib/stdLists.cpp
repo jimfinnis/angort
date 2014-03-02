@@ -21,36 +21,35 @@
     }
 }
 
-%word get (idx list --) get an item from a list
+%word get (key coll --) get an item from a list or hash
 {
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    int idx = a->popInt();
-    
-    Value *v = a->pushval();
-    v->copy(list->get(idx));
+    Value *c = a->popval();
+    Value *keyAndResult = a->stack.peekptr();
+    Value v;
+    c->t->getValue(c,keyAndResult,&v);
+    keyAndResult->copy(&v); // copy into the key's slot
 }
-%word set (val idx list --) put an item into a list
+%word set (val key coll --) put an item into a list or hash
 {
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    int idx = a->popInt();
+    Value *c = a->popval();
+    Value *k = a->popval();
     Value *v = a->popval();
-    list->set(idx,v);
+    c->t->setValue(c,k,v);
 }
 %word count (list --) get count
 {
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    Value *v = a->pushval();
-    Types::tInteger->set(v,list->count());
+    Value *c = a->stack.peekptr();
+    int ct = c->t->getCount(c);
+    Types::tInteger->set(c,ct);
 }
 
 %word remove (idx list -- item) remove an item by index, returning it
 {
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    int i = a->popInt();
-    
-    Value *v = a->pushval();
-    v->copy(list->get(i));
-    list->remove(i);
+    Value *c = a->popval();
+    Value *keyAndResult = a->stack.peekptr();
+    Value v;
+    c->t->removeAndReturn(c,keyAndResult,&v);
+    keyAndResult->copy(&v); // copy into the key's slot
 }
 
 

@@ -137,6 +137,22 @@ public:
         throw RUNT("cannot iterate a non-iterable type");
     }
     
+    /// set a value in a collection, if this type is one
+    virtual void setValue(Value *coll,Value *k,Value *v){
+        throw RUNT("cannot set value of item inside a non-collection");
+    }
+    /// get a value from a collection, if this type is one
+    virtual void getValue(Value *coll,Value *k,Value *result){
+        throw RUNT("cannot get value of item inside a non-collection");
+    }
+    /// get number of items in a collection if this is one
+    virtual int getCount(Value *coll){
+        throw RUNT("cannot get count of non-collection");
+    }
+    virtual void removeAndReturn(Value *coll,Value *k,Value *result){
+        throw RUNT("cannot remove from non-collection");
+    }
+   
     /// find a type by ID
     static Type *findByID(uint32_t id){
         for(Type *p = head;p;p=p->next)

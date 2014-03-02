@@ -52,3 +52,30 @@ void *HashType::loadDataBlock(Serialiser *ser){
 void HashType::visitRefChildren(Value *v,ValueVisitor *visitor){
     v->v.hash->hash->visitRefChildren(visitor);
 }
+
+void HashType::setValue(Value *coll,Value *k,Value *v){
+    Hash *h = coll->v.hash->hash;
+    h->set(k,v);
+}
+
+void HashType::getValue(Value *coll,Value *k,Value *result){
+    Hash *h = coll->v.hash->hash;
+    if(h->find(k))
+        result->copy(h->getval());
+    else
+        result->clr();
+}
+
+int HashType::getCount(Value *coll){
+    Hash *h = coll->v.hash->hash;
+    return h->count();
+}
+
+void HashType::removeAndReturn(Value *coll,Value *k,Value *result){
+    Hash *h = coll->v.hash->hash;
+    if(h->find(k)){
+        result->copy(h->getval());
+        h->del(k);
+    } else
+        result->clr();
+}

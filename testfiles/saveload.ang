@@ -1,19 +1,19 @@
 # make a hash
-hash!H 0 200 range each { [i i *, i i i * *] i ?H hset }
+[%] !H 0 200 range each { [i i *, i i i * *] i ?H set }
 # bung a couple of strings in it too
-"foo" "bar" ?H hset
-"fish" "cot" ?H hset
+"foo" "bar" ?H set
+"fish" "cot" ?H set
 # save it
 "tmp1" save
 "tmp1" load
 
 # check that the strings came out OK
-"bar" ?H hget "foo" = "hash string load" assert
+"bar" ?H get "foo" = "hash string load" assert
 
 # and check that we are able to retrieve each number's entry from the hash,
 # which will be a list.
 
-0 2 range each {i i i * * i ?H hget 1 swap get  = "list hash get" assert }
+0 2 range each {i i i * * i ?H get 1 swap get  = "list hash get" assert }
 
 
 [

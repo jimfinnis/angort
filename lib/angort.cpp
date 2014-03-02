@@ -33,7 +33,6 @@ int Angort::getVersion(){
 
 Angort::Angort() {
     Types::createTypes();
-    
     names.create("default"); // create the default namespace
     names.set("default"); // and select it
     
@@ -49,6 +48,7 @@ Angort::Angort() {
     emergencyStop=false;
     assertDebug=false;
     wordValIdx=-1;
+    barewords=false;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
@@ -913,16 +913,14 @@ void Angort::feed(const char *buf){
                     char *s = tok.getstring();
                     if((t = names.get(s))>=0){
                         compile(OP_GLOBALDO)->d.i = t;
-                    }  else if(NativeFunc f = funcs.get(s)){
+                    } else if(NativeFunc f = funcs.get(s)){
                         compile(OP_FUNC)->d.func = f;
-                    } else {
-#if BAREWORDS
+                    } else if(barewords){
                         char *s = strdup(tok.getstring());
                         compile(OP_LITERALSTRING)->d.s = s;
-#else
+                    } else {
                         throw SyntaxException(NULL)
                               .set("unknown identifier: %s",s);
-#endif
                     }
                     break;
                 }
