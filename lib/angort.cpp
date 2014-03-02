@@ -20,6 +20,7 @@
 #define DEFOPCODENAMES 1
 #include "opcodes.h"
 #include "tokens.h"
+#include "hash.h"
 
 int GarbageCollected::globalCt=0;
 
@@ -47,7 +48,7 @@ Angort::Angort() {
     printLines=false;
     emergencyStop=false;
     assertDebug=false;
-    wordVal=NULL;
+    wordValIdx=-1;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
@@ -570,12 +571,31 @@ void Angort::run(const Instruction *ip){
                 Types::tList->set(pushval());
                 ip++;
                 break;
+            case OP_NEWHASH:
+                Types::tHash->set(pushval());
+                ip++;
+                break;
             case OP_CLOSELIST:
             case OP_APPENDLIST:
-                a = popval();
+                a = popval(); // the value
+                
+                // if the value now on top of the stack is a list, 
+                // then we're appending to a list. Otherwise, the value UNDER THAT
+                // must be a hash, and that top value must be the key.
+                // Of course, this will cause problems if lists become hashable,
+                // and therefore able to become keys.
                 b = stack.peekptr(0);
-                b = Types::tList->get(b)->append();
-                b->copy(a);
+                if(b->t != Types::tList){
+                    c = stack.peekptr(1);
+                    if(c->t == Types::tHash){
+                        Types::tHash->get(c)->set(b,a);
+                        stack.popptr(); // discard the key
+                    } else 
+                        throw RUNT("attempt to set value in non-hash or list");
+                } else {
+                    b = Types::tList->get(b)->append();
+                    b->copy(a);
+                }
                 ip++;
                 break;
             default:
@@ -593,38 +613,42 @@ void Angort::run(const Instruction *ip){
 
 void Angort::startDefine(const char *name){
     int idx;
-    if(wordVal)
+    if(isDefining())
         throw SyntaxException("cannot define a word inside another");
     if((idx = names.get(name))<0)
         idx = names.addConst(name);
     else
         if(names.getEnt(idx)->isConst)
             throw SyntaxException("").set("cannot redefine constant '%s'",name);
-    wordVal = names.getVal(idx);
+    wordValIdx = idx;
 }
     
 
 void Angort::endDefine(CompileContext *c){
-    if(!wordVal)
+    if(!isDefining())
         throw SyntaxException("not defining a word");
     
     CodeBlock *cb = new CodeBlock(c);
     cb->spec = c->getSpec() ? strdup(c->getSpec()) : NULL;    
+    
+    Value *wordVal = names.getVal(wordValIdx);
     Types::tCode->set(wordVal,cb);
-    wordVal = NULL;
+    wordValIdx = -1;
 }
 
 void Angort::endDefine(Instruction *i){
-    if(!wordVal)
+    if(!isDefining())
         throw SyntaxException("not defining a word");
     
     CodeBlock *cb = new CodeBlock(i);
+    Value *wordVal = names.getVal(wordValIdx);
     Types::tCode->set(wordVal,cb);
+    wordValIdx = -1;
 }
 
 void Angort::compileParamsAndLocals(){
     
-    if(!wordVal && !inSubContext())
+    if(!isDefining() && !inSubContext())
         throw SyntaxException("cannot use [] outside a word definition or code literal.");
     if(context->getCodeSize()!=0)
         throw SyntaxException("[] must be come first in a word definition or code literal");
@@ -735,7 +759,7 @@ void Angort::feed(const char *buf){
     if(printLines)
         printf(">>> %s\n",buf);
     
-    if(!wordVal && context && !inSubContext()) // make sure we're reset unless we're compiling or subcontexting
+    if(!isDefining() && context && !inSubContext()) // make sure we're reset unless we're compiling or subcontexting
         context->reset(NULL);
     
     strcpy(lastLine,buf);
@@ -757,7 +781,7 @@ void Angort::feed(const char *buf){
             }
             case T_CONST: // const syntax = <val> const <ident>
                 {
-                    if(wordVal)
+                    if(isDefining())
                         throw SyntaxException("'const' not allowed in a definition");
                     if(tok.getnext()!=T_IDENT)
                         throw SyntaxException("expected an identifier");
@@ -772,7 +796,7 @@ void Angort::feed(const char *buf){
                 }
                 break;
             case T_COLON:
-                if(wordVal){
+                if(isDefining()){
                     // the only valid use of ":" in a definition is in a specstring.
                     char spec[1024];
                     if(!tok.getnextstring(spec))
@@ -789,7 +813,7 @@ void Angort::feed(const char *buf){
                 compile(OP_DOT);
                 break;
             case T_SEMI:
-                if(!wordVal)
+                if(!isDefining())
                     throw SyntaxException("; not allowed outside a definition");
                 compile(OP_END);
                 endDefine(context);
@@ -1000,7 +1024,7 @@ void Angort::feed(const char *buf){
                 break;
             case T_END:
                 // just return if we're still defining
-                if(!wordVal && !inSubContext()){
+                if(!isDefining() && !inSubContext()){
                     // otherwise run the buffer we just made
                     compile(OP_END);
                     run(context->getCode());
@@ -1010,8 +1034,13 @@ void Angort::feed(const char *buf){
             case T_PIPE:
                 compileParamsAndLocals();
                 break;
-            case T_OSQB: // create a new list
-                compile(OP_NEWLIST);
+            case T_OSQB: // create a new list or hash, depending on the next token
+                if(tok.getnext()==T_PERC) {
+                    compile(OP_NEWHASH);
+                } else {
+                    tok.rewind();
+                    compile(OP_NEWLIST);
+                }
                 // if the next token is a close, just swallow it.
                 if(tok.getnext()!=T_CSQB)
                     tok.rewind();
@@ -1039,7 +1068,7 @@ void Angort::clearAtEndOfFeed(){
     contextStack.clear(); // clear the context stack
     context = contextStack.pushptr();
     context->reset(NULL); // reset the old context
-    wordVal=NULL; // stop definition
+    wordValIdx=-1;
     // make sure the return stack gets cleared otherwise
     // really strange things can happen on the next processed
     // line

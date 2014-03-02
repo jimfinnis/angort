@@ -505,9 +505,10 @@ private:
     Tokeniser tok;
     const Instruction *ip,*debugwordbase;
     
-    /// a pointer to the word currently being defined, whose
-    /// value is set at the end of the definition.
-    Value *wordVal;
+    /// the index of the word currently being defined
+    /// within the current namespace, whose value is set
+    /// at the end of the definition.
+    int wordValIdx;
     
     /// this defines a word with no instructions, and sets
     /// wordVal to point to the word's value. It's used at 
@@ -596,7 +597,7 @@ public:
     
     /// returns true if we are defining a word
     bool isDefining(){
-        return wordVal!=NULL;
+        return wordValIdx>=0;
     }
     
     /// only valid in feedFile()

@@ -123,12 +123,6 @@
     delete iter;
 }
 
-%word hash (-- hash) create a new hash
-{
-    Value *v = a->pushval();
-    Types::tHash->set(v);
-}
-
 %word hset (val key hash --) set a value in a hash
 {
     Hash *h = Types::tHash->get(a->popval());

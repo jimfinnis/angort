@@ -28,6 +28,7 @@ public:
     /// create a list, with initially enough room for n elements
     ArrayList(int n){
         capacity = n;
+        baseCapacity = n;
         ct = 0;
         data = (T*)malloc(sizeof(T)*n);
         // don't run constructors until there are items there!
@@ -129,24 +130,24 @@ private:
     /// all items over. Will NOT change ct.
     void reallocateifrequired(int newct){
         T *newdata;
-//        printf("ct %d, cap %d\n",newct,capacity);
         if(newct>=capacity){
             // need to grow the list
+            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
             capacity = newct + (newct>>3) + (newct<9?3:6);
-//            printf("GROW to %d\n",capacity);
-        } else if(capacity>16 && newct<(capacity>>1)) {
+            printf("GROW to %d\n",capacity);
+        } else if(capacity>baseCapacity && newct<(capacity>>1)) {
             // need to shrink the list. New capacity should still
             // have at least one empty space left at the end, for popped
             // items!
+            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
             capacity = capacity>>1;
-//            printf("SHRINK to %d\n",capacity);
+            printf("SHRINK to %d\n",capacity);
         } else
             return;
         
-        // do the resize
+        // do the resize; don't run ctors - they've already been run on
+        // the data
         newdata = (T*)malloc(sizeof(T)*capacity);
-        for(int i=0;i<capacity;i++)
-            new (newdata+i) T();
         memcpy(newdata,data,sizeof(T)*ct);
         free(data); // without running dtors because they've been moved
         data = newdata;
@@ -158,6 +159,8 @@ private:
     int ct;
     /// the capacity of the list
     int capacity;
+    /// the initial capacity of the list, lower than which we never go
+    int baseCapacity;
     
 };
 
