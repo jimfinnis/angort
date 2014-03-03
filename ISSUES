@@ -1,3 +1,14 @@
+Not yet documented:
+    hashes
+    symbols
+    barewords
+
+Binary Operators need to be folded into type code
+
+
+
+
+
 GC cycles!
 
 

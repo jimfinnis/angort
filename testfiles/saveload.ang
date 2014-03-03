@@ -1,14 +1,24 @@
-# make a hash
+# make a hash with a range in it
 [%] !H 0 200 range each { [i i *, i i i * *] i ?H set }
 # bung a couple of strings in it too
 "foo" "bar" ?H set
 "fish" "cot" ?H set
+# and a few symbols
+`dog `wibble ?H set
+`fred `trouser ?H set
+`cat `dog ?H set
+
 # save it
 "tmp1" save
 "tmp1" load
 
 # check that the strings came out OK
 "bar" ?H get "foo" = "hash string load" assert
+
+# and the symbols
+`dog ?H get `cat = "hash symbol load1" assert
+`trouser ?H get `fred = "hash symbol load2" assert
+`wibble ?H get `dog = "hash symbol load2" assert
 
 # and check that we are able to retrieve each number's entry from the hash,
 # which will be a list.

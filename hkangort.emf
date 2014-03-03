@@ -54,7 +54,6 @@ set-variable .fhook-angort.collapse-mnext "-1"
     hilight   .hilight.angort 1 "|"            .scheme.operator
     hilight   .hilight.angort 1 "&"            .scheme.operator
     hilight   .hilight.angort 1 "@"            .scheme.operator
-    hilight   .hilight.angort 1 "`"            .scheme.operator
 
     ;
     ; Keywords
@@ -88,6 +87,7 @@ set-variable .fhook-angort.collapse-mnext "-1"
     hilight   .hilight.angort 4 "\|" "\|" ""     .scheme.function
     hilight   .hilight.angort 4 "?" "\\W" ""     .scheme.variable
     hilight   .hilight.angort 4 "!" "\\W" ""     .scheme.variable
+    hilight   .hilight.angort 4 "`" "\\W" ""     .scheme.string
     
     !if &band .hilight.flags 0x08
         hilight .hilight.angort 1 "[[:digit:]]+"       .scheme.constant
