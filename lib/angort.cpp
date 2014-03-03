@@ -295,6 +295,29 @@ void Angort::run(const Instruction *ip){
                     }
                     if(!cmp)
                         pushFloat(r);
+                }else if(a->getType() == Types::tSymbol || b->getType() == Types::tSymbol){
+                    bool r;
+                    switch(opcode){
+                    case OP_EQUALS:
+                        r = a->v.i == b->v.i;break;
+                    case OP_NEQUALS:
+                        r = a->v.i != b->v.i;break;
+                    case OP_GT:{
+                        const char * p = a->toString(strbuf1,1024);
+                        const char * q = b->toString(strbuf2,1024);
+                        r = (strcmp(p,q)>0);
+                        break;
+                    }
+                    case OP_LT:{
+                        const char * p = a->toString(strbuf1,1024);
+                        const char * q = b->toString(strbuf2,1024);
+                        r = (strcmp(p,q)<0);
+                        break;
+                    }
+                    default:
+                        throw RUNT("bad operation for symbols");
+                    }
+                    pushInt(r?1:0);
                 } else {
                     int p,q,r;
                     switch(opcode){
@@ -575,6 +598,10 @@ void Angort::run(const Instruction *ip){
                 Types::tHash->set(pushval());
                 ip++;
                 break;
+            case OP_LITERALSYMB:
+                Types::tSymbol->set(pushval(),ip->d.i);
+                ip++;
+                break;
             case OP_CLOSELIST:
             case OP_APPENDLIST:
                 a = popval(); // the value
@@ -777,6 +804,13 @@ void Angort::feed(const char *buf){
                 if(!tok.getnextstring(buf))
                     throw SyntaxException("expected a filename after 'include'");
                 include(buf);
+                break;
+            }
+            case T_BACKTICK:{
+                char buf[256];
+                if(!tok.getnextident(buf))
+                    throw SyntaxException("expected a symbol after backtick");
+                compile(OP_LITERALSYMB)->d.i=Types::tSymbol->getSymbol(buf);
                 break;
             }
             case T_CONST: // const syntax = <val> const <ident>

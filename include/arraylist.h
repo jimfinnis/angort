@@ -118,6 +118,21 @@ public:
         data[n].copy(v);
     }
     
+    /// get a slot to copy a value into
+    T *set(int n){
+        if(n<0)
+            throw ArrayListException("set out of range");
+        if(n>=ct){
+            reallocateifrequired(n+10); // allocate a bit more
+            // initialise the new values!
+            for (int i=ct;i<capacity;i++){
+                new (data+i)T();
+            }
+            ct=n+1;
+        }
+        return data +n;
+    }
+    
     /// get the index of an item in the list
     int getIndexOf(T *v){
         int n = v-data;

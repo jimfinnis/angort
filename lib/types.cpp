@@ -130,6 +130,9 @@ ListType *Types::tList = &_List;
 static HashType _Hash;
 HashType *Types::tHash = &_Hash;
 
+static SymbolType _Symbol;
+SymbolType *Types::tSymbol = &_Symbol;
+
 
 static IteratorType _Iterator;
 IteratorType *Types::tIter = &_Iterator;

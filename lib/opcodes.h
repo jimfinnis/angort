@@ -20,7 +20,7 @@ const char *opcodenames[]=
     "propset","not","equals","nequals",
     "swap","drop","and","or","lt","gt",
     "ifleave","for","forjump","newhash",
-    "SPARE","over","closureget","closureget","dot",
+    "litsymb","over","closureget","closureget","dot",
     "iterlvifdone","iterstart","literalstr-fixup","literalcode-fixup","newlist",
     "appendlist", "closelist","loopstart","stop"
 };
@@ -73,7 +73,7 @@ const char *opcodenames[]=
 #define OP_FORJUMP	36
 #define OP_NEWHASH	37
 
-#define OP_SPARE2	38
+#define OP_LITERALSYMB	38
 #define OP_OVER	39
 #define OP_CLOSUREGET 40
 #define OP_CLOSURESET 41

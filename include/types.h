@@ -247,6 +247,7 @@ public:
 #include "types/list.h"
 #include "types/iter.h"
 #include "types/hashtype.h"
+#include "types/symbol.h"
 
 
 /// this is effectively a namespace for the type data
@@ -283,6 +284,8 @@ struct Types {
     static ListType *tList;
     /// v.lhash is a list object
     static HashType *tHash;
+    /// v.i is a symbol ID
+    static SymbolType *tSymbol;
     
     /// v.gc is some unspecified garbage-collected type
     static GCType *tGC;
