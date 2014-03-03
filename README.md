@@ -237,8 +237,13 @@ We also have floating point ranges, using the frange word:
    
     0 1.001 0.1 frange each {i.}
     
-will show 0 to 1 in steps of 0.1 (we're using 1.001 so that the range will include the end value.)
+will show 0 to 1 in steps of 0.1 (we're using 1.001 so that the range will include the end value.) There's
+another word which will do the same thing, but instead you pass in the number of steps:
 
+    0 10 1 frangesteps
+
+Ranges constructed this way will include both start and end points (this is done internally by
+adding a fraction of the calculated step to the end value).
 
 ### Nested loops
 In a nested loop, it's possible to access the current variables of the outer loops by using "j" and "k":

@@ -168,11 +168,23 @@ public:
     Types::tIRange->set(v,start,end,step);
 }
 
-%word frange (start end step -- range) build a float range object with step
+%word frange (start end step -- range) build a float range object with step size
 {
     float step = a->popFloat();
     float end = a->popFloat();
     float start = a->popFloat();
+    Value *v = a->pushval();
+    Types::tFRange->set(v,start,end,step);
+}
+
+%word frangesteps (start end stepcount -- range) build a float range object with step count
+{
+    float steps = a->popFloat();
+    float end = a->popFloat();
+    float start = a->popFloat();
+    float step = (end-start)/steps;
+    end += step * 0.4f;
+    
     Value *v = a->pushval();
     Types::tFRange->set(v,start,end,step);
 }

@@ -132,7 +132,7 @@ public:
     }
     /// return true if we're out of bounds
     virtual bool isDone() const{
-        return range->step < 0 ? (v.v.f < range->end) : (v.v.f > range->end);
+        return range->step < 0 ? (v.v.f <= range->end) : (v.v.f >= range->end);
     }
     
     /// return the current value
