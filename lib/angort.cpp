@@ -950,8 +950,8 @@ void Angort::feed(const char *buf){
                     } else if(NativeFunc f = funcs.get(s)){
                         compile(OP_FUNC)->d.func = f;
                     } else if(barewords){
-                        char *s = strdup(tok.getstring());
-                        compile(OP_LITERALSTRING)->d.s = s;
+                        compile(OP_LITERALSYMB)->d.i=
+                             Types::tSymbol->getSymbol(tok.getstring());
                     } else {
                         throw SyntaxException(NULL)
                               .set("unknown identifier: %s",s);
