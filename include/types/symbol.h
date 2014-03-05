@@ -20,6 +20,8 @@ public:
     /// get or create a new symbol
     static int getSymbol(const char *s);
     
+    static const char *getString(int id);
+    
     /// get the string value
     const char *get(const Value *v) const;
     

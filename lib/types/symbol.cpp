@@ -46,6 +46,10 @@ int SymbolType::getSymbol(const char *s){
     return n;
 }
 
+const char *SymbolType::getString(int id){
+    return strings.get(id)->s;
+}
+
 void SymbolType::set(Value *v,int i){
     int n;
     v->clr();

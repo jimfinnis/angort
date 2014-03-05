@@ -68,19 +68,23 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
     }
     if(ip->opcode == OP_JUMP||ip->opcode==OP_LEAVE||ip->opcode==OP_ITERLEAVEIFDONE||
        ip->opcode==OP_IF){
-        printf(" (offset %d)",ip->d.i);
+        printf("(offset %d)",ip->d.i);
     }
     else if(ip->opcode == OP_GLOBALDO || ip->opcode == OP_GLOBALSET || ip->opcode == OP_GLOBALGET){
-        printf(" (%s)",names.getName(ip->d.i));
+        printf("(%s)",names.getName(ip->d.i));
     }
     else if(ip->opcode == OP_CLOSUREGET || ip->opcode == OP_CLOSURESET){
-        printf(" (%p)",closureTable+ip->d.i);
+        printf("(%p)",closureTable+ip->d.i);
     }
     else if(ip->opcode == OP_PROPGET || ip->opcode == OP_PROPSET){
-        printf(" (%s)",props.getKey(ip->d.prop));
+        printf("(%s)",props.getKey(ip->d.prop));
     }
     else if(ip->opcode == OP_LITERALSTRING){
-        printf(" (%s)",ip->d.s);
+        printf("(%s)",ip->d.s);
+    }
+    else if(ip->opcode == OP_LITERALSYMB){
+        printf("(%d:%s)",ip->d.i,
+               Types::tSymbol->getString(ip->d.i));
     }
     
 }
@@ -643,7 +647,7 @@ void Angort::startDefine(const char *name){
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
     if((idx = names.get(name))<0)
-        idx = names.addConst(name);
+        idx = names.add(name); // words are NOT constant; they can be redefined.
     else
         if(names.getEnt(idx)->isConst)
             throw SyntaxException("").set("cannot redefine constant '%s'",name);
