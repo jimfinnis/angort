@@ -286,18 +286,22 @@ Here's an example:
      :degs2rads pi 180.0 / * ;
      
 ###Words, globals and constants: the truth
-Globals, constants and words all share the same namespace, and are actually all the same kind of thing --- a global value.
-The const keyword and ":" definitions both create constant global variables. For example,
+Globals, constants and words all
+share the same namespace, and are actually all the same kind of thing --- a
+global value. The ":" actually creates a global variable, so
 
-    (3 +) const add3
+    global add3
+    (3 +) !add3
     
 and
 
     :add3 3 + ;
     
-both do exactly the same thing --- bind the name "add3" to a function which adds 3 to the number on top of the stack.
-Referring to a global using the "?name" syntax generates code to stack the global's value. Using the name of the global alone
-will check the type first, and if it's a "runnable" (that is, a function or closure) it will run it rather than stack it. So
+both do exactly the same thing --- bind the name "add3" to a function which
+adds 3 to the number on top of the stack. Referring to a global using the
+"?name" syntax generates code to stack the global's value. Using the name of
+the global alone will check the type first, and if it's a "runnable" (that is,
+a function or closure) it will run it rather than stack it. So
 
     add3
     
@@ -307,15 +311,17 @@ will run the add3 global's value (the function) while
     
 will push the function onto the stack. This is useful when we come to deal with functional programming.
 
-Of course, this means that the preceding section wasn't strictly true - you can refer to a global variable by name alone, and the
-value will be stacked. It is, however, good practice to use the "?name" notation to remind you you're dealing with a variable.
+Of course, this means that the preceding section wasn't strictly true - you
+can refer to a global variable by name alone, and the value will be stacked.
+It is, however, good practice to use the "?name" notation to remind you you're
+dealing with a variable.
 
 You can also do something like this:
 
-    (dup *) !Square
+    (dup *) const square
     
-to define a word called "Square" which can be run just like any other, but whose definition can be overriden later (unlike normal words).
-I have no idea why you would want to do this, but you can (although writing recursive words this way might be tricky).
+to define a word called "square" which can be run just like any other, but
+whose definition cannot be changed later (unlike normal words). 
 
 
 
