@@ -35,8 +35,10 @@ Angort::Angort() {
     Types::createTypes();
     names.create("default"); // create the default namespace
     names.set("default"); // and select it
+    lineNumber=0;
     
     tok.init();
+    tok.setname("<stdin>");
     tok.settokens(tokens);
     tok.setcommentlinesequence("#");
     
@@ -52,7 +54,7 @@ Angort::Angort() {
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
-    context->reset(NULL);
+    context->reset(NULL,&tok);
 }
 
 
@@ -185,6 +187,8 @@ void Angort::run(const Instruction *ip){
     
     static char strbuf1[1024]; // used for string conversions when required
     static char strbuf2[1024];
+    
+    ipException = NULL;
     
     Value *a, *b, *c;
     debugwordbase = ip;
@@ -635,6 +639,8 @@ void Angort::run(const Instruction *ip){
             
         }
     } catch(Exception e){
+        // store the exception details
+        ipException = ip;
         // destroy any iterators left lying around
         while(!loopIterStack.isempty())
             loopIterStack.popptr()->clr();
@@ -718,21 +724,31 @@ void Angort::compileParamsAndLocals(){
 }
 
 bool Angort::fileFeed(const char *name,bool rethrow){
+    const char *oldName = tok.getname();
+    int oldLN = lineNumber;
+#if defined(SOURCEDATA)
+    // we duplicate the filename so that we can always access it
+    const char *fileName = strdup(name); 
+    tok.setname(fileName);
+#endif
+    
     FILE *ff = fopen(name,"r");
-    lineNumber=0;
     try{
         char buf[1024];
         if(!ff)
             throw Exception().set("cannot open %s",name);
         while(fgets(buf,1024,ff)!=NULL){
             feed(buf);
-            lineNumber++;
         }
+        tok.setname(oldName);
+        lineNumber=oldLN;
         fclose(ff);
     }catch(Exception e){
         if(rethrow) throw e;
         printf("Error in file %s: %s\n",name,e.what());
         printf("Last line: %s\n",getLastLine());
+        tok.setname(oldName);
+        lineNumber=oldLN;
         return false;
     } 
     return true;
@@ -785,16 +801,21 @@ void Angort::include(const char *fh){
 }
 
 void Angort::feed(const char *buf){
+    ipException = NULL;
     resetStop();
     
     if(printLines)
-        printf(">>> %s\n",buf);
+        printf("%d >>> %s\n",lineNumber,buf);
     
     if(!isDefining() && context && !inSubContext()) // make sure we're reset unless we're compiling or subcontexting
-        context->reset(NULL);
+        context->reset(NULL,&tok);
     
     strcpy(lastLine,buf);
     tok.reset(buf);
+    // the tokeniser will reset its idea of the line number,
+    // because we reset it at the start of all input.
+    tok.setline(lineNumber);
+    
     int t,here;
     Instruction *code;
     try {
@@ -856,7 +877,7 @@ void Angort::feed(const char *buf){
                 compile(OP_END);
                 endDefine(context);
                 //                printf("defined %s - %d ops\n",defineName,context->getCodeSize());
-                context->reset(NULL);
+                context->reset(NULL,&tok);
                 break;
             case T_IF:
                 // at compile time, push this compiler location onto the compiler
@@ -884,13 +905,13 @@ void Angort::feed(const char *buf){
             case T_EACH:
                 if(tok.getnext()!=T_OCURLY)
                     throw SyntaxException("each must be followed by {");
-                context->compile(OP_ITERSTART); // creates and starts the iterator
+                compile(OP_ITERSTART); // creates and starts the iterator
                 context->pushhere(); // loop point
                 context->pushleave(); // and which loop we're in
                 context->compileAndAddToLeaveList(OP_ITERLEAVEIFDONE);
                 break;
             case T_OCURLY://start loop
-                context->compile(OP_LOOPSTART);
+                compile(OP_LOOPSTART);
                 // stack the location
                 context->pushhere();
                 // and which loop we're in
@@ -1055,7 +1076,7 @@ void Angort::feed(const char *buf){
                     // required.
                     
                     compile(OP_LITERALCODE)->d.cb = new CodeBlock(lambdaContext);
-                    lambdaContext->reset(NULL);
+                    lambdaContext->reset(NULL,&tok);
                 }
                 break;
             case T_END:
@@ -1066,6 +1087,7 @@ void Angort::feed(const char *buf){
                     run(context->getCode());
                     clearAtEndOfFeed();
                 }
+                lineNumber++;
                 return;
             case T_PIPE:
                 compileParamsAndLocals();
@@ -1097,13 +1119,14 @@ void Angort::feed(const char *buf){
         clearAtEndOfFeed();
         throw e; // and rethrow
     }
+    lineNumber++;
 }
 
 void Angort::clearAtEndOfFeed(){
     // make sure we tidy up any state
     contextStack.clear(); // clear the context stack
     context = contextStack.pushptr();
-    context->reset(NULL); // reset the old context
+    context->reset(NULL,&tok); // reset the old context
     wordValIdx=-1;
     // make sure the return stack gets cleared otherwise
     // really strange things can happen on the next processed
@@ -1132,6 +1155,16 @@ void Angort::disasm(const char *name){
         printf("\n");
         if(opcode == OP_END)break;
     }
+}
+
+const char *Instruction::getDetails(char *buf,int len) const{
+#if SOURCEDATA
+    snprintf(buf,len,"[%s] %s:%d/%d",opcodenames[opcode],
+             file,line,pos);
+#else
+    snprintf(buf,len,"[%s]",opcodenames[opcode]);
+#endif
+    return buf;
 }
 
 const char *Angort::getSpec(const char *s){

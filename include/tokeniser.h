@@ -135,10 +135,31 @@ public:
     /// a token!
     void skipahead(char c);
     
-    /// get currnet line number
+    /// get the current file name
+    const char *getname(){
+        return fileName;
+    }
+    
+    /// set the current file name
+    void setname(const char *f){
+        fileName = f;
+    }
+    
+    /// get current line number
     int getline()
     {
         return line;
+    }
+    
+    /// sometimes we have to do this if the system
+    /// uses its own line numbering
+    void setline(int l){
+        line = l;
+    }
+    
+    /// return the index of the character within the stream
+    int getpos() {
+        return current-start;
     }
     
     /// turn on debugging
@@ -157,13 +178,11 @@ public:
             commentlinesequencelen=0;
     }
     
-    /// return the index of the character within the stream
-    int getpos() {
-        return current-start;
-    }
-    
 private:
     void dprintf(const char *s,...);
+    
+    /// the current filename, should be strduped()
+    const char *fileName;
     
     /// find the token for a keyword if one exists
     int findkeyword(const char *s);

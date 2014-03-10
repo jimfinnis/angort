@@ -12,6 +12,7 @@
 "tmp1" save
 "tmp1" load
 
+
 # check that the strings came out OK
 "bar" ?H get "foo" = "hash string load" assert
 

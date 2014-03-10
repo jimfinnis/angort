@@ -18,6 +18,9 @@
 #include "value.h"
 #include "namespace.h"
 
+/// true to compile debugging data into opcodes
+#define SOURCEDATA 1
+
 /// first int in file for image data
 #define ANGORT_MAGIC  0x737dfead
 
@@ -76,7 +79,15 @@ struct Property {
 
 /// all code is a sequence of these - an opcode and some data
 struct Instruction {
+    
+    /// for debugging
+    const char *getDetails(char *buf,int len) const;
+    
     int opcode;
+#if SOURCEDATA
+    const char *file;
+    int line,pos;
+#endif
     union {
         int i;
         float f;
@@ -135,22 +146,24 @@ class CompileContext {
     int leaveListHead; //!< the head of a leave list - the index of the first OP_LEAVE etc. instruction, or -1.
     const char *spec; //!< specification string
     
+    Tokeniser *tokeniser; //!< the tokeniser
 public:
     
     CompileContext(){
         spec=NULL;
-        reset(NULL);
+        reset(NULL,NULL);
     }
     
     
     /// reset a new compile context and set the containing context.
-    void reset(CompileContext *p){
+    void reset(CompileContext *p,Tokeniser *tok){
         parent = p;
         compileCt=0;
-        compileBuf[0].opcode=1; //OP_END
+//        compileBuf[0].opcode=1; //OP_END
         paramCt=0;
         localTokenCt=0;
         closureMapCt=0;
+        tokeniser=tok;
         if(spec){
             free((void *)spec);
             spec=NULL;
@@ -276,6 +289,11 @@ public:
         Instruction *i = compileBuf+compileCt;
         compileCt++;
         i->opcode = opcode;
+#if SOURCEDATA
+        i->file = tokeniser->getname();
+        i->line = tokeniser->getline();
+        i->pos = tokeniser->getpos();
+#endif
         return i;
     }
     
@@ -488,6 +506,10 @@ private:
     VarStack locals;
     Value *closureTable; //!< the current closure table
     
+    /// if an exception occurred during run, this will have 
+    /// the last instruction.
+    const Instruction *ipException;
+    
     /// the functions, duplicates of the module entries
     StringMap<NativeFunc> funcs;
     StringMap<const char *> funcSpecs;
@@ -527,7 +549,7 @@ private:
     void pushCompileContext(){
         CompileContext *p = context;
         context = contextStack.pushptr();
-        context->reset(p);
+        context->reset(p,&tok);
     }
     
     /// pop a context off the stack, ready to carry on where we left off.
@@ -544,7 +566,6 @@ private:
     /// and filling the localTokens table with names to be used in this definition.
     /// Only works in defining mode!
     void compileParamsAndLocals();
-    
     
     /// show an instruction
     void showop(const Instruction *ip,const Instruction *base);
@@ -577,6 +598,12 @@ private:
     /// clear all stacks etc.
     void clearAtEndOfFeed();
 public:
+    /// if an exception occurred in a run, this will have the IP.
+    const Instruction *getIPException(){
+        return ipException;
+    }
+    
+    
     /// call this to get the version number. It's a denary integer,
     /// the lowest two digits of which are the minor version. It's
     /// a number because it's used in files.
@@ -599,10 +626,8 @@ public:
         return wordValIdx>=0;
     }
     
-    /// only valid in feedFile()
     int lineNumber;
     
-    /// return line number, only valid in feedFile()
     int getLineNumber(){
         return lineNumber;
     }
