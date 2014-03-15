@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 210
+#define ANGORT_VERSION 211
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -606,6 +606,25 @@ void Angort::run(const Instruction *ip){
                 Types::tHash->set(pushval());
                 ip++;
                 break;
+            case OP_HASHGETSYMB:
+                {
+                    Value t;
+                    a = stack.peekptr();
+                    Types::tSymbol->set(&t,ip->d.i);
+                    a->t->getValue(a,&t,a);
+                }
+                ip++;
+                break;
+            case OP_HASHSETSYMB:
+                {
+                    Value t;
+                    a = stack.popptr();
+                    b = stack.popptr();
+                    Types::tSymbol->set(&t,ip->d.i);
+                    a->t->setValue(a,&t,b);
+                }
+                ip++;
+                break;
             case OP_LITERALSYMB:
                 Types::tSymbol->set(pushval(),ip->d.i);
                 ip++;
@@ -991,9 +1010,18 @@ void Angort::feed(const char *buf){
                 }
             case T_QUESTION:
                 {
-                    if(tok.getnext()!=T_IDENT)
-                        throw SyntaxException("expected an identifier");
-                    else if((t = context->getLocalToken(tok.getstring()))>=0){
+                    if(tok.getnext()!=T_IDENT){
+                        char buf[256];
+                        switch(tok.getcurrent()){
+                        case T_BACKTICK:
+                            if(!tok.getnextident(buf))
+                                throw SyntaxException("expected a symbol after backtick");
+                            compile(OP_HASHGETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
+                            break;
+                        default:
+                            throw SyntaxException("expected an identifier");
+                        }
+                    } else if((t = context->getLocalToken(tok.getstring()))>=0){
                         // if we couldn't find it as a local, try to find it as a 
                         // local in the parent context. If that succeeds, we will have
                         // created a local for it.
@@ -1020,10 +1048,19 @@ void Angort::feed(const char *buf){
             case T_PLING:
                 {
                     if(tok.getnext()!=T_IDENT){
-                        if(tok.getcurrent()==T_EQUALS)
+                        char buf[256];
+                        switch(tok.getcurrent()){
+                        case T_BACKTICK:
+                            if(!tok.getnextident(buf))
+                                throw SyntaxException("expected a symbol after backtick");
+                            compile(OP_HASHSETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
+                            break;
+                        case T_EQUALS:
                             compile(OP_NEQUALS);
-                        else
+                            break;
+                        default:
                             throw SyntaxException("expected an identifier");
+                        }
                     }else if((t = context->getLocalToken(tok.getstring()))>=0){
                         // if we couldn't find it as a local, try to find it as a 
                         // local in the parent context. If that succeeds, we will have

@@ -21,8 +21,9 @@ const char *opcodenames[]=
     "swap","drop","and","or","lt","gt",
     "ifleave","for","forjump","newhash",
     "litsymb","over","closureget","closureget","dot",
-    "iterlvifdone","iterstart","literalstr-fixup","literalcode-fixup","newlist",
-    "appendlist", "closelist","loopstart","stop"
+    "iterlvifdone","iterstart","literalstr-fixup","literalcode-fixup",
+    "newlist","appendlist", "closelist","loopstart","stop",
+    "hashgetsymb","hashsetsymb",
 };
 #endif
     
@@ -83,11 +84,14 @@ const char *opcodenames[]=
 #define OP_ITERSTART 44
 #define OP_LITERALSTRING_FIXUP 45
 #define OP_LITERALCODE_FIXUP 46
-#define OP_NEWLIST 47
 
+#define OP_NEWLIST 47
 #define OP_APPENDLIST 48
 #define OP_CLOSELIST 49
 #define OP_LOOPSTART 50
 #define OP_STOP 51
+
+#define OP_HASHGETSYMB 52
+#define OP_HASHSETSYMB 53
 
 #endif /* __OPCODES_H */

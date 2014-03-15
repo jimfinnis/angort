@@ -467,6 +467,58 @@ on the stack without checking to see if it's runnable (and running it if so) - t
     :square dup *;
     0 10 range ?square map each {i.}
 
+##Symbols
+Symbols are single-word strings which are stored in an optimised form for
+easy and quick comparison (they're actually turned into unique integers
+internally). They are specified by using a backtick (`) in front of the
+word. They're most useful as keys in hashes.
+
+##Hashes
+Hashes allow data be stored using keys of any hashable type (ints, floats,
+strings, symbols -- anything except hashes and lists). Create a hash
+using a similar syntax to the list initialiser, but with a '%' after
+the closing brace and data in key,value pairs:
+
+    [%]
+    
+creates an empty hash, and 
+
+    [%
+        `foo "the foo string",
+        `bar "the bar string"
+    ]
+    
+creates a hash with two entries, both of which are keyed by symbols (although
+the keys in a hash can be of different types). We can add values to the hash
+using "set (val key hash --)":
+
+    [%]!H
+    "the foo string" `foo ?H set
+    "the bar string" `bar ?H set
+        
+and read values using "get (key hash -- val)":
+
+    `foo ?H get .
+    
+We can also iterate over the hash's keys:
+
+    ?H each {i p "   " p i ?H get .}
+
+will dump all the keys and values in the hash stored in H.
+
+###Shortcut for symbol-keyed hashes
+Hashes keyed by symbols are very widely used, so there is a special
+shortcut for getting and setting their values. The ?`key and !`key
+will get and set values in the hash on top of the stack respectively:
+
+    [%] !H
+    "the foo string" ?H!`foo
+    "the bar string" ?H!`bar
+    
+    ?H?`foo .
+    
+
+
         
 ##Some other builtin words
 
