@@ -37,6 +37,12 @@
     printf("SNARK %d\n",snarkct++);
 }
 
+%word none ( -- none ) stack a None value
+{
+    Value *v = a->pushval();
+    v->clr();
+}
+
 
 %word p ( v -- ) print a value
 {

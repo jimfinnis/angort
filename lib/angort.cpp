@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 211
+#define ANGORT_VERSION 212
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -65,28 +65,39 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
            (int)(ip-base),
            opcodenames[ip->opcode],
            ip->opcode);
-    if(ip->opcode == OP_FUNC){
+    switch(ip->opcode){
+    case OP_FUNC:
         printf(" (%s)",funcs.getKey(ip->d.func));
-    }
-    if(ip->opcode == OP_JUMP||ip->opcode==OP_LEAVE||ip->opcode==OP_ITERLEAVEIFDONE||
-       ip->opcode==OP_IF){
+        break;
+    case OP_JUMP:
+    case OP_LEAVE:
+    case OP_IF:
+    case OP_ITERLEAVEIFDONE:
         printf("(offset %d)",ip->d.i);
-    }
-    else if(ip->opcode == OP_GLOBALDO || ip->opcode == OP_GLOBALSET || ip->opcode == OP_GLOBALGET){
+        break;
+    case OP_GLOBALDO:
+    case OP_GLOBALSET:
+    case OP_GLOBALGET:
         printf("(%s)",names.getName(ip->d.i));
-    }
-    else if(ip->opcode == OP_CLOSUREGET || ip->opcode == OP_CLOSURESET){
+        break;
+    case OP_CLOSURESET:
+    case OP_CLOSUREGET:
         printf("(%p)",closureTable+ip->d.i);
-    }
-    else if(ip->opcode == OP_PROPGET || ip->opcode == OP_PROPSET){
+        break;
+    case OP_PROPSET:
+    case OP_PROPGET:
         printf("(%s)",props.getKey(ip->d.prop));
-    }
-    else if(ip->opcode == OP_LITERALSTRING){
+        break;
+    case OP_LITERALSTRING:
         printf("(%s)",ip->d.s);
-    }
-    else if(ip->opcode == OP_LITERALSYMB){
+        break;
+    case OP_LITERALSYMB:
+    case OP_HASHGETSYMB:
+    case OP_HASHSETSYMB:
         printf("(%d:%s)",ip->d.i,
                Types::tSymbol->getString(ip->d.i));
+        break;
+    default:break;
     }
     
 }
