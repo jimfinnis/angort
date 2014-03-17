@@ -23,6 +23,13 @@
 
 5 25 over 5 = "over1" assert 25 = "over2" assert 5 = "over3" assert
 
+1 none = not "noneeq1" assert 
+"foo" none = not "noneeq2" assert 
+none none = not "noneeq3" assert 
+[] none = not "noneeq4" assert 
+
+1 none != "noneeq2" assert 
+
 
 global s
 global t

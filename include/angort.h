@@ -618,6 +618,9 @@ public:
     /// make assertions print statements even when they pass just fine,
     /// used in testing.
     bool assertDebug;
+    /// if true, assertion conditions are negated - useful for testing
+    /// that something should assert
+    bool assertNegated;
     /// print each line we parse
     bool printLines;
     

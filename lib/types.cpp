@@ -27,10 +27,12 @@ void Type::createIterator(Value *dest,Value *src){
 
 
 
-char *BlockAllocType::allocate(Value *v,int len){
+char *BlockAllocType::allocate(Value *v,int len,Type *type){
+    v->clr();
     BlockAllocHeader *h = (BlockAllocHeader *)malloc(len+sizeof(BlockAllocHeader));
     h->refct=1;
     v->v.block = h;
+    v->t = type;
     return (char *)(h+1);
 }
 

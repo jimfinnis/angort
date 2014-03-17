@@ -11,10 +11,8 @@
 #include "ser.h"
 
 void StringType::set(Value *v,const char *s){
-    v->clr();
-    v->t = Types::tString;
     int len = strlen(s);
-    strcpy(allocate(v,len+1),s);
+    strcpy(allocate(v,len+1,this),s);
 }
 
 void StringType::setPreAllocated(Value *v,const char *s){

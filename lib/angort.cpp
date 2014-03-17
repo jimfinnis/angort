@@ -49,6 +49,7 @@ Angort::Angort() {
     printLines=false;
     emergencyStop=false;
     assertDebug=false;
+    assertNegated=false;
     wordValIdx=-1;
     barewords=false;
     
@@ -231,11 +232,11 @@ void Angort::run(const Instruction *ip){
             
             
             switch(opcode){
+            case OP_EQUALS:
             case OP_ADD:
             case OP_MUL:
             case OP_DIV:
             case OP_SUB:
-            case OP_EQUALS:
             case OP_NEQUALS:
             case OP_AND:
             case OP_OR:
@@ -244,18 +245,28 @@ void Angort::run(const Instruction *ip){
             case OP_MOD:
                 b = popval();
                 a = popval();
-                if(a->getType() == Types::tString || b->getType() == Types::tString){
+                if(a->getType() == Types::tNone ||  b->getType() == Types::tNone){
+                    switch(opcode){
+                    case OP_EQUALS: // none is equal to nothing
+                        pushInt(0);break;
+                    case OP_NEQUALS:// and not equal to everything
+                        pushInt(1);break;
+                    default:
+                        throw RUNT("invalid operation with a 'none' operand");
+                    }
+                } else if(a->getType() == Types::tString || b->getType() == Types::tString){
                     bool cmp=false;
                     // buffers won't be used if they're already strings
                     const char * p = a->toString(strbuf1,1024);
                     const char * q = b->toString(strbuf2,1024);
                     switch(opcode){
                     case OP_ADD:{
-                        c = stack.pushptr();
+                        Value t; // we use a temp, otherwise allocate() will clear the type
                         int len = strlen(p)+strlen(q);
-                        char *r = Types::tString->allocate(c,len+1);
+                        char *r = Types::tString->allocate(&t,len+1,Types::tString);
                         strcpy(r,p);
                         strcat(r,q);
+                        stack.pushptr()->copy(&t);
                         break;
                     }
                     case OP_EQUALS:

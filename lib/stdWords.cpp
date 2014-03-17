@@ -105,13 +105,30 @@ public:
 {
     char buf[1024];
     const char *desc = a->popval()->toString(buf,1024);
-    if(!a->popInt()){
+    bool cond = (a->popInt()==0);
+    
+    if(a->assertNegated){
+        cond=!cond;
+        if(a->assertDebug)printf("Negated ");
+    }
+    if(cond){
         if(a->assertDebug)printf("Assertion failed: %s\n",desc);
         throw AssertException(desc,a->getLineNumber());
     } else if(a->assertDebug)
         printf("Assertion passed: %s\n",desc);
         
 }
+
+%word assertmode (mode --) set to `negated or `normal, if negated assertion conditions are negated
+{
+    char buf[16];
+    const char *mode = a->popval()->toString(buf,16);
+    if(!strcmp(mode,"negated"))
+        a->assertNegated=true;
+    else
+        a->assertNegated=false;
+}
+    
 
 %word abs (x --) absolute value
 {

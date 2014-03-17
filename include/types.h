@@ -196,7 +196,8 @@ public:
     /// allocate a block of memory plus 16 bits for refcount, 
     /// setting the refcount to 1, setting v.s to the start of the whole block,
     /// returning a pointer to just after the header.
-    char *allocate(Value *v,int len);
+    /// Also clears the value type and sets the new type.
+    char *allocate(Value *v,int len,Type *t);
     /// return a pointer to the allocated data (AFTER the header)
     const char *getData(const Value *v) const;
     
