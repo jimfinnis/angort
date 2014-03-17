@@ -24,6 +24,8 @@ public:
     /// get a hash key
     virtual uint32_t getHash(Value *v);
     
+    virtual bool isIn(Value *v,Value *item);
+    
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
     

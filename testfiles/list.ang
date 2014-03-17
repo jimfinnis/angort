@@ -9,4 +9,12 @@
 ?L pop 4 = "filter2" assert
 ?L pop 2 = "filter3" assert
 
+[1,2,3,4,5] (2 % 0 =) filter !L
+
+2 ?L in "listin1" assert
+4 ?L in "listin2" assert
+1 ?L in not "listin2" assert
+3.0 ?L in not "listin3" assert
+10 ?L in not "listin4" assert
+
 quit

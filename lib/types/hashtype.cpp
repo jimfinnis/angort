@@ -79,3 +79,11 @@ void HashType::removeAndReturn(Value *coll,Value *k,Value *result){
     } else
         result->clr();
 }
+
+bool HashType::isIn(Value *coll,Value *item){
+    Hash *h = coll->v.hash->hash;
+    if(h->find(item))
+        return true;
+    else
+        return false;
+}

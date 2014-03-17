@@ -134,8 +134,13 @@ public:
     
     /// create the low-level iterator if possible
     virtual Iterator<Value *> *makeIterator(Value *v){
-        throw RUNT("cannot iterate a non-iterable type");
+        throw RUNT("cannot iterate a non-iterable value");
     }
+    
+    /// return whether the item is in the collection (uses the same
+    /// equality test as hash keys)
+    virtual bool isIn(Value *v,Value *item);
+        
     
     /// set a value in a collection, if this type is one
     virtual void setValue(Value *coll,Value *k,Value *v){

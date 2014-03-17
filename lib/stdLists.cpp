@@ -142,4 +142,10 @@
     delete iter;
 }
 
-
+%word in (item iterable -- bool) return if item is in list or hash keys
+{
+    Value *iterable = a->popval();
+    Value *item = a->popval();
+    
+    a->pushInt(iterable->t->isIn(iterable,item)?true:false);
+}

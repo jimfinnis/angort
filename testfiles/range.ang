@@ -53,4 +53,14 @@ mkrange !t
 0 100 5 srange each { i+ dup.}
 950 = "srange" assert
 
+0 100 2 srange !R
+
+2 ?R in "rangein1" assert
+4 ?R in "rangein2" assert
+1 ?R in not "rangein2" assert
+3.0 ?R in not "rangein3" assert
+100 ?R in not "rangein4" assert
+101 ?R in not "rangein4" assert
+
+
 quit

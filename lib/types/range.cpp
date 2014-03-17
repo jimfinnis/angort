@@ -10,6 +10,8 @@
 #include "file.h"
 #include "ser.h"
 
+#include <math.h>
+
 template<> RangeType<int>::RangeType(){
     add("range","RANG");
 }
@@ -41,6 +43,15 @@ template <> void RangeType<int>::set(Value *v, int start,int end,int step){
     
     incRef(v);
 }
+
+template<> bool RangeType<int>::isIn(Value *v,Value *item){
+    Range<int> *r = v->v.irange;
+    int i = item->toInt();
+    if(i<r->start || i>=r->end)
+        return false;
+    return ((i-r->start)%r->step)==0;
+}
+
 
 // for hash keys, int ranges are equal if their members are equal
 template<> uint32_t RangeType<int>::getHash(Value *v){
@@ -146,6 +157,10 @@ template <> Iterator<Value *> *RangeType<int>::makeIterator(Value *v){
 }
 template <> Iterator<Value *> *RangeType<float>::makeIterator(Value *v){
     return new FloatRangeIterator(v->v.frange);
+}
+
+template<> bool RangeType<float>::isIn(Value *v,Value *item){
+    throw RUNT("cannot determine membership of float range");
 }
 
 template <> void RangeType<int>::saveDataBlock(Serialiser *ser,const void *v){

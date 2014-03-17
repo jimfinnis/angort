@@ -130,3 +130,4 @@ void ListType::removeAndReturn(Value *coll,Value *k,Value *result){
     result->copy(r->list.get(i));
     r->list.remove(i);
 }
+

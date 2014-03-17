@@ -34,6 +34,16 @@ char *BlockAllocType::allocate(Value *v,int len){
     return (char *)(h+1);
 }
 
+bool Type::isIn(Value *v,Value *item){
+    Iterator<Value *> *iter = makeIterator(v);
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        if(iter->current()->equalForHashTable(item)){
+            return true;
+        }
+    }
+    return false;
+}
 
 const char *BlockAllocType::getData(const Value *v) const{
     return (const char *)(v->v.block+1);
