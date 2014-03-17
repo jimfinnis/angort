@@ -392,13 +392,6 @@ and here's how it could be used to show the squares of the numbers:
 
     (|x:| ?x ?x *) over1to10
             
-If we want to stack a reference to a word instead of running it, we can precede the word with a backtick:
-
-    :square dup * ;    # more efficient than the above anonymous!
-    `square over1to10
-
-This will NOT WORK with builtin functions, however.
-
 ### Closures
 
 Anonymous functions can refer to variables in their enclosing function or word, in which case a closure is created to store the value when the enclosing function exits. This closure is mutable - its value can be changed by the anonymous function. For example:

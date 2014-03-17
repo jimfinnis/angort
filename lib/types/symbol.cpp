@@ -57,14 +57,6 @@ void SymbolType::set(Value *v,int i){
     v->t = this;
 }
 
-int SymbolType::toInt(const Value *v) const {
-    return atoi(get(v));
-}
-
-float SymbolType::toFloat(const Value *v) const {
-    return atof(get(v));
-}
-
 const char * SymbolType::toString(char *outBuf,int len,const Value *v) const {
     strncpy(outBuf,get(v),len);
     return outBuf;

@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 212
+#define ANGORT_VERSION 213
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -59,9 +59,13 @@ Angort::Angort() {
 
 
 void Angort::showop(const Instruction *ip,const Instruction *base){
-    printf("%8p [%8p] : %04d : %s (%d) ",
+    printf("%8p [%s:%d] : %04d : %s (%d) ",
            base,
-           ip,
+#if SOURCEDATA
+           ip->file,ip->line,
+#else
+           "?",0,
+#endif
            (int)(ip-base),
            opcodenames[ip->opcode],
            ip->opcode);

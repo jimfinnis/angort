@@ -122,23 +122,24 @@
     delete iter;
 }
 
-%word hset (val key hash --) set a value in a hash
+%word filter (iter func -- list) filter an iterable with a boolean function
 {
-    Hash *h = Types::tHash->get(a->popval());
-    Value *k = a->popval();
-    Value *v = a->popval();
+    Value func;
+    func.copy(a->popval()); // need a local copy
+    Value *iterable = a->popval();
     
-    h->set(k,v);
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
     
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current());
+        a->runValue(&func);
+        if(a->popval()->toInt()){
+            Value *v = list->append();
+            v->copy(iter->current());
+        }
+    }
+    delete iter;
 }
 
-%word hget (key hash --) get a value in a hash, or tNone
-{
-    Hash *h = Types::tHash->get(a->popval());
-    Value *k = a->stack.peekptr();
-    if(h->find(k))
-        k->copy(h->getval());
-    else 
-        k->clr();
-}
 

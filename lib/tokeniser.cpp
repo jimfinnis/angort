@@ -180,6 +180,11 @@ loop:
         while(*p!=q)
         {
             if(*p == 0x0a)line++;
+            if(*p == 0){
+                seterror();
+                return -1;
+            }
+                
             // string escape handing
             if(*p == '\\'){
                 switch(*++p){
