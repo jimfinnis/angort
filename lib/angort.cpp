@@ -35,7 +35,7 @@ Angort::Angort() {
     Types::createTypes();
     names.create("default"); // create the default namespace
     names.set("default"); // and select it
-    lineNumber=0;
+    lineNumber=1;
     
     tok.init();
     tok.setname("<stdin>");
@@ -771,6 +771,7 @@ void Angort::compileParamsAndLocals(){
 bool Angort::fileFeed(const char *name,bool rethrow){
     const char *oldName = tok.getname();
     int oldLN = lineNumber;
+    lineNumber=1;
 #if defined(SOURCEDATA)
     // we duplicate the filename so that we can always access it
     const char *fileName = strdup(name); 
@@ -790,7 +791,7 @@ bool Angort::fileFeed(const char *name,bool rethrow){
         fclose(ff);
     }catch(Exception e){
         if(rethrow) throw e;
-        printf("Error in file %s: %s\n",name,e.what());
+        printf("Error in file %s: %s\n",tok.getname(),e.what());
         printf("Last line: %s\n",getLastLine());
         tok.setname(oldName);
         lineNumber=oldLN;
@@ -878,7 +879,7 @@ void Angort::feed(const char *buf){
             }
             case T_BACKTICK:{
                 char buf[256];
-                if(!tok.getnextident(buf))
+                if(!tok.getnextidentorkeyword(buf))
                     throw SyntaxException("expected a symbol after backtick");
                 compile(OP_LITERALSYMB)->d.i=Types::tSymbol->getSymbol(buf);
                 break;

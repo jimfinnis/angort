@@ -128,6 +128,11 @@ public:
     /// get the next identifier, or return false on error
     bool getnextident(char *out);
     
+    /// get the next identifier, or return false on error; differs
+    /// from getnextident() in that keywords will be converted into
+    /// identifiers!
+    bool getnextidentorkeyword(char *out);
+    
     /// return the rest of the line as a string, bypassing the tokeniser
     const char *restofline();
     
@@ -219,7 +224,7 @@ private:
     const char *previous;
     int prevtype;
     int prevline;
-    
+    bool keywordsOff;
 };
 
 

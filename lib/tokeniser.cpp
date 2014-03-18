@@ -40,6 +40,13 @@ bool Tokeniser::getnextident(char *out){
     return true;
 }
 
+bool Tokeniser::getnextidentorkeyword(char *out){
+    keywordsOff=true;
+    bool rv = getnextident(out);
+    keywordsOff=false;
+    return true;
+}
+
 
 void Tokeniser::init()
 {
@@ -61,6 +68,7 @@ void Tokeniser::reset(const char *buf,const char *_end)
     
     error=false;
     line =0;
+    keywordsOff=false;
     curtype = -1000;
 }
 
@@ -257,7 +265,9 @@ loop:
                     curtype=inttoken;
                     return curtype;
                 }
-                int w = findkeyword(val.s);
+                int w=-1;
+                if(!keywordsOff)
+                    w = findkeyword(val.s);
                 if(w>=0)
                 {
                     dprintf("got keyword %s",val.s);
