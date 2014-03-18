@@ -109,8 +109,8 @@ void GCType::loadValue(Serialiser *ser, Value *v){
  * 
  */
 
-static Type _tNone;
-Type *Types::tNone= &_tNone;
+static NoneType _tNone;
+NoneType *Types::tNone= &_tNone;
 static Type _tDeleted;
 Type *Types::tDeleted= &_tDeleted;
 static Type _tFixup;

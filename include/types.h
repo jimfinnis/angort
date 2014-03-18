@@ -254,14 +254,15 @@ public:
 #include "types/iter.h"
 #include "types/hashtype.h"
 #include "types/symbol.h"
+#include "types/none.h"
 
 
 /// this is effectively a namespace for the type data
 struct Types {
     static void createTypes();
     
-    /// the null type object
-    static Type *tNone;
+    /// the null type
+    static NoneType *tNone;
     /// the type object for deleted hash keys
     static Type *tDeleted;
     /// not a real type; d.fixup gives the ID of a datum in the fixup table;

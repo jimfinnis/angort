@@ -13,12 +13,15 @@
     
 
 int IntegerType::get(Value *v){
+    /*
     if(v->t == Types::tInteger)
         return v->v.i;
     else if(v->t == Types::tFloat)
         return (int)v->v.f;
     else
-        throw BadConversionException(v->t->name,name);
+       throw BadConversionException(v->t->name,name);
+     */
+    return v->t->toInt(v);
 }
 
 
