@@ -41,7 +41,7 @@
 
 :run 
     0
-    1 101 range ?f inject
+    1 101 range ?f reduce
     ;
 
 run 628 = "pre-save inject" assert

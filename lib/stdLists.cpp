@@ -105,7 +105,7 @@
     delete iter;
 }
 
-%word inject (start iter func -- result) see Ruby's docs on this :)
+%word reduce (start iter func -- result) perform a (left) fold or reduce on an iterable
 {
     Value func;
     func.copy(a->popval()); // need a local copy
