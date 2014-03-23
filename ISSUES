@@ -3,11 +3,8 @@ Not yet documented:
     symbols
     barewords
 
-Binary Operators need to be folded into type code
-
-
-
-
+Binary Operators need to be folded into type code, and things
+like string/list concat added.
 
 GC cycles!
 

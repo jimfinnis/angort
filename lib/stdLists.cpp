@@ -36,7 +36,7 @@
     Value *v = a->popval();
     c->t->setValue(c,k,v);
 }
-%word count (list --) get count
+%word len (list --) get length of list, hash or string
 {
     Value *c = a->stack.peekptr();
     int ct = c->t->getCount(c);

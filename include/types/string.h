@@ -24,6 +24,9 @@ public:
     /// with a refcount.
     void setPreAllocated(Value *v,const char *s);
     
+    /// get length of string
+    virtual int getCount(Value *v);
+    
     /// convert to a string - just returns the string, length is ignored
     virtual const char *toString(char *outBuf,int len,const Value *v) const;
     virtual float toFloat(const Value *v) const;

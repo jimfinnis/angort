@@ -15,6 +15,11 @@ void StringType::set(Value *v,const char *s){
     strcpy(allocate(v,len+1,this),s);
 }
 
+int StringType::getCount(Value *v){
+    return strlen(v->v.s);
+}
+
+
 void StringType::setPreAllocated(Value *v,const char *s){
     v->clr();
     v->t = Types::tString;

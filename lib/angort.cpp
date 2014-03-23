@@ -218,7 +218,7 @@ void Angort::run(const Instruction *ip){
                     return;
             }
                
-               int opcode = ip->opcode;
+            int opcode = ip->opcode;
             if(debug){
                 showop(ip,debugwordbase);
                 printf(" ST [%d] : ",stack.ct);
