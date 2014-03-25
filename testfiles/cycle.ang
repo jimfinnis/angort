@@ -9,7 +9,10 @@
 2 gccount = "cycle1" assert
 
 0 !A
+0 !B
+1 1 1 drop drop drop
 gc
-0 gccount = "cycle1" assert
+gccount.
+0 gccount = "cycle2" assert
 
 

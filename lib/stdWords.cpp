@@ -311,4 +311,7 @@ public:
     a->pushInt(rand());
 }
 
-
+%word gc (--) perform a major garbage detect and cycle removal
+{
+    a->gc();
+}

@@ -9,6 +9,7 @@
 
 CycleDetector *CycleDetector::instance = NULL;
 
+#define dfprintf printf
 
 /** A description of the algorithm: 
  * - For each container object, set gc_refs equal to the object's reference count.
@@ -124,6 +125,7 @@ void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc, boo
         Value *v = iterator->current();
         if(GarbageCollected *gc = v->t->getGC(v)){
             gc->gc_refs--;
+            dfprintf("decremented count for %p to %d\n",gc,gc->gc_refs);
         }
     }
     delete iterator;
@@ -162,3 +164,8 @@ void CycleDetector::clearZombieReferencesIterator(GarbageCollected *gc, bool key
 }
 
 
+void GarbageCollected::gc(){
+    CycleDetector::getInstance()->detect();
+}
+    
+    

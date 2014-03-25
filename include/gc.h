@@ -91,8 +91,12 @@ public:
     /// If their gc_refs is zero (i.e. still in the mainlist) move
     /// to the list passed in (the newlist). See CycleDetector for
     /// more details; it's also something best learned by examples!
-    /// Extend for C++ properties which are garbage-collectable
+    /// Extend for C++ properties which are garbage-collectable,
+    /// and aren't accessed by iterator.
     virtual void traceAndMove(class CycleDetector *cycle){}
+    
+    /// run the cycle detector to do a major garbage detect
+    static void gc();
 };
 
 

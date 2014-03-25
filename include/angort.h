@@ -785,6 +785,11 @@ public:
         emergencyStop=false;
     }
     
+    /// run the cycle detector
+    void gc(){
+        GarbageCollected::gc();
+    }
+        
     
 };
 
