@@ -1,0 +1,15 @@
+
+
+[%] !A
+[%] !B
+
+?B `foo ?A set
+?A `foo ?B set
+
+2 gccount = "cycle1" assert
+
+0 !A
+gc
+0 gccount = "cycle1" assert
+
+
