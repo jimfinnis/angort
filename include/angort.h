@@ -47,6 +47,7 @@ struct Closure : public GarbageCollected {
 
 
 
+
 /// this is a structure of word names / pointers as produced
 /// by makeWords.pl. A null-terminated array of these can
 /// be passed to registerWords().

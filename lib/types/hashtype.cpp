@@ -9,12 +9,15 @@
 #include "file.h"
 #include "ser.h"
 #include "hash.h"
+#include "cycle.h"
 
 HashObject::HashObject(){
     hash = new Hash();
+    CycleDetector::getInstance()->add(this);
 }
 
 HashObject::~HashObject(){
+    CycleDetector::getInstance()->remove(this);
     delete hash;
 }
 

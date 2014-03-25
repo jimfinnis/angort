@@ -7,6 +7,15 @@
 #include "angort.h"
 #include "file.h"
 #include "ser.h"
+#include "cycle.h"
+
+ListObject::ListObject() : GarbageCollected(), list(32) {
+    CycleDetector::getInstance()->add(this);
+}
+
+ListObject::~ListObject(){
+    CycleDetector::getInstance()->remove(this);
+}
 
 ArrayList<Value> *ListType::set(Value *v){
     v->clr();

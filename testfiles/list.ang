@@ -5,7 +5,7 @@
 [1,2,3] pop 3= "pop item" assert
 
 [1,2,3,4,5] (2 % 0 =) filter !L
-?L count 2 = "filter1" assert
+?L len 2 = "filter1" assert
 ?L pop 4 = "filter2" assert
 ?L pop 2 = "filter3" assert
 

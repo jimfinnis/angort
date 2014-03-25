@@ -12,8 +12,8 @@
 struct ListObject : public GarbageCollected {
     ArrayList<Value> list;
     
-    ListObject() : GarbageCollected(), list(32){
-    }
+    ListObject();
+    ~ListObject();
 };
 
 class ListType : public GCType {

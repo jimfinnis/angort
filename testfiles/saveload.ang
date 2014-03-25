@@ -37,7 +37,7 @@
 :getnextnum
     Foo 7* 87+ 31% dup !Foo;
 
-:f getnextnum ?Ops count % ?Ops get @ 1000%;
+:f getnextnum ?Ops len % ?Ops get @ 1000%;
 
 :run 
     0

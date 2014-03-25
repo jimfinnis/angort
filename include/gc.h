@@ -21,19 +21,21 @@ typedef uint16_t refct_t; //!< reference count - make sure it's unsigned
 /// reference one via the v.gc field.
 
 class GarbageCollected {
-    /// this is a global count of GCd objects - it doesn't include
-    /// simple allocations like strings.
-    static int globalCt;
+    static int globalCount;
 public:
     GarbageCollected() {
         refct=0;
+        globalCount++;
     }
     
+    /// return the total number of refcounted objects
     static int getGlobalCount(){
-        return globalCt;
+        return globalCount;
     }
     
-    virtual ~GarbageCollected(){}
+    virtual ~GarbageCollected(){
+        globalCount--;
+    }
     
     /// the reference count
     refct_t refct;
@@ -50,7 +52,6 @@ public:
     /// increment the refct, throwing an exception if it wraps
     void incRefCt(){
         refct++;
-        globalCt++;
         dfprintf("++ incrementing count for %p, now %d\n",this,refct);
         if(refct==0)
             throw Exception("ref count too large");
@@ -61,7 +62,6 @@ public:
         if(refct<=0)
             throw Exception().set("ERROR - already deleted: %p!",this);
         --refct;
-        --globalCt;
         dfprintf("-- decrementing count for %p, now %d\n",this,refct);
         return refct==0;
     }

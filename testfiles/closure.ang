@@ -4,6 +4,7 @@
 
 #stack 5, make a function to add 4, run it on 5.
 5 4 makeadder @ 
+"Closure made above is not being deleted.".
 9 = "closure1" assert
 # 4 way string concat, the first 2 strings are stored in the closure
 
@@ -26,7 +27,6 @@ global t
 "zig" "foo" ?t@ "boz1zigfoo" = "closure3" assert
 "step 7" p nl
 1 !t # overwrite 
-
 gccount 0 = "closuregc0" assert # GC count should be zero here
 
 

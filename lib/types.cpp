@@ -3,6 +3,7 @@
 #include "file.h"
 
 Type *Type::head = NULL;
+int  GarbageCollected::globalCount=0;
 
 const char *Type::toString(char *outBuf,int len,const Value *v) const{
     snprintf(outBuf,len,"<TYPE %s:%p>",name,v->v.s);
@@ -86,11 +87,15 @@ void GCType::incRef(Value *v){
     
 void GCType::decRef(Value *v){
     bool b = v->v.gc->decRefCt();
-//    printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
+//   printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
-//        printf("  AND DELETING %s:%p\n",name,v->v.gc);
+//       printf("  AND DELETING %s:%p\n",name,v->v.gc);
         delete v->v.gc;
     }
+}
+
+GarbageCollected *GCType::getGC(Value *v){
+    return v->v.gc;
 }
 
 

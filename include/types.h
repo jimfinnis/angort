@@ -45,6 +45,12 @@ public:
         return false;
     }
     
+    /// return the GC object only if this is a GC type
+    virtual class GarbageCollected *getGC(Value *v){
+        NULL;
+    }
+          
+    
     /// set the ID and name and add to the type list
     void add(const char *_name, const char *_id){
         name = _name;
@@ -235,6 +241,8 @@ public:
     
     /// decrement the reference count and delete if zero
     virtual void decRef(Value *v);
+
+    virtual class GarbageCollected *getGC(Value *v);
 };
 
 

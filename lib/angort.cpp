@@ -22,8 +22,6 @@
 #include "tokens.h"
 #include "hash.h"
 
-int GarbageCollected::globalCt=0;
-
 WORDS(std);WORDS(lists);
 
 int Angort::getVersion(){
@@ -189,8 +187,10 @@ const Instruction *Angort::ret()
         return NULL;
     } else {
         ip = rstack.pop();
-        if(GarbageCollected *gc = gcrstack.pop())
-            gc->decRefCt();
+        if(GarbageCollected *gc = gcrstack.pop()){
+            if(gc->decRefCt())
+                delete gc;
+        }
         closureTable = closureStack.pop();
         //                printf("CLOSURE SNARK POP\n");
         debugwordbase = ip;
@@ -1277,22 +1277,3 @@ void Angort::visitGlobalData(ValueVisitor *visitor){
 
 
 
-Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
-    if(c)
-        Types::tCode->set(&codeBlockValue,c);
-    ct=tabsize;
-    table=t;
-}
-Closure::~Closure(){
-    //    printf("closure deletion\n");
-    delete [] table; // should delete AND DECREF the contained objects
-}
-
-Closure::Closure(const Closure *c) : GarbageCollected() {
-    throw RUNT("CLOSURE COPY DISALLOWED");
-    codeBlockValue.copy(&c->codeBlockValue);
-    ct = c->ct;
-    table = new Value[ct];
-    for(int i=0;i<ct;i++)
-        table[i].copy(c->table+i); // will INCREF the objects
-}

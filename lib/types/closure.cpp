@@ -8,11 +8,40 @@
 #include "angort.h"
 #include "file.h"
 #include "ser.h"
+#include "cycle.h"
+
+Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
+    if(c)
+        Types::tCode->set(&codeBlockValue,c);
+    CycleDetector::getInstance()->add(this);
+    ct=tabsize;
+    table=t;
+    printf("creating closure %p\n",this);
+}
+
+Closure::Closure(const Closure *c) : GarbageCollected() {
+    throw RUNT("CLOSURE COPY DISALLOWED");
+    codeBlockValue.copy(&c->codeBlockValue);
+    ct = c->ct;
+    table = new Value[ct];
+    CycleDetector::getInstance()->add(this);
+    for(int i=0;i<ct;i++)
+        table[i].copy(c->table+i); // will INCREF the objects
+    printf("creating closure %p\n",this);
+}
+
+Closure::~Closure(){
+    //    printf("closure deletion\n");
+    delete [] table; // should delete AND DECREF the contained objects
+    CycleDetector::getInstance()->remove(this);
+    printf("deleting closure %p\n",this);
+}
 
 void ClosureType::set(Value *v,Closure *c){
     v->clr();
     v->v.closure=c;
     v->t = Types::tClosure;
+    printf("Closure not yet traced!\n");
     incRef(v);
 }
 

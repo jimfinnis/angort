@@ -21,6 +21,7 @@ global t
 1 6 range !t
 0 ?t each {i +} 
 15 = "range3" assert
+gccount .
 1 gccount = "range3gc" assert # ?t holds a range
 
 # smoke test to screw up the stack
