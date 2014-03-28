@@ -511,7 +511,24 @@ will get and set values in the hash on top of the stack respectively:
     ?H?`foo .
     
 
+##Taking out the garbage
+Garbage collection is done automatically - up to a point. Specifically,
+the system does reference-counted garbage collection as it goes along.
+This normally works fine until you do something like this:
 
+    [] !A              # make a list called A
+    [?A] !B            # make a list called B, referencing A
+    ?B ?A push         # add a reference to B in A
+    
+Now you have two objects referencing each other - a cycle. This can
+happen in lists, hashes and closures. Plain reference-counted garbage
+collection will never delete these. Therefore, if you are creating a lot
+of structures like this, you'll need to call the cycle detecting
+garbage collector occasionally. This is done manually by the word
+
+    gc
+    
+ 
         
 ##Some other builtin words
 
