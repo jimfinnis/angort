@@ -23,6 +23,7 @@ public:
     virtual void *loadDataBlock(Serialiser *ser);
     
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
+    
 };
 
 #endif /* __CLOSURE_H */

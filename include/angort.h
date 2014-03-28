@@ -42,6 +42,12 @@ struct Closure : public GarbageCollected {
     /// not be initialised. Used in serialisation.
     Closure(const CodeBlock *c,int tabsize,Value *t);
     Closure(const Closure *c); // make a deep copy, allocating a new table and copy()ing all values.
+    
+    /// the value iterator for a closure means we can do cycle detection.
+    /// It does mean that you can do some interesting things with "each"
+    /// though...
+    virtual Iterator<class Value *> *makeValueIterator();
+
     ~Closure();
 };
 
