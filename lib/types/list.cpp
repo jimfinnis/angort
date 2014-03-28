@@ -34,15 +34,25 @@ ArrayList<Value> *ListType::get(Value *v){
     return &v->v.list->list;
 }
 
-struct ListIterator : public Iterator<Value *>{
+class ListIterator : public Iterator<Value *>{
     Value v; //!< the current value, as an actual value
     int idx; //!< current index
-    
+    bool isKey;
     ListObject *list; //!< the range we're iterating over
+    
+    /// copy the current value into the value
+    inline void copyCurrent(){
+        if(isKey)
+            Types::tInteger->set(&v,idx);
+        else
+            v.copy(list->list.get(idx));
+    }
+    
 public:
     /// create a list iterator for a list
-    ListIterator(ListObject *r){
+    ListIterator(ListObject *r,bool iskeyiterator){
         idx=0;
+        isKey = iskeyiterator;
         list = r;
         /// increment the list's reference count
         list->incRefCt();
@@ -60,7 +70,7 @@ public:
     virtual void first(){
         idx=0;
         if(idx<list->list.count())
-            v.copy(list->list.get(idx));
+            copyCurrent();
         else
             v.clr();
     }
@@ -68,7 +78,7 @@ public:
     virtual void next(){
         idx++;
         if(idx<list->list.count())
-            v.copy(list->list.get(idx));
+            copyCurrent();
         else{
             v.clr();
         }
@@ -84,8 +94,15 @@ public:
     }
 };
 
-Iterator<Value *> *ListType::makeIterator(Value *v){
-    return new ListIterator(v->v.list);
+
+
+
+Iterator<Value *> *ListObject::makeValueIterator(){
+    return new ListIterator(this,false);
+}
+
+Iterator<Value *> *ListObject::makeKeyIterator(){
+    return new ListIterator(this,true);
 }
 
 void ListType::saveDataBlock(Serialiser *ser,const void *v){

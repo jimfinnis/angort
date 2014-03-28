@@ -11,6 +11,8 @@
 
 struct ListObject : public GarbageCollected {
     ArrayList<Value> list;
+    virtual Iterator<class Value *> *makeValueIterator();
+    virtual Iterator<class Value *> *makeKeyIterator();
     
     ListObject();
     ~ListObject();
@@ -35,8 +37,6 @@ public:
     virtual void *loadDataBlock(Serialiser *ser);
     
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
-    
-    virtual Iterator<Value *> *makeIterator(Value *v);
     
     virtual void setValue(Value *coll,Value *k,Value *v);
     virtual void getValue(Value *coll,Value *k,Value *result);

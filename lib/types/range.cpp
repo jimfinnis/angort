@@ -152,11 +152,11 @@ public:
     }
 };
 
-template <> Iterator<Value *> *RangeType<int>::makeIterator(Value *v){
-    return new IntRangeIterator(v->v.irange);
+template <> Iterator<Value *> *Range<int>::makeValueIterator(){
+    return new IntRangeIterator(this);
 }
-template <> Iterator<Value *> *RangeType<float>::makeIterator(Value *v){
-    return new FloatRangeIterator(v->v.frange);
+template <> Iterator<Value *> *Range<float>::makeValueIterator(){
+    return new FloatRangeIterator(this);
 }
 
 template<> bool RangeType<float>::isIn(Value *v,Value *item){

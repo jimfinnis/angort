@@ -205,14 +205,14 @@ private:
     
     
     /// decrements the reference counts of all objects referred to in the iterable
-    void decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool keys);
+    void decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool iskey);
     /// trace all collectable entities reachable from this iterable
     /// If their gc_refs is zero (i.e. still in the mainlist) move
     /// to the newlist
-    void traceAndMoveIterator(GarbageCollected *gc,bool keys);
+    void traceAndMoveIterator(GarbageCollected *gc,bool iskey);
     
     /// deletion prepwork - clears all references to objects marked - see detect()
-    void clearZombieReferencesIterator(GarbageCollected *gc,bool keys);
+    void clearZombieReferencesIterator(GarbageCollected *gc,bool iskey);
 };
     
 

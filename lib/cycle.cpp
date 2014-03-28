@@ -9,7 +9,7 @@
 
 CycleDetector *CycleDetector::instance = NULL;
 
-#define dfprintf printf
+//#define dfprintf printf
 
 /** A description of the algorithm: 
  * - For each container object, set gc_refs equal to the object's reference count.
@@ -24,7 +24,8 @@ void CycleDetector::detect(){
     newlist.reset(); // clean the new list
     
     for(p=mainlist.head();p;p=mainlist.next(p)){
-        dfprintf("List ent : %p (next %p)\n",p,mainlist.next(p));
+        dfprintf("List ent : %p (next %p), refs %d\n",p,mainlist.next(p),
+                 p->refct);
         p->gc_refs = p->refct;
     }
     
@@ -116,14 +117,15 @@ void CycleDetector::detect(){
 //    printf("DONE\n");
 }
 
-void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc, bool keys) {
+void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool iskey) {
     
-    Iterator<Value *>* iterator = keys ? gc->createKeyIterator(true) : gc->createValueIterator();
+    Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
     if(!iterator)return;
-    
+    dfprintf("doing deciterref on %p\n",gc);
     for(iterator->first();!iterator->isDone();iterator->next()){
         Value *v = iterator->current();
         if(GarbageCollected *gc = v->t->getGC(v)){
+            dfprintf("Item type %s, gc %p\n",v->t->name,v->v.gc);
             gc->gc_refs--;
             dfprintf("decremented count for %p to %d\n",gc,gc->gc_refs);
         }
@@ -131,9 +133,9 @@ void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc, boo
     delete iterator;
 }
 
-void CycleDetector::traceAndMoveIterator(GarbageCollected *gc, bool keys) {
+void CycleDetector::traceAndMoveIterator(GarbageCollected *gc,bool iskey) {
     
-    Iterator<Value *>* iterator = keys ? gc->createKeyIterator(true) : gc->createValueIterator();
+    Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
     if(!iterator)return;
     
     for(iterator->first();!iterator->isDone();iterator->next()){
@@ -141,7 +143,7 @@ void CycleDetector::traceAndMoveIterator(GarbageCollected *gc, bool keys) {
         if(GarbageCollected *g = v->t->getGC(v)){
             if(!g->gc_refs) { // if child not done
                 move(g);
-                traceAndMoveIterator(v->v.gc,keys);
+                traceAndMoveIterator(v->v.gc,iskey);
                 v->v.gc->traceAndMove(this);
             }
         }
@@ -149,8 +151,8 @@ void CycleDetector::traceAndMoveIterator(GarbageCollected *gc, bool keys) {
     delete iterator;
 }
 
-void CycleDetector::clearZombieReferencesIterator(GarbageCollected *gc, bool keys) {
-    Iterator<Value *>* iterator = keys ? gc->createKeyIterator(true) : gc->createValueIterator();
+void CycleDetector::clearZombieReferencesIterator(GarbageCollected *gc,bool iskey) {
+    Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
     if(!iterator)return;
     
     for(iterator->first();!iterator->isDone();iterator->next()){

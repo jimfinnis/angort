@@ -21,6 +21,15 @@ HashObject::~HashObject(){
     delete hash;
 }
 
+Iterator<Value *> *HashObject::makeValueIterator() {
+    return hash->createIterator(false);
+}
+
+Iterator<Value *> *HashObject::makeKeyIterator() {
+    return hash->createIterator(true);
+}
+
+
 Hash *HashType::set(Value *v){
     v->clr();
     v->t = this;
@@ -36,10 +45,6 @@ Hash *HashType::get(Value *v){
     return v->v.hash->hash;
 }
 
-
-Iterator<Value *> *HashType::makeIterator(Value *v){
-    return v->v.hash->hash->createIterator();
-}
 
 void HashType::saveDataBlock(Serialiser *ser,const void *v){
     HashObject *r = (HashObject *)v;

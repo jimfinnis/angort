@@ -6,6 +6,7 @@
 ?B `foo ?A set
 ?A `foo ?B set
 
+gc
 2 gccount = "cycle1" assert
 
 0 !A
@@ -16,3 +17,23 @@ gccount.
 0 gccount = "cycle2" assert
 
 
+[%] !A
+[% `foo A ] !B
+[% `bar B, `fod A] !C
+?C `buz ?A set
+gccount .
+3 gccount = "cycle2" assert
+
+gc
+3 gccount = "cycle2" assert
+
+0 !A
+0 !B
+0 !C
+1 1 1 drop drop drop
+gc
+gccount.
+0 gccount = "cycle4" assert
+
+
+quit

@@ -69,14 +69,12 @@ public:
     
     /// many GC objects are containers for references to other objects - return a reference
     /// to an iterator iterating over containing these, and you won't need to subclass the methods 
-    /// below! This is the values iterator.
     /// \todo rewrite docs for iterators?
-    virtual Iterator<class Value *> *createValueIterator(){return NULL;}
+    virtual Iterator<class Value *> *makeKeyIterator(){return NULL;}
     /// many GC objects are containers for references to other objects - return a reference
-    /// to a new iterator iterating over the keys for these, and you won't need to subclass the methods 
-    /// below! This is the keys iterator - if it returns non-GCs mapped to values, such as
-    /// is the case with object properties, it should return NULL when the argument is true.
-    virtual Iterator<class Value *> *createKeyIterator(bool incycledetection){return NULL;}
+    /// to an iterator iterating over containing these, and you won't need to subclass the methods 
+    /// below! This is the values iterator.
+    virtual Iterator<class Value *> *makeValueIterator(){return NULL;}
     
     /// deletion prepwork - see CycleDetector::detect(). This should go through any GC objects,
     /// and if the gc_refs field is 0xffff, should clear them (i.e. any objects which were not traced)

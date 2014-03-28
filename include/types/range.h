@@ -12,8 +12,13 @@
 #include "angort.h"
 
 template <class T> struct Range : public GarbageCollected {
-public:
     T start,end,step;
+    virtual Iterator<class Value *> *makeValueIterator();
+    
+    /// the key iterator of a range is the same as the value iterator
+    virtual Iterator<class Value *> *makeKeyIterator(){
+        return makeValueIterator();
+    }
 };
 
 template <class T> class RangeType : public GCType {
@@ -36,7 +41,6 @@ public:
     /// which is held external to the Value union.
     virtual void *loadDataBlock(Serialiser *ser);
     
-    virtual Iterator<Value *> *makeIterator(Value *v);
 };
 
 #endif /* __RANGE_H */

@@ -47,7 +47,7 @@ public:
     
     /// return the GC object only if this is a GC type
     virtual class GarbageCollected *getGC(Value *v){
-        NULL;
+        return NULL;
     }
           
     
@@ -138,8 +138,21 @@ public:
         throw WTF;
     }
     
-    /// create the low-level iterator if possible
+    /// the "default" operator is a value iterator for lists etc,
+    /// and a key iterator for hashes.
     virtual Iterator<Value *> *makeIterator(Value *v){
+        return makeValueIterator(v);
+    }
+    
+    /// create the low-level iterator if possible. GCType does this by calling
+    /// makeValueIterator on the underlying GarbageCollected object in the value.
+    virtual Iterator<Value *> *makeValueIterator(Value *v){
+        throw RUNT("cannot iterate a non-iterable value");
+    }
+    
+    /// create the low-level key iterator if possible. GCType does this by calling
+    /// makeValueIterator on the underlying GarbageCollected object in the value.
+    virtual Iterator<Value *> *makeKeyIterator(Value *v){
         throw RUNT("cannot iterate a non-iterable value");
     }
     
@@ -243,6 +256,12 @@ public:
     virtual void decRef(Value *v);
 
     virtual class GarbageCollected *getGC(Value *v);
+    
+    /// make an iterator by calling the gc's method
+    virtual Iterator<class Value *> *makeValueIterator(Value *v);
+    /// make an iterator by calling the gc's method
+    virtual Iterator<class Value *> *makeKeyIterator(Value *v);
+        
 };
 
 

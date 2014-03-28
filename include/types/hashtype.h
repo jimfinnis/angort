@@ -14,6 +14,8 @@ class Hash;
 struct HashObject: public GarbageCollected {
     Hash *hash;
     
+    virtual Iterator<Value *> *makeKeyIterator();
+    virtual Iterator<Value *> *makeValueIterator();
     HashObject();
     ~HashObject();
 };
@@ -21,7 +23,7 @@ struct HashObject: public GarbageCollected {
 class HashType: public GCType {
 public:
     HashType(){
-        add("hash","HASHx");
+        add("hash","HASH");
     }
     
     /// get the hash, throwing if it's not one
@@ -29,6 +31,12 @@ public:
     
     /// create a new hash, throwing if it's not one
     Hash *set(Value *v);
+    
+    /// the default iterator for a hash is the key iterator
+    virtual Iterator<Value *> *makeIterator(Value *v){
+        return makeKeyIterator(v);
+    }
+    
     
     /// serialise the data for a reference type - that is, the data
     /// which is held external to the Value union.
@@ -39,7 +47,6 @@ public:
     
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
     
-    virtual Iterator<Value *> *makeIterator(Value *v);
     virtual bool isIn(Value *v,Value *item);
     
     virtual void setValue(Value *coll,Value *k,Value *v);
