@@ -1,8 +1,3 @@
-
-OK this is all problematic because closures done this way are IMMUTABLE.
-We copy from the closure table into the local variables, and any changes
-are lost. That's no good. So.
-
 Function definitions should contain the closure map, which is just an array
 of indices of parent locals. Compiling will now have locals, globals and 
 closure variables. There will also be OP_CLOSUREGET and OP_CLOSURESET.
@@ -56,8 +51,8 @@ Further notes
 
 ========================
 
-:createadder [x]
-    ( [:a] ?x + ) ;   # ok, variable a is a bit pointless - it's an illustration
+:createadder |x|
+    (|:a| ?x + ) ;   # ok, variable a is a bit pointless - it's an illustration
     
 global adder
 3 createadder !adder
@@ -65,9 +60,9 @@ global adder
 
     
 :createadder        enter compiling context    
-[x]                 create new locals list in that context, with 1 parameter, x, with index 0
+|x|                 create new locals list in that context, with 1 parameter, x, with index 0
 (                   push compiling context with no locals or params and an empty closure map
-[:a]                create a single local called a in the new context
+|:a|                create a single local called a in the new context
 ?x                  scan for x. It's not in the current context. Tell the current
                     context to scan its parent, and add a closure map entry if it finds one in
                     the parent. It finds one, and adds the closure map entry.
