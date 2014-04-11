@@ -1,8 +1,14 @@
 #include <math.h>
 #include "angort.h"
 
+/*
+ * Mappings for (some) standard maths library functions
+ */
 
+
+// macro for helping generate unary float functions
 #define FN(f) a->pushFloat(f(a->popFloat()))
+
 %name stdmath
 
 
@@ -33,4 +39,9 @@
 %word sqrt (x -- sqrt x)
 {
     FN(sqrtf);
+}
+
+%word exp (x -- exp x)
+{
+    FN(exp);
 }
