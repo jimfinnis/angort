@@ -1,0 +1,23 @@
+\documentclass{article}
+\usepackage{listings}
+\begin{document}
+\lstdefinelanguage{angort}
+{morekeywords={for,if,then,else,leave,dup,call,global,swap,drop,not,
+and,or,ifleave,const,over,defer,each,include,stop},
+sensitive=false,
+morecomment=[l]{\#},
+morestring=[b]"
+}
+\lstdefinestyle{ang}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=angort,
+  showstringspaces=false,
+  basicstyle=\scriptsize\ttfamily,
+}
+
+\input{body}
+
+\end{document}
