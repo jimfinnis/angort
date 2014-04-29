@@ -23,6 +23,9 @@
 
 $listname="default";
 
+open(WORDSFILE,">words");
+
+
 while(<>){
     chop;
     if(/^%name/){
@@ -32,6 +35,7 @@ while(<>){
         ($dummy,$word,$text)=split(/\s/,$_,3);
         push(@list,$word);
         $descs{$word}=$text;
+        print WORDSFILE "$word,";
         print "static void _word__$word"."(Angort *a)\n";
     } else {
         print "$_\n";

@@ -13,12 +13,17 @@ set(WORDFILELIST)
 # into the SOURCES. So, Angort word files should be added with this.
 
 macro(add_words_files)
+    add_custom_command(
+        OUTPUT wordslist
+        COMMAND rm wordslist
+        )
     foreach(file ${ARGV})
         add_custom_command(
             OUTPUT ${file}.cpp
             DEPENDS ${file}
             COMMAND pwd
-            COMMAND perl ../../makeWords.pl ${CMAKE_SOURCE_DIR}/lib/${file} >${file}.cpp
+            COMMAND perl  ../../makeWords.pl  ${CMAKE_SOURCE_DIR}/lib/${file}>${file}.cpp
+            COMMAND cat words >>wordslist
         )
         set(WORDFILELIST ${WORDFILELIST} ${file}.cpp)
     endforeach(file)
