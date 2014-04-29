@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{listings}
+\usepackage{fancyvrb}
 \begin{document}
 \lstdefinelanguage{angort}
 {morekeywords={for,if,then,else,leave,dup,call,global,swap,drop,not,
@@ -17,6 +18,11 @@ morestring=[b]"
   showstringspaces=false,
   basicstyle=\scriptsize\ttfamily,
 }
+
+\DefineVerbatimEnvironment{v}{Verbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\small,xleftmargin=15pt}
 
 \input{body}
 

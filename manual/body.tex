@@ -1,4 +1,99 @@
 \section{Introduction}
-Angort is a stack-based concatenative programming language with
+Angort is a stack-based concatenative programming language with some
 functional features. The language has grown from a simple Forth-like
-core
+core over time, and has been used primarily for robot control on
+an ExoMars rover locomotion prototype.
+
+This is an extremely brief introduction to the language. It may
+be useful for readers unfamiliar with this style of programming
+to look into Forth, which is an older, more primitive (but faster and
+smaller) language from which much of the syntax of Angort was
+borrowed.
+
+It combines the power and ease of a modern dynamic language with
+the convenience of a Forth-like language for controlling robots in
+real time. For example, on our rover we have the following definitions
+in the startup file:
+
+\begin{lstlisting}[style=ang]
+# define a constant "wheels" holding a range from 1-6 inclusive
+
+range 1 7 const wheels
+
+# define a new word "d" with a single parameter "speed"
+
+:d [speed:]
+
+    # set a help text for this word
+
+    :"(speed --) set speed of all drive motors"
+    
+    # for each wheel, set the required speed to the value
+    # of the parameter
+    
+    wheels each {
+        ?speed i!drive
+    }
+;
+
+# slightly more complex word for steering
+
+:t [angle:]
+    :"(angle --) turn front wheels one way, back wheels opposite way"
+    
+    ?angle dup 1!steer 2!steer
+    0 0 3!steer 4!steer
+    ?angle neg dup 5!steer 6!steer
+;
+
+# define a word to stop the rover by setting all speeds to zero
+
+:s 0 d;
+
+\end{lstlisting}
+Once these words are defined we can steer the robot in real time with
+commands like:
+\begin{v}
+2500 d
+30 t
+s
+\end{v}
+These will set the rover speed to 2500, turn it to 30 degrees, and stop
+it respectively. We can also directly type things like:
+\begin{v}
+wheels each { i dactual .}
+\end{v}
+which will print the actual speeds of all the wheels. As can be seen,
+it is a very terse language.
+
+In the examples given so far, words such as \texttt{dactual},
+\texttt{!drive} and \texttt{?drive} are links to native C++ code: it
+is very easy to interface Angort with C++.
+
+\section{Basic concepts}
+Angort, like Forth (with which it shares many conceptual elements)
+is a stack-based language. It consists of sequences of ``words'',
+which can be constants (such as strings or numbers), or functions.
+All words operate on the stack, or manipulate the internal state,
+in sequence --- there is very little ``syntax'' as such.
+
+Because of this, Angort is a \emph{reverse Polish} language: functions
+(including operations like $+$ and $-$) precede their operands. For
+example, to print $(123+231)*6$ we would write
+\begin{v}
+123 231 + 6 * .
+\end{v}
+This would perform the following actions:
+\begin{itemize}
+\item push 123 onto the stack
+\item push 231 onto the stack
+\item pop the top two values off the stack, add them, and push the sum (giving $123+231$)
+\item push 6 onto the stack (so the stack now has $123+231$ and $6$)
+\item pop the top two values off the stack, add them, and push the product
+\item pop the top value and print it.
+\end{itemize}
+A few words don't work like this. For example, the \texttt{const} keyword
+pops a value off the stack, reads the next token in the input stream and
+creates a constant of that name. 
+
+
