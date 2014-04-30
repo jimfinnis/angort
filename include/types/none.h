@@ -20,6 +20,11 @@ public:
     virtual int toInt(const Value *v) const {
         return 0;
     }
+    virtual const char *toString(char *outBuf,int len,const Value *v) const
+    {
+        strncpy(outBuf,"NONE",len);
+        return outBuf;
+    }
 };
 
 
