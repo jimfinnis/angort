@@ -105,7 +105,7 @@ Define new words with
 
     :newword .... ;
 
-as in Forth. If you want to recurse, forward-declare the word with "defer." Here are some example functions:
+as in Forth. Here are some example functions:
 
     :square dup * ;
     
@@ -115,7 +115,6 @@ This will duplicate the number on the stack and then multiply the top two number
     
 will print 16. As mentioned above, you can use multiple lines for a word definition:
 
-    defer factorial
     :factorial |x:|
         ?x 1 = if
             1
@@ -205,7 +204,7 @@ create an "iterator loop" over the range:
 The range will run from <start> to <end>, and *does not include* the end. That is, the above
 code will show the values from 0 to 9, and
 
-    0 10 5 strange each {i.}
+    0 10 5 srange each {i.}
     
 will just show 0 and 5.
 
