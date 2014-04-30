@@ -101,7 +101,7 @@ This is for a Linux machine
 with CMake and the \texttt{readline} development libraries. The standard
 interpreter will then be installed in \texttt{cli/angortcli} .
 
-\subsection{Getting started: immediate mode}
+\section{Getting started: immediate mode}
 Running the interpreter will give a prompt:
 \begin{v}
 0|0>
@@ -120,7 +120,7 @@ bytecode block, and the current block is closed and run at the end of the
 line in immediate mode. Inside a word definition this rule does not apply.
 
 
-\subsection{The stack}
+\section{The stack}
 Angort is a stack-based language --- most words change the contents
 of the stack in some way. For example,
 \begin{v}
@@ -137,7 +137,7 @@ will pop the value from the top of the stack and print it.
 will push 3 and 4 onto the stack, then add them together replacing them
 with 7, and then print the 7.
 
-\subsection{Defining new words}
+\section{Defining new words}
 New words are defined with code of the form
 \begin{v}
 :wordname ... ;
@@ -168,7 +168,7 @@ more than one line:
     then
 \end{lstlisting}
 
-\subsubsection{Word parameters and local variables}
+\subsection{Word parameters and local variables}
 Until now, all the code has been perfectly valid Forth\footnote{With
 the exception of the factorial function, which in most Forths would
 probably require a \texttt{DEFER}.} However, the manipulation of
@@ -200,7 +200,7 @@ either side of the colons empty means no locals or parameters will
 be created.
 
      
-\subsubsection{Word documentation strings}
+\subsection{Word documentation strings}
 Following the locals and parameters (or just the word name if there
 are none) there may be a word documentation string. It has the form
 \begin{v}
@@ -221,7 +221,7 @@ shows its replacement. For example:
 Note that the after part doesn't usually refer to a named variable ---
 it's just the value left behind on the stack.
 
-\subsection{Types}
+\section{Types}
 Angort is a dynamically typed language, with type coercion (weak typing).
 The following types are available:
 \begin{center}
@@ -248,7 +248,7 @@ keys can strings, symbols, integers or floats & \texttt{[\% `foo 1, "fish" "fish
 There are some additional types used internally --- such as the
 types for iterators and deleted objects in a hash.
 
-\subsubsection{Coercions}
+\subsection{Coercions}
 \begin{itemize}
 \item Integers and floats are coerced to strings in string contexts.
 \item In binary operations, if one of the operands is a float, both are coerced to floats:
@@ -263,6 +263,7 @@ is a string, both will be coerced to strings.
 \end{itemize}
 Much of the type system is untidy, and a major reorganisation is being
 planned.
+\clearpage
 
 \section{Conditions}
 These have the form:
@@ -270,11 +271,178 @@ These have the form:
 <condition> if <runs if true> then
 \end{v}
 The word \texttt{if} pops the item off the top of the stack,
-and jumps forward to just after the corresponding \texttt{then} if it is false.
+and jumps forward to just after the corresponding \texttt{then} if it is false (zero).
 There is also a two way branch:
 \begin{v}
 <condition> if <runs if true> else <runs if false> then
 \end{v}
 This works the same way, except that the \texttt{if} jumps to after the
 \texttt{else} if the top value is false, and \texttt{else} jumps forward
-to just after \texttt{then} `
+to just after \texttt{then}. This is shown in the figure below:
+\begin{center}
+\includegraphics[width=5in]{ifthen.pdf}
+\end{center}
+Here's a code example, printing whether a number is even or odd:
+\begin{lstlisting}
+:evenodd 
+    # Get the number on the stack modulo 2, and use
+    # whether it is zero or not as the condition.
+    2 % if
+        "number is odd"     # stack this string if there is a remainder
+    else
+        "number is even"    # stack this string if remainder is zero
+    then                    # end the conditional
+    .                       # print the top of the stack
+;
+\end{lstlisting}
+We can run this with various values:
+\begin{v}
+0|0> 4 evenodd
+number is even
+0|0> 3 evenodd
+number is odd
+\end{v}
+Conditions can be nested.
+
+
+\section{Loops}
+There are two kinds of loops in Angort --- infinite loops,
+which must be broken out of using \texttt{leave} or \texttt{ifleave}; and
+iterator loops, which loop over a collection (i.e. a hash or list) or
+a range. Both are delimited with curly brackets \verb+{}+, but iterator loops
+use the \texttt{each} word before the opening brace.
+
+\subsection{Infinite loops}
+Any \texttt{leave} word will break out of an infinite loop:
+\begin{lstlisting}
+:foo |:counter|         # a local variable "counter", no parameters
+    0 !counter          # set counter to zero
+    {                   # start loop
+        ?counter.       # print the counter
+        ?counter 1+     # increment the counter
+        !counter        # and store it back
+        ?counter 100=   # is it equal to 100?
+        if leave then   # if so, leave the loop
+    }
+;
+\end{lstlisting}
+This will count from 0 to 99. The sequence
+\begin{v}
+if leave then
+\end{v}
+is so common that it is coded to a special word of its own, and can be written
+as 
+\begin{v}
+ifleave
+\end{v}
+The word above could be written tersely as
+\begin{lstlisting}
+:foo |:c| 0!c {?c. ?c 1+ !c ?c 100= ifleave};
+\end{lstlisting}
+Loops can be listed, and the \texttt{leave} words will jump out of the
+innermost loop in which they appear.
+
+\subsection{Iterator loops}
+Iterator loops loop over an \emph{iterable} value. These are currently ranges,
+hashes and lists. They are delimited by curly braces, but preceded by the 
+\texttt{each} word, which pops the iterable off the stack and makes an
+iterator out of it, over which the loop runs. The iterator exists for as 
+long as the loop does, and is destroyed when the loop completed. Again, iterator
+loops can be nested (and can be nested with infinite loops). With an iterator
+loop, the counting example can be rewritten as:
+\begin{lstlisting}
+:foo
+    0 100 range         # stack a range from 0-99 (see below)
+    each {              # start the iterator loop
+        i               # push the current item in the iterator
+        .               # print it
+    }                   # end of loop
+;
+\end{lstlisting}
+Note that the end value of all ranges is the first value \emph{outside} the loop.
+This looks somewhat odd with integer ranges, but serves to make float ranges
+not rely on equality tests.
+\begin{lstlisting}
+:foo
+    0 10 0.09 frange    # float range from 0-10 in steps of 0.09
+    each {i.}           # print them
+\end{lstlisting}
+will print about 9.990008 as its final value.
+
+Although we've not covered lists and hashes, it's useful to know that we can
+iterate over the values in a list:
+\begin{lstlisting}
+[1,2,3,4,5] each {i.}
+\end{lstlisting}
+will print the items. Similarly, we can iterate over the keys of a hash:
+\begin{lstlisting}
+[% "foo" "bar", "baz" "qux"] each {i.}
+\end{lstlisting}
+will print the hash keys ``foo'' and ``bar''.
+
+\subsubsection{Nested iterator loops}
+Each loop has its own iterator, even if they come from the same iterable:
+\begin{lstlisting}
+:foo |:r|
+    0 10 range !r           # store a range
+    ?r each {               # outer loop
+        i.                  # print value of outer loop iterator
+        ?r each {           # inner loop
+            i.              # print value of inner loop iterator
+        }
+    }
+;
+\end{lstlisting}
+The range here is used twice, generating two separate iterators with
+their own current value.
+
+While the word \texttt{i} retrieves the iterator value inside the current
+loop, inside nested iterator loops it is often useful to get the value
+in outer loops. This can be done with the \texttt{j} and \texttt{k} words,
+to get the outer and next outer iterator values:
+\begin{lstlisting}
+:foo |:r|
+    0 10 range !r           # store a range
+    ?r each {               # outer loop
+        ?r each {           # inner loop
+            i j +           # print sum of inner and outer iterators
+        }
+    }
+;
+\end{lstlisting}
+
+\subsection{The state of the stack inside a loop}
+Note that the iterator is not kept on the normal stack --- it is popped
+off when the loop starts and kept inside a special stack. The same
+applies to infinite loops: no loop state is kept on the stack. This 
+leaves the stack free for manipulation:
+\begin{lstlisting}
+# sum all the integers from 0 to x
+:sumto |x:|
+    0               # stack an accumulator
+    0 ?x 1+ range   # stack a range from 0 to x inclusive
+    each {          # stack an iterator, then pop it onto the iterator stack
+        i           # get current iterator value
+        +           # add it to the accumulator
+    }               # end loop
+;                   # finish and return the accumulator
+\end{lstlisting}
+
+\subsection{Words to create ranges}
+There are three words to create a range on the stack:
+\begin{itemize}
+\item \texttt{x y range} will create an integer range over the interval $[x,y)$ with a step of 1; i.e. a range from $x$ to $y-1$ inclusive.
+\item \texttt{x y s srange} will create an integer range over the interval $[x,y)$ with a step of $s$
+\item \texttt{x y s frange} will create a float range over the interval $[x,y)$ with a step of $s$
+\end{itemize}
+
+
+\section{Globals and constants}
+Global variables are defined in two ways. The ``polite'' way is to use the 
+\texttt{global} keyword, which creates a new global of the same following
+it, initially holding the nil value \texttt{none}:
+\begin{v}
+0|0> global foo
+0|0> ?foo.
+<TYPE NONE: 
+\end{v}
