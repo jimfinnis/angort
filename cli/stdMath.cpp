@@ -45,3 +45,10 @@
 {
     FN(exp);
 }
+
+%word pow (x y -- x^y)
+{
+    float y = a->popFloat();
+    float x = a->popFloat();
+    a->pushFloat(powf(x,y));
+}
