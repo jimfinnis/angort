@@ -1,5 +1,8 @@
+\lstset{style=ang}
 \section{Introduction}
-Angort is a stack-based concatenative programming language with some
+Angort\footnote{The name is an entirely random pair of syllables,
+it has no significance.}
+is a stack-based concatenative programming language with some
 functional features. The language has grown from a simple Forth-like
 core over time, and has been used primarily for robot control on
 an ExoMars rover locomotion prototype.
@@ -15,7 +18,7 @@ the convenience of a Forth-like language for controlling robots in
 real time. For example, on our rover we have the following definitions
 in the startup file:
 
-\begin{lstlisting}[style=ang]
+\begin{lstlisting}
 # define a constant "wheels" holding a range from 1-6 inclusive
 
 range 1 7 const wheels
@@ -63,37 +66,215 @@ it respectively. We can also directly type things like:
 \begin{v}
 wheels each { i dactual .}
 \end{v}
-which will print the actual speeds of all the wheels. As can be seen,
-it is a very terse language.
+which will print the actual speeds of all the wheels.
+It's also possible to perform some functional programming with
+anonymous functions:
+\begin{v}
+:sum |list:| 0 ?list (+) reduce;
+\end{v}
+will allow us to sum a list and print the results:
+\begin{v}
+[1,2,3,4,5] sum .
+\end{v}
+or even:
+\begin{v}
+1 1001 range (dup*) map sum .
+\end{v}
+to print the sum of the squares of the first 1000 integers.
+As can be seen, Angort is a very terse language.
 
 In the examples given so far, words such as \texttt{dactual},
 \texttt{!drive} and \texttt{?drive} are links to native C++ code: it
 is very easy to interface Angort with C++.
 
-\section{Basic concepts}
-Angort, like Forth (with which it shares many conceptual elements)
-is a stack-based language. It consists of sequences of ``words'',
-which can be constants (such as strings or numbers), or functions.
-All words operate on the stack, or manipulate the internal state,
-in sequence --- there is very little ``syntax'' as such.
-
-Because of this, Angort is a \emph{reverse Polish} language: functions
-(including operations like $+$ and $-$) precede their operands. For
-example, to print $(123+231)*6$ we would write
+\subsection{Downloading and building Angort}
+Angort can be downloaded from \url{https://github.com/jimfinnis/angort} .
+Once downloaded it, can be built with the following commands (from
+inside the top-level Angort directory):
 \begin{v}
-123 231 + 6 * .
+mkdir build
+cd build
+cmake ..
+make
 \end{v}
-This would perform the following actions:
+This is for a Linux machine
+with CMake and the \texttt{readline} development libraries. The standard
+interpreter will then be installed in \texttt{cli/angortcli} .
+
+\subsection{Getting started: immediate mode}
+Running the interpreter will give a prompt:
+\begin{v}
+0|0>
+\end{v}
+The two numbers are the number of garbage-collectable objects in the
+system and the number of items on the stack, respectively.
+The interpreter is in ``immediate mode'', as opposed to ``compilation
+mode'' --- any words entered will be compiled to bytecode and run when
+enter is pressed,
+rather than being added to a word definition.
+
+In this mode, control constructs like
+\texttt{if...else...then} or loops cannot span more than one
+line. This is because such structures can only operate within a single 
+bytecode block, and the current block is closed and run at the end of the
+line in immediate mode. Inside a word definition this rule does not apply.
+
+
+\subsection{The stack}
+Angort is a stack-based language --- most words change the contents
+of the stack in some way. For example,
+\begin{v}
+3
+\end{v}
+by itself will just put the value 3 on the stack. Then
+\begin{v}
+.
+\end{v}
+will pop the value from the top of the stack and print it.
+\begin{v}
+3 4 + .
+\end{v}
+will push 3 and 4 onto the stack, then add them together replacing them
+with 7, and then print the 7.
+
+\subsection{Defining new words}
+New words are defined with code of the form
+\begin{v}
+:wordname ... ;
+\end{v}
+A simple example is:
+\begin{v}
+:square dup *;
+\end{v}
+This will define a word \texttt{square} which will duplicate
+the value on top of the stack, multiply the top two values
+(effectively squaring the number\footnote{producing
+an error if the value is not a number}) and exit, leaving the
+squared number on the stack. This can then be used thus:
+\begin{v}
+3 square 4 square + .
+\end{v}
+which will print 25, i.e. $3^2+4^2$.
+While defining a word, Angort is is compilation mode --- words will
+be converted to bytecode but added to the definition of the new word
+rather than executed immediately. Word definitions can therefore span
+more than one line:
+\begin{lstlisting}
+:factorial |x:|
+    ?x 1 = if
+        1
+    else
+        ?x ?x 1 - factorial *
+    then
+\end{lstlisting}
+
+\subsubsection{Word parameters and local variables}
+Until now, all the code has been perfectly valid Forth\footnote{With
+the exception of the factorial function, which in most Forths would
+probably require a \texttt{DEFER}.} However, the manipulation of
+stack required in Forth is a challenge (and modern computers
+have a little more memory), so Angort has a system of named
+parameters and local variables. These can be defined by
+putting a special block of the form
+\begin{v}
+|param1,param2,param3... : local1,local2,local3|
+\end{v}
+after the word name in the definition. Locals and parameters are
+exactly the same internally, but the values of parameters are popped
+off the stack when the new word is called. 
+
+
+Once defined, locals (and parameters) can be read (i.e. pushed onto
+the stack) using a question mark followed by the variable name.
+Similarly, a local is written (i.e. a value popped off the stack and
+stored in the local) by using an exclamation mark. For example,
+\begin{lstlisting}
+:pointless |x,y:z|
+    ?x ?y + !z
+;
+\end{lstlisting}
+will read the two arguments into the locals $x$ and $y$, add them,
+store the result in the local $z$, and then exit, throwing everything away.
+Note that leaving
+either side of the colons empty means no locals or parameters will
+be created.
+
+     
+\subsubsection{Word documentation strings}
+Following the locals and parameters (or just the word name if there
+are none) there may be a word documentation string. It has the form
+\begin{v}
+:"(before -- after) what the word does"
+\end{v}
+The section in brackets is known as a \emph{stack picture,} and describes
+the action of the word on the stack. The part before the hyphen
+shows the part of the stack removed by the word, and the part after
+shows its replacement. For example:
+\begin{lstlisting}
+:dist |x1,y1,x2,y2:|
+    :"(x1 y1 x2 y2 -- d) calculate the distance between two points"
+    ?x1 ?x2 - abs dup *     # this is (x1-x2)^2
+    ?y1 ?y2 - abs dup *     # this is (y1-y2)^2
+    + sqrt                  # sum them, and find the root
+;
+\end{lstlisting}
+Note that the after part doesn't usually refer to a named variable ---
+it's just the value left behind on the stack.
+
+\subsection{Types}
+Angort is a dynamically typed language, with type coercion (weak typing).
+The following types are available:
+\begin{center}
+\begin{tabular}{|l|p{2.7in}|l|}\hline
+\textbf{Name} & \textbf{Definition} & \textbf{Example of literal} \\ \hline
+None & The nil object, specifying ``no value'' & \texttt{none} \\
+Integer & 32 or 64-bit integers depending on architecture & \texttt{5045} \\
+Float & 32-bit floats & \texttt{54.0} \\
+String & Strings of characters & \texttt{"Hello there"} \\
+Symbol & Single-word strings, internally stored as integers and
+generally used as hash keys & \texttt{`foo} \\
+Code\footnote{Actually, this conflates two types internally --- codeblocks,
+which have no environment; and closures, which consist of a codeblock and
+some stored variables.}& Blocks of Angort code, anonymous functions & \texttt{( dup * 1 + )}\\
+Integer range & A range of integers between two values with optional step& \texttt{0 4 range}\footnote{This is actually a call to the \texttt{range} word which takes two integers to create a range.}\\
+Float range & A range of floats between two values with  step& \texttt{0 4 0.1 frange}\\
+List & A array/list of values\footnote{Stored internally as an
+automatically resized array rather than a linked list.} & \texttt{[1,2,"foo"]} \\
+Hash & A map of values to values implemented as a hash table, where
+keys can strings, symbols, integers or floats & \texttt{[\% `foo 1, "fish" "fish"]} \\
+\hline
+\end{tabular}
+\end{center}
+There are some additional types used internally --- such as the
+types for iterators and deleted objects in a hash.
+
+\subsubsection{Coercions}
 \begin{itemize}
-\item push 123 onto the stack
-\item push 231 onto the stack
-\item pop the top two values off the stack, add them, and push the sum (giving $123+231$)
-\item push 6 onto the stack (so the stack now has $123+231$ and $6$)
-\item pop the top two values off the stack, add them, and push the product
-\item pop the top value and print it.
+\item Integers and floats are coerced to strings in string contexts.
+\item In binary operations, if one of the operands is a float, both are coerced to floats:
+\begin{v}
+0|0> 1 2 / .
+0
+0|0> 1.0 2 / .
+0.500000
+\end{v}
+\item In certain binary operations (currently just ``+'') if one of the operands
+is a string, both will be coerced to strings.
 \end{itemize}
-A few words don't work like this. For example, the \texttt{const} keyword
-pops a value off the stack, reads the next token in the input stream and
-creates a constant of that name. 
+Much of the type system is untidy, and a major reorganisation is being
+planned.
 
-
+\section{Conditions}
+These have the form:
+\begin{v}
+<condition> if <runs if true> then
+\end{v}
+The word \texttt{if} pops the item off the top of the stack,
+and jumps forward to just after the corresponding \texttt{then} if it is false.
+There is also a two way branch:
+\begin{v}
+<condition> if <runs if true> else <runs if false> then
+\end{v}
+This works the same way, except that the \texttt{if} jumps to after the
+\texttt{else} if the top value is false, and \texttt{else} jumps forward
+to just after \texttt{then} `

@@ -1,11 +1,43 @@
 \documentclass{article}
+\setlength{\textheight}{229mm}
+\setlength{\topmargin}{-5.4mm}
+\setlength{\textwidth}{150mm}
+\setlength{\oddsidemargin}{10.6mm}
+\setlength{\evensidemargin}{10.6mm}
+\setlength{\headheight}{15.2pt}
 \usepackage{listings}
+\usepackage{palatino}
+\makeatletter
+\lst@Key{stringsprefix}\relax{\lst@DefActive\lst@stringsprefix{#1}}
+\global\let\lst@stringsprefix\@empty
+\lst@AddToHook{SelectCharTable}
+    {\ifx\lst@stringsprefix\@empty\else
+         \expandafter\lst@CArg\lst@stringsprefix\relax
+             \lst@CDef{}%
+                      {\lst@ifletter\else
+                           \global\let\lst@prefixstring\@empty
+                       \fi}%
+                      {}%
+     \fi}
+\lst@AddToHook{Init}{\global\let\lst@prefixstring\relax}
+\lst@AddToHook{Output}
+    {\ifx\lst@prefixstring\@empty
+         \let\lst@thestyle\lst@stringstyle
+         \global\let\lst@prefixstring\relax
+     \fi}%
+
+\makeatother
 \usepackage{fancyvrb}
+\usepackage{url}
 \begin{document}
-\lstdefinelanguage{angort}
-{morekeywords={for,if,then,else,leave,dup,call,global,swap,drop,not,
-and,or,ifleave,const,over,defer,each,include,stop},
+\lstdefinelanguage{angort}{
+morekeywords={for,if,then,else,leave,dup,call,global,swap,drop,not,
+and,or,ifleave,const,over,defer,each,include,stop,dumplist,get,set,len,remove,shift,unshift,pop,push,map,reduce,filter,in,version,
+barewords,dump,snark,none,p,rawp,nl,quit,debug,disasm,assertdebug,assert,assertmode,
+abs,neg,isnone,gccount,range,srange,frange,frangesteps,i,j,k,iter,save,load,reset,clear,
+list,help,type,srand,rand,gc},
 sensitive=false,
+stringsprefix={\`},
 morecomment=[l]{\#},
 morestring=[b]"
 }
@@ -15,6 +47,8 @@ morestring=[b]"
   frame=L,
   xleftmargin=\parindent,
   language=angort,
+  stringstyle=\ttfamily\slshape,
+  keywordstyle=\bfseries,
   showstringspaces=false,
   basicstyle=\scriptsize\ttfamily,
 }
