@@ -1,4 +1,4 @@
-# make a hash with a range in it
+# make a hash with a load of lists in it
 [%] !H 0 200 range each { [i i *, i i i * *] i ?H set }
 # bung a couple of strings in it too
 "foo" "bar" ?H set
@@ -7,11 +7,13 @@
 `dog `wibble ?H set
 `fred `trouser ?H set
 `cat `dog ?H set
+?H .
+
+#?H each {  "key: " p i p "   val:" p i ?H get .}
 
 # save it
 "tmp1" save
 "tmp1" load
-
 
 # check that the strings came out OK
 "bar" ?H get "foo" = "hash string load" assert

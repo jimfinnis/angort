@@ -24,6 +24,7 @@ public:
             ser->createFixup(v->t,v->v.v);
         if(v->t == Types::tCode)
             ser->createCodeFixups(v->v.cb);
+        return true; // recurse
     }
 };
 
@@ -54,6 +55,7 @@ public:
 //              printf("\n");
         if(v->t == Types::tCode)
             ser->resolveCodeFixups((CodeBlock *)v->v.cb);
+        return true; // recurse
     }
     virtual void visit(const void *v){}
 };
@@ -64,10 +66,11 @@ bool Serialiser::createFixup(Type *t,const void *v){
         return false;
     }
     
-//    printf("Creating fixup: %5d for type %10s, value %p\n",
-//           fixups->count(),
-//           t->name,
-//           v);
+/*    printf("Creating fixup: %5d for type %10s, value %p\n",
+         fixups->count(),
+         t->name,
+         v);
+ */
     FixupEnt *e = fixups->append();
     e->t=t;
     e->v=v;
@@ -139,11 +142,14 @@ void Serialiser::resolveCodeFixups(CodeBlock *c){
 
 uint32_t Serialiser::getFixupByData(const void *v){
     // ugly
+//    printf("looking for fixup for %p\n",v);
     for(int i=0;i<fixups->count();i++){
         FixupEnt *e = fixups->get(i);
+//        printf("  checking %d: %p\n",i,e->v);
         if(e->v == v)
             return i;
     }
+//    printf("NOT FOUND\n");
     throw WTF;
 }
 
@@ -264,7 +270,7 @@ void Hash::save(Serialiser *ser){
     
     for(unsigned int i=0;i<mask+1;i++,ent++){
         if(ent->isUsed()){
-//            char buf[1024];
+            char buf[1024];
 //            printf("Index: %5d ",i);
 //            printf("Hash: %10d ",ent->hash);
 //            printf("Key: %20s ",ent->k.toString(buf,1024));
