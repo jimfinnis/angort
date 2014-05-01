@@ -46,11 +46,25 @@
     1 101 range ?f reduce
     ;
 
-run 628 = "pre-save inject" assert
+run 628 = "pre-save reduce" assert
 "tmp1" save
 "tmp1" load
 
 10 !Foo
-run 628 = "post-save inject" assert
+run 628 = "post-save reduce" assert
+
+0!H
+0!Foo
+gc
+
+# now we try to save a cycle!
+
+[] !A
+[?A] !B
+?B ?A push
+
+"tmp1" save
+
+
 
 quit
