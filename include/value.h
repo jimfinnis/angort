@@ -132,15 +132,6 @@ struct Value {
         return t->equalForHashTable(this,other);
     }
     
-    /// receive a visitor, with an optional name
-    void receiveVisitor(ValueVisitor *vis,const char *name=NULL){
-        if(vis->visit(name,this)){
-            // recurse into the children if the visitor
-            // doesn't abort
-            t->visitRefChildren(this,vis);
-        }
-    }
-    
     /// debugging method - dump a value to stdout, using the string
     /// from toString().
     void dump(const char *prefix){

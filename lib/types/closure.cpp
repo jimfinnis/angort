@@ -98,14 +98,3 @@ public:
 Iterator<class Value *> *Closure::makeValueIterator(){
     return new ClosureIterator(this);
 }
-
-
-void ClosureType::visitRefChildren(Value *v,ValueVisitor *visitor){
-    Closure *c = v->v.closure;
-    visitor->visit(NULL,&c->codeBlockValue);
-    for(int i=0;i<c->ct;i++){
-        c->table[i].receiveVisitor(visitor);
-    }
-}
-
-

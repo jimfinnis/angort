@@ -160,18 +160,7 @@ public:
     
     /// create an iterator
     class Iterator<Value *> *createIterator(bool iskeyiterator);
-    
-    void visitRefChildren(ValueVisitor *visitor){
-        HashEnt *ent = table;
-        for(unsigned int i=0;i<mask+1;i++,ent++){
-            if(ent->isUsed()){
-                ent->k.receiveVisitor(visitor);
-                ent->v.receiveVisitor(visitor);
-            }
-        }
-    }
-    
-    
+
 #ifdef DEBUG
     int miss;
 #endif

@@ -108,8 +108,6 @@ public:
         NamespaceBase<NamespaceEnt>::clear();
     }
     
-    /// visit all the elements
-    void visit(ValueVisitor *visitor);
     void list();
 };
 
@@ -179,12 +177,6 @@ public:
         for(int i=0;i<spaces.count();i++){
             printf("Namespace %s\n",spaces.getName(i));
             spaces.getEnt(i)->list();
-        }
-    }
-    
-    void visit(ValueVisitor *visitor){
-        for(int i=0;i<spaces.count();i++){
-            spaces.getEnt(i)->visit(visitor);
         }
     }
     

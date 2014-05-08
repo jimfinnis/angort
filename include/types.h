@@ -7,18 +7,6 @@ struct Value;
 #include "gc.h"
 #include "arraylist.h"
 
-/// abstract type for something which can visit the tree of GarbageCollected
-/// and BlockAllocType objects.
-
-class ValueVisitor {
-public:
-    /// returns false if the recursion should halt - make sure it
-    /// does so! If globname is not NULL, this is a global variable.
-    virtual bool visit(const char *globname, Value *v) =0;
-};
-
-
-
 
 /// Each Value as a pointer to one of these, which exist as a set of
 /// singletons describing each type's allocation behaviour etc.
@@ -103,12 +91,6 @@ public:
     
     /// decrement the reference count and delete if zero, default does nothing
     virtual void decRef(Value *v){
-    }
-    
-    /// recursively visit all the children of this value which
-    /// are reference types (GCType or BlockAllocType.) Does nothing
-    /// for primitive types.
-    virtual void visitRefChildren(Value *v,ValueVisitor *visitor){
     }
     
     /// the "default" operator is a value iterator for lists etc,

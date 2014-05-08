@@ -38,8 +38,6 @@ public:
     }
     
     
-    virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
-    
     virtual bool isIn(Value *v,Value *item);
     
     virtual void setValue(Value *coll,Value *k,Value *v);

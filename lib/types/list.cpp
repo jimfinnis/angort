@@ -104,14 +104,6 @@ Iterator<Value *> *ListObject::makeKeyIterator(){
 }
 
 
-void ListType::visitRefChildren(Value *v,ValueVisitor *visitor){
-    ListObject *r = v->v.list;
-    
-    for(int i=0;i<r->list.count();i++){
-        r->list.get(i)->receiveVisitor(visitor);
-    }
-}
-
 void ListType::setValue(Value *coll,Value *k,Value *v){
     ListObject *r = coll->v.list;
     int i = k->toInt();

@@ -1268,12 +1268,3 @@ void Angort::list(){
         }
     }
 }
-
-
-void Angort::visitGlobalData(ValueVisitor *visitor){
-    names.visit(visitor);
-}
-
-
-
-

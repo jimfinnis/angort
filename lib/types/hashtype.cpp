@@ -43,11 +43,6 @@ Hash *HashType::get(Value *v){
     return v->v.hash->hash;
 }
 
-
-void HashType::visitRefChildren(Value *v,ValueVisitor *visitor){
-    v->v.hash->hash->visitRefChildren(visitor);
-}
-
 void HashType::setValue(Value *coll,Value *k,Value *v){
     Hash *h = coll->v.hash->hash;
     h->set(k,v);

@@ -16,9 +16,6 @@ public:
         add("closure","CLOS");
     }
     void set(Value *v,struct Closure *c);
-    
-    virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
-    
 };
 
 #endif /* __CLOSURE_H */

@@ -647,9 +647,6 @@ public:
         return v->v.iter;
     }
     
-    /// visit the tree of all globally-accessible data
-    void visitGlobalData(ValueVisitor *visitor);
-    
     /// clear the entire system
     void clear(){
         names.clear();

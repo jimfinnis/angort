@@ -9,9 +9,3 @@
 void Namespace::list(){
     locations.listKeys();
 }
-
-void Namespace::visit(ValueVisitor *visitor){
-    for(int i=0;i<entries.count();i++){
-        getEnt(i)->v.receiveVisitor(visitor,getName(i));
-    }
-}
