@@ -40,26 +40,9 @@ int main(int argc,char *argv[]){
             printf("cannot open file: %s\n",argv[1]);
             exit(1);
         }
-        uint32_t magic,version;
-        if(!fread(&magic,4,1,f))
-            magic=0;
         
         try{
-            if(magic==ANGORT_MAGIC){
-                if(!fread(&version,4,1,f))
-                    version=0;
-                fclose(f);
-                if(version!=a.getVersion()){
-                    printf("image file version incorrect: %d\n",version);
-                    exit(1);
-                }
-                a.loadImage(argv[1]);
-                
-            }else{
-                // attempt to read as a script file
-                fclose(f);
-                a.fileFeed(argv[1]);
-            }
+            a.fileFeed(argv[1]);
         }catch(Exception e){
             printf("Error: %s\n",e.what());
             const Instruction *ip = a.getIPException();

@@ -8,8 +8,6 @@
 
 
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
 
 
 float FloatType::get(Value *v){
@@ -50,12 +48,4 @@ uint32_t FloatType::getHash(Value *v){
 
 bool FloatType::equalForHashTable(Value *a,Value *b){
     return a->toFloat() == b->toFloat();
-}
-
-
-void FloatType::saveValue(Serialiser *ser, Value *v){
-    ser->file->writeFloat(get(v));
-}
-void FloatType::loadValue(Serialiser *ser, Value *v){
-    set(v,ser->file->readFloat());
 }

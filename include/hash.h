@@ -16,7 +16,6 @@
 #include <string.h>
 
 #include "angort.h"
-#include "ser.h"
 
 // 5 in original
 #define PERTURB_SHIFT 5
@@ -158,12 +157,6 @@ public:
         //            resize((used>50000 ? 2:4)*used);
 	return true;
     }
-    
-    void save(Serialiser *ser);
-    void load(Serialiser *ser);
-    
-    
-    
     
     /// create an iterator
     class Iterator<Value *> *createIterator(bool iskeyiterator);

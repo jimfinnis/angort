@@ -111,8 +111,6 @@ public:
     /// visit all the elements
     void visit(ValueVisitor *visitor);
     void list();
-    void load(Serialiser *ser);
-    void save(Serialiser *ser);
 };
 
 #define MKIDX(i)
@@ -189,9 +187,6 @@ public:
             spaces.getEnt(i)->visit(visitor);
         }
     }
-    
-    void save(Serialiser *ser);
-    void load(Serialiser *ser);
     
     //////////////////// manipulating the current namespace ///////////
     

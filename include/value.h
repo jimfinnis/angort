@@ -22,7 +22,6 @@ struct Value {
         float f;
         int i;
         char *s;
-        void *v; //!< used in fixups
         struct BlockAllocHeader *block;
         const struct CodeBlock *cb;
         struct Closure *closure;
@@ -33,7 +32,6 @@ struct Value {
         class HashObject *hash;
         class GarbageCollected *gc;
         class IteratorObject *iter;
-        uint32_t fixup;
     } v;
     
     
@@ -132,16 +130,6 @@ struct Value {
         if(t != other->t)
             return false;
         return t->equalForHashTable(this,other);
-    }
-    
-    /// part of serialisation
-    void load(class Serialiser *ser);
-    /// part of serialisation
-    void save(class Serialiser *ser);
-    /// part of serialisation
-    void setFixup(uint32_t fixup){
-        t = Types::tFixup;
-        v.fixup = fixup;
     }
     
     /// receive a visitor, with an optional name

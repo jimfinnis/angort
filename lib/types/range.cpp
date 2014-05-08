@@ -7,8 +7,6 @@
  */
 
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
 
 #include <math.h>
 
@@ -163,29 +161,3 @@ template<> bool RangeType<float>::isIn(Value *v,Value *item){
     throw RUNT("cannot determine membership of float range");
 }
 
-template <> void RangeType<int>::saveDataBlock(Serialiser *ser,const void *v){
-    Range<int> *r = (Range<int> *)v;
-    ser->file->writeInt(r->start);
-    ser->file->writeInt(r->end);
-    ser->file->writeInt(r->step);
-}
-template <> void RangeType<float>::saveDataBlock(Serialiser *ser,const void *v){
-    Range<float> *r = (Range<float> *)v;
-    ser->file->writeFloat(r->start);
-    ser->file->writeFloat(r->end);
-    ser->file->writeFloat(r->step);
-}
-template <> void *RangeType<int>::loadDataBlock(Serialiser *ser){
-    Range<int> *r = new Range<int>();
-    r->start = ser->file->readInt();
-    r->end = ser->file->readInt();
-    r->step = ser->file->readInt();
-    return (void *)r;
-}
-template <> void *RangeType<float>::loadDataBlock(Serialiser *ser){
-    Range<float> *r = new Range<float>();
-    r->start = ser->file->readFloat();
-    r->end = ser->file->readFloat();
-    r->step = ser->file->readFloat();
-    return (void *)r;
-}

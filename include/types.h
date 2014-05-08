@@ -2,7 +2,6 @@
 #define __TYPES_H
 
 struct Value;
-class Serialiser;
 
 #include "iterator.h"
 #include "gc.h"
@@ -31,11 +30,11 @@ private:
     static Type *head; 
     /// next pointer for type list
     Type *next;
+    /// and ID
+    uint32_t id;
 public:
     /// a constant name
     const char *name;
-    /// and ID for serialisation
-    uint32_t id;
     
     /// true if the type is a reference type;
     /// that is, two values of this type can point to
@@ -110,32 +109,6 @@ public:
     /// are reference types (GCType or BlockAllocType.) Does nothing
     /// for primitive types.
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor){
-    }
-    
-    /// save a value, but not the data associated with a reference
-    /// type; for those, we save the fixup.
-    virtual void saveValue(Serialiser *ser, Value *v){
-        throw SerialisationException(NULL)
-              .set("cannot serialise type '%s'",name);
-    }
-    
-    /// load a value, but not the data associated with a reference
-    /// type; for those, we load the fixup.
-    virtual void loadValue(Serialiser *ser, Value *v){
-        throw SerialisationException(NULL)
-              .set("cannot serialise type '%s'",name);
-    }
-    
-    
-    /// serialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void saveDataBlock(Serialiser *ser,const void *v){
-        throw WTF;
-    }
-    /// deserialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void *loadDataBlock(Serialiser *ser){
-        throw WTF;
     }
     
     /// the "default" operator is a value iterator for lists etc,
@@ -219,11 +192,6 @@ public:
     char *allocate(Value *v,int len,Type *t);
     /// return a pointer to the allocated data (AFTER the header)
     const char *getData(const Value *v) const;
-    
-    /// standard fixup resolution
-    virtual void saveValue(Serialiser *ser, Value *v);
-    /// standard fixup resolution
-    virtual void loadValue(Serialiser *ser, Value *v);
 };
 
 /// this is for GC types which contain a GarbageCollected item
@@ -234,21 +202,6 @@ public:
     }
     
     
-    /// standard fixup resolution
-    virtual void saveValue(Serialiser *ser, Value *v);
-    /// standard fixup resolution
-    virtual void loadValue(Serialiser *ser, Value *v);
-    
-    /// serialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void saveDataBlock(Serialiser *ser,const void *v){
-        throw WTF;
-    }
-    /// deserialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void *loadDataBlock(Serialiser *ser){
-        throw WTF;
-    }
     /// increment the reference count
     virtual void incRef(Value *v);
     
@@ -293,8 +246,6 @@ struct Types {
     /// the type object for deleted hash keys
     static Type *tDeleted;
     /// not a real type; d.fixup gives the ID of a datum in the fixup table;
-    /// used in serialisation
-    static Type *tFixup;
     
     /// the d.i value gives the integer value
     static IntegerType *tInteger;

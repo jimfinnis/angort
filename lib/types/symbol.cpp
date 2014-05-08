@@ -7,8 +7,6 @@
  */
 
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
 
 #define MAXSYMBOLLEN 32
 
@@ -78,14 +76,4 @@ bool SymbolType::equalForHashTable(Value *a,Value *b){
     // This does mean that the key "foo" will
     // not match the key `foo, but that's OK.
     return a->v.i = b->v.i;
-}
-
-
-void SymbolType::saveValue(Serialiser *ser, Value *v){
-    ser->file->writeString(get(v));
-}
-void SymbolType::loadValue(Serialiser *ser, Value *v){
-    char buf[MAXSYMBOLLEN];
-    int i = getSymbol(ser->file->readString(buf,MAXSYMBOLLEN));
-    set(v,i);
 }

@@ -116,11 +116,5 @@ public:
     SyntaxException(const char *s) : Exception(s) {}
 };
 
-class SerialisationException : public Exception{
-public:
-    SerialisationException(const char *s) : Exception(s) {}
-};
-
-
 
 #endif /* __EXCEPTION_H */

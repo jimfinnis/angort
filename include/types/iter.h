@@ -36,23 +36,6 @@ public:
         add("iterator","ITER");
     }
     
-    /// serialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void saveDataBlock(Serialiser *ser,const void *v){
-        throw WTF;
-    }
-    /// deserialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void *loadDataBlock(Serialiser *ser){
-        throw WTF;
-    }
-    virtual void saveValue(Serialiser *ser, Value *v){
-        throw WTF;
-    }
-    virtual void loadValue(Serialiser *ser, Value *v){
-        throw WTF;
-    }
-    
     void set(Value *v,Value *src,Iterator<Value *> *iter);
     Iterator<Value *> *get(Value *v);
 };

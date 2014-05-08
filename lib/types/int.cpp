@@ -8,8 +8,6 @@
 
 
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
     
 
 int IntegerType::get(Value *v){
@@ -53,9 +51,3 @@ bool IntegerType::equalForHashTable(Value *a,Value *b){
 }
 
 
-void IntegerType::saveValue(Serialiser *ser, Value *v){
-    ser->file->writeInt(get(v));
-}
-void IntegerType::loadValue(Serialiser *ser, Value *v){
-    set(v,ser->file->readInt());
-}

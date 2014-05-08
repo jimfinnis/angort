@@ -21,9 +21,6 @@
 /// true to compile debugging data into opcodes
 #define SOURCEDATA 1
 
-/// first int in file for image data
-#define ANGORT_MAGIC  0x737dfead
-
 extern TokenRegistry tokens[];
 
 typedef void (*NativeFunc)(class Angort *a);
@@ -34,12 +31,12 @@ struct CodeBlock;
 /// this is a closure - it's a CodeBlock (a function, if you will) associated with
 /// the values which need to be bound to locals by the CodeBlock's closure map.
 struct Closure : public GarbageCollected {
-    Value codeBlockValue; //!< we store the codeblock as a value, to make serialisation painless.
+    Value codeBlockValue; //!< we store the codeblock as a value
     Value *table;
     int ct; // size of the table so we can copy it
     
     /// c may be NULL here, in which case the code block will
-    /// not be initialised. Used in serialisation.
+    /// not be initialised.
     Closure(const CodeBlock *c,int tabsize,Value *t);
     Closure(const Closure *c); // make a deep copy, allocating a new table and copy()ing all values.
     
@@ -383,9 +380,6 @@ struct CodeBlock {
     }
     
     
-    void save(Serialiser *ser) const;
-    CodeBlock(Serialiser *ser);
-    
     CodeBlock(CompileContext *con){
         setFromContext(con);
     }
@@ -493,8 +487,7 @@ struct Module {
 };
 
 class Angort {
-    friend class Serialiser;
-    friend struct CodeBlock; // for serialisation
+    friend struct CodeBlock;
 private:
     Stack<const Instruction *,32> rstack;
     Stack<Value*,32> closureStack; //<! parallels the return stack, carries the closure table
@@ -654,8 +647,7 @@ public:
         return v->v.iter;
     }
     
-    /// visit the tree of all globally-accessible data,
-    /// used in serialisation
+    /// visit the tree of all globally-accessible data
     void visitGlobalData(ValueVisitor *visitor);
     
     /// clear the entire system
@@ -775,9 +767,6 @@ public:
     
     /// get the spec string for a word or native
     const char *getSpec(const char *s);
-    
-    /// load an image file
-    void loadImage(const char *name);
     
     /// stop any running code (call from a signal handler, or
     /// code inside a word to terminate loops etc.)

@@ -38,13 +38,6 @@ public:
     }
     
     
-    /// serialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void saveDataBlock(Serialiser *ser,const void *v);
-    /// deserialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void *loadDataBlock(Serialiser *ser);
-    
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
     
     virtual bool isIn(Value *v,Value *item);

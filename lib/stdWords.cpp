@@ -7,7 +7,6 @@
  */
 
 #include "angort.h"
-#include "ser.h"
 
 #include <time.h>
 
@@ -235,23 +234,6 @@ public:
     p->copy(iterator->iterable);
 }
     
-
-%word save (name --) Hopefully save an image
-{
-    char b[1024];
-    const char *name = a->popval()->toString(b,1024);
-    Serialiser ser;
-    
-    ser.save(a,name);
-}
-%word load (name --) Hopefully load an image
-{
-    char b[1024];
-    const char *name = a->popval()->toString(b,1024);
-    Serialiser ser;
-    
-    ser.load(a,name);
-}
 
 %word reset (--) Clear everything
 {

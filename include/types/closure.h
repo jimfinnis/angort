@@ -17,11 +17,6 @@ public:
     }
     void set(Value *v,struct Closure *c);
     
-    /// serialise the closure data block
-    virtual void saveDataBlock(Serialiser *ser,const void *v);
-    /// deserialise the closure data block
-    virtual void *loadDataBlock(Serialiser *ser);
-    
     virtual void visitRefChildren(Value *v,ValueVisitor *visitor);
     
 };

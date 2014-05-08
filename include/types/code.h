@@ -19,18 +19,6 @@ public:
         return true;
     }
     void set(Value *v,const struct CodeBlock *cb);
-    
-    /// serialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void saveDataBlock(Serialiser *ser,const void *v);
-    /// deserialise the data for a reference type - that is, the data
-    /// which is held external to the Value union.
-    virtual void *loadDataBlock(Serialiser *ser);
-    
-    virtual void saveValue(Serialiser *ser, Value *v);
-    virtual void loadValue(Serialiser *ser, Value *v);
-    
-    
 };
 
 

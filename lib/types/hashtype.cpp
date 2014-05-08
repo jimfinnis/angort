@@ -6,8 +6,6 @@
  * 
  */
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
 #include "hash.h"
 #include "cycle.h"
 
@@ -43,17 +41,6 @@ Hash *HashType::get(Value *v){
     if(v->t != this)
         throw RUNT("not a hash");
     return v->v.hash->hash;
-}
-
-
-void HashType::saveDataBlock(Serialiser *ser,const void *v){
-    HashObject *r = (HashObject *)v;
-    r->hash->save(ser);
-}
-void *HashType::loadDataBlock(Serialiser *ser){
-    HashObject *r = new HashObject();
-    r->hash->load(ser);
-    return (void *)r;
 }
 
 

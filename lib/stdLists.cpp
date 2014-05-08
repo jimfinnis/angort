@@ -5,7 +5,6 @@
  */
 
 #include "angort.h"
-#include "ser.h"
 #include "hash.h"
 
 %name lists

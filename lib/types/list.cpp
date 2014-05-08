@@ -5,8 +5,6 @@
  */
 
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
 #include "cycle.h"
 
 ListObject::ListObject() : GarbageCollected(), list(32) {
@@ -103,25 +101,6 @@ Iterator<Value *> *ListObject::makeValueIterator(){
 
 Iterator<Value *> *ListObject::makeKeyIterator(){
     return new ListIterator(this,true);
-}
-
-void ListType::saveDataBlock(Serialiser *ser,const void *v){
-    ListObject *r = (ListObject *)v;
-    ser->file->writeInt(r->list.count());
-    for(int i=0;i<r->list.count();i++){
-        r->list.get(i)->save(ser);
-    }
-}
-void *ListType::loadDataBlock(Serialiser *ser){
-    ListObject *r = new ListObject();
-    
-    int count = ser->file->readInt();
-    for(int i=0;i<count;i++){
-        Value *v = r->list.append();
-        v->load(ser);
-    }
-    
-    return (void *)r;
 }
 
 

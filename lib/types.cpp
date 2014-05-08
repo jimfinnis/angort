@@ -1,6 +1,4 @@
 #include "angort.h"
-#include "ser.h"
-#include "file.h"
 
 Type *Type::head = NULL;
 int  GarbageCollected::globalCount=0;
@@ -67,19 +65,6 @@ void BlockAllocType::decRef(Value *v){
     }
 }
 
-
-
-void BlockAllocType::saveValue(Serialiser *ser, Value *v){
-    ser->file->write32(ser->getFixupByData(v->v.cb));
-}
-void BlockAllocType::loadValue(Serialiser *ser, Value *v){
-    v->setFixup(ser->file->read32());
-}
-
-
-
-
-
 void GCType::incRef(Value *v){
     v->v.gc->incRefCt();
 //    printf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
@@ -106,14 +91,6 @@ GarbageCollected *GCType::getGC(Value *v){
 }
 
 
-void GCType::saveValue(Serialiser *ser, Value *v){
-    ser->file->write32(ser->getFixupByData(v->v.gc));
-}
-void GCType::loadValue(Serialiser *ser, Value *v){
-    v->setFixup(ser->file->read32());
-}
-
-
 
 /*
  * 
@@ -125,8 +102,6 @@ static NoneType _tNone;
 NoneType *Types::tNone= &_tNone;
 static Type _tDeleted;
 Type *Types::tDeleted= &_tDeleted;
-static Type _tFixup;
-Type *Types::tFixup= &_tFixup;
 
 static IntegerType _Int;
 IntegerType *Types::tInteger = &_Int;
@@ -166,6 +141,5 @@ IteratorType *Types::tIter = &_Iterator;
 void Types::createTypes(){
     tNone->add("NONE","NONE");
     tDeleted->add("DELETED","DELT");
-    tFixup->add("fixup","FIXP");
     
 }

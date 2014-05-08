@@ -33,9 +33,6 @@ public:
     virtual int toInt(const Value *v) const;
     virtual float toFloat(const Value *v) const;
     virtual const char *toString(char *outBuf,int len,const Value *v) const;
-
-    virtual void saveValue(Serialiser *ser, Value *v);
-    virtual void loadValue(Serialiser *ser, Value *v);
 };
 
 #endif /* __FLOAT_H */

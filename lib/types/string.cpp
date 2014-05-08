@@ -7,8 +7,6 @@
  */
 
 #include "angort.h"
-#include "file.h"
-#include "ser.h"
 
 void StringType::set(Value *v,const char *s){
     int len = strlen(s);
@@ -55,16 +53,3 @@ bool StringType::equalForHashTable(Value *a,Value *b){
     return !strcmp(getData(a),getData(b));
 }
 
-void StringType::saveDataBlock(Serialiser *ser, const void *v){
-    BlockAllocHeader *h = (BlockAllocHeader *)v;
-    ser->file->writeString((const char *)(h+1));
-}
-void *StringType::loadDataBlock(Serialiser *ser){
-    // using some extra knowledge of how strings are saved and 
-    // how blockallocated data works.
-    int len = ser->file->read16();
-    BlockAllocHeader *h = (BlockAllocHeader*)malloc(sizeof(BlockAllocHeader)+len);
-    h->refct=0;
-    ser->file->readBytes(h+1,len);
-    return h;
-}
