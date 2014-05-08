@@ -882,7 +882,8 @@ In the following operations, these conversions take place:
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
 +    & (a b -- a+b)&\\
 -    & (a b -- a-b)&\\
-$*$    & (a b -- a*b)&\\
+$*$    & (a b -- a*b)& ints are coerced to floats if one operand is an int, but not otherwise. ``string int *'' produces
+a repeated string, but not ``int string *''.\\
 /    & (a b -- a/b)&\\
 \%    & (a b -- a\%b) & remainder ("mod") operator\\
 $>$    & (a b -- a$>$b)& string comparison works as expected\\

@@ -546,6 +546,8 @@ private:
     void endDefine(Instruction *i);
     
     char lastLine[1024]; //!< last line read
+    char strbuf1[1024]; //!< string buffer for conversions
+    char strbuf2[1024];//!< string buffer for conversions
     
     /// add a new instruction to the current compile context
     Instruction *compile(int opcode){
@@ -604,6 +606,10 @@ private:
     
     /// clear all stacks etc.
     void clearAtEndOfFeed();
+    
+    /// handle binary operations
+    void binop(Value *a,Value *b,int opcode);
+    
 public:
     /// if an exception occurred in a run, this will have the IP.
     const Instruction *getIPException(){
