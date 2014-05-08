@@ -38,7 +38,6 @@ struct Closure : public GarbageCollected {
     /// c may be NULL here, in which case the code block will
     /// not be initialised.
     Closure(const CodeBlock *c,int tabsize,Value *t);
-    Closure(const Closure *c); // make a deep copy, allocating a new table and copy()ing all values.
     
     /// the value iterator for a closure means we can do cycle detection.
     /// It does mean that you can do some interesting things with "each"

@@ -18,17 +18,6 @@ Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
 //    printf("creating closure %p\n",this);
 }
 
-Closure::Closure(const Closure *c) : GarbageCollected() {
-    throw RUNT("CLOSURE COPY DISALLOWED");
-    codeBlockValue.copy(&c->codeBlockValue);
-    ct = c->ct;
-    table = new Value[ct];
-    CycleDetector::getInstance()->add(this);
-    for(int i=0;i<ct;i++)
-        table[i].copy(c->table+i); // will INCREF the objects
-//    printf("creating closure %p\n",this);
-}
-
 Closure::~Closure(){
     //    printf("closure deletion\n");
     delete [] table; // should delete AND DECREF the contained objects
