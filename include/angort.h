@@ -590,6 +590,9 @@ private:
     /// file inclusion mechanism
     void include(const char *path);
     
+    /// add a plugin (Linux only, uses shared libraries)
+    void plugin(const char *path);
+    
     
     /// called at the end of a block of code,
     /// or by emergency stop invocation. Returns

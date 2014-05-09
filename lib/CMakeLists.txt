@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 
-
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    add_definitions(-DLINUX)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 project(ANGORTLIB)
 
@@ -44,12 +46,16 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
 add_words_files(stdWords.cpp stdLists.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
-    cycle.cpp binop.cpp
+    cycle.cpp binop.cpp plugins.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp      types/iter.cpp     types/list.cpp
     types/hashtype.cpp   types/symbol.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries(angort dl)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 

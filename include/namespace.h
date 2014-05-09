@@ -116,7 +116,7 @@ public:
 #define GETITEMIDX(i)
 
 class NamespaceManager {
-    NamespaceBase<Namespace> spaces;
+    NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
     Namespace *current;
     int currentIdx;
@@ -142,7 +142,7 @@ private:
     }
 public:
     
-    // the namespace system has room for 4 namespaces initially.
+    // the namespace system has room for 4 namespaces initially, but can grow.
     NamespaceManager() : spaces(4) {}
     
     //////////////////// manipulating namespaces /////////////////////
@@ -213,8 +213,25 @@ public:
         return spaces.getEnt(nsidx)->getName(idx);
     }
     
+    /// get an index by name - if there is a $, separate into
+    /// namespace and name and resolve.
+    
     int get(const char *name){
-        return makeIndex(currentIdx,current->get(name));
+        // does this contain a $?
+        const char *dollar;
+        if(dollar=strchr(name,'$')){
+            char buf[32];
+            if(dollar-name > 32){
+                throw RUNT("namespace name too long");
+            }
+            strncpy(buf,name,dollar-name);
+            buf[dollar-name]=0;
+            int spaceidx = spaces.get(buf);
+            Namespace *sp = spaces.getEnt(spaceidx);
+            return makeIndex(spaceidx,sp->get(dollar+1));
+        } else {
+            return makeIndex(currentIdx,current->get(name));
+        }
     }
     
     Value *getValFromNamespace(const char *space,int idx){

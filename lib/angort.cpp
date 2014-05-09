@@ -704,6 +704,14 @@ void Angort::feed(const char *buf){
                 include(buf);
                 break;
             }
+            case T_LIBRARY:{
+                char buf[1024];
+                // will recurse
+                if(!tok.getnextstring(buf))
+                    throw SyntaxException("expected a filename after 'include'");
+                plugin(buf);
+                break;
+            }
             case T_BACKTICK:{
                 char buf[256];
                 if(!tok.getnextidentorkeyword(buf))

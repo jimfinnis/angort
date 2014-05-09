@@ -57,3 +57,4 @@ defer	:   T_DEFER
 each	:   T_EACH
 include :   T_INCLUDE
 stop    :   T_STOP
+library :   T_LIBRARY

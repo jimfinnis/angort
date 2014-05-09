@@ -27,4 +27,5 @@ add_words_files(stdMath.cpp)
 set(SOURCE main.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
+
 target_link_libraries(angortcli angort ${READLINE_LIBRARY})
