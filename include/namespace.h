@@ -216,6 +216,12 @@ public:
     /// get an index by name - if there is a $, separate into
     /// namespace and name and resolve.
     
+    // What needs to happen here:
+    // check for explicit '$'. If so, search that namespace only. Otherwise search:
+    // 1) namespace stack (which shouldn't have default on it)
+    // 2) imported namespaces
+    // 3) default
+    
     int get(const char *name){
         // does this contain a $?
         const char *dollar;
