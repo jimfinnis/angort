@@ -728,6 +728,9 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw SyntaxException("expected a filename after 'include'");
+                if(tok.getnext()!=T_END)
+                    throw SyntaxException("include must be at end of line");
+                    
                 include(buf,false);
                 break;
             }
@@ -739,6 +742,8 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw FileNameExpectedException();
+                if(tok.getnext()!=T_END)
+                    throw SyntaxException("require must be at end of line");
                 include(buf,true);
                 break;
             }

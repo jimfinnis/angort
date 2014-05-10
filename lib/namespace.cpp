@@ -55,6 +55,7 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
     
     Namespace *ns = spaces.getEnt(nsidx);
     printf("scanning ns %d\n",nsidx);
+    ns->list();
     if(lst){
         // go through the list
         ArrayListIterator<Value> iter(lst);
@@ -64,7 +65,7 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
             const char *s = v->toString(buf,256);
             // find the symbol in the namespace
             int idx = ns->get(s);
-            if(idx<=0)
+            if(idx<0)
                 throw RUNT("").set("cannot import '%s'",s);
             NamespaceEnt *ent = ns->getEnt(idx);
             defaultSpace->copy(s,ent);
