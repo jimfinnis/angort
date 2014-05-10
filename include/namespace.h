@@ -78,7 +78,9 @@ class Namespace : public NamespaceBase<NamespaceEnt> {
 public:
     
     // each namespace has room for 32 names initially
-    Namespace() : NamespaceBase<NamespaceEnt>(32) {}
+    Namespace() : NamespaceBase<NamespaceEnt>(32) {
+        nextImport=NULL;
+    }
     
     virtual int add(const char *name){
         int idx = NamespaceBase<NamespaceEnt>::add(name);
@@ -98,6 +100,15 @@ public:
         return &(getEnt(idx)->v);
     }
     
+    /// make a new entry in the namespace identical to
+    /// the one passed in
+    void copy(const char *name ,const NamespaceEnt *ent){
+        int idx = NamespaceBase<NamespaceEnt>::add(name);
+        NamespaceEnt *e = getEnt(idx);
+        e->isConst = ent->isConst;
+        e->v.copy(&(ent->v));
+    }
+    
     /// wipe everything
     void clear(){
         for(int i=0;i<count();i++){
@@ -109,6 +120,12 @@ public:
     }
     
     void list();
+    /// used to link imported namespaces; you can't "unimport" a
+    /// namespace.
+    Namespace *nextImport;
+    // sadly we need this for the import list, so we can make the superindex
+    // for an item when we get
+    int idx; 
 };
 
 #define MKIDX(i)
@@ -116,13 +133,26 @@ public:
 #define GETITEMIDX(i)
 
 class NamespaceManager {
+private:
     NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
+    Namespace *defaultSpace;
+    int defaultIdx;
     Namespace *current;
     int currentIdx;
+    
     Stack<int,8> stack;
     
-private:
+    Namespace *headImport; //!< head of imported namespaces list
+    
+    /// this will add a namespace to the imported chain;
+    /// these are searched in order (most recent first) before
+    /// the default space and after the stacked spaces.
+    void import(Namespace *sp){
+        sp->nextImport = headImport;
+        headImport = sp;
+    }
+    
     
     /// make a superindex out of a namespace index and an item index
     inline int makeIndex(int nsi,int itemi){
@@ -146,25 +176,43 @@ public:
     NamespaceManager() : spaces(4) {}
     
     //////////////////// manipulating namespaces /////////////////////
-    void set(int idx){
+    
+    /// create a new idx and return it, optionally setting the initial,
+    /// default namespace
+    int create(const char *name,bool isdefault=false){
+        int idx = spaces.add(name);
+        // set the index in the ns we created
+        spaces.getEnt(idx)->idx = idx;
+        if(isdefault){
+            defaultIdx = idx;
+            defaultSpace = spaces.getEnt(idx);
+            currentIdx = idx;
+            current = defaultSpace;
+        }
+        return idx;
+    }
+    
+    int getStackTop(){
+        if(stack.ct>0)
+            return stack.peek();
+        else
+            return -1;
+    }
+    
+    void push(int idx){
+        stack.push(idx);
         currentIdx = idx;
-        current = spaces.getEnt(idx);
-    }
-    void set(const char *name){
-        int idx = spaces.get(name);
-        set(idx);
+        current = spaces.getEnt(currentIdx);
     }
     
-    void create(const char *name){
-        spaces.add(name);
-    }
-    
-    void push(){
-        stack.push(currentIdx);
-    }
-    
-    void pop(){
-        currentIdx = stack.pop();
+    int pop(){
+        int idx=stack.pop();
+        if(stack.ct>0)
+            currentIdx=stack.peek();
+        else
+            currentIdx=defaultIdx;
+        current = spaces.getEnt(currentIdx);
+        return idx;
     }
     
     void clear(){
@@ -218,27 +266,11 @@ public:
     
     // What needs to happen here:
     // check for explicit '$'. If so, search that namespace only. Otherwise search:
-    // 1) namespace stack (which shouldn't have default on it)
+    // 1) namespace stack
     // 2) imported namespaces
     // 3) default
     
-    int get(const char *name){
-        // does this contain a $?
-        const char *dollar;
-        if(dollar=strchr(name,'$')){
-            char buf[32];
-            if(dollar-name > 32){
-                throw RUNT("namespace name too long");
-            }
-            strncpy(buf,name,dollar-name);
-            buf[dollar-name]=0;
-            int spaceidx = spaces.get(buf);
-            Namespace *sp = spaces.getEnt(spaceidx);
-            return makeIndex(spaceidx,sp->get(dollar+1));
-        } else {
-            return makeIndex(currentIdx,current->get(name));
-        }
-    }
+    int get(const char *name);
     
     Value *getValFromNamespace(const char *space,int idx){
         int spaceidx = spaces.get(space);
@@ -246,6 +278,11 @@ public:
         return sp->getVal(idx);
     }
     
+    
+    /// import either all symbols (by adding to the list of imported
+    /// namespaces) or some symbols (by adding those to the default
+    /// namespace) from a namespace.
+    void import(int nsidx,ArrayList<Value> *lst);
 };
 
 

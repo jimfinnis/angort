@@ -57,4 +57,11 @@ defer	:   T_DEFER
 each	:   T_EACH
 include :   T_INCLUDE
 stop    :   T_STOP
+
+
+package :   T_PACKAGE
+require :   T_REQUIRE
+import  :   T_IMPORT
+importall   :   T_IMPORTALL
+
 library :   T_LIBRARY

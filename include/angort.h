@@ -515,7 +515,8 @@ private:
     /// and the properties, duplicates of the module entries
     StringMap<Property *> props; 
     StringMap<const char *> propSpecs;
-    
+    /// have we already done "package" in this file?
+    bool definingPackage;
     /// the current compile context
     CompileContext *context;
     
@@ -587,8 +588,10 @@ private:
             i = names.add(name);
         return i;
     }
-    /// file inclusion mechanism
-    void include(const char *path);
+    /// file inclusion mechanism - if ispkg is set, the file
+    /// should contain a package definition defining a new
+    /// namespace, which will be left on the stack.
+    void include(const char *path,bool ispkg);
     
     /// add a plugin (Linux only, uses shared libraries)
     void plugin(const char *path);

@@ -116,5 +116,11 @@ public:
     SyntaxException(const char *s) : Exception(s) {}
 };
 
+class FileNameExpectedException : public SyntaxException {
+public:
+    FileNameExpectedException() : 
+        SyntaxException("filename expected") {}
+};
+
 
 #endif /* __EXCEPTION_H */

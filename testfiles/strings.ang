@@ -14,7 +14,7 @@ global b
 ?a "foo" = "strdup3" assert
 ?b "foobar" = "strdup4" assert
 
-"fooble" 3 * "fooblefooblefooble" "repeat" = assert
+"fooble" 3 * "fooblefooblefooble" = "repeat" assert
 
 quit
 

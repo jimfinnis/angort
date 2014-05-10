@@ -31,9 +31,10 @@ int Angort::getVersion(){
 
 Angort::Angort() {
     Types::createTypes();
-    names.create("default"); // create the default namespace
-    names.set("default"); // and select it
+    // create and set default namespace
+    names.create("default",true);
     lineNumber=1;
+    definingPackage=false;
     
     tok.init();
     tok.setname("<stdin>");
@@ -505,6 +506,22 @@ void Angort::run(const Instruction *ip){
                 }
                 ip++;
                 break;
+            case OP_IMPORT:
+                // the stack will have one of two configurations:
+                // (int --) will import everything (i.e. add the
+                // namespace to the "imported namespaces list")
+                // while (int list --) will only import the listed
+                // symbols (i.e. copy them into the default space)
+                if(stack.peekptr()->t==Types::tInteger)
+                    names.import(popInt(),NULL);
+                else if(stack.peekptr()->t==Types::tList){
+                    ArrayList<Value> *lst = Types::tList->get(stack.popptr());
+                    names.import(popInt(),lst);
+                } else
+                    throw SyntaxException("expected package list or package im import");
+                ip++;
+                break;
+                
             default:
                 throw RUNT("unknown opcode");
             }
@@ -596,6 +613,7 @@ void Angort::compileParamsAndLocals(){
 }
 
 bool Angort::fileFeed(const char *name,bool rethrow){
+    definingPackage=false;
     const char *oldName = tok.getname();
     int oldLN = lineNumber;
     lineNumber=1;
@@ -604,7 +622,6 @@ bool Angort::fileFeed(const char *name,bool rethrow){
     const char *fileName = strdup(name); 
     tok.setname(fileName);
 #endif
-    
     FILE *ff = fopen(name,"r");
     try{
         char buf[1024];
@@ -650,7 +667,7 @@ const Instruction *Angort::compile(const char *s){
     return NULL;
 }
 
-void Angort::include(const char *fh){
+void Angort::include(const char *fh,bool isreq){
     int oldDir = open(".",O_RDONLY); // get the FD for the current directory so we can go back
     
     // first, find the real path of the file
@@ -666,6 +683,16 @@ void Angort::include(const char *fh){
     chdir(path);
     
     fileFeed(file);
+    if(names.getStackTop()>=0){
+        // pop the namespace stack
+        int idx=names.pop();
+        if(isreq){
+            // push the idx of the package which was defined. 
+            // A bit dodgy since this isn't taking place in
+            // a code block..
+            pushInt(idx);
+        }
+    }
     
     
     free(path);
@@ -701,21 +728,53 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw SyntaxException("expected a filename after 'include'");
-                include(buf);
+                include(buf,false);
                 break;
             }
-            case T_LIBRARY:{
+            case T_REQUIRE:{
+                // like include, but a package should
+                // be created whose namespace idx will be on the stack,
+                // ready for import or list-import.
                 char buf[1024];
                 // will recurse
                 if(!tok.getnextstring(buf))
-                    throw SyntaxException("expected a filename after 'include'");
+                    throw FileNameExpectedException();
+                include(buf,true);
+                break;
+            }
+            case T_PACKAGE:{
+                // start a new package.
+                char buf[256];
+                if(!tok.getnextident(buf))
+                    throw SyntaxException("expected a package name");
+                if(definingPackage)
+                    throw SyntaxException("already in a package");
+                definingPackage=true;
+                int idx = names.create(buf);
+                // stack it, we're now defining things in
+                // this package and will be until fileFeed() returns
+                // in include()
+                names.push(idx);
+                break;
+            }
+            case T_IMPORT:
+                compile(OP_IMPORT);
+                break;
+            case T_LIBRARY:{
+                // load a plugin (a shared library). Will
+                // push the plugin's namespace ID ready for
+                // import or list-import
+                char buf[1024];
+                // will recurse
+                if(!tok.getnextstring(buf))
+                    throw FileNameExpectedException();
                 plugin(buf);
                 break;
             }
             case T_BACKTICK:{
                 char buf[256];
                 if(!tok.getnextidentorkeyword(buf))
-                    throw SyntaxException("expected a symbol after backtick");
+                    throw FileNameExpectedException();
                 compile(OP_LITERALSYMB)->d.i=Types::tSymbol->getSymbol(buf);
                 break;
             }
