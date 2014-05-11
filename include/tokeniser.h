@@ -32,6 +32,27 @@ public:
     virtual void HandleTokeniserError(class Tokeniser *t) = 0;
 };
 
+
+/// we can save the tokeniser context into this temporarily
+struct TokeniserContext {
+    const char *start;
+    const char *current;
+    const char *end;
+    /// the current filename, should be strduped()
+    const char *fileName;
+    int curtype;
+    bool error;
+    Token prevval;
+    const char *previous;
+    int prevtype;
+    int prevline;
+    bool keywordsOff;
+    Token val;
+    int line;
+    bool trace;
+    
+};
+
 class Tokeniser
 {
 public:    
@@ -183,11 +204,43 @@ public:
             commentlinesequencelen=0;
     }
     
+    void saveContext(TokeniserContext *c){
+        c->start = start;
+        c->current = current;
+        c->end = end;
+        c->fileName = fileName;
+        c->curtype=curtype;
+        c->error = error;
+        c->prevval=prevval;
+        c->previous = previous;
+        c->prevtype=prevtype;
+        c->prevline=prevline;
+        c->keywordsOff=keywordsOff;
+        c->val=val;
+        c->line=line;
+        c->trace=trace;
+    }
+    
+    void restoreContext(TokeniserContext *c){
+        start = c->start;
+        current = c->current;
+        end = c->end;
+        fileName = c->fileName;
+        curtype=c->curtype;
+        error = c->error;
+        prevval=c->prevval;
+        previous = c->previous;
+        prevtype=c->prevtype;
+        prevline=c->prevline;
+        keywordsOff=c->keywordsOff;
+        val=c->val;
+        line=c->line;
+        trace=c->trace;
+    }        
+              
+    
 private:
     void dprintf(const char *s,...);
-    
-    /// the current filename, should be strduped()
-    const char *fileName;
     
     /// find the token for a keyword if one exists
     int findkeyword(const char *s);
@@ -205,26 +258,27 @@ private:
     const char *start;
     const char *current;
     const char *end;
+    /// the current filename, should be strduped()
+    const char *fileName;
     int curtype;
-    int chartable[128];
-    const char *commentlinesequence;
-    int commentlinesequencelen;
     bool error;
-    
-    int line;
-    bool trace;
-    
-    Token val;
-    TokenRegistry *tokens;
-    
-    int endtoken,inttoken,stringtoken,identtoken,floattoken;
-    ITokeniserErrorHandler *handler;
-    
     Token prevval;
     const char *previous;
     int prevtype;
     int prevline;
     bool keywordsOff;
+    Token val;
+    int line;
+    bool trace;
+    
+    int chartable[128];
+    const char *commentlinesequence;
+    int commentlinesequencelen;
+    
+    TokenRegistry *tokens;
+    
+    int endtoken,inttoken,stringtoken,identtoken,floattoken;
+    ITokeniserErrorHandler *handler;
 };
 
 

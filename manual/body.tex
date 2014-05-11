@@ -919,6 +919,62 @@ filter: (iter func -- list) filter an iterable with a boolean function
 0|0 > 
 \end{v}
 
+\section{Namespaces and packages}
+Build a package by putting the \texttt{package} directive at the start
+of a file along with the package name, e.g.
+\begin{v}
+package wibble
+\end{v}
+
+and including that file with \texttt{require} instead of the usual \texttt{include.} 
+
+This will cause a new namespace to be created where \texttt{package} is 
+invoked, and all subsequent definitions until the end of the file will
+be put into that namespace. On return from the file, \texttt{require} will
+put an integer handle for that namespace on the stack. All the globals,
+constants and words defined in the package are available by prefixing
+the name with the package name and a dollar sign:
+\begin{v}
+package$name
+\end{v}
+Note that the package name is that given to the \texttt{package} directive,
+not the name of the file!
+
+\subsection{Importing packages into the default space}
+With this handle on the stack, we can import the namespace --- either
+all of it or part of it. The \texttt{import} word takes two forms:
+\begin{v}
+require "wibble.ang" import
+\end{v}
+will import all the public names defined in the package, while
+\begin{v}
+require "wibble.ang" [`foo, `bar] import
+\end{v}
+will only import the given names --- in this case, \texttt{foo} and \texttt{bar}.
+
+The namespace handle can also be used in other ways:
+\begin{center}
+\begin{tabular}{|l|l|p{3in}|}\hline
+\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
+require ``filename'' & (-- handle) & load a package\\
+package packagename & & directive to start a new namespace \\
+private & & all subsequent names are not exportable from the namespace\\
+public & & all subsequent names are exportable from the namespace (default)\\\hline
+import &(handle --) & import all public definitions from a namespace into the default namespace\\
+import &(handle list --) & import some public definitions from a namespace into the default namespace\\
+names & (handle -- list) & get a list of names in a namespace\\
+ispriv & (handle name -- bool) & return true if a name is private in the namespace\\
+isconst & (handle name -- bool) & return true if a name is constant in the namespace\\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+
+
+
+
 \section{Topics missing from this document}
 There are several topics which will be discussed in later versions
 of this document:
@@ -928,4 +984,7 @@ of this document:
 \item properties (which look like global variables but invoke Angort code);
 \item embedding an Angort interpreter in other systems.
 \end{itemize}
+
+
+
 

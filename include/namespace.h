@@ -11,14 +11,22 @@
 /// You can't remove things from it, because existing integer keys would become invalid.
 
 template <class T> class NamespaceBase {
-private:
-    NamespaceBase(){}
 protected:
+    NamespaceBase(){}
     StringMap<int> locations;
     ArrayList<T> entries;
     
 public:
+    
     NamespaceBase(int initialSize) : entries(initialSize) {}
+    
+    void appendNamesToList(ArrayList<Value> *list){
+        StringMapIterator<int> iter(&locations);
+        for(iter.first();!iter.isDone();iter.next()){
+            const char *name = iter.current()->key;
+            Types::tString->set(list->append(),name);
+        }
+    }
     
     virtual int add(const char *name){
         if(get(name)>=0)
@@ -61,9 +69,11 @@ public:
 struct NamespaceEnt {
     Value v;
     bool isConst;
+    bool isPriv;
     
     NamespaceEnt(){
         isConst=false;
+        isPriv=false;
     }
 };
 
@@ -79,33 +89,35 @@ public:
     
     // each namespace has room for 32 names initially
     Namespace() : NamespaceBase<NamespaceEnt>(32) {
-        nextImport=NULL;
     }
     
-    virtual int add(const char *name){
-        int idx = NamespaceBase<NamespaceEnt>::add(name);
-        NamespaceEnt *e = getEnt(idx);
+    virtual int add(const char *name,bool priv){
+        int i = NamespaceBase<NamespaceEnt>::add(name);
+        NamespaceEnt *e = getEnt(i);
         e->isConst=false;
-        return idx;
+        e->isPriv=priv;
+        return i;
     }
     
-    int addConst(const char *name){
-        int idx = NamespaceBase<NamespaceEnt>::add(name);
-        NamespaceEnt *e = getEnt(idx);
+    int addConst(const char *name,bool priv){
+        int i = NamespaceBase<NamespaceEnt>::add(name);
+        NamespaceEnt *e = getEnt(i);
         e->isConst=true;
-        return idx;
+        e->isPriv=priv;
+        return i;
     }
     
-    Value *getVal(int idx){
-        return &(getEnt(idx)->v);
+    Value *getVal(int i){
+        return &(getEnt(i)->v);
     }
     
     /// make a new entry in the namespace identical to
     /// the one passed in
     void copy(const char *name ,const NamespaceEnt *ent){
-        int idx = NamespaceBase<NamespaceEnt>::add(name);
-        NamespaceEnt *e = getEnt(idx);
+        int i = NamespaceBase<NamespaceEnt>::add(name);
+        NamespaceEnt *e = getEnt(i);
         e->isConst = ent->isConst;
+        e->isPriv = ent->isPriv;
         e->v.copy(&(ent->v));
     }
     
@@ -115,44 +127,44 @@ public:
             NamespaceEnt *e = getEnt(i);
             e->v.clr();
             e->isConst=false;
+            e->isPriv=false;
         }
         NamespaceBase<NamespaceEnt>::clear();
     }
     
+    /// import all permitted entries into the given namespace
+    void importAllTo(Namespace *dest);
+    
+    /// import a given entry into the given namespace (throw RUNT if not found)
+    void importTo(Namespace *dest,const char *name);
+    
     void list();
-    /// used to link imported namespaces; you can't "unimport" a
-    /// namespace.
-    Namespace *nextImport;
-    // sadly we need this for the import list, so we can make the superindex
-    // for an item when we get
-    int idx; 
+    
+    int idx; //!< index within namespace manager's "spaces" namespace.
 };
 
-#define MKIDX(i)
-#define GETNSIDX(i)
-#define GETITEMIDX(i)
+//#define MKIDX(i)
+//#define GETNSIDX(i)
+//#define GETITEMIDX(i)
+
+/**
+ * Handles all the namespaces, using a namespace of namespaces.
+ * Deals in "superindices" - a superindex contains both the
+ * index of the namespace, and the entry within that namespace.
+ * There are methods for assembling and disassembling these.
+ */
 
 class NamespaceManager {
 private:
     NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
-    Namespace *defaultSpace;
-    int defaultIdx;
-    Namespace *current;
-    int currentIdx;
+    Namespace *defaultSpace; //!< the default namespace
+    int defaultIdx; //!< the index of the default namespace
     
-    Stack<int,8> stack;
+    Namespace *current; //!< the namespace to which names are currently being added
+    int currentIdx; //!< the index of the current namespace
     
-    Namespace *headImport; //!< head of imported namespaces list
-    
-    /// this will add a namespace to the imported chain;
-    /// these are searched in order (most recent first) before
-    /// the default space and after the stacked spaces.
-    void import(Namespace *sp){
-        sp->nextImport = headImport;
-        headImport = sp;
-    }
-    
+    Stack<int,8> stack; //!< we maintain a stack of namespaces for when packages include others
     
     /// make a superindex out of a namespace index and an item index
     inline int makeIndex(int nsi,int itemi){
@@ -162,7 +174,6 @@ private:
     /// from a superindex, return the namespace index
     inline int getNamespaceIndex(int idx){
         return idx>>14;
-        
     }
     
     /// from a superindex, return the item index
@@ -170,6 +181,14 @@ private:
         return idx & ((1<<14)-1);
         
     }
+    
+    /// return the full superindex for a name, or -1
+    int getFromNamespace(Namespace *sp,const char *name);
+    
+    /// if true, names are created private; otherwise names are
+    /// created public.
+    bool privNames;
+    
 public:
     
     // the namespace system has room for 4 namespaces initially, but can grow.
@@ -191,7 +210,8 @@ public:
         }
         return idx;
     }
-    
+        
+        
     int getStackTop(){
         if(stack.ct>0)
             return stack.peek();
@@ -231,11 +251,17 @@ public:
     //////////////////// manipulating the current namespace ///////////
     
     int add(const char *name){
-        return makeIndex(currentIdx,current->add(name));
+        return makeIndex(currentIdx,current->add(name,privNames));
     }
     
     int addConst(const char *name){
-        return makeIndex(currentIdx,current->addConst(name));
+        return makeIndex(currentIdx,current->addConst(name,privNames));
+    }
+    
+    /// set whether created names are private - if so, they will not
+    /// be imported
+    void setPrivate(bool p){
+        privNames = p;
     }
     
     //////////////////// getting items across all namespaces //////////
@@ -261,27 +287,30 @@ public:
         return spaces.getEnt(nsidx)->getName(idx);
     }
     
-    /// get an index by name - if there is a $, separate into
+    /// get a namespace
+    Namespace *getSpaceByIdx(int i){
+        return spaces.getEnt(i);
+    }
+    
+    /// get a namespace
+    Namespace *getSpaceByName(const char *s){
+        int idx=spaces.get(s);
+        if(idx<0)
+            throw RUNT("cannot find namespace");
+        return spaces.getEnt(idx);
+    }
+    
+    /// get a superindex by name - if there is a $, separate into
     /// namespace and name and resolve.
     
     // What needs to happen here:
     // check for explicit '$'. If so, search that namespace only. Otherwise search:
-    // 1) namespace stack
-    // 2) imported namespaces
-    // 3) default
+    // 1) current namespace
+    // 2) default namespace
     
     int get(const char *name);
     
-    Value *getValFromNamespace(const char *space,int idx){
-        int spaceidx = spaces.get(space);
-        Namespace *sp = spaces.getEnt(spaceidx);
-        return sp->getVal(idx);
-    }
-    
-    
-    /// import either all symbols (by adding to the list of imported
-    /// namespaces) or some symbols (by adding those to the default
-    /// namespace) from a namespace.
+    /// import either all symbols or some symbols from a namespace.
     void import(int nsidx,ArrayList<Value> *lst);
 };
 

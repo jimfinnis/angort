@@ -75,7 +75,7 @@
 
 %word debug ( v -- ) turn debugging on or off (value is 0 or 1)
 {
-    a->debug = a->popInt()?true:false;
+    a->debug = a->popInt();
 }
 
 %word disasm (name -- ) disassemble word
@@ -296,4 +296,45 @@ public:
 %word gc (--) perform a major garbage detect and cycle removal
 {
     a->gc();
+}
+
+%word nspace (name -- handle) get a namespace by name
+{
+    char buf[256];
+    Namespace *ns = a->names.getSpaceByName(a->popval()->toString(buf,256));
+    a->pushInt(ns->idx);
+}
+
+%word names (handle --) get a list of names from a namespace
+{
+    int idx = a->popInt();
+    Namespace *ns = a->names.getSpaceByIdx(idx);
+    
+    ArrayList<Value> *list=Types::tList->set(a->pushval());
+    ns->appendNamesToList(list);
+    
+}
+
+static NamespaceEnt *getNSEnt(Angort *a){
+    char buf[256];
+    const char *s = a->popval()->toString(buf,256);
+    Namespace *ns = a->names.getSpaceByIdx(a->popInt());
+    
+    int idx = ns->get(s);
+    if(idx<0)
+        throw RUNT("ispriv: cannot find name in namespace");
+    NamespaceEnt *ent = ns->getEnt(idx);
+}
+
+%word ispriv (handle name -- bool) return true if the definition is private in the namespace
+{
+    NamespaceEnt *ent = getNSEnt(a);
+    a->pushInt(ent->isPriv?1:0);
+    
+}
+%word isconst (handle name -- bool) return true if the definition is constant in the namespace
+{
+    NamespaceEnt *ent = getNSEnt(a);
+    a->pushInt(ent->isConst?1:0);
+    
 }

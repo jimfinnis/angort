@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 219
+#define ANGORT_VERSION 220
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -217,7 +217,7 @@ void Angort::run(const Instruction *ip){
             }
                
             int opcode = ip->opcode;
-            if(debug){
+            if(debug&1){
                 showop(ip,debugwordbase);
                 printf(" ST [%d] : ",stack.ct);
                 for(int i=0;i<stack.ct;i++){
@@ -682,7 +682,10 @@ void Angort::include(const char *fh,bool isreq){
     // change to that directory, so all future reads are relative to there
     chdir(path);
     
+    TokeniserContext c;
+    tok.saveContext(&c);
     fileFeed(file);
+    tok.restoreContext(&c);
     if(names.getStackTop()>=0){
         // pop the namespace stack
         int idx=names.pop();
@@ -711,6 +714,7 @@ void Angort::feed(const char *buf){
         context->reset(NULL,&tok);
     
     strcpy(lastLine,buf);
+    tok.settrace((debug&2)?true:false);
     tok.reset(buf);
     // the tokeniser will reset its idea of the line number,
     // because we reset it at the start of all input.
@@ -728,8 +732,8 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw SyntaxException("expected a filename after 'include'");
-                if(tok.getnext()!=T_END)
-                    throw SyntaxException("include must be at end of line");
+//                if(tok.getnext()!=T_END)
+//                    throw SyntaxException("include must be at end of line");
                     
                 include(buf,false);
                 break;
@@ -742,11 +746,17 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw FileNameExpectedException();
-                if(tok.getnext()!=T_END)
-                    throw SyntaxException("require must be at end of line");
+//                if(tok.getnext()!=T_END)
+//                    throw SyntaxException("require must be at end of line");
                 include(buf,true);
                 break;
             }
+            case T_PRIVATE:
+                names.setPrivate(true);
+                break;
+            case T_PUBLIC:
+                names.setPrivate(false);
+                break;
             case T_PACKAGE:{
                 // start a new package.
                 char buf[256];

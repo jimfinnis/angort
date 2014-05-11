@@ -62,6 +62,8 @@ stop    :   T_STOP
 package :   T_PACKAGE
 require :   T_REQUIRE
 import  :   T_IMPORT
+private :   T_PRIVATE
+public  :   T_PUBLIC
 importall   :   T_IMPORTALL
 
 library :   T_LIBRARY

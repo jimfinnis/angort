@@ -10,6 +10,14 @@ void Namespace::list(){
     locations.listKeys();
 }
 
+int NamespaceManager::getFromNamespace(Namespace *sp, const char *name){
+    int iidx = sp->get(name);
+    if(iidx>=0)
+        return makeIndex(sp->idx,iidx);
+    else
+        return -1;
+}
+
 int NamespaceManager::get(const char *name){
     // does this contain a $?
     const char *dollar;
@@ -25,27 +33,17 @@ int NamespaceManager::get(const char *name){
         return makeIndex(spaceidx,sp->get(dollar+1));
     }
     
-    // default case - scan the namespace stack
+    // and this is for names in an unspecified space
     
-    for(int i=0;i<stack.ct;i++){
-        int nsidx = stack.peek(i);
-        Namespace *sp = spaces.getEnt(nsidx);
-        int iidx = sp->get(name);
-        if(iidx>=0)
-            return makeIndex(nsidx,iidx);
-    }
+    // first, scan the current list
     
-    // if not there, check the imported spaces
+    int idx = getFromNamespace(current,name);
+    if(idx>=0)
+        return idx;
     
-    for(Namespace *sp = headImport;sp;sp=sp->nextImport){
-        int iidx = sp->get(name);
-        if(iidx>=0)
-            return makeIndex(sp->idx,iidx);
-    }
-    
-    // finally, check the default space
+    // finally, check the default space and error 
         
-    return makeIndex(defaultIdx,defaultSpace->get(name));
+    return getFromNamespace(defaultSpace,name);
 }
 
 
@@ -54,8 +52,6 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
     // Otherwise, we add the namespace to the import list.
     
     Namespace *ns = spaces.getEnt(nsidx);
-    printf("scanning ns %d\n",nsidx);
-    ns->list();
     if(lst){
         // go through the list
         ArrayListIterator<Value> iter(lst);
@@ -63,13 +59,31 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
             char buf[256];
             Value *v = iter.current();
             const char *s = v->toString(buf,256);
-            // find the symbol in the namespace
-            int idx = ns->get(s);
-            if(idx<0)
-                throw RUNT("").set("cannot import '%s'",s);
-            NamespaceEnt *ent = ns->getEnt(idx);
-            defaultSpace->copy(s,ent);
+            ns->importTo(defaultSpace,s);
         }
+    } else {
+        // import everything which is permitted
+        ns->importAllTo(defaultSpace);
     }
 }
 
+void Namespace::importAllTo(Namespace *dest){
+    StringMapIterator<int> iter(&locations);
+    for(iter.first();!iter.isDone();iter.next()){
+        const char *name = iter.current()->key;
+        int loc = iter.current()->value;
+        NamespaceEnt *ent = entries.get(loc);
+        if(!ent->isPriv) // don't import privates
+            dest->copy(name,ent);
+    }
+}
+
+
+void Namespace::importTo(Namespace *dest,const char *name){
+    int idx = get(name);
+    if(idx<0)
+        throw RUNT("").set("cannot import '%s'",name);
+    NamespaceEnt *ent = getEnt(idx);
+    if(!ent->isPriv)
+        dest->copy(name,ent); // we do not import privates
+}

@@ -499,8 +499,6 @@ private:
     
     StringMap<Module *> modules; //!< a list of modules
     
-    NamespaceManager names; //!< the namespaces are all handled by the namespace manager
-    
     Stack<CompileContext,4> contextStack;
     VarStack locals;
     Value *closureTable; //!< the current closure table
@@ -624,8 +622,10 @@ public:
     bool emergencyStop;
     /// if true, unidentified idents will be converted to strings
     bool barewords;
-    /// show operations as they run
-    bool debug;
+    /// debug flags
+    /// 1 - show instructions as they run
+    /// 2 - show parsing in the tokeniser
+    int debug;
     /// make assertions print statements even when they pass just fine,
     /// used in testing.
     bool assertDebug;
@@ -634,6 +634,8 @@ public:
     bool assertNegated;
     /// print each line we parse
     bool printLines;
+    NamespaceManager names; //!< the namespaces are all handled by the namespace manager
+    
     
     /// returns true if we are defining a word
     bool isDefining(){
