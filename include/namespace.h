@@ -91,7 +91,7 @@ public:
     Namespace() : NamespaceBase<NamespaceEnt>(32) {
     }
     
-    virtual int add(const char *name,bool priv){
+    int addNonConst(const char *name,bool priv){
         int i = NamespaceBase<NamespaceEnt>::add(name);
         NamespaceEnt *e = getEnt(i);
         e->isConst=false;
@@ -192,7 +192,9 @@ private:
 public:
     
     // the namespace system has room for 4 namespaces initially, but can grow.
-    NamespaceManager() : spaces(4) {}
+    NamespaceManager() : spaces(4) {
+        privNames=false;
+    }
     
     //////////////////// manipulating namespaces /////////////////////
     
@@ -251,7 +253,7 @@ public:
     //////////////////// manipulating the current namespace ///////////
     
     int add(const char *name){
-        return makeIndex(currentIdx,current->add(name,privNames));
+        return makeIndex(currentIdx,current->addNonConst(name,privNames));
     }
     
     int addConst(const char *name){

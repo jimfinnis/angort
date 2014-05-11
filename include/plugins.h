@@ -19,10 +19,18 @@
 /// can't embed other objects safely.
 
 class PluginObject {
+public:
     /// The GarbageCollected object which Angort embeds
     /// this in. Set this to NULL on creation to indicate
     /// to Angort that it is a new object.
-    class GarbageCollected *gc;
+    class PluginObjectWrapper *wrapper;
+    
+    PluginObject(){
+        wrapper = NULL;
+    }
+    
+    virtual ~PluginObject(){
+    }
 };
 
 
@@ -87,10 +95,10 @@ struct PluginValue {
 };
 
 /// this is a plugin function; it takes a set
-/// of values and returns another set. Be careful
+/// of values and returns a value. Be careful
 /// with the strings - when passed in, they're on
 /// the stack; on return they are in static buffers.
-typedef PluginValue (*PLUGINFUNC)(PluginValue *params);
+typedef void (*PLUGINFUNC)(PluginValue *res,PluginValue *params);
 
 
 

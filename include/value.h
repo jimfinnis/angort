@@ -34,6 +34,7 @@ struct Value {
         class GarbageCollected *gc;
         class IteratorObject *iter;
         PluginFunc *native;
+        class PluginObjectWrapper *plobj;
     } v;
     
     

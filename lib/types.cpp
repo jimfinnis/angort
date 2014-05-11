@@ -79,7 +79,7 @@ Iterator<class Value *> *GCType::makeValueIterator(Value *v){
     
 void GCType::decRef(Value *v){
     bool b = v->v.gc->decRefCt();
-//   printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
+//    printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
 //       printf("  AND DELETING %s:%p\n",name,v->v.gc);
         delete v->v.gc;
@@ -134,6 +134,10 @@ SymbolType *Types::tSymbol = &_Symbol;
 
 static NativeType _Native;
 NativeType *Types::tNative = &_Native;
+
+static PluginObjectType _PluginObject;
+PluginObjectType *Types::tPluginObject = &_PluginObject;
+
 
 
 static IteratorType _Iterator;

@@ -224,6 +224,7 @@ public:
 #include "types/symbol.h"
 #include "types/none.h"
 #include "types/native.h"
+#include "types/plugobj.h"
 
 
 /// this is effectively a namespace for the type data
@@ -262,6 +263,8 @@ struct Types {
     static SymbolType *tSymbol;
     /// v.native is a native function
     static NativeType *tNative;
+    /// v.plobj is a wrapper around PluginObject
+    static PluginObjectType *tPluginObject;
     
     /// v.gc is some unspecified garbage-collected type
     static GCType *tGC;
