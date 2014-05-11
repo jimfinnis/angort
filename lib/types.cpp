@@ -132,6 +132,9 @@ HashType *Types::tHash = &_Hash;
 static SymbolType _Symbol;
 SymbolType *Types::tSymbol = &_Symbol;
 
+static NativeType _Native;
+NativeType *Types::tNative = &_Native;
+
 
 static IteratorType _Iterator;
 IteratorType *Types::tIter = &_Iterator;

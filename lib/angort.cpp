@@ -112,6 +112,14 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     Value *v;
     Type *t;
     
+    t=a->getType();
+    
+    /// very simple to handle a native.
+    if(t==Types::tNative) {
+        callPlugin(Types::tNative->get(a));
+        return returnip;
+    }
+    
     GarbageCollected *toPushOntoGCRStack=NULL;
     
     closureStack.push(closureTable); // we *might* be changing the closure table
@@ -120,7 +128,6 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     locals.push(); // switch to new locals frame
     // get the codeblock, check the type, and in
     // the case of a closure, bind the closed locals
-    t=a->getType();
     
     if(t==Types::tCode){
         cb = a->v.cb;
@@ -307,21 +314,7 @@ void Angort::run(const Instruction *ip){
                 break;
             case OP_GLOBALDO:
                 a = names.getVal(ip->d.i);
-                if(a->t == Types::tCode){
-                    cb = a->v.cb;
-                    rstack.push(ip+1);
-                    closureStack.push(closureTable);
-                    gcrstack.push(NULL);
-                    //            printf("CLOSURE SNARK PUSH\n");
-                    locals.push();
-                    locals.allocLocalsAndPopParams(cb->locals,
-                                                   cb->params,
-                                                   &stack);
-                    ip = cb->ip;
-                    if(!ip)
-                        throw RUNT("call to a word with a deferred definition");
-                    debugwordbase = ip;
-                } else if(a->t == Types::tClosure){
+                if(a->t->isCallable()){
                     ip = call(a,ip+1);
                 } else {
                     b = stack.pushptr();
@@ -696,6 +689,7 @@ void Angort::include(const char *fh,bool isreq){
             pushInt(idx);
         }
     }
+    names.setPrivate(false); // and clear the private flag
     
     
     free(path);

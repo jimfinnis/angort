@@ -577,6 +577,8 @@ private:
     /// (which could be NULL for top level).
     const Instruction *call(const Value *v, const Instruction *returnip);
     
+    /// call a native
+    void callPlugin(const PluginFunc *p);
     
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.

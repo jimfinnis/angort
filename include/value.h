@@ -10,6 +10,7 @@
 #define __VALUE_H
 
 #include "types.h"
+#include "plugins.h"
 
 /// all Angort values are instances of these --- the type of a value is determined
 /// by the t field, and the TypeData structure pointer.
@@ -32,6 +33,7 @@ struct Value {
         class HashObject *hash;
         class GarbageCollected *gc;
         class IteratorObject *iter;
+        PluginFunc *native;
     } v;
     
     

@@ -32,6 +32,12 @@ public:
         return false;
     }
     
+    /// true if this is callable; in which case a global
+    /// of this name will be run rather than stacked (unless ? is used)
+    virtual bool isCallable(){
+        return false;
+    }
+    
     /// return the GC object only if this is a GC type
     virtual class GarbageCollected *getGC(Value *v){
         return NULL;
@@ -217,6 +223,7 @@ public:
 #include "types/hashtype.h"
 #include "types/symbol.h"
 #include "types/none.h"
+#include "types/native.h"
 
 
 /// this is effectively a namespace for the type data
@@ -253,6 +260,8 @@ struct Types {
     static HashType *tHash;
     /// v.i is a symbol ID
     static SymbolType *tSymbol;
+    /// v.native is a native function
+    static NativeType *tNative;
     
     /// v.gc is some unspecified garbage-collected type
     static GCType *tGC;

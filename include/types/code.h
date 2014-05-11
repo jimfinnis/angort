@@ -18,6 +18,9 @@ public:
     virtual bool isReference(){
         return true;
     }
+    virtual bool isCallable(){
+        return true;
+    }
     void set(Value *v,const struct CodeBlock *cb);
 };
 

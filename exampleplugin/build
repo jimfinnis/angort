@@ -1,0 +1,5 @@
+g++ -fPIC -g -c -Wall plugin.cpp
+g++ -shared -Wl,-soname,plugin.so \
+    -o libplugin.so \
+    plugin.o
+

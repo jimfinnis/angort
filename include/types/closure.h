@@ -15,6 +15,9 @@ public:
     ClosureType(){
         add("closure","CLOS");
     }
+    virtual bool isCallable(){
+        return true;
+    }
     void set(Value *v,struct Closure *c);
 };
 
