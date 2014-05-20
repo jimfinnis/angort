@@ -53,3 +53,18 @@ bool StringType::equalForHashTable(Value *a,Value *b){
     return !strcmp(getData(a),getData(b));
 }
 
+void StringType::setValue(Value *coll,Value *k,Value *v){
+    char *s = (char *)getData(coll);
+    int idx = k->toInt();
+    const char *val = getData(v);
+    s[idx]=val[0];
+}
+void StringType::getValue(Value *coll,Value *k,Value *result){
+    const char *s = (char *)getData(coll);
+    int idx = k->toInt();
+    char out[2];
+    out[1]=0;
+    out[0]=s[idx];
+    set(result,out);
+}
+

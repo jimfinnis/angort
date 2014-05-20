@@ -35,6 +35,15 @@ public:
     /// get a hash key
     virtual uint32_t getHash(Value *v);
     
+    virtual void setValue(Value *coll,Value *k,Value *v);
+    
+    virtual void getValue(Value *coll,Value *k,Value *result);
+    
+    virtual void removeAndReturn(Value *coll,Value *k,Value *result){
+        throw RUNT("cannot remove from string");
+    }
+    
+    
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
 };
