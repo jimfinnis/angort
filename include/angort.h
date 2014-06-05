@@ -473,7 +473,9 @@ public:
     }
 };
 
-/// a module is a set of native functions grouped by functionality
+/// a module is a set of native functions grouped by functionality. It's
+/// a fair bit faster than a namespace, but (sadly) duplicates a lot
+/// of that functionality in its own way.
 struct Module {
     /// the name of the module - may be "" if the module was registered
     /// directly with registerFunc() with no optional module name
@@ -513,7 +515,9 @@ private:
     /// and the properties, duplicates of the module entries
     StringMap<Property *> props; 
     StringMap<const char *> propSpecs;
-    /// have we already done "package" in this file?
+   
+   
+   /// have we already done "package" in this file?
     bool definingPackage;
     /// the current compile context
     CompileContext *context;
@@ -728,6 +732,17 @@ public:
             m = modules.found();
         return m;
     }
+    
+    /// split a name like foo$bar, setting the returned 
+    /// pointer to the bar part and returning the module;
+    /// or returning NULL and leaving the name unchanged if there
+    /// is no dollar.
+    Module *splitFullySpecified(const char **name);
+    
+    NativeFunc getFunc(const char *s);
+    Property *getProp(const char *s);
+    const char *getFuncSpec(const char *s);
+    const char *getPropSpec(const char *s);
     
     void registerFunc(const char *name,NativeFunc f,const char *module=NULL,const char *spec=NULL){
         Module *m = findOrCreateModule(module);

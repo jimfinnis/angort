@@ -1,0 +1,68 @@
+library "./libmpc.so" import
+
+private
+:quote |x:| "\"" ?x "\"" ++;
+
+public
+:clr
+    "clear" mpc drop;
+:artist
+    "search artist " swap + mpc;
+:album
+    "search album " swap + mpc;
+
+:add |x:|
+    ?x type "string" = if
+        quote "add " swap + mpc drop
+    else
+        ?x each {
+            "add " i quote + mpc drop
+        }
+    then;
+    
+:grep |list,str:|
+    ?list (?str istridx isnone not) filter;
+
+:m
+    mpc each {i.};
+
+:p
+    "play" mpc drop;
+
+:s
+    "stop" mpc drop;
+
+:l |:stat,x,a,b|
+    "status" mpc dup len 1 > if
+        1 swap get !x
+        ?x "#" stridx 1+ !a
+        ?x "/" stridx 1- !b
+        ?a ?b ?a - 1+
+        ?x substr toint 1-
+    else
+        drop -1
+    then
+    !a
+    0!x
+    "playlist" mpc each {
+        ?x ?a = if
+            "> " std$p
+        then
+        ?x 1+ std$p " " std$p
+        i.
+        ?x 1+!x
+    }
+;   
+
+:stat
+    "status" mpc each {i.}
+;
+
+:f "next" mpc drop ;
+
+:b "prev" mpc drop;
+
+:go |x:|
+    "play " ?x +
+    mpc drop;
+    

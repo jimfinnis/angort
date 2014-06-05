@@ -1,0 +1,15 @@
+A little example plugin and script, for a simple MPC client. Just
+uses pipes to the standard mpc client.
+
+Example usages:
+
+    clr                     # wipe the current playlist
+
+    "Cardiacs" artist add   # add all Cardiacs songs
+    
+    # as above, but use only those with "On Land" in the title
+    # or album
+    
+    "Cardiacs" artist "On Land" filter add
+
+    p                       # start playing

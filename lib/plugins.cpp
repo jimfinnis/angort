@@ -41,6 +41,55 @@ void Angort::plugin(const char *path){
     pushInt(ns); // leave the NS on the stack
 }
 
+
+static void pluginToAngort(Value *out, PluginValue *in){
+    switch(in->type){
+    case PV_INT:
+        Types::tInteger->set(out,in->getInt());
+        break;
+    case PV_FLOAT:
+        Types::tFloat->set(out,in->getFloat());
+        break;
+    case PV_STRING:
+        Types::tString->set(out,in->getString());
+        break;
+    case PV_OBJ:
+        {
+            PluginObject *obj = in->getObject();
+            if(!(obj->wrapper)){
+                // no wrapper exists, create a new one
+                obj->wrapper = new PluginObjectWrapper(obj);
+            }
+            Types::tPluginObject->set(out,obj->wrapper);
+            
+        }
+        break;
+    case PV_LIST:
+        {
+            // we copy the list out into an Angort list,
+            // and delete the nodes. We delete any strings
+            // indexed by the nodes.
+            ArrayList<Value> *list = Types::tList->set(out);
+            PluginValue *q;
+            for(PluginValue *p = in->v.head;p;p=q){
+                q = p->next;
+                Value *dest = list->append();
+                pluginToAngort(dest,p);
+                if(p->type == PV_STRING)
+                    free((void *)p->v.s);
+                delete p;
+            }
+        }
+        break;
+    case PV_NONE:
+        out->clr();
+        break;
+    default:
+        throw RUNT("").set("return from plugin invalid pv-type: %d",in->type);
+    }
+    
+}
+
 void Angort::callPlugin(const PluginFunc *native){
     // pop the arguments in reverse order, converting
     PluginValue v[16];
@@ -52,7 +101,7 @@ void Angort::callPlugin(const PluginFunc *native){
         else if(a->t == Types::tFloat)
             p->setFloat(a->v.f);
         else if(a->t == Types::tString)
-            p->setString(a->v.s); // no copy
+            p->setString(Types::tString->getData(a)); // no copy
         else if(a->t == Types::tPluginObject){
             p->setObject(a->v.plobj->obj);
         } else
@@ -60,38 +109,21 @@ void Angort::callPlugin(const PluginFunc *native){
     }
     
     // call
-    PluginValue result;
-    (*native->func)(&result,v);
     
-    // and process the return
-    
-    switch(result.type){
-    case PV_INT:
-        pushInt(result.getInt());
-        break;
-    case PV_FLOAT:
-        pushFloat(result.getFloat());
-        break;
-    case PV_STRING:
-        // makes a copy on the stack
-        pushString(result.getString());
-        break;
-    case PV_OBJ:
-        {
-            PluginObject *obj = result.getObject();
-            if(!(obj->wrapper)){
-                // no wrapper exists, create a new one
-                obj->wrapper = new PluginObjectWrapper(obj);
-            }
-            Value *v = pushval();
-            Types::tPluginObject->set(v,obj->wrapper);
-            
+    try {
+        PluginValue result;
+        (*native->func)(&result,v);
+        // and process the return
+        if(result.type != PV_NORETURN){
+            Value *a = pushval();
+            pluginToAngort(a,&result);
         }
-    case PV_NONE:break;
-        break;
-    default:
-        throw RUNT("").set("return from plugin invalid pv-type: %d",result.type);
+    } catch(const char *s){
+        throw RUNT(s);
     }
+    
+          
+    
 }
 
 #else

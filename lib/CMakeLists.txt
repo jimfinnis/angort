@@ -43,7 +43,7 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
     
 #add_definitions(-g)
 
-add_words_files(stdWords.cpp stdLists.cpp)
+add_words_files(stdWords.cpp stdLists.cpp stdString.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     cycle.cpp binop.cpp plugins.cpp

@@ -7,11 +7,13 @@
 #ifndef __PLUGINS_H
 #define __PLUGINS_H
 // plugin value types
-#define PV_NONE     0
+#define PV_NORETURN 0 // this means that there is NO RETURN VALUE.
 #define PV_INT	    1
 #define PV_FLOAT    2
 #define PV_STRING   3
-#define PV_OBJ      4
+#define PV_OBJ      4 // subclass of PluginObject
+#define PV_LIST	    5 // linked list of PluginObject
+#define PV_NONE     6 // the return value is NONE.
 
 /// This is the base of a plugin object, which Angort will
 /// handle garbage collection for. Note that
@@ -47,10 +49,17 @@ struct PluginValue {
         /// returned.
         const char *s;
         PluginObject *obj;
+        // Angort cannot currently create lists to pass in,
+        // but it will convert a returned lists into an Angort
+        // list, deleting nodes and objects contained.
+        PluginValue *head;
     }v;
     
+    // used if this PluginValue is contained in a list
+    struct PluginValue *next,*tail;
+    
     PluginValue(){
-        type = PV_NONE;
+        type = PV_NORETURN;
     }
     
     int getInt(){
@@ -78,6 +87,26 @@ struct PluginValue {
         v.s = s;
         type =PV_STRING;
     }
+    void setNone(){
+        type = PV_NONE;
+    }
+    
+    void setList(){
+        type = PV_LIST;
+        v.head = NULL;
+    }
+    
+    void addToList(PluginValue *o){
+        if(type!=PV_LIST)throw "not a list";
+        type=PV_LIST;
+        o->next=NULL;
+        if(!v.head){
+            v.head=tail=o;
+        } else {
+            tail->next = o;
+            tail = o;
+        }
+    }
     
     PluginObject *getObject(){
         if(type!=PV_OBJ)throw "not an object";
@@ -87,10 +116,6 @@ struct PluginValue {
         v.obj = o;
         type =PV_OBJ;
     }
-    
-    
-    
-    
     
 };
 

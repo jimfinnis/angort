@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 221
+#define ANGORT_VERSION 222
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -22,7 +22,7 @@
 #include "tokens.h"
 #include "hash.h"
 
-WORDS(std);WORDS(lists);
+WORDS(std);WORDS(lists);WORDS(string);
 
 int Angort::getVersion(){
     return ANGORT_VERSION;
@@ -43,6 +43,7 @@ Angort::Angort() {
     
     REGWORDS((*this),std);
     REGWORDS((*this),lists);
+    REGWORDS((*this),string);
     
     debug=false;
     printLines=false;
@@ -813,7 +814,7 @@ void Angort::feed(const char *buf){
                 } else {            
                     char defname[256];
                     if(!tok.getnextident(defname))
-                        throw SyntaxException("expected a word name");
+                        throw SyntaxException("").set("expected a word name, not %s (toktype %d)",tok.getstring(),tok.getcurrent());
                     startDefine(defname);
                 }
                 break;
@@ -921,7 +922,7 @@ void Angort::feed(const char *buf){
                     char *s = tok.getstring();
                     if((t = names.get(s))>=0){
                         compile(OP_GLOBALDO)->d.i = t;
-                    } else if(NativeFunc f = funcs.get(s)){
+                    } else if(NativeFunc f = getFunc(s)){
                         compile(OP_FUNC)->d.func = f;
                     } else if(barewords){
                         compile(OP_LITERALSYMB)->d.i=
@@ -960,7 +961,7 @@ void Angort::feed(const char *buf){
                         // we managed to create a closure from here to upstairs,
                         // so store the closure index
                         compile(OP_CLOSUREGET)->d.i=t;
-                    } else if(Property *p = props.get(tok.getstring())){
+                    } else if(Property *p = getProp(tok.getstring())){
                         compile(OP_PROPGET)->d.prop = p;
                     } else if((t = names.get(tok.getstring()))>=0){
                         // it's a global; use it - but don't call it if it's a function
@@ -1000,7 +1001,7 @@ void Angort::feed(const char *buf){
                         // we managed to create a closure from here to upstairs,
                         // so store the closure index
                         compile(OP_CLOSURESET)->d.i=t;
-                    } else if(Property *p = props.get(tok.getstring())){
+                    } else if(Property *p = getProp(tok.getstring())){
                         compile(OP_PROPSET)->d.prop = p;
                     } else if((t = names.get(tok.getstring()))>=0){
                         if(names.getEnt(t)->isConst)
@@ -1144,9 +1145,9 @@ const char *Angort::getSpec(const char *s){
             return "<not a function>";
         else
             return v->v.cb->spec;
-    } else if(spec=funcSpecs.get(s)){
+    } else if(spec=getFuncSpec(s)){
         return spec;
-    } else if(spec=propSpecs.get(s)){
+    } else if(spec=getPropSpec(s)){
         return spec;
     }
     return NULL;
@@ -1169,5 +1170,59 @@ void Angort::list(){
             printf("MODULE %s PROPS:\n",*name?name:"(none)");
             m->props.listKeys();
         }
+    }
+}
+
+Module *Angort::splitFullySpecified(const char **name){
+    char *dollar;
+    if(dollar=strchr((char *)*name,'$')){
+        char buf[32];
+        if(dollar- *name > 32){
+            throw RUNT("namespace name too long");
+        }
+        strncpy(buf,*name,dollar- *name);
+        buf[dollar- *name]=0;
+        
+        Module *m = modules.get(buf);
+        if(!m)
+            throw RUNT("").set("module not found: %s",buf);
+        *name = dollar+1;
+        return m;
+    } else {
+        return NULL;
+    }
+}
+    
+        
+
+NativeFunc Angort::getFunc(const char *name){
+    if(Module *m = splitFullySpecified(&name)){
+        return m->funcs.get(name);
+    } else {
+        return funcs.get(name);
+    }
+}
+
+Property *Angort::getProp(const char *name){
+    if(Module *m = splitFullySpecified(&name)){
+        return m->props.get(name);
+    } else {
+        return props.get(name);
+    }
+}
+
+const char *Angort::getFuncSpec(const char *name){
+    if(Module *m = splitFullySpecified(&name)){
+        throw RUNT("fully specified specs not supported");
+    } else {
+        return funcSpecs.get(name);
+    }
+}
+
+const char *Angort::getPropSpec(const char *name){
+    if(Module *m = splitFullySpecified(&name)){
+        throw RUNT("fully specified specs not supported");
+    } else {
+        return propSpecs.get(name);
     }
 }

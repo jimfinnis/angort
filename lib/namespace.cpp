@@ -29,6 +29,7 @@ int NamespaceManager::get(const char *name){
         strncpy(buf,name,dollar-name);
         buf[dollar-name]=0;
         int spaceidx = spaces.get(buf);
+        if(spaceidx<0)return -1; // no such namespace
         Namespace *sp = spaces.getEnt(spaceidx);
         return makeIndex(spaceidx,sp->get(dollar+1));
     }

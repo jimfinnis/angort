@@ -340,21 +340,3 @@ static NamespaceEnt *getNSEnt(Angort *a){
 }
 
 
-%word chr (integer -- string) convert integer to ASCII
-{
-    Value *s = a->stack.peekptr();
-    int i = s->toInt();
-    char out[2];
-    out[0]=i;
-    out[1]=0;
-    Types::tString->set(s,out);
-    
-}
-
-%word asc (string -- integer) convert ASCII char to integer
-{
-    char buf[32];
-    Value *s = a->stack.peekptr();
-    const char *str = s->toString(buf,32);
-    Types::tInteger->set(s,str[0]);
-}
