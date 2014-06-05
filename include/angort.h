@@ -642,6 +642,10 @@ public:
     bool printLines;
     NamespaceManager names; //!< the namespaces are all handled by the namespace manager
     
+    /// called at the end of a script which contains a package, where that
+    /// package is not included by another script - effectively
+    /// fakes the require return.
+    void endPackageInScript();
     
     /// returns true if we are defining a word
     bool isDefining(){

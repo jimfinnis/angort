@@ -661,6 +661,16 @@ const Instruction *Angort::compile(const char *s){
     return NULL;
 }
 
+void Angort::endPackageInScript(){
+    // see the similar code below in include()
+    if(names.getStackTop()>=0){
+        // pop the namespace stack
+        int idx=names.pop();
+        pushInt(idx);
+    }
+    names.setPrivate(false); // and clear the private flag
+}
+
 void Angort::include(const char *fh,bool isreq){
     int oldDir = open(".",O_RDONLY); // get the FD for the current directory so we can go back
     

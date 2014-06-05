@@ -1,3 +1,5 @@
+package mpcc
+
 library "./libmpc.so" import
 
 private
@@ -54,15 +56,19 @@ public
     }
 ;   
 
-:stat
-    "status" mpc each {i.}
-;
+:stat "status" m;
 
-:f "next" mpc drop ;
+:f "next" mpc drop;
 
 :b "prev" mpc drop;
 
 :go |x:|
     "play " ?x +
     mpc drop;
-    
+
+:load 
+    "load " swap + mpc drop;
+:save 
+    "save " swap + mpc drop;
+
+endpackage import

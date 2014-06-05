@@ -969,6 +969,25 @@ isconst & (handle name -- bool) & return true if a name is constant in the names
 \end{tabular}
 \end{center}
 
+\subsubsection{Local packages}
+It is sometimes necessary to create a package inside a script which
+is not included from another script. One example is where the script
+does not terminate, leaving the user at the prompt with some words defined,
+but some words should be private.
+
+To do this, define the package thus:
+\begin{v}
+package somename
+private
+...private words...
+public
+...public words...
+endpackage import
+\end{v}
+The \texttt{endpackage} word does the same as the return from a 
+\texttt{require} normally does --- close off the package and
+stack the package ID.
+
 \subsection{Namespaces, libraries and modules}
 Native functions created by using the shared library plugin system
 are loaded into namespaces, just as described above. However, native
