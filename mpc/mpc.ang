@@ -6,35 +6,48 @@ private
 :quote |x:| "\"" ?x "\"" ++;
 
 public
+
 :clr
+    :"clear the playlist"
     "clear" mpc drop;
+
 :artist
+    :"(name -- list) search for songs by an artist"
     "search artist " swap + mpc;
+
 :album
+    :"(name -- list) search for songs on an album"
     "search album " swap + mpc;
 
 :add |x:|
+    :"(list or item --) add a list or named song to a playlist"
     ?x type "string" = if
         quote "add " swap + mpc drop
     else
         ?x each {
             "add " i quote + mpc drop
         }
-    then;
+    then
+;
     
 :grep |list,str:|
+    :"(list str -- list) filter a list for a string"
     ?list (?str istridx isnone not) filter;
 
 :m
+    :"(cmd --) run an mpc command and list the output"
     mpc each {i.};
 
 :p
+    :"(--) start playing"
     "play" mpc drop;
 
 :s
+    :"(--) stop playing"
     "stop" mpc drop;
 
 :l |:stat,x,a,b|
+    :"(--) list the current playlist, numbered, indicating the current song"
     "status" mpc dup len 1 > if
         1 swap get !x
         ?x "#" stridx 1+ !a
@@ -56,19 +69,28 @@ public
     }
 ;   
 
-:stat "status" m;
+:stat 
+    :"(--) show the status"
+    "status" m;
 
-:f "next" mpc drop;
+:f 
+    :"(--) move forwards in current playlist"
+    "next" mpc drop;
 
-:b "prev" mpc drop;
+:b 
+    :"(--) move backwards in current playlist"
+    "prev" mpc drop;
 
 :go |x:|
+    :"(n --) start playing from given song index in playlist"
     "play " ?x +
     mpc drop;
 
-:load 
+:load
+    :"(name --) load a playlist"
     "load " swap + mpc drop;
 :save 
+    :"(name --) save a playlist"
     "save " swap + mpc drop;
 
 endpackage import
