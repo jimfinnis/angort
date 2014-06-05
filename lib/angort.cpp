@@ -22,7 +22,7 @@
 #include "tokens.h"
 #include "hash.h"
 
-WORDS(std);WORDS(lists);WORDS(string);
+WORDS(std);WORDS(coll);WORDS(string);
 
 int Angort::getVersion(){
     return ANGORT_VERSION;
@@ -42,7 +42,7 @@ Angort::Angort() {
     tok.setcommentlinesequence("#");
     
     REGWORDS((*this),std);
-    REGWORDS((*this),lists);
+    REGWORDS((*this),coll);
     REGWORDS((*this),string);
     
     debug=false;

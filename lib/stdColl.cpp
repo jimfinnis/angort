@@ -7,7 +7,7 @@
 #include "angort.h"
 #include "hash.h"
 
-%name lists
+%name coll
 
 %word dumplist (list --) Dump a list
 {
