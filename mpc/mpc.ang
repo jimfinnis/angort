@@ -4,6 +4,17 @@ library "./libmpc.so" import
 
 private
 :quote |x:| "\"" ?x "\"" ++;
+:doshuffle |lst,n:a,b|
+    0 ?n range each {
+        rand ?lst len % !a
+        rand ?lst len % !b
+        ?a ?lst get
+        ?b ?lst get
+        ?a ?lst set
+        ?b ?lst set
+    }
+    ?lst
+;
 
 public
 
@@ -13,11 +24,15 @@ public
 
 :artist
     :"(name -- list) search for songs by an artist"
-    "search artist " swap + mpc;
+    quote "search artist " swap + mpc;
 
 :album
     :"(name -- list) search for songs on an album"
-    "search album " swap + mpc;
+    quote "search album " swap + mpc;
+
+:song 
+    :"(name -- list) search for songs by title"
+    quote "search title " swap + mpc;
 
 :add |x:|
     :"(list or item --) add a list or named song to a playlist"
@@ -29,6 +44,11 @@ public
         }
     then
 ;
+
+:ron 
+    :"(--) turn random on" "random on" mpc drop;
+:roff 
+    :"(--) turn random off" "random off" mpc drop;
     
 :grep |list,str:|
     :"(list str -- list) filter a list for a string"
@@ -45,6 +65,10 @@ public
 :s
     :"(--) stop playing"
     "stop" mpc drop;
+
+:ps
+    :"(--) pause"
+    "pause" mpc drop;
 
 :l |:stat,x,a,b|
     :"(--) list the current playlist, numbered, indicating the current song"
@@ -67,7 +91,12 @@ public
         i.
         ?x 1+!x
     }
-;   
+;
+
+:d 
+    :"(lst --) dump a list"
+    each {i.};
+
 
 :stat 
     :"(--) show the status"
@@ -86,11 +115,16 @@ public
     "play " ?x +
     mpc drop;
 
+:shuf 
+    :"(lst -- lst) shuffle the list"
+    dup len doshuffle;
+
 :load
     :"(name --) load a playlist"
     "load " swap + mpc drop;
 :save 
     :"(name --) save a playlist"
     "save " swap + mpc drop;
+
 
 endpackage import

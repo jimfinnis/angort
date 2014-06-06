@@ -10,6 +10,14 @@ Example usages:
     # as above, but use only those with "On Land" in the title
     # or album
     
-    "Cardiacs" artist "On Land" filter add
+    "Cardiacs" artist "On Land" grep add
 
     p                       # start playing
+
+    # play the song "laburnum"
+    
+    "Laburnum" clr song add p
+
+    # randomly play all Cardiacs songs
+    
+    clr "Cardiacs" artist add roff p
