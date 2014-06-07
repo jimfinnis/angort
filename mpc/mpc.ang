@@ -18,6 +18,8 @@ private
 
 public
 
+1 barewords
+
 :clr
     :"clear the playlist"
     "clear" mpc drop;
