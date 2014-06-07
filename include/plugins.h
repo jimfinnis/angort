@@ -12,8 +12,15 @@
 #define PV_FLOAT    2
 #define PV_STRING   3
 #define PV_OBJ      4 // subclass of PluginObject
-#define PV_LIST	    5 // linked list of PluginObject
-#define PV_NONE     6 // the return value is NONE.
+
+// for PV_LIST and PV_HASH, the data is a linked list of PluginValue.
+// In the hash case, the values come in pairs key->value->key->value.
+// The subvalues will be deleted when the main value is deleted.
+
+#define PV_LIST	    5
+#define PV_HASH	    6
+
+#define PV_NONE     7 // the return value is NONE.
 
 /// This is the base of a plugin object, which Angort will
 /// handle garbage collection for. Note that
@@ -44,14 +51,8 @@ struct PluginValue {
     union{
         int i;
         float f;
-        /// strings - Angort will not copy these to private storage
-        /// on being passed in, but it will make a copy of strings
-        /// returned.
         const char *s;
         PluginObject *obj;
-        // Angort cannot currently create lists to pass in,
-        // but it will convert a returned lists into an Angort
-        // list, deleting nodes and objects contained.
         PluginValue *head;
     }v;
     
@@ -61,6 +62,23 @@ struct PluginValue {
     PluginValue(){
         type = PV_NORETURN;
     }
+    
+    ~PluginValue(){
+        PluginValue *p,*q;
+        switch(type){
+        case PV_STRING:
+            free((void *)v.s);
+            break;
+        case PV_HASH:
+        case PV_LIST:
+            for(p=v.head;p;p=q){
+                q=p->next;
+                delete p;
+            }
+            default:break;
+        }
+    }
+        
     
     int getInt(){
         if(type!=PV_INT)throw "not an int";
@@ -84,7 +102,7 @@ struct PluginValue {
         return v.s;
     }
     void setString(const char *s){
-        v.s = s;
+        v.s = strdup(s);
         type =PV_STRING;
     }
     void setNone(){
@@ -95,10 +113,13 @@ struct PluginValue {
         type = PV_LIST;
         v.head = NULL;
     }
+    void setHash(){
+        type = PV_HASH;
+        v.head = NULL;
+    }
     
     void addToList(PluginValue *o){
-        if(type!=PV_LIST)throw "not a list";
-        type=PV_LIST;
+        if(type!=PV_LIST && type!=PV_HASH)throw "not a list";
         o->next=NULL;
         if(!v.head){
             v.head=tail=o;

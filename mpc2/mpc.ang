@@ -1,0 +1,124 @@
+package mpcc
+
+library "./libmpc.so" drop
+
+none 0 mpc$connect
+
+private
+
+
+
+:quote |x:| "\"" ?x "\"" ++;
+:doshuffle |lst,n:a,b|
+    0 ?n range each {
+        rand ?lst len % !a
+        rand ?lst len % !b
+        ?a ?lst get
+        ?b ?lst get
+        ?a ?lst set
+        ?b ?lst set
+    }
+    ?lst
+;
+
+:dosearch |tag,str:|
+    [% ?tag ?str] mpc$search;
+
+public
+
+:artist |name:|
+    :"(name -- list) search for songs by an artist"
+    `artist ?name dosearch;
+    
+:album |name:|
+    :"(name -- list) search for songs on an album"
+    `album ?name dosearch;
+
+:song |name:|
+    :"(name -- list) search for songs by title"
+    `song ?name dosearch;
+
+:ron 
+    :"(--) turn random on" "random on" mpc$mpc drop;
+:roff 
+    :"(--) turn random off" "random off" mpc$mpc drop;
+    
+:grep |list,str:|
+    :"(list str -- list) filter a list for a string"
+    ?list (mpc$name ?str istridx isnone not) filter;
+
+:m
+    :"(cmd --) run an mpc$mpc command and list the output"
+    mpc$mpc each {i.};
+
+:p
+    :"(--) start playing"
+    none mpc$play;
+:s
+    :"(--) stop playing"
+    mpc$stop;
+
+:ps
+    :"(--) pause"
+    mpc$pause;
+
+:l |:stat,x,a,b|
+    :"(--) list the current playlist, numbered, indicating the current song"
+    "status" mpc$mpc dup len 1 > if
+        1 swap get !x
+        ?x "#" stridx 1+ !a
+        ?x "/" stridx 1- !b
+        ?a ?b ?a - 1+
+        ?x substr toint 1-
+    else
+        drop -1
+    then
+    !a
+    0!x
+    "playlist" mpc$mpc each {
+        ?x ?a = if
+            "> " std$p
+        then
+        ?x 1+ std$p " " std$p
+        i.
+        ?x 1+!x
+    }
+;
+
+:clr mpc$clear;
+:add mpc$add;
+
+:d 
+    :"(lst --) dump a list"
+    each {i.};
+
+
+:stat 
+    :"(--) show the status"
+    "status" m;
+
+:f 
+    :"(--) move forwards in current playlist"
+    mpc$next;
+
+:b 
+    :"(--) move backwards in current playlist"
+    mpc$prev;
+
+:go |x:|
+    :"(n --) start playing from given song index in playlist"
+    ?x mpc$play;
+
+:shuf 
+    :"(lst -- lst) shuffle the list"
+    dup len doshuffle;
+
+:load
+    :"(name --) load a playlist"
+    "load " swap + mpc$mpc drop;
+:save 
+    :"(name --) save a playlist"
+    "save " swap + mpc$mpc drop;
+
+
+endpackage import

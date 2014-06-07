@@ -819,7 +819,7 @@ void Angort::feed(const char *buf){
                     // the only valid use of ":" in a definition is in a specstring.
                     char spec[1024];
                     if(!tok.getnextstring(spec))
-                        throw SyntaxException("expected spec string after second ':' in definition");
+                        throw SyntaxException("").set("expected spec string after second ':' in definition, got '%s'",tok.getstring());
                     context->setSpec(spec);
                 } else {            
                     char defname[256];

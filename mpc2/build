@@ -1,0 +1,7 @@
+g++ -fPIC -g -c -Wall `pkg-config libmpdclient --cflags` mpc.cpp 
+
+g++ -shared -Wl,-soname,mpc.so \
+    -o libmpc.so \
+    mpc.o\
+    `pkg-config libmpdclient --libs`\
+

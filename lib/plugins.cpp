@@ -5,6 +5,7 @@
  */
 
 #include "angort.h"
+#include "hash.h"
 #include "plugins.h"
 
 #ifdef LINUX
@@ -66,18 +67,13 @@ static void pluginToAngort(Value *out, PluginValue *in){
         break;
     case PV_LIST:
         {
-            // we copy the list out into an Angort list,
-            // and delete the nodes. We delete any strings
-            // indexed by the nodes.
+            // we copy the list out into an Angort list.
             ArrayList<Value> *list = Types::tList->set(out);
             PluginValue *q;
             for(PluginValue *p = in->v.head;p;p=q){
                 q = p->next;
                 Value *dest = list->append();
                 pluginToAngort(dest,p);
-                if(p->type == PV_STRING)
-                    free((void *)p->v.s);
-                delete p;
             }
         }
         break;
@@ -90,25 +86,66 @@ static void pluginToAngort(Value *out, PluginValue *in){
     
 }
 
+/*DOING THIS SO I CAN PASS LISTS TO PLUGINS (HASHES?)
+WILL BE RECURSIVE. THEN CAN IMPLEMENT ADD IN MPC,
+AND REWORK SEARCH SO IT TAKES A LIST/HASH.
+ */
+static void angortToPlugin(PluginValue *out,Value *in);
+
+static void angortToPlugin(PluginValue *out,Value *in){
+    if(in->t == Types::tInteger)
+        out->setInt(in->v.i);
+    else if(in->t == Types::tFloat)
+        out->setFloat(in->v.f);
+    else if(in->t == Types::tNone)
+        out->setNone();
+    else if(in->t == Types::tString)
+        out->setString(Types::tString->getData(in));
+    else if(in->t == Types::tSymbol)
+        out->setString(Types::tSymbol->getString(in->v.i));
+    else if(in->t == Types::tList){
+        out->setList();
+        ArrayList<Value> *list = Types::tList->get(in);
+        for(int i=0;i<list->count();i++){
+            Value *v = list->get(i);
+            // responsibility to the plugin to delete
+            PluginValue *pv = new PluginValue();
+            angortToPlugin(pv,v);
+            out->addToList(pv);
+        }
+    } else if(in->t == Types::tHash){
+        out->setHash();
+        Hash *h = Types::tHash->get(in);
+        HashKeyIterator iter(h);
+        
+        for(iter.first();!iter.isDone();iter.next()){
+            Value *key = iter.current();
+            h->find(key); // must be there!
+            Value *val = h->getval();
+            PluginValue *pv = new PluginValue();
+            angortToPlugin(pv,key);
+            out->addToList(pv);
+            pv = new PluginValue();
+            angortToPlugin(pv,val);
+            out->addToList(pv);
+            
+        }
+    } else if(in->t == Types::tPluginObject){
+        out->setObject(in->v.plobj->obj);
+    } else
+        throw RUNT("").set("not a permitted type in plugins: %s",in->t->name);
+}
+
 void Angort::callPlugin(const PluginFunc *native){
     // pop the arguments in reverse order, converting
     PluginValue v[16];
-    PluginValue *p=v;
-    for(int i=native->nargs-1;i>=0;i--,p++){
+    PluginValue *p=v+native->nargs-1;
+    for(int i=0;i<native->nargs;i++,p--){
         Value *a = popval();
-        if(a->t == Types::tInteger)
-            p->setInt(a->v.i);
-        else if(a->t == Types::tFloat)
-            p->setFloat(a->v.f);
-        else if(a->t == Types::tString)
-            p->setString(Types::tString->getData(a)); // no copy
-        else if(a->t == Types::tPluginObject){
-            p->setObject(a->v.plobj->obj);
-        } else
-            throw RUNT("").set("not a permitted type in plugins: %s",a->t->name);
+        angortToPlugin(p,a);
     }
     
-    // call
+    // call the plugin
     
     try {
         PluginValue result;
