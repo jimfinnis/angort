@@ -96,4 +96,12 @@
 
 %word format (list string -- string) string formatting
 {
+    void format(Value *out,Value *formatVal,ArrayList<Value> *items);
+    
+    Value *f = a->popval();
+    Value *l = a->popval();
+    
+    format(a->pushval(),f,Types::tList->get(l));
+          
+    
 }
