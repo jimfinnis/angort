@@ -20,7 +20,11 @@
 #define PV_LIST	    5
 #define PV_HASH	    6
 
-#define PV_NONE     7 // the return value is NONE.
+// is a string but will be converted to a symbol in return values
+// (used in hash keys)
+#define PV_SYMBOL   7 
+
+#define PV_NONE     8 // the return value is NONE.
 
 /// This is the base of a plugin object, which Angort will
 /// handle garbage collection for. Note that
@@ -63,6 +67,14 @@ struct PluginValue {
         type = PV_NORETURN;
     }
     
+    explicit PluginValue(const char *s){
+        setString(s);
+    }
+    
+    explicit PluginValue(int n){
+        setInt(n);
+    }
+    
     ~PluginValue(){
         PluginValue *p,*q;
         switch(type){
@@ -98,12 +110,16 @@ struct PluginValue {
     }
     
     const char *getString(){
-        if(type!=PV_STRING)throw "not a string";
+        if(type!=PV_STRING && type!=PV_SYMBOL)throw "not a string or symbol";
         return v.s;
     }
     void setString(const char *s){
         v.s = strdup(s);
         type =PV_STRING;
+    }
+    void setSymbol(const char *s){
+        v.s = strdup(s);
+        type =PV_SYMBOL;
     }
     void setNone(){
         type = PV_NONE;
@@ -127,6 +143,25 @@ struct PluginValue {
             tail->next = o;
             tail = o;
         }
+    }
+    
+    void setHashVal(const char *s,PluginValue *v){
+        if(type!=PV_HASH)throw "not a hash";
+        PluginValue *pv = new PluginValue();
+        pv->setSymbol(s);
+        addToList(pv);
+        addToList(v);
+    }
+    
+    PluginValue *getHashVal(const char *s){
+        if(type!=PV_HASH)throw "not a hash";
+        PluginValue *value,*key;
+        for(key=v.head;key;key=value->next){
+            value = key->next;
+            if(key->type == PV_STRING && !strcmp(key->v.s,s))
+                return value;
+        }
+        return NULL;
     }
     
     PluginObject *getObject(){

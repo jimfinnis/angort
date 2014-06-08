@@ -38,14 +38,9 @@ public
     :"(name -- list) search for songs by title"
     `song ?name dosearch;
 
-:ron 
-    :"(--) turn random on" "random on" mpc$mpc drop;
-:roff 
-    :"(--) turn random off" "random off" mpc$mpc drop;
-    
 :grep |list,str:|
-    :"(list str -- list) filter a list for a string"
-    ?list (mpc$name ?str istridx isnone not) filter;
+    :"(list str -- list) filter a list of songs for a string"
+    ?list (?`name ?str istridx isnone not) filter;
 
 :m
     :"(cmd --) run an mpc$mpc command and list the output"
@@ -62,40 +57,41 @@ public
     :"(--) pause"
     mpc$pause;
 
-:l |:stat,x,a,b|
+
+:l |:stat,i|
     :"(--) list the current playlist, numbered, indicating the current song"
-    "status" mpc$mpc dup len 1 > if
-        1 swap get !x
-        ?x "#" stridx 1+ !a
-        ?x "/" stridx 1- !b
-        ?a ?b ?a - 1+
-        ?x substr toint 1-
-    else
-        drop -1
-    then
-    !a
-    0!x
-    "playlist" mpc$mpc each {
-        ?x ?a = if
-            "> " std$p
+    mpc$stat !stat
+    0!i
+    mpc$list each {
+        ?i ?stat?`pos = if
+            ">> " std$p
         then
-        ?x 1+ std$p " " std$p
-        i.
-        ?x 1+!x
+        ?i std$p "  "std$p
+        i?`name .
+        ?i 1+ !i
     }
+;
+
+:stat |:stat,list|
+    mpc$stat !stat
+    mpc$list !list
+    
+    ?stat?`pos 0 < not if
+        ?stat?`pos ?list get
+        "Current Song: " std$p ?`name.
+    then
 ;
 
 :clr mpc$clear;
 :add mpc$add;
 
-:d 
-    :"(lst --) dump a list"
-    each {i.};
-
-
-:stat 
-    :"(--) show the status"
-    "status" m;
+:d |x:|
+    :"(lst --) dump a list or hash"
+    ?x type `hash = if
+        ?x each {i std$p "   " std$p i ?x get .}
+    else
+        ?x each {i.}
+    then;
 
 :f 
     :"(--) move forwards in current playlist"
@@ -115,10 +111,17 @@ public
 
 :load
     :"(name --) load a playlist"
-    "load " swap + mpc$mpc drop;
+    mpc$load;
 :save 
     :"(name --) save a playlist"
-    "save " swap + mpc$mpc drop;
+    mpc$save;
 
+:rm
+    :"(name --) delete a playlist"
+    mpc$rm;
+
+:ls
+    :"() list playlists"
+    mpc$playlists each {i.};
 
 endpackage import

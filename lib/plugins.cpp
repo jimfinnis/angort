@@ -54,6 +54,10 @@ static void pluginToAngort(Value *out, PluginValue *in){
     case PV_STRING:
         Types::tString->set(out,in->getString());
         break;
+    case PV_SYMBOL:
+        Types::tSymbol->set(out,
+                            Types::tSymbol->getSymbol(in->getString()));
+        break;
     case PV_OBJ:
         {
             PluginObject *obj = in->getObject();
@@ -74,6 +78,20 @@ static void pluginToAngort(Value *out, PluginValue *in){
                 q = p->next;
                 Value *dest = list->append();
                 pluginToAngort(dest,p);
+            }
+        }
+        break;
+    case PV_HASH:
+        {
+            // we copy the list out into an Angort hash
+            Hash *h = Types::tHash->set(out);
+            PluginValue *key,*value;
+            for(key = in->v.head;key;key=value->next){
+                value = key->next;
+                Value aVal,aKey;
+                pluginToAngort(&aKey,key);
+                pluginToAngort(&aVal,value);
+                h->set(&aKey,&aVal);
             }
         }
         break;

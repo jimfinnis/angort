@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <mpd/client.h>
 #include <mpd/status.h>
 #include <mpd/search.h>
@@ -16,47 +17,6 @@
 #include "../include/plugins.h"
 
 const char *todo = "Tidy up song data item access. Some form of hash?";
-
-class SongObject : public PluginObject {
-public:
-    const char *name;
-    int duration;
-    int id; // ID in playlist or 0 if not
-    SongObject(const mpd_song *song){
-        name = strdup(mpd_song_get_uri(song));
-        duration = mpd_song_get_duration(song);
-        id = mpd_song_get_id(song);
-    }
-    
-    /// needs to be virtual because we destruct through
-    /// the PluginObject.
-    virtual ~SongObject(){
-        free((void *)name);
-    }
-};
-
-/// song access words
-static void nameFunc(PluginValue *res,PluginValue *params){
-    if(params[0].type != PV_OBJ)
-        res->setNone();
-    else
-        res->setString(((SongObject*)params[0].getObject())->name);
-}
-static void durationFunc(PluginValue *res,PluginValue *params){
-    if(params[0].type != PV_OBJ)
-        res->setNone();
-    else
-        res->setInt(((SongObject*)params[0].getObject())->duration);
-}
-
-static void idFunc(PluginValue *res,PluginValue *params){
-    if(params[0].type != PV_OBJ)
-        res->setNone();
-    else
-        res->setInt(((SongObject*)params[0].getObject())->id);
-}
-
-
 
 /// handles the connection. This should be created by "connect",
 /// and disconnection will be handled by the destructor, which
@@ -118,6 +78,28 @@ public:
 
 Connection conn;
 
+static PluginValue *makeSong(const mpd_song *song){
+    PluginValue *p = new PluginValue();
+    p->setHash();
+    p->setHashVal("name",new PluginValue(mpd_song_get_uri(song)));
+    p->setHashVal("id",new PluginValue(mpd_song_get_id(song)));
+    p->setHashVal("pos",new PluginValue(mpd_song_get_pos(song)));
+    p->setHashVal("duration",new PluginValue(mpd_song_get_duration(song)));
+    
+    for(int i=(int)MPD_TAG_ARTIST;i<(int)MPD_TAG_COUNT;i++){
+        const char *s = mpd_song_get_tag(song,(mpd_tag_type)i,0);
+        if(s){
+            char buf[256];
+            const char *tagname = mpd_tag_name((mpd_tag_type)i);
+            strcpy(buf,tagname);
+            for(char *q=buf;*q;q++)*q=tolower(*q);
+            p->setHashVal(buf,new PluginValue(s));
+        }
+    }
+    
+    return p;
+}
+
 
 static void connectFunc(PluginValue *res,PluginValue *params){
     if(conn.mpd)
@@ -162,10 +144,7 @@ static void searchFunc(PluginValue *res,PluginValue *params){
     res->setList();
     mpd_song *song;
     while((song=mpd_recv_song(conn.mpd))!=NULL){
-        PluginValue *pv = new PluginValue();
-        SongObject *o = new SongObject(song);
-        
-        pv->setObject(o);
+        PluginValue *pv = makeSong(song);
         res->addToList(pv);
         mpd_song_free(song);
     }
@@ -196,10 +175,10 @@ static void addFunc(PluginValue *res,PluginValue *params){
     mpd_command_list_begin(conn.mpd,false);
     
     if(params->type == PV_OBJ){
-        mpd_send_add(conn.mpd,((SongObject *)params->getObject())->name);
+        mpd_send_add(conn.mpd,params->getHashVal("name")->getString());
     } else if(params->type == PV_LIST) {
         for(PluginValue *p=params->v.head;p;p=p->next){
-            mpd_send_add(conn.mpd,((SongObject *)p->getObject())->name);
+            mpd_send_add(conn.mpd,p->getHashVal("name")->getString());
         }
     } else throw("inappropriate type for 'mpc$add'");
     mpd_command_list_end(conn.mpd);
@@ -226,9 +205,7 @@ static void listFunc(PluginValue *res,PluginValue *params){
         entity = mpd_recv_entity(conn.mpd)) {
         if(mpd_entity_get_type(entity) == MPD_ENTITY_TYPE_SONG) {
             const mpd_song* song = mpd_entity_get_song(entity);
-            PluginValue *pv = new PluginValue();
-            SongObject *o = new SongObject(song);
-            pv->setObject(o);
+            PluginValue *pv = makeSong(song);
             res->addToList(pv);
         }
         mpd_entity_free(entity);
@@ -268,6 +245,68 @@ static void prevFunc(PluginValue *res,PluginValue *params){
         conn.throwError();
 }
 
+static void statFunc(PluginValue *res,PluginValue *params){
+    conn.check();
+    mpd_status *stat = mpd_run_status(conn.mpd);
+    if(!stat)
+        conn.throwError();
+    res->setHash();
+    res->setHashVal("consume",new PluginValue(mpd_status_get_consume(stat)?1:0));
+    res->setHashVal("crossfade",new PluginValue((int)mpd_status_get_crossfade(stat)));
+    res->setHashVal("elapsed",new PluginValue((int)mpd_status_get_elapsed_time(stat)));
+    res->setHashVal("total",new PluginValue((int)mpd_status_get_total_time(stat)));
+    res->setHashVal("update",new PluginValue((int)mpd_status_get_update_id(stat)));
+    res->setHashVal("volume",new PluginValue((int)mpd_status_get_volume(stat)));
+    if(mpd_status_get_error(stat))
+        res->setHashVal("error",new PluginValue(mpd_status_get_error(stat)));
+    res->setHashVal("queuelength",new PluginValue((int)mpd_status_get_queue_length(stat)));
+    res->setHashVal("queueversion",new PluginValue((int)mpd_status_get_queue_version(stat)));
+    
+    res->setHashVal("id",new PluginValue((int)mpd_status_get_song_id(stat)));
+    res->setHashVal("pos",new PluginValue((int)mpd_status_get_song_pos(stat)));
+    
+    const char *state;
+    switch(mpd_status_get_state(stat)){
+    case MPD_STATE_UNKNOWN:state="unknown";break;
+    case MPD_STATE_STOP:state="stop";break;
+    case MPD_STATE_PLAY:state="play";break;
+    case MPD_STATE_PAUSE:state="pause";break;
+    }
+    PluginValue *pv = new PluginValue();
+    pv->setSymbol(state);
+    res->setHashVal("state",pv);
+    
+        
+    res->setHashVal("random",new PluginValue(mpd_status_get_random(stat)?1:0));
+    res->setHashVal("repeat",new PluginValue(mpd_status_get_repeat(stat)?1:0));
+    res->setHashVal("single",new PluginValue(mpd_status_get_single(stat)?1:0));
+}
+
+static void loadFunc(PluginValue *res,PluginValue *params){
+    conn.check();
+    if(!mpd_run_load(conn.mpd,params[0].getString()))
+        conn.throwError();
+}
+static void saveFunc(PluginValue *res,PluginValue *params){
+    conn.check();
+    if(!mpd_run_save(conn.mpd,params[0].getString()))
+        conn.throwError();
+}
+static void rmFunc(PluginValue *res,PluginValue *params){
+    conn.check();
+    if(!mpd_run_rm(conn.mpd,params[0].getString()))
+        conn.throwError();
+}
+
+static void playlistsFunc(PluginValue *res,PluginValue *params){
+    conn.check();
+    mpd_send_list_playlists(conn.mpd);
+    res->setList();
+    while(mpd_playlist *p = mpd_recv_playlist(conn.mpd)){
+        res->addToList(new PluginValue(mpd_playlist_get_path(p)));
+    }
+    mpd_response_finish(conn.mpd);
+}
 
 
 /// this is used for functions which are harder to do!
@@ -292,11 +331,6 @@ static void mpcFunc(PluginValue *res,PluginValue *params){
 }
 
 static PluginFunc funcs[]= {
-    // song data access
-    {"name",nameFunc,1}, // (song -- uri)
-    {"duration",durationFunc,1}, // (song -- duration)
-    {"id",idFunc,1}, // (song -- duration)
-    
     {"connect",connectFunc,2}, // (hostOrNone portOrZero --)
     
     // searches, returning song objects
@@ -306,12 +340,18 @@ static PluginFunc funcs[]= {
     {"add",addFunc,1}, // (songlist--)
     {"clear",clearFunc,0},
     {"list",listFunc,0},
+    {"stat",statFunc,0}, // (-- hash)
     
     {"play",playFunc,1}, // (noneOrID --)
     {"pause",pauseFunc,0},
     {"stop",stopFunc,0},
     {"next",nextFunc,0},
     {"prev",prevFunc,0},
+    
+    {"load",loadFunc,1},
+    {"save",saveFunc,1},
+    {"rm",rmFunc,1},
+    {"playlists",playlistsFunc,0}, // (-- list)
     
     // shell command function
     {"mpc",mpcFunc,1},
