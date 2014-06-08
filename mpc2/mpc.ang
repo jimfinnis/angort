@@ -58,17 +58,44 @@ public
     mpc$pause;
 
 
-:l |:stat,i|
+:l |:stat,list,i,titlen,artlen|
     :"(--) list the current playlist, numbered, indicating the current song"
     mpc$stat !stat
     0!i
-    mpc$list each {
+    mpc$list !list
+    
+    # work out some max lengths
+    0!titlen
+    0!artlen
+    ?list each {
+        i?`artist len dup ?artlen > if !artlen else drop then
+        i?`title  len dup ?titlen > if !titlen else drop then
+    }
+    
+    ?titlen 1+ !titlen
+    ?artlen 1+ !artlen
+    
+    {
+        ?titlen ?artlen + 80 > if 
+            ?titlen 20 > if ?titlen 20 - !titlen then
+            ?artlen 20 > if ?artlen 20 - !artlen then
+        else
+            leave
+        then
+    }
+    
+    ?list each {
         ?i ?stat?`pos = if
             ">> " std$p
         else
             "   " std$p
         then
-        [?i, i?`artist, i?`title] "%4d %30s %30s" format .
+        
+        
+        [?i, 
+         i?`artist ?artlen truncstr ?artlen padleft,
+         i?`title  ?titlen truncstr ?titlen padleft] 
+        "%4d %s %s" format .
         ?i 1+ !i
     }
 ;

@@ -14,7 +14,7 @@ void StringType::set(Value *v,const char *s){
 }
 
 int StringType::getCount(Value *v){
-    return strlen(v->v.s);
+    return strlen(getData(v));
 }
 
 
