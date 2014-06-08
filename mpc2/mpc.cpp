@@ -16,7 +16,6 @@
 
 #include "../include/plugins.h"
 
-const char *todo = "Tidy up song data item access. Some form of hash?";
 
 /// handles the connection. This should be created by "connect",
 /// and disconnection will be handled by the destructor, which
@@ -411,7 +410,7 @@ static PluginInfo info = {
 };
 
 extern "C" PluginInfo *init(){
-    printf("Initialising MPC plugin\n%s\n",todo);
+    printf("Initialising MPC plugin\n");
     return &info;
 }
 
