@@ -70,15 +70,16 @@ public
     ?list each {
         i?`artist len dup ?artlen > if !artlen else drop then
         i?`title  len dup ?titlen > if !titlen else drop then
+        
     }
     
     ?titlen 1+ !titlen
     ?artlen 1+ !artlen
     
     {
-        ?titlen ?artlen + 80 > if 
-            ?titlen 20 > if ?titlen 20 - !titlen then
-            ?artlen 20 > if ?artlen 20 - !artlen then
+        ?titlen ?artlen + 100 > if 
+            ?titlen 20 > if ?titlen 1- !titlen then
+            ?artlen 20 > if ?artlen 1- !artlen then
         else
             leave
         then
@@ -98,6 +99,7 @@ public
         "%4d %s %s" format .
         ?i 1+ !i
     }
+    
 ;
 
 :stat |:stat,list|
