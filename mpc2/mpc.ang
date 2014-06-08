@@ -65,9 +65,10 @@ public
     mpc$list each {
         ?i ?stat?`pos = if
             ">> " std$p
+        else
+            "   " std$p
         then
-        ?i std$p "  "std$p
-        i?`name .
+        [?i, i?`artist, i?`title] "%4d %30s %30s" format .
         ?i 1+ !i
     }
 ;

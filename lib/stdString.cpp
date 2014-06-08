@@ -105,3 +105,62 @@
           
     
 }
+
+%word padleft (string padding -- string) insert spaces at left to pad out string
+{
+    char buf[1024];
+    int padding = a->popInt();
+    Value *v = a->stack.peekptr();
+    const char *str = v->toString(buf,1024);
+    
+    int len = strlen(str);
+    if(len>=padding)
+        return;
+    
+    char *newstr = (char *)malloc(padding+1);
+    int i;
+    for(i=0;i<padding-len;i++)
+        newstr[i]=' ';
+    strcpy(newstr+i,str);
+    Types::tString->set(v,newstr);
+    free(newstr);
+}
+
+%word padright (string padding -- string) insert spaces at right to pad out string
+{
+    char buf[1024];
+    int padding = a->popInt();
+    Value *v = a->stack.peekptr();
+    const char *str = v->toString(buf,1024);
+    
+    int len = strlen(str);
+    if(len>=padding)
+        return;
+    
+    char *newstr = (char *)malloc(padding+1);
+    int i;
+    strcpy(newstr,str);
+    for(i=0;i<padding-len;i++)
+        newstr[len+i]=' ';
+    newstr[padding]=0;
+    Types::tString->set(v,newstr);
+    free(newstr);
+}
+
+
+%word truncstr (string maxlen -- string) truncate a string if required
+{
+    char buf[1024];
+    int maxlen = a->popInt();
+    Value *v = a->stack.peekptr();
+    const char *str = v->toString(buf,1024);
+    
+    if(maxlen>1024 || maxlen<0 || strlen(str)<maxlen)
+        return;
+    
+    // might not actually be a string.
+    if(buf!=str)
+        strcpy(buf,str);
+    buf[maxlen]=0;
+    Types::tString->set(v,buf);
+}

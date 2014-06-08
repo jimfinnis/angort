@@ -17,19 +17,19 @@ static char buf[ITEMLEN];
 static void formatSignedInt(char *s,int i,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     sprintf(format,"%%%s%dd",zeropad?"0":"",negpad?-width:width);
-    snprintf(s,20,format,i);
+    sprintf(s,format,i);
 }
 
 static void formatUnsignedInt(char *s,unsigned int i,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     sprintf(format,"%%%s%du",zeropad?"0":"",negpad?-width:width);
-    snprintf(s,20,format,i);
+    sprintf(s,format,i);
 }
 
 static void formatHexInt(char *s,unsigned int i,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     sprintf(format,"%%%s%dx",zeropad?"0":"",negpad?-width:width);
-    snprintf(s,20,format,i);
+    sprintf(s,format,i);
 }
 
 static void formatFloat(char *s,float f,int width,int precision, bool zeropad, bool negpad){
@@ -38,7 +38,7 @@ static void formatFloat(char *s,float f,int width,int precision, bool zeropad, b
         sprintf(format,"%%%s%d.%df",zeropad?"0":"",negpad?-width:width,precision);
     else
         sprintf(format,"%%%s%df",zeropad?"0":"",negpad?-width:width);
-    snprintf(s,20,format,f);
+    sprintf(s,format,f);
 }
 
 static void formatString(char *s,const char *in,int width,int precision, bool negpad){
@@ -65,11 +65,13 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
     
     // pass 1, work out the buffer size
     int size=0;
+    int strsz;
     for(const char *f = format;*f;f++){
         precision=0;
         width=0;
         if(*f=='%'){
-            const char *p = f;
+            const char *p = f++;
+            if(*f=='-')f++;
             while(isdigit(*f))
                 width = (width*10) + (*f++ - '0');
             if(*f=='.'){
@@ -77,7 +79,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 while(isdigit(*f))
                     precision = (precision*10) + (*f++ - '0');
             }
-            while(*++f && *f!='%' && !isalpha(*f))
+            while(*f && *f!='%' && !isalpha(*f))
                 ;
             if((*f=='l' || *f=='z') && (f[1]=='d' || f[1]=='u'))
                 ++f;
@@ -98,7 +100,8 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 size+=20; // got to draw the line somewhere.
                 break;
             case 's':
-                size+=max(strlen(iter.current()->toString(buf,ITEMLEN)),width);
+                strsz = max(strlen(iter.current()->toString(buf,ITEMLEN)),width);
+                size+=strsz;
                 iter.next();
                 break;
             default://unknown code; just add the rest of the string in. Ugh.
@@ -106,11 +109,13 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 goto expand;
                 break;
             }
-        }
+        } else
+            size++;
     }
 expand:
     // now allocate a temporary buffer
-    char *base=(char *)calloc(size+1,1);
+    char *base=(char *)malloc(size+2);
+    memset(base,0,size+1);
     char *s = base;
     
     // pass 2 - do the formatting
