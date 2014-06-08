@@ -76,10 +76,15 @@ public
     mpc$stat !stat
     mpc$list !list
     
+    "State : "std$p ?stat?`state.
     ?stat?`pos 0 < not if
-        ?stat?`pos ?list get
-        "Current Song: " std$p ?`name.
+        ?stat?`pos ?list get dup
+        "Current Song: " std$p ?`title.
+        "              " std$p ?`artist.
+        ?stat?`elapsed std$p "/" std$p ?stat?`total.
     then
+    
+    
 ;
 
 :clr mpc$clear;

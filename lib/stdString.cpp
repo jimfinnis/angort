@@ -93,3 +93,7 @@
     const char *str = s->toString(buf,32);
     Types::tInteger->set(s,str[0]);
 }
+
+%word format (list string -- string) string formatting
+{
+}

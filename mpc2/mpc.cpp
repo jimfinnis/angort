@@ -72,6 +72,7 @@ public:
     void throwError(){
         char buf[1024];
         sprintf(buf,"MPD error: %s",mpd_connection_get_error_message(mpd));
+        mpd_connection_clear_error(mpd);
         throw buf;
     }
 };
@@ -125,8 +126,9 @@ static void searchFunc(PluginValue *res,PluginValue *params){
         throw "must be a hash in mpc$search";
     
     // start the search
+    
     if(!mpd_search_db_songs(conn.mpd,false))
-        throw mpd_connection_get_error_message(conn.mpd);
+        conn.throwError();
     
     // add constraints
     PluginValue *key,*value;
@@ -139,7 +141,8 @@ static void searchFunc(PluginValue *res,PluginValue *params){
             conn.throwError();
     }
     if(!mpd_search_commit(conn.mpd))
-        throw mpd_connection_get_error_message(conn.mpd);
+        conn.throwError();
+        
     
     res->setList();
     mpd_song *song;
@@ -168,6 +171,49 @@ error:
     }
     throw mpd_connection_get_error_message(conn.mpd);
 }
+
+static void tagsFunc(PluginValue *res,PluginValue *params){
+    conn.check();
+    
+    PluginValue *hash = params+1;
+    if(hash->type != PV_HASH)
+        throw "must be a hash in mpc$search";
+    
+    const char *tag = params->getString();
+    
+    // start the search
+    
+    mpd_tag_type tagid = mpd_tag_name_iparse(tag);
+    if(!mpd_search_db_tags(conn.mpd,tagid))
+        conn.throwError();
+    
+    // add constraints
+    PluginValue *key,*value;
+    for(key = hash->v.head;key;key=value->next){
+        value = key->next;
+        
+        if(!mpd_search_add_tag_constraint(conn.mpd,MPD_OPERATOR_DEFAULT,
+                                          mpd_tag_name_iparse(key->getString()),
+                                          value->getString()))
+            conn.throwError();
+    }
+    if(!mpd_search_commit(conn.mpd))
+        conn.throwError();
+        
+    
+    res->setList();
+    while(mpd_pair *pair = mpd_recv_pair_tag(conn.mpd,tagid)){
+        res->addToList(new PluginValue(pair->value));
+        mpd_return_pair(conn.mpd,pair);
+    }
+    
+    if (mpd_connection_get_error(conn.mpd) != MPD_ERROR_SUCCESS)
+        conn.throwError();
+    
+    if (!mpd_response_finish(conn.mpd))
+        conn.throwError();
+}
+
 
 static void addFunc(PluginValue *res,PluginValue *params){
     conn.check();
@@ -333,8 +379,9 @@ static void mpcFunc(PluginValue *res,PluginValue *params){
 static PluginFunc funcs[]= {
     {"connect",connectFunc,2}, // (hostOrNone portOrZero --)
     
-    // searches, returning song objects
+    // searches, returning song objects or tag values
     {"search",searchFunc,1}, // (constrainthash -- list)
+    {"tags",tagsFunc,2}, // (constrainthash tagname -- listofvaluesfortag)
     
     // playlist manipulation
     {"add",addFunc,1}, // (songlist--)
