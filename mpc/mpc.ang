@@ -18,6 +18,7 @@ private
 :showlist |startidx,endidx:list,titlen,artlen,stat,i,cur,listlen|
     mpc$list dup !list len !listlen
     mpc$stat !stat
+    "List length: " std$p ?listlen.
     0!i
     # work out some max lengths
     0!titlen
