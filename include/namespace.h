@@ -38,7 +38,11 @@ public:
     }
     
     T *getEnt(int idx){
-        return entries.get(idx);
+        try{
+            return entries.get(idx);
+        }catch(ArrayListException e){
+            return NULL;
+        }
     }
     
     const char *getName(int i){

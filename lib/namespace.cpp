@@ -31,6 +31,8 @@ int NamespaceManager::get(const char *name){
         int spaceidx = spaces.get(buf);
         if(spaceidx<0)return -1; // no such namespace
         Namespace *sp = spaces.getEnt(spaceidx);
+        int subidx = sp->get(dollar+1);
+        if(subidx<0)return -1; // no such entry
         return makeIndex(spaceidx,sp->get(dollar+1));
     }
     

@@ -120,16 +120,18 @@ static PluginValue *makeSong(const mpd_song *song){
         throw error;
 }
 
-%word search 1 (constraintHash -- songList) search for songs by tags
+%word search 2 (constraintHash exactbool -- songList) search for songs by tags
 {
     conn.check();
     
     if(params->type != PV_HASH)
         throw "must be a hash in mpc$search";
     
+    bool exact = params[1].getInt()?true:false;
+    
     // start the search
     
-    if(!mpd_search_db_songs(conn.mpd,false))
+    if(!mpd_search_db_songs(conn.mpd,exact))
         conn.throwError();
     
     // add constraints
@@ -139,8 +141,10 @@ static PluginValue *makeSong(const mpd_song *song){
         
         if(!mpd_search_add_tag_constraint(conn.mpd,MPD_OPERATOR_DEFAULT,
                                           mpd_tag_name_iparse(key->getString()),
-                                          value->getString()))
+                                          value->getString())){
+            mpd_search_cancel(conn.mpd);
             conn.throwError();
+        }
     }
     if(!mpd_search_commit(conn.mpd))
         conn.throwError();
@@ -197,8 +201,10 @@ error:
         
         if(!mpd_search_add_tag_constraint(conn.mpd,MPD_OPERATOR_DEFAULT,
                                           mpd_tag_name_iparse(key->getString()),
-                                          value->getString()))
+                                          value->getString())){
+            mpd_search_cancel(conn.mpd);
             conn.throwError();
+        }
     }
     if(!mpd_search_commit(conn.mpd))
         conn.throwError();
@@ -401,5 +407,5 @@ error:
 
 %init
 {
-    printf("Initialising MPD client plugin\n");
+    printf("Initialising MPD client plugin, %s %s\n",__DATE__,__TIME__);
 }

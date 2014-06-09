@@ -60,7 +60,6 @@ int main(int argc,char *argv[]){
     printf("Angort version %d.%d (c) Jim Finnis 2014\nUse '\"word\" help' to get help on a word.\n",
            vv / 100,
            vv % 100);
-    
     for(;;){
         char prompt=0;
         if(a.isDefining())

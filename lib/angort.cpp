@@ -1195,7 +1195,7 @@ Module *Angort::splitFullySpecified(const char **name){
         
         Module *m = modules.get(buf);
         if(!m)
-            throw RUNT("").set("module not found: %s",buf);
+            throw RUNT("").set("not found: %s",*name);
         *name = dollar+1;
         return m;
     } else {

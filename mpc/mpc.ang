@@ -1,6 +1,6 @@
 package mpcc
 
-library "./libmpc.so" drop
+library "./libangortmpc.so" drop
 
 none 0 mpc$connect
 
@@ -22,7 +22,8 @@ private
 ;
 
 :dosearch |tag,str:|
-    [% ?tag ?str] mpc$search;
+    :"(tag str -- list) non exact search shortcut"
+    [% ?tag ?str] 0 mpc$search;
 
 public
 
@@ -77,7 +78,7 @@ public
     ?artlen 1+ !artlen
     
     {
-        ?titlen ?artlen + 100 > if 
+        ?titlen ?artlen + 80 > if 
             ?titlen 20 > if ?titlen 1- !titlen then
             ?artlen 20 > if ?artlen 1- !artlen then
         else
@@ -117,7 +118,7 @@ public
     
 ;
 
-:clr mpc$clear;
+:clr mpc$clr;
 :add mpc$add;
 
 :d |x:|
@@ -158,5 +159,14 @@ public
 :ls
     :"() list playlists"
     mpc$playlists each {i.};
+
+:all |:ids|
+    :"(--list) list all songs (takes ages)"
+    []
+    `artist [%] mpc$tags each {i.
+        [% `artist i] 1 mpc$search each{ i, }
+    }
+    
+;
 
 endpackage import
