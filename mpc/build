@@ -1,4 +1,7 @@
-g++ -fPIC -g -c -Wall `pkg-config libmpdclient --cflags` mpc.cpp 
+perl ../makePlugin.pl mpc.cpp >mpc_plugin.cpp
+
+
+g++ -fPIC -g -c -Wall `pkg-config libmpdclient --cflags` mpc_plugin.cpp 
 
 g++ -shared -Wl,-soname,mpc.so \
     -o libmpc.so \

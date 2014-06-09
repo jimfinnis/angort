@@ -30,7 +30,8 @@ void Angort::plugin(const char *path){
     int ns = names.create(info->name);
     names.push(ns);
     
-    // and add the functions
+    // and add the functions. Irritatingly this
+    // provides no way of accessing the description/specification.
     PluginFunc *f=info->funcs;
     while(f->name){
         int idx = names.addConst(f->name);

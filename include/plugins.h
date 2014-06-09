@@ -190,6 +190,7 @@ public:
     const char *name;
     PLUGINFUNC func;
     int nargs;
+    const char *desc;
 };
 
 /// each plugin returns one of these, which has a pointer

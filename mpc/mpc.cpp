@@ -16,6 +16,8 @@
 
 #include "../include/plugins.h"
 
+%plugin mpc
+
 
 /// handles the connection. This should be created by "connect",
 /// and disconnection will be handled by the destructor, which
@@ -100,8 +102,8 @@ static PluginValue *makeSong(const mpd_song *song){
     return p;
 }
 
-
-static void connectFunc(PluginValue *res,PluginValue *params){
+%word connect 2 (hostOrNone portOrZero --) connect to MPD
+{
     if(conn.mpd)
         conn.disconnect();
     
@@ -118,7 +120,8 @@ static void connectFunc(PluginValue *res,PluginValue *params){
         throw error;
 }
 
-static void searchFunc(PluginValue *res,PluginValue *params){
+%word search 1 (constraintHash -- songList) search for songs by tags
+{
     conn.check();
     
     if(params->type != PV_HASH)
@@ -171,7 +174,8 @@ error:
     throw mpd_connection_get_error_message(conn.mpd);
 }
 
-static void tagsFunc(PluginValue *res,PluginValue *params){
+%word tags 2 (tag constraints -- list) find all unique values of a tag with given constraints
+{
     conn.check();
     
     PluginValue *hash = params+1;
@@ -214,7 +218,8 @@ static void tagsFunc(PluginValue *res,PluginValue *params){
 }
 
 
-static void addFunc(PluginValue *res,PluginValue *params){
+%word add 1 (songlist -- ) add songs to queue
+{
     conn.check();
     
     mpd_command_list_begin(conn.mpd,false);
@@ -232,13 +237,15 @@ static void addFunc(PluginValue *res,PluginValue *params){
         conn.throwError();
 }
 
-static void clearFunc(PluginValue *res,PluginValue *params){
+%word clr 0 (--) clear queue
+{
     conn.check();
     if(!mpd_run_clear(conn.mpd))
         conn.throwError();
 }
 
-static void listFunc(PluginValue *res,PluginValue *params){
+%word list 0 (-- songlist) list the queue
+{
     conn.check();
     mpd_command_list_begin(conn.mpd,true);
     mpd_send_list_queue_meta(conn.mpd);
@@ -259,7 +266,8 @@ static void listFunc(PluginValue *res,PluginValue *params){
         conn.throwError();
 }
 
-static void playFunc(PluginValue *res,PluginValue *params){
+%word play 1 (posOrNone --) start playing from a position, or from the current position
+{
     conn.check();
     if(params->type == PV_NONE){
         if(!mpd_run_play(conn.mpd))
@@ -269,28 +277,37 @@ static void playFunc(PluginValue *res,PluginValue *params){
             conn.throwError();
     }
 }
-static void pauseFunc(PluginValue *res,PluginValue *params){
+
+%word pause 0 (--) pause the player
+{
     conn.check();
     if(!mpd_run_toggle_pause(conn.mpd))
         conn.throwError();
 }
-static void stopFunc(PluginValue *res,PluginValue *params){
+
+%word stop 0 (--) stop the player
+{
     conn.check();
     if(!mpd_run_stop(conn.mpd))
         conn.throwError();
 }
-static void nextFunc(PluginValue *res,PluginValue *params){
+
+%word next 0 (--) move to next item in queue
+{
     conn.check();
     if(!mpd_run_next(conn.mpd))
         conn.throwError();
 }
-static void prevFunc(PluginValue *res,PluginValue *params){
+
+%word prev 0 (--) move to previous item in queue
+{
     conn.check();
     if(!mpd_run_previous(conn.mpd))
         conn.throwError();
 }
 
-static void statFunc(PluginValue *res,PluginValue *params){
+%word stat 0 (-- hash) produce a status hash
+{
     conn.check();
     mpd_status *stat = mpd_run_status(conn.mpd);
     if(!stat)
@@ -327,23 +344,29 @@ static void statFunc(PluginValue *res,PluginValue *params){
     res->setHashVal("single",new PluginValue(mpd_status_get_single(stat)?1:0));
 }
 
-static void loadFunc(PluginValue *res,PluginValue *params){
+%word load 1 (name --) load a playlist
+{
     conn.check();
     if(!mpd_run_load(conn.mpd,params[0].getString()))
         conn.throwError();
 }
-static void saveFunc(PluginValue *res,PluginValue *params){
+
+%word save 1 (name --) save a playlist
+{
     conn.check();
     if(!mpd_run_save(conn.mpd,params[0].getString()))
         conn.throwError();
 }
-static void rmFunc(PluginValue *res,PluginValue *params){
+
+%word rm 1 (name --) delete a playlist
+{
     conn.check();
     if(!mpd_run_rm(conn.mpd,params[0].getString()))
         conn.throwError();
 }
 
-static void playlistsFunc(PluginValue *res,PluginValue *params){
+%word playlists 0 (-- list) produce a list of playlists
+{
     conn.check();
     mpd_send_list_playlists(conn.mpd);
     res->setList();
@@ -356,7 +379,8 @@ static void playlistsFunc(PluginValue *res,PluginValue *params){
 
 /// this is used for functions which are harder to do!
 
-static void mpcFunc(PluginValue *res,PluginValue *params){
+%word mpc 1 (string --) pass a command string to the standard MPC client
+{
     FILE *fp;
     
     char buf[1024];
@@ -375,42 +399,7 @@ static void mpcFunc(PluginValue *res,PluginValue *params){
         res->setNone();
 }
 
-static PluginFunc funcs[]= {
-    {"connect",connectFunc,2}, // (hostOrNone portOrZero --)
-    
-    // searches, returning song objects or tag values
-    {"search",searchFunc,1}, // (constrainthash -- list)
-    {"tags",tagsFunc,2}, // (constrainthash tagname -- listofvaluesfortag)
-    
-    // playlist manipulation
-    {"add",addFunc,1}, // (songlist--)
-    {"clear",clearFunc,0},
-    {"list",listFunc,0},
-    {"stat",statFunc,0}, // (-- hash)
-    
-    {"play",playFunc,1}, // (noneOrID --)
-    {"pause",pauseFunc,0},
-    {"stop",stopFunc,0},
-    {"next",nextFunc,0},
-    {"prev",prevFunc,0},
-    
-    {"load",loadFunc,1},
-    {"save",saveFunc,1},
-    {"rm",rmFunc,1},
-    {"playlists",playlistsFunc,0}, // (-- list)
-    
-    // shell command function
-    {"mpc",mpcFunc,1},
-    {NULL,NULL,-1}
-};
-
-
-static PluginInfo info = {
-    "mpc",funcs
-};
-
-extern "C" PluginInfo *init(){
-    printf("Initialising MPC plugin\n");
-    return &info;
+%init
+{
+    printf("Initialising MPD client plugin\n");
 }
-
