@@ -7,6 +7,20 @@
 #include "angort.h"
 #include "opcodes.h"
 
+/// append to a list. If the element to add is itself a list,
+/// split it apart and and the items individually.
+
+static void addListOrValueToList(ArrayList<Value> *list,Value *a){
+    if(a->getType() == Types::tList){
+        ArrayListIterator<Value> iter(Types::tList->get(a));
+        
+        for(iter.first();!iter.isDone();iter.next()){
+            list->append()->copy(iter.current());
+        }
+    } else 
+        list->append()->copy(a);
+}    
+
 /**
  * Take a pair of values a,b and perform the binary operation given.
  * The result should be pushed onto the stack. The instruction pointer
@@ -32,6 +46,18 @@ void Angort::binop(Value *a,Value *b,int opcode){
         default:
             throw RUNT("invalid operation with a 'none' operand");
         }
+    }else if(at == Types::tList || bt == Types::tList) {
+        ListObject *lo;
+        switch(opcode){
+            case OP_ADD:
+            lo = new ListObject();
+            addListOrValueToList(&lo->list,a);
+            addListOrValueToList(&lo->list,b);
+            break;
+        default:
+            throw RUNT("invalid operation with a list operand");
+        }
+        Types::tList->set(pushval(),lo);
     } else if((at == Types::tString || at == Types::tSymbol) && bt == Types::tInteger && opcode == OP_MUL){
         /**
          * Special case for multiplying a string/symbol by a number
@@ -134,7 +160,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
         if(!cmp)
             pushFloat(r);
     }else if(at == Types::tSymbol || bt == Types::tSymbol){
-        /**
+        /*
          * One of the values is a symbol; equality tests on the integers or
          * string comparisons are valid. Note that < and > work as expected,
          * and equality with strings will work because that will be dealt with

@@ -30,6 +30,9 @@ public:
     /// create a new list
     ArrayList<Value> *set(Value *v);
     
+    /// set a value to an existing list
+    void set(Value *v,ListObject *lo);
+    
     virtual void setValue(Value *coll,Value *k,Value *v);
     virtual void getValue(Value *coll,Value *k,Value *result);
     virtual int getCount(Value *coll);

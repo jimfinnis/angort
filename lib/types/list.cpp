@@ -15,14 +15,16 @@ ListObject::~ListObject(){
     CycleDetector::getInstance()->remove(this);
 }
 
-ArrayList<Value> *ListType::set(Value *v){
+void ListType::set(Value *v,ListObject *lo){
     v->clr();
     v->t = this;
-    
-    ListObject *p = new ListObject();
-    v->v.list = p;
-    
+    v->v.list = lo;
     incRef(v);
+}
+
+ArrayList<Value> *ListType::set(Value *v){
+    ListObject *p = new ListObject();
+    set(v,p);
     return &p->list;
 }
 

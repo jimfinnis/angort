@@ -36,7 +36,7 @@ public
 
 :song |name:|
     :"(name -- list) search for songs by title"
-    `song ?name dosearch;
+    `title ?name dosearch;
 
 :grep |list,str:|
     :"(list str -- list) filter a list of songs for a string"
