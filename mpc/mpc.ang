@@ -6,26 +6,68 @@ none 0 mpc$connect
 
 private
 
-
-
 :quote |x:| "\"" ?x "\"" ++;
-:doshuffle |lst,n:a,b|
-    0 ?n range each {
-        rand ?lst len % !a
-        rand ?lst len % !b
-        ?a ?lst get
-        ?b ?lst get
-        ?a ?lst set
-        ?b ?lst set
-    }
-    ?lst
-;
+
+:chknone |s:| ?s isnone if "<<NONE>>" else ?s then;
+
 
 :dosearch |tag,str:|
     :"(tag str -- list) non exact search shortcut"
     [% ?tag ?str] 0 mpc$search;
 
+:showlist |startidx,endidx:list,titlen,artlen,stat,i,cur,listlen|
+    mpc$list dup !list len !listlen
+    mpc$stat !stat
+    0!i
+    # work out some max lengths
+    0!titlen
+    0!artlen
+    ?startidx ?endidx range each {
+        i ?listlen = ifleave
+        i ?list get !cur
+        ?cur?`artist chknone len dup ?artlen > if !artlen else drop then
+        ?cur?`title chknone len dup ?titlen > if !titlen else drop then
+        
+    }
+    
+    ?titlen 1+ !titlen
+    ?artlen 1+ !artlen
+    
+    {
+        ?titlen ?artlen + 80 > if 
+            ?titlen 20 > if ?titlen 1- !titlen then
+            ?artlen 20 > if ?artlen 1- !artlen then
+        else
+            leave
+        then
+    }
+    
+    ?startidx ?endidx range each {
+        i ?listlen = ifleave
+        i ?list get !cur
+        ?i ?stat?`pos = if
+            ">> " std$p
+        else
+            "   " std$p
+        then
+        
+        
+        [?i, 
+         ?cur?`artist ?artlen truncstr ?artlen padleft,
+         ?cur?`title  ?titlen truncstr ?titlen padleft] 
+        "%4d %s %s" format .
+        ?i 1+ !i
+    }
+    
+;
+
+
+
+
+
+
 public
+
 
 :artist |name:|
     :"(name -- list) search for songs by an artist"
@@ -59,49 +101,19 @@ public
     mpc$pause;
 
 
-:l |:stat,list,i,titlen,artlen|
+    
+
+
+:l |:stat,start,end|
     :"(--) list the current playlist, numbered, indicating the current song"
     mpc$stat !stat
-    0!i
-    mpc$list !list
+    ?stat?`pos
+    10- dup 0< if drop 0 then
+    dup 10+
+    showlist
     
-    # work out some max lengths
-    0!titlen
-    0!artlen
-    ?list each {
-        i?`artist len dup ?artlen > if !artlen else drop then
-        i?`title  len dup ?titlen > if !titlen else drop then
-        
-    }
     
-    ?titlen 1+ !titlen
-    ?artlen 1+ !artlen
-    
-    {
-        ?titlen ?artlen + 80 > if 
-            ?titlen 20 > if ?titlen 1- !titlen then
-            ?artlen 20 > if ?artlen 1- !artlen then
-        else
-            leave
-        then
-    }
-    
-    ?list each {
-        ?i ?stat?`pos = if
-            ">> " std$p
-        else
-            "   " std$p
-        then
-        
-        
-        [?i, 
-         i?`artist ?artlen truncstr ?artlen padleft,
-         i?`title  ?titlen truncstr ?titlen padleft] 
-        "%4d %s %s" format .
-        ?i 1+ !i
-    }
-    
-;
+;    
 
 :stat |:stat,list|
     mpc$stat !stat
@@ -141,9 +153,15 @@ public
     :"(n --) start playing from given song index in playlist"
     ?x mpc$play;
 
-:shuf 
-    :"(lst -- lst) shuffle the list"
-    dup len doshuffle;
+:shuf |lst:n,a,l|
+    ?lst len !l
+    ?l 1- 0 range each {
+        rand i % !a
+        i ?lst get
+        ?a ?lst get
+        i ?lst set
+        ?a ?lst set
+    } ?lst;
 
 :load
     :"(name --) load a playlist"
