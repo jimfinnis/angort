@@ -32,7 +32,8 @@ public:
     
     virtual int toInt(const Value *v) const;
     virtual float toFloat(const Value *v) const;
-    virtual const char *toString(char *outBuf,int len,const Value *v) const;
+protected:
+    virtual const char *toString(bool *allocated,const Value *v) const ;
 };
 
 #endif /* __FLOAT_H */

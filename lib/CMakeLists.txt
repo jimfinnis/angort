@@ -46,7 +46,7 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
 add_words_files(stdWords.cpp stdColl.cpp stdString.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
-    cycle.cpp binop.cpp plugins.cpp format.cpp
+    cycle.cpp binop.cpp plugins.cpp format.cpp stringbuf.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
     types/hashtype.cpp   types/symbol.cpp types/native.cpp    types/plugobj.cpp

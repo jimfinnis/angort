@@ -75,8 +75,8 @@ struct Value {
         return t;
     }
     
-    const char * toString(char *buf,int len) const {
-        return t->toString(buf,len,this);
+    const StringBuffer toString() const {
+        return StringBuffer(this);
     }
     
     float toFloat(){
@@ -138,10 +138,8 @@ struct Value {
     /// debugging method - dump a value to stdout, using the string
     /// from toString().
     void dump(const char *prefix){
-        char buf[256];
-        const char *s;
-        s = toString(buf,256);
-        printf("%s: %s\n",prefix,buf);
+        const char *s = toString().get();
+        printf("%s: %s\n",prefix,s);
     }
     
 private:    

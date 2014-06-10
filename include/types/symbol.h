@@ -33,8 +33,8 @@ public:
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
-    
-    virtual const char *toString(char *outBuf,int len,const Value *v) const;
+protected:    
+    virtual const char *toString(bool *allocated,const Value *v) const;
 };
 
 

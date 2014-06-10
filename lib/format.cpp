@@ -11,9 +11,6 @@
 #include <ctype.h>
 #define max(a,b) ((a)>(b)?(a):(b))
 
-#define ITEMLEN 1024
-static char buf[ITEMLEN];
-
 static void formatSignedInt(char *s,int i,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     sprintf(format,"%%%s%dd",zeropad?"0":"",negpad?-width:width);
@@ -99,11 +96,13 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 iter.next();
                 size+=20; // got to draw the line somewhere.
                 break;
-            case 's':
-                strsz = max(strlen(iter.current()->toString(buf,ITEMLEN)),width);
+            case 's':{
+                const StringBuffer& b = iter.current()->toString();
+                strsz = max(strlen(b.get()),width);
                 size+=strsz;
                 iter.next();
                 break;
+            }
             default://unknown code; just add the rest of the string in. Ugh.
                 size+=strlen(p);
                 goto expand;
@@ -173,12 +172,13 @@ expand:
                 s+=strlen(s);
                 iter.next();
                 break;
-            case 's':
-                t = iter.current()->toString(buf,ITEMLEN);
-                formatString(s,t,width,precision,negpad);
+            case 's':{
+                const StringBuffer& b = iter.current()->toString();
+                formatString(s,b.get(),width,precision,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;
+            }
             default:
                 strcpy(s,p);
                 s+=strlen(s);

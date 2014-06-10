@@ -37,9 +37,11 @@ float IntegerType::toFloat(const Value *v) const {
     return (float)v->v.i;
 }
 
-const char * IntegerType::toString(char *outBuf,int len,const Value *v) const {
-    snprintf(outBuf,len,"%d",v->v.i);
-    return outBuf;
+const char *IntegerType::toString(bool *allocated,const Value *v) const {
+    char buf[128];
+    snprintf(buf,128,"%d",v->v.i);
+    *allocated=true;
+    return strdup(buf);
 }
 
 uint32_t IntegerType::getHash(Value *v){

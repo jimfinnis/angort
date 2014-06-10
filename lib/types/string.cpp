@@ -24,7 +24,7 @@ void StringType::setPreAllocated(Value *v,const char *s){
     v->v.s = (char *)s;
 }
 
-const char *StringType::toString(char *outBuf,int len,const Value *v) const {
+const char *StringType::toString(bool *allocated,const Value *v) const {
     return getData(v);
 }
 

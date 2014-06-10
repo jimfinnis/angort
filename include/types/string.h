@@ -9,6 +9,7 @@
 #ifndef __STRING_H
 #define __STRING_H
 
+
 class StringType : public BlockAllocType {
 public:
     StringType() {
@@ -27,8 +28,6 @@ public:
     /// get length of string
     virtual int getCount(Value *v);
     
-    /// convert to a string - just returns the string, length is ignored
-    virtual const char *toString(char *outBuf,int len,const Value *v) const;
     virtual float toFloat(const Value *v) const;
     virtual int toInt(const Value *v) const;
 
@@ -46,6 +45,9 @@ public:
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
+
+protected:
+    virtual const char *toString(bool *allocated,const Value *v) const;
 };
 
 

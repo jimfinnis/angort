@@ -178,11 +178,10 @@ void Angort::runValue(const Value *v){
 }
 
 void Angort::dumpStack(const char *s){
-    char buf[256];
     printf("Stack dump for %s\n",s);
     for(int i=0;i<stack.ct;i++){
-        stack.peekptr(i)->toString(buf,256);
-        printf("  %s\n",buf);
+        const StringBuffer &b = stack.peekptr(i)->toString();
+        printf("  %s\n",b.get());
     }
 }
 
@@ -215,7 +214,6 @@ void Angort::run(const Instruction *ip){
     Value *a, *b, *c;
     debugwordbase = ip;
     const CodeBlock *cb;
-    
     try {
         for(;;){
             if(emergencyStop){
@@ -229,7 +227,8 @@ void Angort::run(const Instruction *ip){
                 showop(ip,debugwordbase);
                 printf(" ST [%d] : ",stack.ct);
                 for(int i=0;i<stack.ct;i++){
-                    printf("%s ",stack.peekptr(i)->toString(strbuf1,1024));
+                    const StringBuffer &sb = stack.peekptr(i)->toString();
+                    printf("%s ",sb.get());
                 }
                 printf("\n");
             }
@@ -442,7 +441,8 @@ void Angort::run(const Instruction *ip){
                 break;
             case OP_DOT:{
                 a = popval();
-                puts(a->toString(strbuf1,1024));
+                const StringBuffer &sb = a->toString();
+                puts(sb.get());
             }
                 ip++;
                 break;

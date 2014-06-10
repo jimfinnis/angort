@@ -65,14 +65,15 @@ public:
         }
         
         for(int i=0;i<HCOUNT;i++){
-            char buf[32];
             Types::tString->set(&v,keys[i]);
             if(h.find(&v)){
                 w.copy(h.getval());
                 if(w.t != Types::tString)
                     die("value not an int");
-                if(strcmp(w.toString(buf,32),vals[i])){
-                    printf("%s != %s\n",w.toString(buf,32),vals[i]);
+                
+                const StringBuffer& buf = w.toString();
+                if(strcmp(buf.get(),vals[i])){
+                    printf("%s != %s\n",buf.get(),vals[i]);
                     die("value mismatch");
                 }
             } else

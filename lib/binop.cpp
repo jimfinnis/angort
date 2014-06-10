@@ -62,15 +62,15 @@ void Angort::binop(Value *a,Value *b,int opcode){
         /**
          * Special case for multiplying a string/symbol by a number
          */
-        const char * p = a->toString(strbuf1,1024);
+        const StringBuffer& p = a->toString();
         
         int reps = b->toInt();
-        int len = strlen(p);
+        int len = strlen(p.get());
         Value t; // temp value
         // allocate a new result
         char *q = Types::tString->allocate(&t,len*reps+1,Types::tString);
         for(int i=0;i<reps;i++){
-            memcpy(q+i*len,p,len);
+            memcpy(q+i*len,p.get(),len);
         }
         q[len*reps]=0;
         stack.pushptr()->copy(&t);
@@ -82,34 +82,33 @@ void Angort::binop(Value *a,Value *b,int opcode){
          *
          */
         bool cmp=false;
-        // buffers won't be used if they're already strings
-        const char * p = a->toString(strbuf1,1024);
-        const char * q = b->toString(strbuf2,1024);
+        const StringBuffer& p = a->toString();
+        const StringBuffer& q = b->toString();
         switch(opcode){
         case OP_ADD:{
             Value t; // we use a temp, otherwise allocate() will clear the type
-            int len = strlen(p)+strlen(q);
+            int len = strlen(p.get())+strlen(q.get());
             char *r = Types::tString->allocate(&t,len+1,Types::tString);
-            strcpy(r,p);
-            strcat(r,q);
+            strcpy(r,p.get());
+            strcat(r,q.get());
             stack.pushptr()->copy(&t);
             break;
         }
         case OP_EQUALS:
             cmp=true;
-            pushInt(!strcmp(p,q));
+            pushInt(!strcmp(p.get(),q.get()));
             break;
         case OP_NEQUALS:
             cmp=true;
-            pushInt(strcmp(p,q));
+            pushInt(strcmp(p.get(),q.get()));
             break;
         case OP_GT:
             cmp=true;
-            pushInt(strcmp(p,q)>0);
+            pushInt(strcmp(p.get(),q.get())>0);
             break;
         case OP_LT:
             cmp=true;
-            pushInt(strcmp(p,q)<0);
+            pushInt(strcmp(p.get(),q.get())<0);
             break;
         default:throw RUNT("bad operation for strings");
         }
@@ -173,15 +172,15 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_NEQUALS:
             r = a->v.i != b->v.i;break;
         case OP_GT:{
-            const char * p = a->toString(strbuf1,1024);
-            const char * q = b->toString(strbuf2,1024);
-            r = (strcmp(p,q)>0);
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            r = (strcmp(p.get(),q.get())>0);
             break;
         }
         case OP_LT:{
-            const char * p = a->toString(strbuf1,1024);
-            const char * q = b->toString(strbuf2,1024);
-            r = (strcmp(p,q)<0);
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            r = (strcmp(p.get(),q.get())<0);
             break;
         }
         default:

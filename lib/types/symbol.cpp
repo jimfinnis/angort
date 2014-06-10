@@ -55,9 +55,11 @@ void SymbolType::set(Value *v,int i){
     v->t = this;
 }
 
-const char * SymbolType::toString(char *outBuf,int len,const Value *v) const {
-    strncpy(outBuf,get(v),len);
-    return outBuf;
+const char *SymbolType::toString(bool *allocated,const Value *v) const {
+    char buf[128];
+    strncpy(buf,get(v),128);
+    *allocated=true;
+    return strdup(buf);
 }
 
 uint32_t SymbolType::getHash(Value *v){

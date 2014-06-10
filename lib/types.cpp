@@ -3,9 +3,11 @@
 Type *Type::head = NULL;
 int  GarbageCollected::globalCount=0;
 
-const char *Type::toString(char *outBuf,int len,const Value *v) const{
-    snprintf(outBuf,len,"<TYPE %s:%p>",name,v->v.s);
-    return outBuf;
+const char *Type::toString(bool *allocated,const Value *v) const{
+    char buf[128];
+    snprintf(buf,128,"<TYPE %s:%p>",name,v->v.s);
+    *allocated=true;
+    return strdup(buf);
 }
 
 float Type::toFloat(const Value *v) const{

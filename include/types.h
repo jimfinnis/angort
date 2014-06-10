@@ -13,6 +13,7 @@ struct Value;
 /// We do this rather than have a huge VFT for each value.
 
 class Type {
+    friend class StringBuffer;
 private:
     /// head of list of types
     static Type *head; 
@@ -20,6 +21,10 @@ private:
     Type *next;
     /// and ID
     uint32_t id;
+
+    /// convert to a UTF-8 string - if memory was allocated,
+    /// the boolean is set.
+    virtual const char *toString(bool *allocated, const Value *v) const;
 public:
     /// a constant name
     const char *name;
@@ -65,11 +70,6 @@ public:
         throw RUNT("trying to store a value in a non-reference value");
     }
     
-    /// convert to a string - this is the default, which does very little;
-    /// USE THE RETURN VALUE because the buffer might be unused if no conversion
-    /// was required.
-    virtual const char * toString(char *outBuf,int len,const Value *v) const;
-   
     /// convert to a float - exception by default
     virtual float toFloat(const Value *v) const;
     /// convert to an int - exception by default

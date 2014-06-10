@@ -59,10 +59,8 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
         // go through the list
         ArrayListIterator<Value> iter(lst);
         for(iter.first();!iter.isDone();iter.next()){
-            char buf[256];
             Value *v = iter.current();
-            const char *s = v->toString(buf,256);
-            ns->importTo(defaultSpace,s);
+            ns->importTo(defaultSpace,v->toString().get());
         }
     } else {
         // import everything which is permitted

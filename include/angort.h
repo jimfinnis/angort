@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "stack.h"
+#include "stringbuf.h"
 #include "tokeniser.h"
 #include "map.h"
 #include "types.h"
@@ -541,8 +542,6 @@ private:
     void endDefine(Instruction *i);
     
     char lastLine[1024]; //!< last line read
-    char strbuf1[1024]; //!< string buffer for conversions
-    char strbuf2[1024];//!< string buffer for conversions
     
     /// add a new instruction to the current compile context
     Instruction *compile(int opcode){
@@ -721,8 +720,8 @@ public:
     float popFloat(){
         return Types::tFloat->get(popval());
     }
-    const char *popString(char *buf,int len){
-        return popval()->toString(buf,len);
+    StringBuffer popString(){
+        return StringBuffer(popval());
     }
     
     Module *findOrCreateModule(const char *n){

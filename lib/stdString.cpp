@@ -17,37 +17,33 @@ inline int wstrlen(const char *s){
 
 %word stridx (haystack needle -- int) return index if h contains n, else none
 {
-    char nbuf[1024];
-    char hbuf[1024];
-    const char *needle = a->popval()->toString(nbuf,1024);
-    const char *haystack = a->popval()->toString(hbuf,1024);
+    const StringBuffer &needle = a->popString();
+    const StringBuffer &haystack = a->popString();
     
     int rv;
-    const char *p = strstr(haystack,needle);
+    const char *p = strstr(haystack.get(),needle.get());
     if(!p)
         a->pushval()->clr();
     else
-        a->pushInt(p-haystack);
+        a->pushInt(p-haystack.get());
 }
 %word istridx (haystack needle -- int) return index if h contains n, else none
 {
-    char nbuf[1024];
-    char hbuf[1024];
-    const char *needle = a->popval()->toString(nbuf,1024);
-    const char *haystack = a->popval()->toString(hbuf,1024);
+    const StringBuffer &needle = a->popString();
+    const StringBuffer &haystack = a->popString();
     
     int rv;
-    const char *p = strcasestr(haystack,needle);
+    const char *p = strcasestr(haystack.get(),needle.get());
     if(!p)
         a->pushval()->clr();
     else
-        a->pushInt(p-haystack);
+        a->pushInt(p-haystack.get());
 }
 
 %word substr (start len str -- sub) extract and copy out a substring
 {
-    Value *s = a->popval();
-    const char *str = s->toString(sbuf,1024);
+    const StringBuffer &s = a->popString();
+    const char *str = s.get();
     strcpy(sbuf,str); // make sure it gets copied
     
     int len = a->popInt();
@@ -77,7 +73,7 @@ inline int wstrlen(const char *s){
 %word tofloat (string -- float) string to float
 {
     Value *v = a->stack.peekptr();
-    Types::tFloat->set(v,v->toInt());
+    Types::tFloat->set(v,v->toFloat());
 }
         
 
@@ -95,8 +91,8 @@ inline int wstrlen(const char *s){
 %word asc (string -- integer) convert ASCII char to integer
 {
     Value *s = a->stack.peekptr();
-    const char *str = s->toString(sbuf,32);
-    Types::tInteger->set(s,str[0]);
+    const StringBuffer& str = s->toString();
+    Types::tInteger->set(s,*str.get());
 }
 
 %word format (list string -- string) string formatting
@@ -117,11 +113,10 @@ inline int wstrlen(const char *s){
     
     int padding = a->popInt();
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(sbuf,1024);
-    mbstowcs(buf,str,1024);
+    const StringBuffer &s = v->toString();
+    mbstowcs(buf,s.get(),1024);
     
-    
-    int len = wstrlen(str);
+    int len = wstrlen(s.get());
     if(len>=padding)
         return;
     
@@ -142,11 +137,11 @@ inline int wstrlen(const char *s){
     
     int padding = a->popInt();
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(sbuf,1024);
-    mbstowcs(buf,str,1024);
+    const StringBuffer &s = v->toString();
+    mbstowcs(buf,s.get(),1024);
     
     
-    int len = wstrlen(str);
+    int len = wstrlen(s.get());
     if(len>=padding)
         return;
     
@@ -169,8 +164,8 @@ inline int wstrlen(const char *s){
     
     int maxlen = a->popInt();
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(sbuf,1024);
-    mbstowcs(buf,str,1024);
+    const StringBuffer &s = v->toString();
+    mbstowcs(buf,s.get(),1024);
     
     if(maxlen>1024 || maxlen<0 || wcslen(buf)<maxlen)
         return;
@@ -184,7 +179,7 @@ inline int wstrlen(const char *s){
 %word wlen (str -- len) 
 {
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(sbuf,1024);
+    const StringBuffer& s= v->toString();
     
-    Types::tInteger->set(v,wstrlen(str));
+    Types::tInteger->set(v,wstrlen(s.get()));
 }

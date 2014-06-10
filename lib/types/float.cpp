@@ -34,9 +34,11 @@ float FloatType::toFloat(const Value *v) const {
     return v->v.f;
 }
 
-const char * FloatType::toString(char *outBuf,int len,const Value *v) const{
-    snprintf(outBuf,len,"%f",v->v.f);
-    return outBuf;
+const char *FloatType::toString(bool *allocated,const Value *v) const {
+    char buf[128];
+    snprintf(buf,128,"%f",v->v.f);
+    *allocated=true;
+    return strdup(buf);
 }
 
 uint32_t FloatType::getHash(Value *v){

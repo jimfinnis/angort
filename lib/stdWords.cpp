@@ -25,9 +25,7 @@
 
 %word dump ( title -- ) dump the stack
 {
-    char buf[1024];
-    const char *s = a->popval()->toString(buf,1024);
-    a->dumpStack(s);
+    a->dumpStack(a->popString().get());
 }
 
 %word snark ( ) used during debugging; prints an autoincremented count
@@ -45,9 +43,7 @@
 
 %word p ( v -- ) print a value
 {
-    char buf[1024];
-    Value *v = a->popval();
-    fputs(v->toString(buf,1024),stdout);
+    fputs(a->popString().get(),stdout);
 }
 
 %word x (v -- ) print a value in hex
@@ -80,9 +76,7 @@
 
 %word disasm (name -- ) disassemble word
 {
-    char buf[1024];
-    const char *name = a->popval()->toString(buf,1024);
-    a->disasm(name);
+    a->disasm(a->popString().get());
 }
 
 
@@ -103,7 +97,7 @@ public:
 %word assert (bool desc --) throw exception with string 'desc' if bool is false
 {
     char buf[1024];
-    const char *desc = a->popval()->toString(buf,1024);
+    const StringBuffer &desc = a->popString();
     bool cond = (a->popInt()==0);
     
     if(a->assertNegated){
@@ -111,18 +105,17 @@ public:
         if(a->assertDebug)printf("Negated ");
     }
     if(cond){
-        if(a->assertDebug)printf("Assertion failed: %s\n",desc);
-        throw AssertException(desc,a->getLineNumber());
+        if(a->assertDebug)printf("Assertion failed: %s\n",desc.get());
+        throw AssertException(desc.get(),a->getLineNumber());
     } else if(a->assertDebug)
-        printf("Assertion passed: %s\n",desc);
-        
+        printf("Assertion passed: %s\n",desc.get());
 }
 
 %word assertmode (mode --) set to `negated or `normal, if negated assertion conditions are negated
 {
     char buf[16];
-    const char *mode = a->popval()->toString(buf,16);
-    if(!strcmp(mode,"negated"))
+    const StringBuffer& sb = a->popString();
+    if(!strcmp(sb.get(),"negated"))
         a->assertNegated=true;
     else
         a->assertNegated=false;
@@ -260,10 +253,10 @@ public:
 %word help (s --) get help on a word or native function
 {
     char b[1024];
-    const char *name = a->popval()->toString(b,1024);
-    const char *s = a->getSpec(name);
+    const StringBuffer &name = a->popString();
+    const char *s = a->getSpec(name.get());
     if(!s)s="no help found";
-    printf("%s: %s\n",name,s);
+    printf("%s: %s\n",name.get(),s);
 }
 
 
@@ -301,7 +294,8 @@ public:
 %word nspace (name -- handle) get a namespace by name
 {
     char buf[256];
-    Namespace *ns = a->names.getSpaceByName(a->popval()->toString(buf,256));
+    const StringBuffer& name = a->popString();
+    Namespace *ns = a->names.getSpaceByName(name.get());
     a->pushInt(ns->idx);
 }
 
@@ -317,10 +311,10 @@ public:
 
 static NamespaceEnt *getNSEnt(Angort *a){
     char buf[256];
-    const char *s = a->popval()->toString(buf,256);
+    const StringBuffer &s = a->popString();
     Namespace *ns = a->names.getSpaceByIdx(a->popInt());
     
-    int idx = ns->get(s);
+    int idx = ns->get(s.get());
     if(idx<0)
         throw RUNT("ispriv: cannot find name in namespace");
     NamespaceEnt *ent = ns->getEnt(idx);
