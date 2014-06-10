@@ -5,9 +5,15 @@
  */
 
 #include "angort.h"
+#include <wchar.h>
 
 %name string
 
+static char sbuf[1024];
+
+inline int wstrlen(const char *s){
+    return mbstowcs(NULL,s,0);
+}
 
 %word stridx (haystack needle -- int) return index if h contains n, else none
 {
@@ -40,24 +46,24 @@
 
 %word substr (start len str -- sub) extract and copy out a substring
 {
-    char buf[1024];
     Value *s = a->popval();
-    const char *str = s->toString(buf,1024);
-    strcpy(buf,str); // make sure it gets copied
+    const char *str = s->toString(sbuf,1024);
+    strcpy(sbuf,str); // make sure it gets copied
     
     int len = a->popInt();
     int start = a->popInt();
     
     
-    if(start>=strlen(buf)){
+    if(start>=strlen(sbuf)){
         a->pushString("");
     } else {
         Value *s = a->pushval();
-        if(len>strlen(buf+start))
-            len = strlen(buf);
+        
+        if(len>strlen(sbuf+start))
+            len = strlen(sbuf);
     
         char *out = Types::tString->allocate(s,len+1,Types::tString);
-        memcpy(out,buf+start,len);
+        memcpy(out,sbuf+start,len);
         out[start+len]=0;
     }
 }
@@ -88,9 +94,8 @@
 
 %word asc (string -- integer) convert ASCII char to integer
 {
-    char buf[32];
     Value *s = a->stack.peekptr();
-    const char *str = s->toString(buf,32);
+    const char *str = s->toString(sbuf,32);
     Types::tInteger->set(s,str[0]);
 }
 
@@ -108,59 +113,78 @@
 
 %word padleft (string padding -- string) insert spaces at left to pad out string
 {
-    char buf[1024];
+    wchar_t buf[1024];
+    
     int padding = a->popInt();
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(buf,1024);
+    const char *str = v->toString(sbuf,1024);
+    mbstowcs(buf,str,1024);
     
-    int len = strlen(str);
+    
+    int len = wstrlen(str);
     if(len>=padding)
         return;
     
-    char *newstr = (char *)malloc(padding+1);
+    wchar_t *newstr = (wchar_t *)malloc(sizeof(wchar_t)*(padding+1));
     int i;
     for(i=0;i<padding-len;i++)
-        newstr[i]=' ';
-    strcpy(newstr+i,str);
-    Types::tString->set(v,newstr);
+        newstr[i]=L' ';
+    wcscpy(newstr+i,buf);
+    wcstombs(sbuf,newstr,1024);
+    
+    Types::tString->set(v,sbuf);
     free(newstr);
 }
 
 %word padright (string padding -- string) insert spaces at right to pad out string
 {
-    char buf[1024];
+    wchar_t buf[1024];
+    
     int padding = a->popInt();
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(buf,1024);
+    const char *str = v->toString(sbuf,1024);
+    mbstowcs(buf,str,1024);
     
-    int len = strlen(str);
+    
+    int len = wstrlen(str);
     if(len>=padding)
         return;
     
-    char *newstr = (char *)malloc(padding+1);
+    wchar_t *newstr = (wchar_t *)malloc(sizeof(wchar_t)*(padding+1));
     int i;
-    strcpy(newstr,str);
+    wcscpy(newstr,buf);
     for(i=0;i<padding-len;i++)
-        newstr[len+i]=' ';
+        newstr[len+i]=L' ';
     newstr[padding]=0;
-    Types::tString->set(v,newstr);
+    wcstombs(sbuf,newstr,1024);
+    
+    Types::tString->set(v,sbuf);
     free(newstr);
 }
 
 
 %word truncstr (string maxlen -- string) truncate a string if required
 {
-    char buf[1024];
+    wchar_t buf[1024];
+    
     int maxlen = a->popInt();
     Value *v = a->stack.peekptr();
-    const char *str = v->toString(buf,1024);
+    const char *str = v->toString(sbuf,1024);
+    mbstowcs(buf,str,1024);
     
-    if(maxlen>1024 || maxlen<0 || strlen(str)<maxlen)
+    if(maxlen>1024 || maxlen<0 || wcslen(buf)<maxlen)
         return;
     
     // might not actually be a string.
-    if(buf!=str)
-        strcpy(buf,str);
     buf[maxlen]=0;
-    Types::tString->set(v,buf);
+    wcstombs(sbuf,buf,1024);
+    Types::tString->set(v,sbuf);
+}
+
+%word wlen (str -- len) 
+{
+    Value *v = a->stack.peekptr();
+    const char *str = v->toString(sbuf,1024);
+    
+    Types::tInteger->set(v,wstrlen(str));
 }

@@ -19,7 +19,6 @@ private
     mpc$list dup !list len !listlen
     mpc$stat !stat
     "List length: " std$p ?listlen.
-    0!i
     # work out some max lengths
     0!titlen
     0!artlen
@@ -43,6 +42,7 @@ private
         then
     }
     
+    ?startidx!i
     ?startidx ?endidx range each {
         i ?listlen = ifleave
         i ?list get !cur
@@ -110,7 +110,7 @@ public
     mpc$stat !stat
     ?stat?`pos
     10- dup 0< if drop 0 then
-    dup 10+
+    dup 20+
     showlist
     
     
