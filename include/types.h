@@ -137,6 +137,10 @@ public:
     virtual void removeAndReturn(Value *coll,Value *k,Value *result){
         throw RUNT("cannot remove from non-collection");
     }
+    
+    virtual void slice(Value *out,Value *coll,int start,int len){
+        throw RUNT("cannot get slice of non-collection");
+    }
    
     /// find a type by ID
     static Type *findByID(uint32_t id){

@@ -16,6 +16,20 @@ global b
 
 "fooble" 3 * "fooblefooblefooble" = "repeat" assert
 
+:qq dup "**"p p "**".;
+
+"abcdefg" !a
+-1 4 ?a slice "abcd" =   "slice1" assert
+
+0 4 ?a slice "abcd" =   "slice1" assert
+-1 4 ?a slice "abcd" =   "slice1a" assert
+2 4 ?a slice "cdef" =   "slice2" assert
+4 4 ?a slice "efg" =   "slice3" assert
+6 4 ?a slice "g" =   "slice4" assert
+3 -1 ?a slice "defg" = "slice5" assert
+7 1 ?a slice "" = "slice6" assert
+8 1 ?a slice "" = "slice7" assert
+
 quit
 
 

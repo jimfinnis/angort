@@ -8,30 +8,33 @@ private
 
 :quote |x:| "\"" ?x "\"" ++;
 
-:chknone |s:| ?s isnone if "<<NONE>>" else ?s then;
+:chknone |s:| ?s isnone
+    if "<<NONE>>" else ?s then
+;
 
+:maxlist
+    0 swap (over over < if swap then drop) reduce
+;
 
 :dosearch |tag,str:|
     :"(tag str -- list) non exact search shortcut"
     [% ?tag ?str] 0 mpc$search;
 
-:showlist |startidx,endidx:list,titlen,artlen,stat,i,cur,listlen|
-    mpc$list dup !list len !listlen
+:showlist |startidx,endidx:list,titlen,artlen,stat,i|
+    mpc$list !list
     mpc$stat !stat
-    "List length: " std$p ?listlen.
-    # work out some max lengths
-    0!titlen
-    0!artlen
-    ?startidx ?endidx range each {
-        i ?listlen = ifleave
-        i ?list get !cur
-        ?cur?`artist chknone len dup ?artlen > if !artlen else drop then
-        ?cur?`title chknone len dup ?titlen > if !titlen else drop then
-        
-    }
+    "List length: " std$p ?list len.
     
-    ?titlen 1+ !titlen
-    ?artlen 1+ !artlen
+    # get the bit of the list we want
+    ?startidx ?endidx ?startidx- 
+    ?list slice !list
+    
+    # work out some max lengths
+    
+    ?list (?`artist chknone len) map maxlist  !artlen
+    ?list (?`title chknone len) map maxlist  !titlen
+    
+    # adjust them to fit the screen
     
     {
         ?titlen ?artlen + 80 > if 
@@ -42,24 +45,20 @@ private
         then
     }
     
-    ?startidx!i
-    ?startidx ?endidx range each {
-        i ?listlen = ifleave
-        i ?list get !cur
+    ?startidx !i
+    ?list each {
         ?i ?stat?`pos = if
             ">> " std$p
         else
             "   " std$p
         then
         
-        
         [?i, 
-         ?cur?`artist ?artlen truncstr ?artlen padleft,
-         ?cur?`title  ?titlen truncstr ?titlen padleft] 
+         i?`artist chknone ?artlen truncstr ?artlen padleft,
+         i?`title  chknone ?titlen truncstr ?titlen padleft] 
         "%4d %s %s" format .
         ?i 1+ !i
     }
-    
 ;
 
 

@@ -44,6 +44,9 @@ public:
     virtual void getValue(Value *coll,Value *k,Value *result);
     virtual int getCount(Value *coll);
     virtual void removeAndReturn(Value *coll,Value *k,Value *result);
+    virtual void slice(Value *out,Value *coll,int start,int len){
+        throw RUNT("cannot get slice of hash");
+    }
 };
 
     

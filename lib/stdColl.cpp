@@ -148,3 +148,13 @@
     
     a->pushInt(iterable->t->isIn(iterable,item)?true:false);
 }
+
+%word slice (start len iterable -- iterable) produce a slice of a string or list
+{
+    Value *iterable = a->popval();
+    int len = a->popInt();
+    int start = a->popInt();
+    
+    Value *res = a->pushval();
+    iterable->t->slice(res,iterable,start,len);
+}

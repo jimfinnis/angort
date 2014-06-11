@@ -130,3 +130,20 @@ void ListType::removeAndReturn(Value *coll,Value *k,Value *result){
     r->list.remove(i);
 }
 
+void ListType::slice(Value *out,Value *coll,int start,int len){
+    ArrayList<Value> *outlist = set(out);
+    ArrayList<Value> *list = get(coll);
+    
+    int listlen = list->count();
+    if(start<0)start=0;
+    if(len<0)len=listlen;
+    if(start<listlen){
+        if(len>(listlen-start))
+            len = listlen-start;
+        for(int i=0;i<len;i++){
+            Value *v = list->get(start+i);
+            outlist->append()->copy(v);
+        }
+    }
+    
+}

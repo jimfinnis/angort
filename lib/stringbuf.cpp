@@ -10,4 +10,5 @@
 StringBuffer::StringBuffer(const Value *v){
     allocated=false;
     buf = v->t->toString(&allocated,v);
+    wide = NULL;
 }

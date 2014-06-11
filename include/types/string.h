@@ -45,6 +45,7 @@ public:
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
+    virtual void slice(Value *out,Value *coll,int start,int len);
 
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const;
