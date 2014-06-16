@@ -1,0 +1,19 @@
+# Pure stack based, semi-functional version of QuickSort.
+# Will tend to overflow the local variable stack with more
+# than 100 or so items!
+
+
+:qs |l:n|
+    ?l len 0= if [] else
+        0 ?l get !n
+        1 -1 ?l slice !l
+        ?l (?n <) filter qs
+        [?n]
+        ?l (?n < not) filter qs ++
+    then
+;
+
+:test |n:|
+    [] 0 ?n range each {rand 100 % ,}
+    qs each {i.}
+;
