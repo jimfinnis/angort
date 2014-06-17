@@ -250,13 +250,34 @@ public:
     a->list();
 }
 
-%word help (s --) get help on a word or native function
+%word help (s --) get help on a word or native function (not plugins)
 {
     char b[1024];
     const StringBuffer &name = a->popString();
     const char *s = a->getSpec(name.get());
     if(!s)s="no help found";
     printf("%s: %s\n",name.get(),s);
+}
+
+%word pkghelp (s --) list all public functions in the given package
+{
+    Namespace *s = a->names.getSpaceByName(a->popString().get());
+    for(int i=0;i<s->count();i++){
+        const char *spec = NULL;
+        NamespaceEnt *e = s->getEnt(i);
+        if(!e->isPriv){
+            Value *v = &e->v;
+            if(v->t == Types::tCode){
+                spec = v->v.cb->spec;
+            } else if(v->t == Types::tCode){
+                spec = v->v.closure->codeBlockValue.v.cb->spec;
+            }
+            if(spec)
+                printf("%-20s : %s\n",s->getName(i),spec);
+            else
+                printf("%-20s\n",s->getName(i));
+        }
+    }                                  
 }
 
 

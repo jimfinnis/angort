@@ -82,7 +82,7 @@ public
     `title ?name dosearch;
 
 :grep |list,str:|
-    :"(list str -- list) filter a list of songs for a string"
+    :"(list str -- list) filter a list of songs for a string in the filename"
     ?list (?`name ?str istridx isnone not) filter;
 
 :m
@@ -102,20 +102,19 @@ public
 
 
     
-
-
-:l |:stat,start,end|
-    :"(--) list the current playlist, numbered, indicating the current song"
-    mpc$stat !stat
-    ?stat?`pos
+:list |:stat,start,end|
+    :"(n --) list the current playlist around the given song index"
     10- dup 0< if drop 0 then
     dup 20+
-    showlist
-    
-    
-;    
+    showlist;    
+
+
+:l
+    :"(--) list the current playlist, numbered, indicating the current song"
+    mpc$stat ?`pos list;
 
 :stat |:stat,list|
+    :"(--) show current status"
     mpc$stat !stat
     mpc$list !list
     
@@ -130,8 +129,10 @@ public
     
 ;
 
-:clr mpc$clr;
-:add mpc$add;
+:clr :"(--) clear the playlist"
+    mpc$clr;
+:add :"(list --) add a list of songs to the  playlist"
+    mpc$add;
 
 :d |x:|
     :"(lst --) dump a list or hash"
@@ -149,11 +150,12 @@ public
     :"(--) move backwards in current playlist"
     mpc$prev;
 
-:go |x:|
+:g |x:|
     :"(n --) start playing from given song index in playlist"
     ?x mpc$play;
 
 :shuf |lst:n,a,l|
+    :"(list -- list) shuffle a list"
     ?lst len !l
     ?l 1- 0 range each {
         rand i % !a
@@ -164,10 +166,10 @@ public
     } ?lst;
 
 :load
-    :"(name --) load a playlist"
+    :"(name --) load the playlist from a stored playlist"
     mpc$load;
 :save 
-    :"(name --) save a playlist"
+    :"(name --) save the current playlist"
     mpc$save;
 
 :rm
@@ -175,7 +177,7 @@ public
     mpc$rm;
 
 :ls
-    :"() list playlists"
+    :"(--) list all stored playlists"
     mpc$playlists each {i.};
 
 :all |:ids|
@@ -184,7 +186,12 @@ public
     `artist [%] mpc$tags each {i.
         [% `artist i] 1 mpc$search each{ i, }
     }
-    
 ;
 
+    
+:h
+    :"(--) list all music player public words"
+    "mpcc" pkghelp
+;
+    
 endpackage import

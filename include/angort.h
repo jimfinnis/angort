@@ -507,8 +507,6 @@ private:
     Stack<int,32> cstack;
     Stack<Value,8> loopIterStack; // stack of loop iterators
     
-    StringMap<Module *> modules; //!< a list of modules
-    
     Stack<CompileContext,4> contextStack;
     VarStack locals;
     Value *closureTable; //!< the current closure table
@@ -517,6 +515,7 @@ private:
     /// the last instruction.
     const Instruction *ipException;
     
+    StringMap<Module *> modules; //!< a map of names to modules
     /// the functions, duplicates of the module entries
     StringMap<NativeFunc> funcs;
     StringMap<const char *> funcSpecs;
@@ -647,6 +646,7 @@ public:
     /// print each line we parse
     bool printLines;
     NamespaceManager names; //!< the namespaces are all handled by the namespace manager
+    
     
     /// called at the end of a script which contains a package, where that
     /// package is not included by another script - effectively
