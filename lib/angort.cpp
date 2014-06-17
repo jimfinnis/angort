@@ -133,8 +133,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     if(t==Types::tCode){
         cb = a->v.cb;
         locals.allocLocalsAndPopParams(cb->locals,
-                                       cb->params,
-                                       &stack);
+                                       cb->params,&stack);
         if(!cb->ip)
             throw RUNT("call to a word with a deferred definition");
     } else if(t==Types::tClosure) {
@@ -147,8 +146,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         
         cb = closure->codeBlockValue.v.cb;
         locals.allocLocalsAndPopParams(cb->locals,
-                                       cb->params,
-                                       &stack);
+                                       cb->params,&stack);
         if(!cb->closureMap)
             throw RUNT("weird - the closure's codeblock has no closure map");
         // set the closure table we're using
@@ -525,8 +523,13 @@ void Angort::run(const Instruction *ip){
         // store the exception details
         ipException = ip;
         // destroy any iterators left lying around
-        while(!loopIterStack.isempty())
+        while(!loopIterStack.isempty()){
             loopIterStack.popptr()->clr();
+        }
+        // and the locals stack too
+        locals.clear();
+        closureStack.clear();
+        rstack.clear();
         throw e;
     }
 }
@@ -1114,6 +1117,7 @@ void Angort::clearAtEndOfFeed(){
     while(!loopIterStack.isempty())
         loopIterStack.popptr()->clr();
     closureStack.clear();
+    locals.clear();
 }    
 
 void Angort::disasm(const char *name){

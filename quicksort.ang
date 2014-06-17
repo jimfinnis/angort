@@ -14,6 +14,7 @@
 ;
 
 :test |n:|
+    10101 srand
     [] 0 ?n range each {rand 100 % ,}
     qs each {i.}
 ;

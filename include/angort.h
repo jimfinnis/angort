@@ -28,6 +28,9 @@ typedef void (*NativeFunc)(class Angort *a);
 
 struct CodeBlock;
 
+/// size of the primary stack
+#define MAINSTACKSIZE  128
+
 
 /// this is a closure - it's a CodeBlock (a function, if you will) associated with
 /// the values which need to be bound to locals by the CodeBlock's closure map.
@@ -438,6 +441,7 @@ public:
         for(int i=0;i<VSTACKSIZE;i++){
             vars[i].clr();
         }
+        baseStack.clear();
     }
         
     
@@ -458,8 +462,11 @@ public:
         //        printf("popping state: state now %d/%d\n",base,next);
     }
     
-    // localct is count of locals AND parms, parmct is just parms.
-    void allocLocalsAndPopParams(int localct,int parmct,Stack<Value,32> *stack){
+    /// take the local parameters and variables from the stack
+    /// and put them into local variables.
+    /// localct is count of locals AND parms, parmct is just parms.
+    void allocLocalsAndPopParams(int localct,int parmct,
+                                 Stack<Value,MAINSTACKSIZE> *stack){
         //        printf("locals : %d, params: %d\n",localct,parmct);
         next += localct;
         for(int i=0;i<parmct;i++){
@@ -623,7 +630,7 @@ public:
     /// a number because it's used in files.
     static int getVersion();
     
-    Stack<Value,32>stack;
+    Stack<Value,128>stack;
     bool emergencyStop;
     /// if true, unidentified idents will be converted to strings
     bool barewords;
