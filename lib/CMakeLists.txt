@@ -41,6 +41,7 @@ add_custom_command(
 include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
     ${ANGORT_SOURCE_DIR}/build/lib)
     
+add_definitions(-Wall)
 #add_definitions(-g)
 
 add_words_files(stdWords.cpp stdColl.cpp stdString.cpp)

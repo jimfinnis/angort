@@ -1,0 +1,10 @@
+perl ../makePlugin.pl id3.cpp >id3_plugin.cpp
+
+
+g++ -fPIC -g -c -Wall `pkg-config taglib --cflags` id3_plugin.cpp 
+
+g++ -shared -Wl,-soname,angortid3.so \
+    -o libangortid3.so \
+    id3_plugin.o\
+    `pkg-config taglib --libs`\
+

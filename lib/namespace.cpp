@@ -46,7 +46,7 @@ int NamespaceManager::get(const char *name){
     
     // finally, check the default space and error 
         
-    return getFromNamespace(defaultSpace,name);
+    return getFromNamespace(spaces.getEnt(defaultIdx),name);
 }
 
 
@@ -60,11 +60,11 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
         ArrayListIterator<Value> iter(lst);
         for(iter.first();!iter.isDone();iter.next()){
             Value *v = iter.current();
-            ns->importTo(defaultSpace,v->toString().get());
+            ns->importTo(spaces.getEnt(defaultIdx),v->toString().get());
         }
     } else {
         // import everything which is permitted
-        ns->importAllTo(defaultSpace);
+        ns->importAllTo(spaces.getEnt(defaultIdx));
     }
 }
 

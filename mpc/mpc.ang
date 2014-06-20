@@ -1,7 +1,7 @@
 package mpcc
 
 library "./libangortmpc.so" drop
-
+library "./libangortid3.so" drop
 none 0 mpc$connect
 
 private
@@ -113,6 +113,20 @@ public
     :"(--) list the current playlist, numbered, indicating the current song"
     mpc$stat ?`pos list;
 
+:getn
+    :"(n -- hash) get song N in the current list"
+    mpc$list get;
+
+:cur |:p|
+    :"(-- hash) get current playing song"
+    mpc$stat?`pos !p
+    ?p 0 < not if
+        ?p mpc$list get
+    else
+        none
+    then
+;
+
 :stat |:stat,list|
     :"(--) show current status"
     mpc$stat !stat
@@ -193,5 +207,34 @@ public
     :"(--) list all music player public words"
     "mpcc" pkghelp
 ;
+
+:getfn 
+    :"(hash -- file) get full name (only works on local machine)"
+    "/home/white/beetsmusic/" swap ?`name +
+;
+
+:loadtags
+    :"(hash -- hash) read song tags into a hash"
+    getfn id3$loadtags
+;
+
+:spp 20 padright;
+
+:gfs |x,s:| # get from song
+    ?s ?x?`songhash get chknone
+;
+
+:showprobs |:t|
+    []
+    all
+    nl nl nl
+    each {i loadtags i over !`songhash ,}
+    
+    each {
+        i?`artist isnone if "Null artist: " spp i `name gfs +. then
+        i?`title isnone if "Null title: " spp  i `name gfs +. then
+    }
+    ;
+    
     
 endpackage import

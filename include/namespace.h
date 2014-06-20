@@ -162,7 +162,6 @@ class NamespaceManager {
 private:
     NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
-    Namespace *defaultSpace; //!< the default namespace
     int defaultIdx; //!< the index of the default namespace
     
     Namespace *current; //!< the namespace to which names are currently being added
@@ -210,9 +209,8 @@ public:
         spaces.getEnt(idx)->idx = idx;
         if(isdefault){
             defaultIdx = idx;
-            defaultSpace = spaces.getEnt(idx);
             currentIdx = idx;
-            current = defaultSpace;
+            current = spaces.getEnt(defaultIdx);
         }
         return idx;
     }
@@ -282,8 +280,8 @@ public:
     NamespaceEnt *getEnt(int idx){
         int nsidx = getNamespaceIndex(idx);
         idx = getItemIndex(idx);
-        
-        return spaces.getEnt(nsidx)->getEnt(idx);
+        Namespace *sp = spaces.getEnt(nsidx);
+        return sp->getEnt(idx);
     }
     
     const char *getName(int idx){
