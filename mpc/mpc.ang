@@ -4,12 +4,18 @@ library "./libangortmpc.so" drop
 library "./libangortid3.so" drop
 none 0 mpc$connect
 
+40 !ListWindow
+
 private
 
 :quote |x:| "\"" ?x "\"" ++;
 
 :chknone |s:| ?s isnone
     if "<<NONE>>" else ?s then
+;
+
+:chknoneint |s:| ?s isnone
+    if 0 else ?s then
 ;
 
 :maxlist
@@ -61,8 +67,34 @@ private
     }
 ;
 
+:gettrack |x:|
+    ?x?`track !x
+    ?x isnone if
+        0
+    else
+        ?x "/" stridx dup isnone if
+            drop
+            ?x toint
+        else
+            0 swap ?x slice toint
+        then
+    then
+;
 
-
+:sortFunc |x,y:|
+    ?x?`album chknone
+    ?y?`album chknone
+    cmp dup 0 = if
+        drop
+        ?x gettrack
+        ?y gettrack cmp
+    then
+;
+        
+        
+    
+        
+    
 
 
 
@@ -104,14 +136,21 @@ public
     
 :list |:stat,start,end|
     :"(n --) list the current playlist around the given song index"
-    10- dup 0< if drop 0 then
-    dup 20+
+    ?ListWindow 2/ -
+    dup 0< if drop 0 then
+    dup ?ListWindow +
     showlist;    
 
 
 :l
-    :"(--) list the current playlist, numbered, indicating the current song"
-    mpc$stat ?`pos list;
+    :"((n) --) list playlist. If stackct>1, show around that number, else show current"
+    ct 0 = if
+        mpc$stat ?`pos list
+    else
+        list
+    then
+;
+
 
 :getn
     :"(n -- hash) get song N in the current list"
@@ -219,22 +258,34 @@ public
 ;
 
 :spp 20 padright;
-
 :gfs |x,s:| # get from song
     ?s ?x?`songhash get chknone
 ;
 
+
 :showprobs |:t|
-    []
-    all
+    :"Scan for common errors in all ID3 tags - takes quite a while"
+    [] all
     nl nl nl
+    
     each {i loadtags i over !`songhash ,}
     
     each {
         i?`artist isnone if "Null artist: " spp i `name gfs +. then
         i?`title isnone if "Null title: " spp  i `name gfs +. then
     }
-    ;
-    
+;
+
+
+:srt
+    :"(list -- list) sort list by album, then track"
+    clone dup (mpcc$sortFunc) fsort
+;
+
+:lsrt
+    :"(--) sort playlist by album, then track"
+    mpc$list dup (mpcc$sortFunc) fsort clr add
+;
     
 endpackage import
+#quit

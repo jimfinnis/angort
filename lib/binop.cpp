@@ -106,7 +106,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             pushInt(strcmp(p.get(),q.get())<0);
             break;
         case OP_CMP:
-            pushInt(-strcmp(p.get(),q.get()));
+            pushInt(strcmp(p.get(),q.get()));
             break;
         default:throw RUNT("bad operation for strings");
         }
@@ -153,7 +153,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             pushInt(p<q);break;
         case OP_CMP:
             cmp=true;
-            pushInt(((p-q)<0)?1:(((p-q)>0)?-1:0));
+            pushInt(((p-q)>0)?1:(((p-q)<0)?-1:0));
             break;
         default:
             throw RUNT("invalid operator for floats");
@@ -187,7 +187,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_CMP:{
             const StringBuffer& p = a->toString();
             const StringBuffer& q = b->toString();
-            pushInt(-strcmp(p.get(),q.get()));
+            pushInt(strcmp(p.get(),q.get()));
             break;
         }
         default:
@@ -240,7 +240,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_CMP:
             p = a->toInt();
             q = b->toInt();
-            r = ((p-q)<0)?1:(((p-q)>0)?-1:0);
+            r = ((p-q)>0)?1:(((p-q)<0)?-1:0);
             break;
         case OP_EQUALS:
             if(at == Types::tInteger || bt == Types::tInteger)

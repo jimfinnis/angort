@@ -40,6 +40,11 @@
     v->clr();
 }
 
+%word ct (-- ct) push the current stack count
+{
+    a->pushInt(a->stack.ct);
+}
+
 
 %word p ( v -- ) print a value
 {

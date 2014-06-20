@@ -172,8 +172,8 @@ struct StdComparator : public ArrayListComparator<Value> {
     }
     virtual int compare(const Value *a, const Value *b){
         // binop isn't const, sadly.
-        ang->binop(const_cast<Value *>(b),
-                   const_cast<Value *>(a),OP_CMP);
+        ang->binop(const_cast<Value *>(a),
+                   const_cast<Value *>(b),OP_CMP);
         return ang->popInt();
     }
 };
@@ -196,8 +196,8 @@ struct RevStdComparator : public ArrayListComparator<Value> {
     }
     virtual int compare(const Value *a, const Value *b){
         // binop isn't const, sadly.
-        ang->binop(const_cast<Value *>(a),
-                   const_cast<Value *>(b),OP_CMP);
+        ang->binop(const_cast<Value *>(b),
+                   const_cast<Value *>(a),OP_CMP);
         return ang->popInt();
     }
 };
