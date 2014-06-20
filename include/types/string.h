@@ -20,10 +20,7 @@ public:
     }
     /// set the value to the given string, copying
     void set(Value *v,const char *s);
-    /// pass this a block allocated by setStringPreAllocated() --- it's used
-    /// by string concatenation etc. MUST BE in the right format, i.e. starting
-    /// with a refcount.
-    void setPreAllocated(Value *v,const char *s);
+    void setPreAllocated(Value *v,BlockAllocHeader *b);
     
     /// get length of string
     virtual int getCount(Value *v);
@@ -46,6 +43,8 @@ public:
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
     virtual void slice(Value *out,Value *coll,int start,int len);
+    
+    virtual void clone(Value *out,Value *in);
 
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const;

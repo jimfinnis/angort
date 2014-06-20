@@ -15,14 +15,15 @@ void StringType::set(Value *v,const char *s){
 }
 
 int StringType::getCount(Value *v){
-    return strlen(getData(v));
+    const char *s = getData(v);
+    return mbstowcs(NULL,s,0);
 }
 
 
-void StringType::setPreAllocated(Value *v,const char *s){
+void StringType::setPreAllocated(Value *v,BlockAllocHeader *b){
     v->clr();
     v->t = Types::tString;
-    v->v.s = (char *)s;
+    v->v.block = b;
 }
 
 const char *StringType::toString(bool *allocated,const Value *v) const {
@@ -57,8 +58,7 @@ bool StringType::equalForHashTable(Value *a,Value *b){
 void StringType::setValue(Value *coll,Value *k,Value *v){
     char *s = (char *)getData(coll);
     int idx = k->toInt();
-    const char *val = getData(v);
-    s[idx]=val[0];
+    s[idx]=v->toString().get()[0];
 }
 void StringType::getValue(Value *coll,Value *k,Value *result){
     const char *s = (char *)getData(coll);
@@ -105,4 +105,19 @@ void StringType::slice(Value *out,Value *coll,int start,int len){
     
     
     free(s); // free the buffer
+}
+
+void StringType::clone(Value *out,Value *in){
+    const char *s = getData(in);
+    // note - will work for UTF-8, because gives memory size,
+    // not character count
+    int len = strlen(s); 
+    
+    BlockAllocHeader *h = (BlockAllocHeader *)malloc(len+1+sizeof(BlockAllocHeader));
+    h->refct=1;
+    memcpy((char *)(h+1),s,len+1); // and the null too!
+    
+    out->v.block = h;
+    out->t = this;
+    
 }

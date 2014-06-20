@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 223
+#define ANGORT_VERSION 224
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -234,9 +234,10 @@ void Angort::run(const Instruction *ip){
             
             
             switch(opcode){
-            case OP_EQUALS:      case OP_ADD:            case OP_MUL:          case OP_DIV:
-            case OP_SUB:         case OP_NEQUALS:        case OP_AND:          case OP_OR:
-            case OP_GT:          case OP_LT:             case OP_MOD:
+            case OP_EQUALS:      case OP_ADD:            case OP_MUL:
+            case OP_DIV:         case OP_SUB:            case OP_NEQUALS:
+            case OP_AND:         case OP_OR:             case OP_GT:
+            case OP_LT:          case OP_MOD:            case OP_CMP:
                 b = popval();
                 a = popval();
                 binop(a,b,opcode);
@@ -917,6 +918,7 @@ void Angort::feed(const char *buf){
             case T_DIV:compile(OP_DIV);break;
             case T_SUB:compile(OP_SUB);break;
             case T_ADD:compile(OP_ADD);break;
+            case T_CMP:compile(OP_CMP);break;
             case T_PERC:compile(OP_MOD);break;
             case T_DUP:compile(OP_DUP);break;
             case T_OVER:compile(OP_OVER);break;
@@ -1240,3 +1242,24 @@ const char *Angort::getPropSpec(const char *name){
         return propSpecs.get(name);
     }
 }
+
+
+
+/// comparator for ArrayList sorting
+
+// all very ugly, but I can't seem to avoid the static here, which sort
+// of throws the templating out of the window (as far as I can see).
+
+static ArrayListComparator<Value> *cmpObj;
+int arrayCmp(const void *a,const void *b){
+    const Value *va = (const Value *)a;
+    const Value *vb = (const Value *)b;
+    
+    return cmpObj->compare(va,vb);
+}
+
+template<> void ArrayList<Value>::sort(ArrayListComparator<Value> *cmp){
+    cmpObj=cmp;
+    qsort(data,ct,sizeof(Value),arrayCmp);
+}
+

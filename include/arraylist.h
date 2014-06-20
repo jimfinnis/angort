@@ -14,6 +14,12 @@ public:
     ArrayListException(const char *e) : Exception(e) {}
 };
 
+/// comparator object for sorting
+template <class T> struct ArrayListComparator {
+    virtual int compare(const T *a, const T *b) = 0;
+};
+    
+
 /// array list with random access get at  O(1). Insertion at O(n)
 /// except at the end of the list where it's O(1). List will occasionally
 /// resize, more often on grow than on shrink. Docs need improving.
@@ -140,6 +146,10 @@ public:
             throw ArrayListException("getIndexOf() out of range");
         return n;
     }
+    
+    /// sort in place - requires specialisation
+    void sort(ArrayListComparator<T> *cmp);
+
 
 private:
     
@@ -210,6 +220,10 @@ protected:
     int idx;
     ArrayList<T> *list;
 };
+
+template<> void ArrayList<Value>::sort(ArrayListComparator<Value> *cmp);
+
+
 
 
 #endif /* __ARRAYLIST_H */

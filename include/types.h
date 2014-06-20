@@ -8,9 +8,8 @@ struct Value;
 #include "arraylist.h"
 
 
-/// Each Value as a pointer to one of these, which exist as a set of
+/// Each Value has a pointer to one of these, which exist as a set of
 /// singletons describing each type's allocation behaviour etc.
-/// We do this rather than have a huge VFT for each value.
 
 class Type {
     friend class StringBuffer;
@@ -141,6 +140,13 @@ public:
     virtual void slice(Value *out,Value *coll,int start,int len){
         throw RUNT("cannot get slice of non-collection");
     }
+    
+    /// generate a shallow copy of the object:
+    /// default action is to just copy the value; collections
+    /// need to do more. Note that in and out may point to
+    /// the same Value.
+    virtual void clone(Value *out,Value *in);
+    
    
     /// find a type by ID
     static Type *findByID(uint32_t id){

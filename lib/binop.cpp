@@ -81,7 +81,6 @@ void Angort::binop(Value *a,Value *b,int opcode){
          * perform a string operation.
          *
          */
-        bool cmp=false;
         const StringBuffer& p = a->toString();
         const StringBuffer& q = b->toString();
         switch(opcode){
@@ -95,20 +94,19 @@ void Angort::binop(Value *a,Value *b,int opcode){
             break;
         }
         case OP_EQUALS:
-            cmp=true;
             pushInt(!strcmp(p.get(),q.get()));
             break;
         case OP_NEQUALS:
-            cmp=true;
             pushInt(strcmp(p.get(),q.get()));
             break;
         case OP_GT:
-            cmp=true;
             pushInt(strcmp(p.get(),q.get())>0);
             break;
         case OP_LT:
-            cmp=true;
             pushInt(strcmp(p.get(),q.get())<0);
+            break;
+        case OP_CMP:
+            pushInt(-strcmp(p.get(),q.get()));
             break;
         default:throw RUNT("bad operation for strings");
         }
@@ -118,10 +116,10 @@ void Angort::binop(Value *a,Value *b,int opcode){
          * One of the values is a float; coerce the other to a float and perform
          * a float operation
          */
-        bool cmp=false;
         float r;
         float p = a->toFloat();
         float q = b->toFloat();
+        bool cmp=false;
         switch(opcode){
         case OP_ADD:
             r = p+q;break;
@@ -153,6 +151,10 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_LT:
             cmp=true;
             pushInt(p<q);break;
+        case OP_CMP:
+            cmp=true;
+            pushInt(((p-q)<0)?1:(((p-q)>0)?-1:0));
+            break;
         default:
             throw RUNT("invalid operator for floats");
         }
@@ -165,28 +167,32 @@ void Angort::binop(Value *a,Value *b,int opcode){
          * and equality with strings will work because that will be dealt with
          * by the string test above
          */
-        bool r;
         switch(opcode){
         case OP_EQUALS:
-            r = a->v.i == b->v.i;break;
+            pushInt(a->v.i == (b->v.i?1:0));break;
         case OP_NEQUALS:
-            r = a->v.i != b->v.i;break;
+            pushInt(a->v.i != (b->v.i?1:0));break;
         case OP_GT:{
             const StringBuffer& p = a->toString();
             const StringBuffer& q = b->toString();
-            r = (strcmp(p.get(),q.get())>0);
+            pushInt(strcmp(p.get(),q.get())>0);
             break;
         }
         case OP_LT:{
             const StringBuffer& p = a->toString();
             const StringBuffer& q = b->toString();
-            r = (strcmp(p.get(),q.get())<0);
+            pushInt(strcmp(p.get(),q.get())<0);
+            break;
+        }
+        case OP_CMP:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(-strcmp(p.get(),q.get()));
             break;
         }
         default:
             throw RUNT("bad operation for symbols");
         }
-        pushInt(r?1:0);
     } else {
         /**
          * Otherwise assume we're dealing with ints
@@ -231,6 +237,11 @@ void Angort::binop(Value *a,Value *b,int opcode){
             p = a->toInt();
             q = b->toInt();
             r = (p<q);break;
+        case OP_CMP:
+            p = a->toInt();
+            q = b->toInt();
+            r = ((p-q)<0)?1:(((p-q)>0)?-1:0);
+            break;
         case OP_EQUALS:
             if(at == Types::tInteger || bt == Types::tInteger)
                 r = a->toInt() == b->toInt();

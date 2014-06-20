@@ -77,3 +77,25 @@ bool HashType::isIn(Value *coll,Value *item){
     else
         return false;
 }
+
+void HashType::clone(Value *out,Value *in){
+    HashObject *p = new HashObject();
+    Hash *h = get(in);
+    
+    Iterator<Value *> *iter = makeIterator(in);
+    for(iter->first();!iter->isDone();iter->next()){
+        Value *k = iter->current();
+        Value *v;
+        if(h->find(k))
+            v = h->getval();
+        else
+            throw WTF;
+        p->hash->set(k,v);
+ 
+    }
+    
+    out->clr();
+    out->t = this;
+    out->v.hash = p;
+    incRef(out);
+}

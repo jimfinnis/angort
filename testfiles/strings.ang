@@ -30,6 +30,21 @@ global b
 7 1 ?a slice "" = "slice6" assert
 8 1 ?a slice "" = "slice7" assert
 
+"foo" !A
+?A clone !B
+"w" 0 ?A set
+?A "woo" = "clone1" assert
+?B "foo" = "clone2" assert
+
+
+"b" 0 ?A set
+?A "boo" = "strset1" assert
+
+0 0 ?A set
+?A "0oo" = "strset2" assert
+?B "foo" = "clone3" assert
+
+
 quit
 
 

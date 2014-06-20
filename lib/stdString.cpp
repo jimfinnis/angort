@@ -176,10 +176,3 @@ inline int wstrlen(const char *s){
     Types::tString->set(v,sbuf);
 }
 
-%word wlen (str -- len) 
-{
-    Value *v = a->stack.peekptr();
-    const StringBuffer& s= v->toString();
-    
-    Types::tInteger->set(v,wstrlen(s.get()));
-}

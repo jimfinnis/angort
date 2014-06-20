@@ -147,3 +147,13 @@ void ListType::slice(Value *out,Value *coll,int start,int len){
     }
     
 }
+void ListType::clone(Value *out,Value *in){
+    ListObject *p = new ListObject();
+    Iterator<Value *> *iter = makeIterator(in);
+    for(iter->first();!iter->isDone();iter->next()){
+        Value *v = p->list.append();
+        v->copy(iter->current());
+    }
+    
+    set(out,p);
+}

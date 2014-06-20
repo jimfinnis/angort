@@ -56,7 +56,7 @@ over	:   T_OVER
 each	:   T_EACH
 include :   T_INCLUDE
 stop    :   T_STOP
-
+cmp     :   T_CMP
 package :   T_PACKAGE
 require :   T_REQUIRE
 import  :   T_IMPORT

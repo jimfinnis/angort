@@ -12,8 +12,13 @@
 #include "types.h"
 #include "plugins.h"
 
-/// all Angort values are instances of these --- the type of a value is determined
-/// by the t field, and the TypeData structure pointer.
+/// all Angort values are instances of these --- the type of a value is
+/// determined by the t field, and the TypeData structure pointer. 
+/// Why not just have a hierarchy of Value types, with a VFT defining
+/// the operations rather than a Type objects, and no union? It's because
+/// very many data structures in Angort require the ability to store
+/// many different types of values in an array, and also because they
+/// need to be able to change the types of values in this array.
 
 struct Value {
     /// the type object for the value
@@ -102,6 +107,11 @@ struct Value {
     /// to a bit of memory somewhere else, like a STRING or CLOSURE) will just copy the reference
     /// and increment the refct
     void copy(const Value *src){
+        
+        // don't do anything if src==this
+        if(src==this)
+            return;
+        
         // we do this weird stuff to avoid situation where we try to copy 
         // a value out of a GC into a value which holds the GC itself with
         // one reference. Here, the GC would actually get deleted by clr()

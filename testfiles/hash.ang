@@ -1,0 +1,61 @@
+
+
+[% "foo" 1,
+ "bar" `a ,
+ 4 "foo" ,
+ `a 2
+] !H
+
+:ha |z:| "basehash-" ?N + "-" + ?z + assert;
+
+:basecheck |h,n:|
+    ?n !N
+    "foo" ?h get 1 = 1 ha
+    "bar" ?h get `a = 2 ha
+    4 ?h get "foo" = 3 ha
+    `a ?h get 2 = 4 ha
+    ?h?`a 2 = 5 ha
+    ?h?`b isnone 6 ha
+    `zog ?h get isnone 7 ha;
+
+?H 1 basecheck
+
+4 "foo" ?H set
+"foo" ?H get 4 = "hash1" assert
+1 "foo" ?H set
+
+:eq |x,y:| # quick list equiv check
+    ?x type "list"=
+    ?y type "list"= and
+    ?x len ?y len = and
+    not if 0 stop then
+    0 ?x len range each {
+        i ?x get i ?y get =
+        not if 0 stop then
+    }
+    1
+;
+
+[1,2,3] ?H!`q
+?H 2 basecheck
+?H?`q [1,2,3] eq "hash3" assert
+
+`q ?H remove [1,2,3] eq "hash4" assert
+?H?`q isnone "hash5" assert
+
+?H 3 basecheck
+
+?H clone !I
+?H 4 basecheck
+?I 5 basecheck
+
+100 ?I!`a 
+?H 6 basecheck
+?I?`a 100 = "hclone" assert
+2 ?I!`a
+?I 7 basecheck
+
+ 
+ 
+
+quit

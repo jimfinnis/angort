@@ -6,6 +6,7 @@
 
 #include "angort.h"
 #include "hash.h"
+#include "opcodes.h"
 
 %name coll
 
@@ -157,4 +158,88 @@
     
     Value *res = a->pushval();
     iterable->t->slice(res,iterable,start,len);
+}
+
+%word clone (in -- out) construct a shallow copy of a collection
+{
+    Value *v = a->stack.peekptr();
+    v->t->clone(v,v);
+}
+
+struct StdComparator : public ArrayListComparator<Value> {
+    Angort *ang;
+    StdComparator(Angort *a){
+        ang = a;
+    }
+    virtual int compare(const Value *a, const Value *b){
+        // binop isn't const, sadly.
+        ang->binop(const_cast<Value *>(b),
+                   const_cast<Value *>(a),OP_CMP);
+        return ang->popInt();
+    }
+};
+
+%word sort (in --) sort a list in place using default comparator
+{
+    Value listv;
+    // need copy because comparators use the stack
+    listv.copy(a->popval());
+    ArrayList<Value> *list = Types::tList->get(&listv);
+    
+    StdComparator cmp(a);
+    list->sort(&cmp);
+}
+
+struct RevStdComparator : public ArrayListComparator<Value> {
+    Angort *ang;
+    RevStdComparator(Angort *a){
+        ang = a;
+    }
+    virtual int compare(const Value *a, const Value *b){
+        // binop isn't const, sadly.
+        ang->binop(const_cast<Value *>(a),
+                   const_cast<Value *>(b),OP_CMP);
+        return ang->popInt();
+    }
+};
+
+%word rsort (in --) reverse sort a list in place using default comparator
+{
+    Value listv;
+    // need copy because comparators use the stack
+    listv.copy(a->popval());
+    ArrayList<Value> *list = Types::tList->get(&listv);
+    
+    RevStdComparator cmp(a);
+    list->sort(&cmp);
+}
+
+struct FuncComparator : public ArrayListComparator<Value> {
+    Value *func;
+    Angort *ang;
+    
+    FuncComparator(Angort *a,Value *f){
+        ang = a;
+        func = f;
+    }
+    virtual int compare(const Value *a, const Value *b){
+        ang->pushval()->copy(a);
+        ang->pushval()->copy(b);
+        ang->runValue(func);
+        return ang->popInt();
+    }
+};
+
+%word fsort (in func --) sort a list in place using function comparator
+{
+    Value func,listv;
+    
+    // need copies because comparators use the stack
+    func.copy(a->popval());
+    listv.copy(a->popval());
+    
+    ArrayList<Value> *list = Types::tList->get(&listv);
+    
+    FuncComparator cmp(a,&func);
+    list->sort(&cmp);
 }

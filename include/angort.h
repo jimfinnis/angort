@@ -614,14 +614,14 @@ private:
     /// clear all stacks etc.
     void clearAtEndOfFeed();
     
-    /// handle binary operations
-    void binop(Value *a,Value *b,int opcode);
-    
 public:
     /// if an exception occurred in a run, this will have the IP.
     const Instruction *getIPException(){
         return ipException;
     }
+    
+    /// handle binary operations (public; used in comparators)
+    void binop(Value *a,Value *b,int opcode);
     
     
     /// call this to get the version number. It's a denary integer,
