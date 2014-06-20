@@ -110,7 +110,6 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
 const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     Closure *closure;
     const CodeBlock *cb;
-    Value *v;
     Type *t;
     
     t=a->getType();
@@ -585,7 +584,6 @@ void Angort::compileParamsAndLocals(){
     
     for(;;){
         int t = tok.getnext();
-        Instruction *i;
         
         switch(t){
         case T_IDENT:
@@ -729,8 +727,7 @@ void Angort::feed(const char *buf){
     // because we reset it at the start of all input.
     tok.setline(lineNumber);
     
-    int t,here;
-    Instruction *code;
+    int here;
     try {
         for(;;){
             
@@ -1161,9 +1158,9 @@ const char *Angort::getSpec(const char *s){
             return "<not a function>";
         else
             return v->v.cb->spec;
-    } else if(spec=getFuncSpec(s)){
+    } else if((spec=getFuncSpec(s))){
         return spec;
-    } else if(spec=getPropSpec(s)){
+    } else if((spec=getPropSpec(s))){
         return spec;
     }
     return NULL;
@@ -1191,7 +1188,7 @@ void Angort::list(){
 
 Module *Angort::splitFullySpecified(const char **name){
     char *dollar;
-    if(dollar=strchr((char *)*name,'$')){
+    if((dollar=strchr((char *)*name,'$'))){
         char buf[32];
         if(dollar- *name > 32){
             throw RUNT("namespace name too long");
@@ -1228,7 +1225,7 @@ Property *Angort::getProp(const char *name){
 }
 
 const char *Angort::getFuncSpec(const char *name){
-    if(Module *m = splitFullySpecified(&name)){
+    if(splitFullySpecified(&name)!=NULL){
         throw RUNT("fully specified specs not supported");
     } else {
         return funcSpecs.get(name);
@@ -1236,7 +1233,7 @@ const char *Angort::getFuncSpec(const char *name){
 }
 
 const char *Angort::getPropSpec(const char *name){
-    if(Module *m = splitFullySpecified(&name)){
+    if(splitFullySpecified(&name)!=NULL){
         throw RUNT("fully specified specs not supported");
     } else {
         return propSpecs.get(name);

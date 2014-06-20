@@ -49,7 +49,6 @@ const char *SymbolType::getString(int id){
 }
 
 void SymbolType::set(Value *v,int i){
-    int n;
     v->clr();
     v->v.i = i;
     v->t = this;

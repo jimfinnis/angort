@@ -11,8 +11,8 @@
 
 struct Value;
 
-//#define dfprintf printf
-#define dfprintf
+//#define dprintf printf
+#define dprintf if(0)printf
 
 typedef uint16_t refct_t; //!< reference count - make sure it's unsigned
 
@@ -52,7 +52,7 @@ public:
     /// increment the refct, throwing an exception if it wraps
     void incRefCt(){
         refct++;
-        dfprintf("++ incrementing count for %p, now %d\n",this,refct);
+        dprintf("++ incrementing count for %p, now %d\n",this,refct);
         if(refct==0)
             throw Exception("ref count too large");
     }
@@ -62,7 +62,7 @@ public:
         if(refct<=0)
             throw Exception().set("ERROR - already deleted: %p!",this);
         --refct;
-        dfprintf("-- decrementing count for %p, now %d\n",this,refct);
+        dprintf("-- decrementing count for %p, now %d\n",this,refct);
         return refct==0;
     }
     

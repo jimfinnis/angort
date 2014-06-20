@@ -96,7 +96,6 @@ public:
 
 %word assert (bool desc --) throw exception with string 'desc' if bool is false
 {
-    char buf[1024];
     const StringBuffer &desc = a->popString();
     bool cond = (a->popInt()==0);
     
@@ -113,7 +112,6 @@ public:
 
 %word assertmode (mode --) set to `negated or `normal, if negated assertion conditions are negated
 {
-    char buf[16];
     const StringBuffer& sb = a->popString();
     if(!strcmp(sb.get(),"negated"))
         a->assertNegated=true;
@@ -252,7 +250,6 @@ public:
 
 %word help (s --) get help on a word or native function (not plugins)
 {
-    char b[1024];
     const StringBuffer &name = a->popString();
     const char *s = a->getSpec(name.get());
     if(!s)s="no help found";
@@ -314,7 +311,6 @@ public:
 
 %word nspace (name -- handle) get a namespace by name
 {
-    char buf[256];
     const StringBuffer& name = a->popString();
     Namespace *ns = a->names.getSpaceByName(name.get());
     a->pushInt(ns->idx);
@@ -331,14 +327,13 @@ public:
 }
 
 static NamespaceEnt *getNSEnt(Angort *a){
-    char buf[256];
     const StringBuffer &s = a->popString();
     Namespace *ns = a->names.getSpaceByIdx(a->popInt());
     
     int idx = ns->get(s.get());
     if(idx<0)
         throw RUNT("ispriv: cannot find name in namespace");
-    NamespaceEnt *ent = ns->getEnt(idx);
+    return ns->getEnt(idx);
 }
 
 %word ispriv (handle name -- bool) return true if the definition is private in the namespace

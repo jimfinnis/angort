@@ -14,7 +14,6 @@
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     
-    static char buf[1024];
     for(int i=0;i<list->count();i++){
         const StringBuffer& s = list->get(i)->toString();
         printf("%d: %s\n",i,s.get());

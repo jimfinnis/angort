@@ -14,12 +14,12 @@
 void Angort::plugin(const char *path){
     char *err;
     void *lib = dlopen(path,RTLD_LAZY);
-    if(err=dlerror()){
+    if((err=dlerror())){
         throw RUNT(err);
     }
     
     PluginInitFunc init = (PluginInitFunc)dlsym(lib,"init");
-    if(err=dlerror()){
+    if((err=dlerror())){
         throw RUNT(err);
     }
     

@@ -53,7 +53,6 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
         throw RUNT("format must be a string");
     
     const char *format = Types::tString->getData(formatVal);
-    const char *t;
     
     ArrayListIterator<Value> iter(items);
     iter.first();
@@ -124,7 +123,6 @@ expand:
             bool zeropad=false;
             bool negpad=false;
             const char *p = f++;
-            int i;
             precision=-9999; // rogue value for "no precision"
             width=0;
             if(*f=='-'){

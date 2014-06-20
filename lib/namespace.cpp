@@ -21,7 +21,7 @@ int NamespaceManager::getFromNamespace(Namespace *sp, const char *name){
 int NamespaceManager::get(const char *name){
     // does this contain a $?
     const char *dollar;
-    if(dollar=strchr(name,'$')){
+    if((dollar=strchr(name,'$'))){
         char buf[32];
         if(dollar-name > 32){
             throw RUNT("namespace name too long");

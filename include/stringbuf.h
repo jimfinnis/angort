@@ -56,6 +56,7 @@ public:
         if(!wide){
             wide = getWideBuffer();
         }
+        return wide;
     }
 };
 

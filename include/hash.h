@@ -80,8 +80,6 @@ public:
     }
     
     ~Hash(){
-        int s = mask+1;
-        HashEnt *ent = table;
         delete [] table;
 #ifdef DEBUG
         //        fprintf(stderr,"misses : %d, size %d\n",miss,mask+1);
@@ -94,7 +92,7 @@ public:
         
         uint32_t hash = k->getHash();
         HashEnt *ent = look(k,hash);
-        int n_used = used;
+        unsigned int n_used = used;
         
         // we use the type directly, it's a bit quicker than isUsed() et. al.
         Type *tp = ent->k.t;
@@ -184,7 +182,7 @@ public:
         unsigned int oldsize = mask+1;
         HashEnt *oldtable = table;
         
-        int newsize;
+        unsigned int newsize;
         for(newsize = oldsize; newsize<=minused && newsize>0;newsize<<=1){}
 //        printf("resizing to %d\n",newsize);
         

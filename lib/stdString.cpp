@@ -20,7 +20,6 @@ inline int wstrlen(const char *s){
     const StringBuffer &needle = a->popString();
     const StringBuffer &haystack = a->popString();
     
-    int rv;
     const char *p = strstr(haystack.get(),needle.get());
     if(!p)
         a->pushval()->clr();
@@ -32,36 +31,11 @@ inline int wstrlen(const char *s){
     const StringBuffer &needle = a->popString();
     const StringBuffer &haystack = a->popString();
     
-    int rv;
     const char *p = strcasestr(haystack.get(),needle.get());
     if(!p)
         a->pushval()->clr();
     else
         a->pushInt(p-haystack.get());
-}
-
-%word substr (start len str -- sub) extract and copy out a substring
-{
-    const StringBuffer &s = a->popString();
-    const char *str = s.get();
-    strcpy(sbuf,str); // make sure it gets copied
-    
-    int len = a->popInt();
-    int start = a->popInt();
-    
-    
-    if(start>=strlen(sbuf)){
-        a->pushString("");
-    } else {
-        Value *s = a->pushval();
-        
-        if(len>strlen(sbuf+start))
-            len = strlen(sbuf);
-    
-        char *out = Types::tString->allocate(s,len+1,Types::tString);
-        memcpy(out,sbuf+start,len);
-        out[start+len]=0;
-    }
 }
 
 %word toint (string -- int) string to integer
@@ -167,7 +141,7 @@ inline int wstrlen(const char *s){
     const StringBuffer &s = v->toString();
     mbstowcs(buf,s.get(),1024);
     
-    if(maxlen>1024 || maxlen<0 || wcslen(buf)<maxlen)
+    if(maxlen>1024 || maxlen<0 || wcslen(buf)<(unsigned int)maxlen)
         return;
     
     // might not actually be a string.

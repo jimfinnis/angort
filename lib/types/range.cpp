@@ -64,7 +64,6 @@ template<> bool RangeType<int>::equalForHashTable(Value *a,Value *b){
 
 // for hash keys, float ranges are equal if they are the same range
 template<> uint32_t RangeType<float>::getHash(Value *v){
-    Range<float> *r = v->v.frange;
     return (uint32_t)(v->v.irange->start + v->v.irange->end*10000 + v->v.irange->step);
 }
 template<> bool RangeType<float>::equalForHashTable(Value *a,Value *b){

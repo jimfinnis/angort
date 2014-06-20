@@ -98,7 +98,8 @@ public:
     /// set, will overwrite
     void set(const char *key,T value){
         StringMapEnt<T> *p;
-        if(p=findent(key)){
+        p = findent(key);
+        if(p){
             p->value = value;
         } else {
             p = new StringMapEnt<T>(key,value);
@@ -167,7 +168,7 @@ template<class T> void StringMap<T>::listKeys(){
         }
         const char *s = iter.current()->key;
         lengthSoFar+=strlen(s);
-        printf("%s ",s,lengthSoFar);
+        printf("%s ",s);
     }
     if(lengthSoFar>0)puts("");
 }

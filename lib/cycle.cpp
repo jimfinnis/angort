@@ -9,7 +9,7 @@
 
 CycleDetector *CycleDetector::instance = NULL;
 
-//#define dfprintf printf
+//#define dprintf printf
 
 /** A description of the algorithm: 
  * - For each container object, set gc_refs equal to the object's reference count.
@@ -24,7 +24,7 @@ void CycleDetector::detect(){
     newlist.reset(); // clean the new list
     
     for(p=mainlist.head();p;p=mainlist.next(p)){
-        dfprintf("List ent : %p (next %p), refs %d\n",p,mainlist.next(p),
+        dprintf("List ent : %p (next %p), refs %d\n",p,mainlist.next(p),
                  p->refct);
         p->gc_refs = p->refct;
     }
@@ -45,9 +45,9 @@ void CycleDetector::detect(){
     
     for(p=mainlist.head();p;p=q){
         q=mainlist.next(p); // so we can remove during traversal
-        dfprintf("Refct : %p %d\n",p,p->gc_refs); 
+        dprintf("Refct : %p %d\n",p,p->gc_refs); 
         if(p->gc_refs>=1){
-            dfprintf(" refct moving %p into new list\n",p);
+            dprintf(" refct moving %p into new list\n",p);
             p->gc_refs=0; // this is the initial move, we need to do this to make sure move() will work!
             move(p);
         }
@@ -56,12 +56,12 @@ void CycleDetector::detect(){
     // only items with a gc_refs of zero will remain.
     
 /*    
-    dfprintf("Mainlist:\n");
+    dprintf("Mainlist:\n");
     for(p=mainlist.head();p;p=mainlist.next(p))
-        dfprintf("   %p\n",p);
-    dfprintf("Newlist:\n");
+        dprintf("   %p\n",p);
+    dprintf("Newlist:\n");
     for(p=newlist.head();p;p=newlist.next(p))
-        dfprintf("   %p\n",p);
+        dprintf("   %p\n",p);
 */    
     // trace objects which can be accessed from the objects we just moved, and move them too.
     // as we do this, we set gc_refs 1 to indicate it's been done. We would do this in the step
@@ -73,19 +73,19 @@ void CycleDetector::detect(){
     
     for(p=newlist.head();p;p=q){
         q=newlist.next(p);        
-        dfprintf("Entry : %p  - next %p\n",p,q);
-        dfprintf("moving refs from %p into new list\n",p);
+        dprintf("Entry : %p  - next %p\n",p,q);
+        dprintf("moving refs from %p into new list\n",p);
 	traceAndMoveIterator(p,true);
 	traceAndMoveIterator(p,false);
 	p->traceAndMove(this);
     }
-    dfprintf("End of loop.\n");
+    dprintf("End of loop.\n");
     
     // now we iterate through the list and set all reference counts of
     // the objects we're about to delete to max.
     
     for(p=mainlist.head();p;p=mainlist.next(p)){
-        dfprintf("maxreffing %p\n",p);
+        dprintf("maxreffing %p\n",p);
         p->gc_refs=0xffff;
     }
     
@@ -102,7 +102,7 @@ void CycleDetector::detect(){
     
     for(p=mainlist.head();p;p=q){
         q=mainlist.next(p);
-        dfprintf("%p is in a cycle  - deleting\n",p);
+        dprintf("%p is in a cycle  - deleting\n",p);
         delete p;
     }
     
@@ -121,13 +121,13 @@ void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool
     
     Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
     if(!iterator)return;
-    dfprintf("doing deciterref on %p\n",gc);
+    dprintf("doing deciterref on %p\n",gc);
     for(iterator->first();!iterator->isDone();iterator->next()){
         Value *v = iterator->current();
         if(GarbageCollected *gc = v->t->getGC(v)){
-            dfprintf("Item type %s, gc %p\n",v->t->name,v->v.gc);
+            dprintf("Item type %s, gc %p\n",v->t->name,v->v.gc);
             gc->gc_refs--;
-            dfprintf("decremented count for %p to %d\n",gc,gc->gc_refs);
+            dprintf("decremented count for %p to %d\n",gc,gc->gc_refs);
         }
     }
     delete iterator;

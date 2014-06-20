@@ -44,7 +44,7 @@ bool Tokeniser::getnextidentorkeyword(char *out){
     keywordsOff=true;
     bool rv = getnextident(out);
     keywordsOff=false;
-    return true;
+    return rv;
 }
 
 
@@ -124,7 +124,7 @@ int Tokeniser::getnext()
     prevval = val;
     prevline = line;
     
-    const char *p = current;
+    const char *p = (char *)current;
     
     if(curtype==endtoken)return curtype;
     if(p>=end)
@@ -153,10 +153,10 @@ loop:
     
     /// is it a special char?
     
-    if(chartable[*p]>-100)
+    if(chartable[(unsigned char )*p]>-100)
     {
         
-        curtype=chartable[*p];
+        curtype=chartable[(unsigned char )*p];
         
         // special case ignoring for '.' AND '-' before a number
         bool possibleNumChar = *p == '.' || *p=='-';
@@ -225,9 +225,10 @@ loop:
         // get char into buffer while:
         // - not whitespace and
         // - not special character token or digit preceded by . or -
-        while(*p && *p!=' ' && *p!='\t' && *p!=0x0a &&
+        while((*p && *p!=' ' && *p!='\t' && *p!=0x0a &&
               *p!=0x0d && 
-              (chartable[*p]<-1 || isdigit(p[1]) && (*p=='.'||*p=='-')))p++;
+               (chartable[(unsigned char)*p]<-1)) || 
+               (isdigit(p[1]) && (*p=='.'||*p=='-')))p++;
         len = p-b;
         memcpy(val.s,b,len);
         val.s[len]=0;
@@ -242,7 +243,9 @@ loop:
             if(val.s[i] == '.')
                 gotPoint = true;
             
-            if(!(isdigit(val.s[i]) || gotPoint || val.s[i]=='-' && (val.s[i+1]=='.' || isdigit(val.s[i+1]))))
+            if(!(isdigit(val.s[i]) 
+                 || gotPoint || 
+                 (val.s[i]=='-' && (val.s[i+1]=='.' || isdigit(val.s[i+1])))))
             {
                 if(i && i==len-1 && isalpha(val.s[i])){
                     // special weird case - a num-zero length numeric string terminated by a letter.

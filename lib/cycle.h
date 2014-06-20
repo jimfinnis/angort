@@ -182,7 +182,7 @@ public:
     /// move an item from the mainlist to the newlist
     void move(GarbageCollected *gc) {
         if(gc->gc_refs==0){
-            dfprintf("    MOVE %p into new list\n",gc);
+            dprintf("    MOVE %p into new list\n",gc);
             mainlist.remove(gc);
             newlist.addToTail(gc);
             gc->gc_refs=1;
