@@ -75,7 +75,7 @@ uint32_t SymbolType::getHash(Value *v){
 }
 
 bool SymbolType::equalForHashTable(Value *a,Value *b){
-    // This does mean that the key "foo" will
-    // not match the key `foo, but that's OK.
-    return a->v.i = b->v.i;
+    //This does mean that the key "foo" will
+    //not match the key `foo, but that's OK.
+    return a->v.i == b->v.i;
 }

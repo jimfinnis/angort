@@ -147,9 +147,13 @@ void ListType::slice(Value *out,Value *coll,int start,int len){
     }
     
 }
-void ListType::clone(Value *out,Value *in){
+void ListType::clone(Value *out,const Value *in){
     ListObject *p = new ListObject();
-    Iterator<Value *> *iter = makeIterator(in);
+    
+    // cast away constness - makeIterator() can't be const
+    // because it modifies refcounts
+    Iterator<Value *> *iter = makeIterator(
+                                           const_cast<Value *>(in));
     for(iter->first();!iter->isDone();iter->next()){
         Value *v = p->list.append();
         v->copy(iter->current());

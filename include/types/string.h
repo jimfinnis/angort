@@ -44,7 +44,7 @@ public:
     virtual bool equalForHashTable(Value *a,Value *b);
     virtual void slice(Value *out,Value *coll,int start,int len);
     
-    virtual void clone(Value *out,Value *in);
+    virtual void clone(Value *out,const Value *in);
 
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const;

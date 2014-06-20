@@ -105,7 +105,8 @@ struct Value {
     
     /// copy of a reference type (that's a type which refers
     /// to a bit of memory somewhere else, like a STRING or CLOSURE) will just copy the reference
-    /// and increment the refct
+    /// and increment the refct.
+    /// Compare clone() which makes a shallow copy of the data itself.
     void copy(const Value *src){
         
         // don't do anything if src==this
@@ -131,6 +132,12 @@ struct Value {
         v = src->v;
         incRef();
         // "old" will decref on destruction
+    }
+    
+    /// copy of a type but this time a true copy, rather than a copy
+    /// of the reference. Compare copy().
+    void clone(const Value *src){
+        t->clone(this,src);
     }
     
     /// get a hash integer for this value

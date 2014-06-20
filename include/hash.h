@@ -103,7 +103,11 @@ public:
             if(tp==Types::tNone)
                 fill++; //we aren't overwriting a dummy, so increment fill
             
-            ent->k.copy(k); // store the key into the table
+            // we clone the key now - this ensure that if a string
+            // we're keyed on subsequently changes elsewhere, the key is still
+            // unchanged.
+            
+            ent->k.clone(k); // store the key into the table
             ent->hash = hash;
             
             used++; // increment used

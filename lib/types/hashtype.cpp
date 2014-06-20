@@ -78,11 +78,14 @@ bool HashType::isIn(Value *coll,Value *item){
         return false;
 }
 
-void HashType::clone(Value *out,Value *in){
+void HashType::clone(Value *out,const Value *in){
     HashObject *p = new HashObject();
-    Hash *h = get(in);
+    Hash *h = get(const_cast<Value *>(in));
     
-    Iterator<Value *> *iter = makeIterator(in);
+    // cast away constness - makeIterator() can't be const
+    // because it modifies refcounts
+    Iterator<Value *> *iter = makeIterator(
+                                           const_cast<Value *>(in));
     for(iter->first();!iter->isDone();iter->next()){
         Value *k = iter->current();
         Value *v;

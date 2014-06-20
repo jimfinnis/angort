@@ -145,7 +145,7 @@ public:
     /// default action is to just copy the value; collections
     /// need to do more. Note that in and out may point to
     /// the same Value.
-    virtual void clone(Value *out,Value *in);
+    virtual void clone(Value *out,const Value *in);
     
    
     /// find a type by ID
