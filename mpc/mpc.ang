@@ -2,9 +2,11 @@ package mpcc
 
 library "./libangortmpc.so" drop
 library "./libangortid3.so" drop
+library "./libangortio.so" drop
+
 none 0 mpc$connect
 
-40 !ListWindow
+20 !ListWindow
 
 private
 
@@ -288,4 +290,14 @@ public
 ;
     
 endpackage import
-#quit
+
+
+:qqq |:f|
+    "alist" "w" io$open !f
+    `artist [%] mpc$tags dup sort
+    each {
+        i "\n" + ?f io$write
+    }
+    0!f
+;
+    

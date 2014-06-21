@@ -60,6 +60,7 @@ struct PluginValue {
         PluginValue *head;
     }v;
     
+    
     // used if this PluginValue is contained in a list
     struct PluginValue *next,*tail;
     
@@ -89,6 +90,7 @@ struct PluginValue {
             }
             default:break;
         }
+        type = PV_NONE;
     }
         
     
@@ -145,6 +147,15 @@ struct PluginValue {
         }
     }
     
+    int getListCount(){
+        if(type!=PV_LIST)throw "not a list";
+        int n=0;
+        for(PluginValue *p=v.head;p;p=p->next)
+            n++;
+        return n;
+    }
+    
+    
     void setHashVal(const char *s,PluginValue *v){
         if(type!=PV_HASH)throw "not a hash";
         PluginValue *pv = new PluginValue();
@@ -153,6 +164,7 @@ struct PluginValue {
         addToList(v);
     }
     
+        
     PluginValue *getHashVal(const char *s){
         if(type!=PV_HASH)throw "not a hash";
         PluginValue *value,*key;
@@ -163,6 +175,16 @@ struct PluginValue {
         }
         return NULL;
     }
+    
+    int getHashCount(){
+        if(type!=PV_HASH)throw "not a hash";
+        int n=0;
+        for(PluginValue *p=v.head;p;p=p->next)
+            n++;
+        if(n%2)throw "badly formed hash";
+        return n/2;
+    }
+    
     
     PluginObject *getObject(){
         if(type!=PV_OBJ)throw "not an object";

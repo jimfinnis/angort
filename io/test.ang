@@ -1,0 +1,37 @@
+
+
+library "./libangortio.so" import
+
+"foo" "wb" open !F
+
+[% `foo 1,
+ `bar [`topiary, 3,4, `fish],
+ 3 [% `cod 1, `dog [2,3,4]],
+ "baz" "brink"
+] ?F write
+
+
+"foo" "rb" open !F
+
+0 !Lev
+:showhash |:t|
+    each {
+        " " ?Lev * p
+        i 20 padright p
+        i iter get
+        dup type !t
+        ?t `list = if
+            each {i p " " p} nl
+        else
+            ?t `hash = if nl
+                ?Lev 1+ !Lev
+                showhash
+                ?Lev 1- !Lev
+            else
+                .
+            then
+        then
+    }
+;
+?F readhash showhash
+quit
