@@ -96,49 +96,107 @@ static FILE *getf(PluginValue *p,bool out){
     dowrite(getf(params+1,true),params);
 }
 
-%word write8 2 (value fileobj/none --) write unsigned byte
+%word write8 2 (value fileobj/none --) write signed byte
+{
+    int8_t b = params->getInt();
+    fwrite(&b,sizeof(b),1,getf(params+1,true));
+}
+
+%word write16 2 (value fileobj/none --) write 16-bit signed integer
+{
+    int16_t b = params->getInt();
+    fwrite(&b,sizeof(b),1,getf(params+1,true));
+}    
+
+%word write32 2 (value fileobj/none --) write 32-bit signed integer
+{
+    int16_t b = params->getInt();
+    fwrite(&b,sizeof(b),1,getf(params+1,true));
+}    
+
+%word writeu8 2 (value fileobj/none --) write unsigned byte
 {
     uint8_t b = params->getInt();
     fwrite(&b,sizeof(b),1,getf(params+1,true));
 }
 
-%word write16 2 (value fileobj/none --) write 16-bit unsigned integer
+%word writeu16 2 (value fileobj/none --) write 16-bit unsigned integer
 {
     uint16_t b = params->getInt();
     fwrite(&b,sizeof(b),1,getf(params+1,true));
 }    
 
-%word write32 2 (value fileobj/none --) write 32-bit unsigned integer
+%word writeu32 2 (value fileobj/none --) write 32-bit unsigned integer
 {
     uint16_t b = params->getInt();
     fwrite(&b,sizeof(b),1,getf(params+1,true));
 }    
 
+%word writefloat 2 (value fileobj/none --) write 32-bit float
+{
+    float b = params->getFloat();
+    fwrite(&b,sizeof(b),1,getf(params+1,true));
+}    
 
-%word read8 1 (fileobj/none -- int/none) read unsigned byte
+%word readfloat 1 (fileobj/none -- float/none) read 32-bit float
+{
+    float i;
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
+        res->setFloat(i);
+    else
+        res->setNone();
+}
+
+%word read8 1 (fileobj/none -- int/none) read signed byte
+{
+    int8_t i;
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
+        res->setInt((int)i);
+    else
+        res->setNone();
+}
+%word read16 1 (fileobj/none -- int/none) read 16-bit signed int
+{
+    int16_t i;
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
+        res->setInt((int)i);
+    else
+        res->setNone();
+}
+%word read32 1 (fileobj/none -- int/none) read 32-bit signed int
+{
+    int32_t i;
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
+        res->setInt((int)i);
+    else
+        res->setNone();
+}
+
+%word readu8 1 (fileobj/none -- int/none) read unsigned byte
 {
     uint8_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))<=0)
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
         res->setInt((int)i);
     else
         res->setNone();
 }
-%word read16 1 (fileobj/none -- int/none) read 16-bit unsigned int
+%word readu16 1 (fileobj/none -- int/none) read 16-bit unsigned int
 {
     uint16_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))<=0)
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
         res->setInt((int)i);
     else
         res->setNone();
 }
-%word read32 1 (fileobj/none -- int/none) read 32-bit unsigned int
+%word readu32 1 (fileobj/none -- int/none) read 32-bit unsigned int
 {
     uint32_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))<=0)
+    if(fread(&i,sizeof(i),1,getf(params,false))>0)
         res->setInt((int)i);
     else
         res->setNone();
 }
+
 
 static const char *readstr(FILE *f){
     static char buf[1024];
@@ -177,7 +235,6 @@ static bool readval(FILE *f,PluginValue *res){
     float fl;
     if(fread(&type,sizeof(type),1,f)<=0)
         return false;
-    printf("Item type: %d\n",type);
     switch(type){
     case PV_INT:
         fread(&i,sizeof(i),1,f);
@@ -209,7 +266,6 @@ static void doreadlist(FILE *f,PluginValue *res){
     res->setList();
     int n;
     fread(&n,sizeof(n),1,f);
-    printf("%d items\n",n);
     for(int i=0;i<n;i++){
         PluginValue *v = new PluginValue();
         if(readval(f,v))

@@ -34,4 +34,13 @@ library "./libangortio.so" import
     }
 ;
 ?F readhash showhash
-quit
+
+
+0!F
+
+"foo" "wb" open !F
+3.2 dup. ?F writefloat
+0!F
+
+"foo" "rb" open !F
+?F readfloat 3.2 = "floateq" assert
