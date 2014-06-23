@@ -8,7 +8,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "../include/plugins.h"
 
@@ -311,6 +315,33 @@ static void doreadhash(FILE *f,PluginValue *res){
     doreadhash(f,res);
 }
 
+%word exists 1 (path -- boolean/none) does a file/directory exist? None indicates some other problem
+{
+    struct stat b;
+    if(stat(params->getString(),&b)==0)
+        res->setInt(1);
+    else if(errno==ENOENT)
+        res->setInt(0);
+    else
+        res->setNone();
+}
+    
+
+%word stat 1 (path -- hash/none) read the file statistics, or none if not found
+{
+    struct stat b;
+    if(stat(params->getString(),&b)==0){
+        res->setHash();
+        res->setHashVal("mode",new PluginValue(b.st_mode));
+        res->setHashVal("uid",new PluginValue(b.st_uid));
+        res->setHashVal("gid",new PluginValue(b.st_gid));
+        res->setHashVal("size",new PluginValue(b.st_size));
+        res->setHashVal("atime",new PluginValue(b.st_atime));
+        res->setHashVal("mtime",new PluginValue(b.st_mtime));
+        res->setHashVal("ctime",new PluginValue(b.st_ctime));
+    } else
+        res->setNone();
+}
 
 
 %init
