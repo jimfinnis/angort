@@ -14,7 +14,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include "../include/plugins.h"
+#include <angort/plugins.h>
 
 %plugin io
 

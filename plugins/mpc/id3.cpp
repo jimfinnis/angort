@@ -12,7 +12,7 @@
 #include <fileref.h>
 #include <tag.h>
 
-#include "../include/plugins.h"
+#include <angort/plugins.h>
 
 %plugin id3
 

@@ -14,7 +14,7 @@
 #include <mpd/entity.h>
 #include <mpd/song.h>
 
-#include "../include/plugins.h"
+#include <angort/plugins.h>
 
 %plugin mpc
 
