@@ -686,7 +686,8 @@ void Angort::include(const char *fh,bool isreq){
     *file++ = 0; // and the file name
     
     // change to that directory, so all future reads are relative to there
-    chdir(path);
+    if(chdir(path))
+        throw RUNT("unable to switch directory in 'include'");
     
     TokeniserContext c;
     tok.saveContext(&c);
@@ -706,7 +707,8 @@ void Angort::include(const char *fh,bool isreq){
     
     
     free(path);
-    fchdir(oldDir);
+    if(fchdir(oldDir))
+        throw RUNT("unable to reset directory in 'include'");
     close(oldDir);
 }
 

@@ -254,6 +254,8 @@ void Angort::binop(Value *a,Value *b,int opcode){
             else
                 r = (a->v.s != b->v.s);
             break;
+        default:
+            throw WTF;
             
         }
         pushInt(r);

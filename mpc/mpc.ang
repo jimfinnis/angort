@@ -297,6 +297,7 @@ endpackage import
     `artist [%] mpc$tags dup sort
     each {
         i "\n" + ?f io$write
+        0 i artist get?`name 50 padleft "\n"+ ?f io$write
     }
     0!f
 ;
