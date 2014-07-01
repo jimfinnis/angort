@@ -1,8 +1,10 @@
+#!/usr/local/bin/angort
+
 package mpcc
 
-library "./libangortmpc.so" drop
-library "./libangortid3.so" drop
-library "./libangortio.so" drop
+library mpc drop
+library id3 drop
+library io drop
 
 none 0 mpc$connect
 
