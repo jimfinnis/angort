@@ -497,6 +497,7 @@ struct Module {
 
 class Angort {
     friend struct CodeBlock;
+    static Angort *callingInstance; ///!< set when feed() is called.
 private:
     Stack<const Instruction *,32> rstack;
     Stack<Value*,32> closureStack; //<! parallels the return stack, carries the closure table
@@ -615,6 +616,17 @@ private:
     void clearAtEndOfFeed();
     
 public:
+    /// this returns the top level of angort which was called;
+    /// it's still possible to have multiple angorts running,
+    /// but this is set when feed() is called. It's really ugly.
+    /// but I can see no other way to handle things like HashType::toString()
+    /// except by putting the angort pointer as a parameter everywhere,
+    /// or using a singleton.
+    static Angort *getCallingInstance(){
+        return callingInstance;
+    }
+    
+    
     /// if an exception occurred in a run, this will have the IP.
     const Instruction *getIPException(){
         return ipException;

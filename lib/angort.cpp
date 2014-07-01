@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 224
+#define ANGORT_VERSION 225
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -27,6 +27,8 @@ WORDS(std);WORDS(coll);WORDS(string);
 int Angort::getVersion(){
     return ANGORT_VERSION;
 }
+
+Angort *Angort::callingInstance=NULL;
 
 
 Angort::Angort() {
@@ -715,6 +717,7 @@ void Angort::include(const char *fh,bool isreq){
 void Angort::feed(const char *buf){
     ipException = NULL;
     resetStop();
+    callingInstance=this;
     
     if(printLines)
         printf("%d >>> %s\n",lineNumber,buf);

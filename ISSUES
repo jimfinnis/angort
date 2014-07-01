@@ -1,19 +1,6 @@
 Not yet documented:
-    hashes
-    symbols
     barewords
 
-Binary Operators need to be folded into type code, and things
-like string/list concat added.
-
-GC cycles!
-
-
-Closures have a problem:
-    :foo |:x| 4!x (?x 1+ !x)@ ?x .;
-    foo
-prints "4" and not "5", because the lambda modifies its closure's copy
-and not the original. This is usually the right thing to do, of course.
-
-
+Given that there are quite a few singletons (e.g type objects)
+there's no real point in Angort not being a singleton.
 

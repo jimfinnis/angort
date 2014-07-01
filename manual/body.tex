@@ -713,6 +713,20 @@ in & (key hash --) & return true if a key is in the hash\\
 Note that the comma and close bracket words examine the stack to
 determine if they are working on a list or a hash.
 
+\subsection{Hash to string function}
+By default, printing a hash --- or converting it to a string any other way ---
+will just print the default string. This tells you it's a hash and gives
+its address in memory:
+\begin{v}
+0|0 > [%] .
+<TYPE hash:0x16a4840>
+1|0 > 
+\end{v}
+However, if we define a hash member called \verb+toString+ (where this
+key is a symbol) which is a function, then that function will be called
+to generate a string. This is useful in many cases where hashes are used
+as data structures.
+
 \section{Garbage collection}
 Garbage collection is done automatically - up to a point. Specifically,
 the system does reference-counted garbage collection continuously,

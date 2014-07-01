@@ -21,12 +21,13 @@ private:
     /// and ID
     uint32_t id;
 
-    /// convert to a UTF-8 string - if memory was allocated,
-    /// the boolean is set.
-    virtual const char *toString(bool *allocated, const Value *v) const;
 public:
     /// a constant name
     const char *name;
+    
+    /// convert to a UTF-8 string - if memory was allocated,
+    /// the boolean is set.
+    virtual const char *toString(bool *allocated, const Value *v) const;
     
     /// true if the type is a reference type;
     /// that is, two values of this type can point to
