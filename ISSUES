@@ -1,6 +1,8 @@
 Not yet documented:
     barewords
 
+Closures are never deleted.
+
 Given that there are quite a few singletons (e.g type objects)
 there's no real point in Angort not being a singleton.
 

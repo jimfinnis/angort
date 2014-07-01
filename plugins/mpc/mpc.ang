@@ -12,7 +12,13 @@ private
 
 # "decorate" a song hash, giving it a toString member.
 :addstrconv |s:|
-    (?`name) `toString ?s set;
+    # could do this with closures but it would create a new
+    # one each time, and closures never get deleted!
+    (|x:|
+        ?x?`artist 
+        ": " +
+        ?x?`title +
+    ) `toString ?s set;
 
 
 # wrap a string with quotes
