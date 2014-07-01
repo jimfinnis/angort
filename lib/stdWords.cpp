@@ -53,9 +53,6 @@
         a->pushInt(gc->refct);
     }
 }
-        
-          
-
 
 %word p ( v -- ) print a value
 {
@@ -370,3 +367,37 @@ static NamespaceEnt *getNSEnt(Angort *a){
 {
     a->endPackageInScript();
 }
+
+/// define a property to set and get the auto cycle detection interval.
+/// It will be called "autogc".
+
+class AutoGCProperty: public Property {
+private:
+    Angort *a;
+public:
+    AutoGCProperty(Angort *_a){
+        a = _a;
+    }
+    
+    virtual void postSet(){
+        a->autoCycleInterval = v.toInt();
+        a->autoCycleCount = a->autoCycleInterval;
+    }
+    
+    virtual void postGet(){
+        Types::tInteger->set(&v,a->autoCycleInterval);
+    }
+};
+
+
+/// this is called directly to register word, and also any other
+/// things - such as properties
+
+void initStdPackage(Angort *a)
+{
+    WORDS(std);
+    REGWORDS(*a,std);
+    
+    a->registerProperty("autogc",new AutoGCProperty(a));
+}
+    

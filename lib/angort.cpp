@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 225
+#define ANGORT_VERSION 226
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -22,7 +22,7 @@
 #include "tokens.h"
 #include "hash.h"
 
-WORDS(std);WORDS(coll);WORDS(string);
+WORDS(coll);WORDS(string);
 
 int Angort::getVersion(){
     return ANGORT_VERSION;
@@ -43,9 +43,11 @@ Angort::Angort() {
     tok.settokens(tokens);
     tok.setcommentlinesequence("#");
     
-    REGWORDS((*this),std);
+    extern void initStdPackage(Angort *a);
+    
     REGWORDS((*this),coll);
     REGWORDS((*this),string);
+    initStdPackage(this);
     
     debug=false;
     printLines=false;
@@ -54,6 +56,7 @@ Angort::Angort() {
     assertNegated=false;
     wordValIdx=-1;
     barewords=false;
+    autoCycleCount = autoCycleInterval = AUTOGCINTERVAL;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
@@ -232,7 +235,10 @@ void Angort::run(const Instruction *ip){
                 }
                 printf("\n");
             }
-            
+            if(autoCycleInterval>0 && !--autoCycleCount){
+                autoCycleCount = autoCycleInterval;
+                gc();
+            }
             
             
             switch(opcode){
@@ -944,7 +950,10 @@ void Angort::feed(const char *buf){
                         compile(OP_FUNC)->d.func = f;
                     } else if(barewords){
                         compile(OP_LITERALSYMB)->d.i=
-                             Types::tSymbol->getSymbol(tok.getstring());
+                              Types::tSymbol->getSymbol(s);
+                    } else if(getProp(s)) {
+                        throw SyntaxException(NULL)
+                              .set("property '%s' requires ? or !",s);
                     } else {
                         throw SyntaxException(NULL)
                               .set("unknown identifier: %s",s);

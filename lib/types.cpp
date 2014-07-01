@@ -82,7 +82,7 @@ void GCType::decRef(Value *v){
     bool b = v->v.gc->decRefCt();
 //    printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
-        printf("  AND DELETING %s:%p\n",name,v->v.gc);
+//        printf("  AND DELETING %s:%p\n",name,v->v.gc);
         delete v->v.gc;
     }
 }

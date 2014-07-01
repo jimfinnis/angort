@@ -69,7 +69,7 @@ struct AngortWordDef {
 #define WORDS(x) extern AngortWordDef _wordlist_##x[];
 /// and this one will call registerWords on the angort
 /// passed in, with the list given
-#define REGWORDS(a,x) a.registerWords(_wordlist_##x)
+#define REGWORDS(a,x) (a).registerWords(_wordlist_##x)
 
 /// a property - it's a value which can be accessed like
 /// a global variable, but has sideeffects on get or set.
@@ -495,8 +495,16 @@ struct Module {
     StringMap<Property *> props; 
 };
 
+/// the default automatic GC interval, which can be changed by
+/// autogc property (or stopped with a value of -1)
+#define AUTOGCINTERVAL 1000
+
+/// This is the main Angort class, of which there should be only
+/// one instance.
+
 class Angort {
     friend struct CodeBlock;
+    friend class AutoGCProperty;
     static Angort *callingInstance; ///!< set when feed() is called.
 private:
     Stack<const Instruction *,32> rstack;
@@ -511,6 +519,8 @@ private:
     Stack<CompileContext,4> contextStack;
     VarStack locals;
     Value *closureTable; //!< the current closure table
+    
+    int autoCycleCount; //!< current auto GC count
     
     /// if an exception occurred during run, this will have 
     /// the last instruction.
@@ -616,6 +626,9 @@ private:
     void clearAtEndOfFeed();
     
 public:
+    /// if non-neg, GC cycle detect is called after this number of instructions
+    int autoCycleInterval; 
+    
     /// this returns the top level of angort which was called;
     /// it's still possible to have multiple angorts running,
     /// but this is set when feed() is called. It's really ugly.
