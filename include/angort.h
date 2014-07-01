@@ -30,6 +30,10 @@ struct CodeBlock;
 
 /// size of the primary stack
 #define MAINSTACKSIZE  128
+/// the default automatic GC interval, which can be changed by
+/// autogc property (or stopped with a value of -1)
+#define AUTOGCINTERVAL 100000
+
 
 
 /// this is a closure - it's a CodeBlock (a function, if you will) associated with
@@ -494,10 +498,6 @@ struct Module {
     /// and the properties
     StringMap<Property *> props; 
 };
-
-/// the default automatic GC interval, which can be changed by
-/// autogc property (or stopped with a value of -1)
-#define AUTOGCINTERVAL 1000
 
 /// This is the main Angort class, of which there should be only
 /// one instance.
