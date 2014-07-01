@@ -152,7 +152,8 @@ static void angortToPlugin(PluginValue *out,Value *in){
     } else if(in->t == Types::tPluginObject){
         out->setObject(in->v.plobj->obj);
     } else
-        throw RUNT("").set("not a permitted type in plugins: %s",in->t->name);
+        // inconvertible type, set to None
+        out->setNone(); 
 }
 
 void Angort::callPlugin(const PluginFunc *native){
