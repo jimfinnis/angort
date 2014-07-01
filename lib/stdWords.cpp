@@ -45,6 +45,17 @@
     a->pushInt(a->stack.ct);
 }
 
+%word rct (gcv -- ct) push the GC count for a GC value
+{
+    Value *v = a->popval();
+    GarbageCollected *gc = v->t->getGC(v);
+    if(gc){
+        a->pushInt(gc->refct);
+    }
+}
+        
+          
+
 
 %word p ( v -- ) print a value
 {

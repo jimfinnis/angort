@@ -124,6 +124,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     
     GarbageCollected *toPushOntoGCRStack=NULL;
     
+//    printf("CLOSURE SNARK PUSH");
     closureStack.push(closureTable); // we *might* be changing the closure table
     
     
@@ -199,7 +200,7 @@ const Instruction *Angort::ret()
                 delete gc;
         }
         closureTable = closureStack.pop();
-        //                printf("CLOSURE SNARK POP\n");
+        //                        printf("CLOSURE SNARK POP\n");
         debugwordbase = ip;
         locals.pop();
         return ip;

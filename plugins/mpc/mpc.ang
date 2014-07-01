@@ -12,13 +12,11 @@ private
 
 # "decorate" a song hash, giving it a toString member.
 :addstrconv |s:|
-    # could do this with closures but it would create a new
-    # one each time, and closures never get deleted!
-    (|x:|
-        ?x?`artist 
+    (   drop
+        ?s?`artist 
         ": " +
-        ?x?`title +
-    ) `toString ?s set;
+        ?s?`title +
+    ) ?s!`toString;
 
 
 # wrap a string with quotes
@@ -41,7 +39,9 @@ private
 
 :dosearch |tag,str:|
     :"(tag str -- list) non exact search shortcut"
-    [% ?tag ?str] 0 mpc$search dup each{i addstrconv};
+    [% ?tag ?str] 0 mpc$search
+    # add the toString tag
+    dup each{i addstrconv};
 
 # show a list of songs in the playlist
 :showlist |startidx,endidx:list,titlen,artlen,stat,i|

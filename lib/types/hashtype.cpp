@@ -119,7 +119,7 @@ const char *HashType::toString(bool *allocated,const Value *v) const {
     if(h->find(&k)){
         // is it a function?
         Value *outval = h->getval();
-        if(outval->t == Types::tCode || outval->t == Types::tClosure){
+        if(outval->t->isCallable()){
             Angort *a = Angort::getCallingInstance();
             // Yes, so call the function and get the returned value
             a->pushval()->copy(v);
