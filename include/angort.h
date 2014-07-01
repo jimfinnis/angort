@@ -33,7 +33,8 @@ struct CodeBlock;
 /// the default automatic GC interval, which can be changed by
 /// autogc property (or stopped with a value of -1)
 #define AUTOGCINTERVAL 100000
-
+/// the default search path for plugins
+#define DEFAULTSEARCHPATH ".:/usr/local/share/angort"
 
 
 /// this is a closure - it's a CodeBlock (a function, if you will) associated with
@@ -505,6 +506,7 @@ struct Module {
 class Angort {
     friend struct CodeBlock;
     friend class AutoGCProperty;
+    friend class SearchPathProperty;
     static Angort *callingInstance; ///!< set when feed() is called.
 private:
     Stack<const Instruction *,32> rstack;
@@ -519,6 +521,8 @@ private:
     Stack<CompileContext,4> contextStack;
     VarStack locals;
     Value *closureTable; //!< the current closure table
+    
+    const char *searchPath; //!< colon-separated library search path
     
     int autoCycleCount; //!< current auto GC count
     

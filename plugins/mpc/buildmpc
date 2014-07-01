@@ -3,8 +3,8 @@ perl ../makePlugin.pl mpc.cpp >mpc_plugin.cpp
 
 g++ -fPIC -g -c -Wall `pkg-config libmpdclient --cflags` mpc_plugin.cpp 
 
-g++ -shared -Wl,-soname,angortmpc.so \
-    -o libangortmpc.so \
+g++ -shared -Wl,-soname,mpc.angso \
+    -o ../libs/mpc.angso \
     mpc_plugin.o\
     `pkg-config libmpdclient --libs`\
 

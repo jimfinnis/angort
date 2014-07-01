@@ -10,9 +10,45 @@
 
 #ifdef LINUX
 #include <dlfcn.h>
+#include <unistd.h>
 
-void Angort::plugin(const char *path){
+const char *findPlugin(const char *searchPath,const char *name){
+    char path[2048];
+    const char *p = searchPath;
+    const char *q;
+    
+    for(;*p;p=q+1){
+        q=p;
+        while(*q && *q!=':')q++;
+        if(q-p<1024){
+            memcpy(path,p,q-p);
+            path[q-p]=0;
+            strncat(path,"/",2048);
+            strncat(path,name,2048);
+            if(!access(path,R_OK)){
+                return strdup(path);
+            }
+        }
+    }
+    return NULL;
+}
+
+void Angort::plugin(const char *name){
     char *err;
+    const char *path;
+    char buf[256];
+    
+    const char *sp = searchPath?searchPath:DEFAULTSEARCHPATH;
+    
+    path = findPlugin(sp,name);
+    if(!path){
+        snprintf(buf,256,"%s.angso",name);
+        path = findPlugin(sp,buf);
+    }
+    
+    if(!path)
+        throw RUNT("").set("cannot find library '%s'",name);
+    
     void *lib = dlopen(path,RTLD_LAZY);
     if((err=dlerror())){
         throw RUNT(err);

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+
+cd io
+./build
+cd ..
+
+
+# These won't work if you don't have the appropriate libraries
+# (libmpdclient and libtaglib)
+
+cd mpc
+./buildmpc
+./buildid3
+cd ..
+

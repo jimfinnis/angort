@@ -38,6 +38,8 @@ Angort::Angort() {
     lineNumber=1;
     definingPackage=false;
     
+    searchPath=NULL;
+    
     tok.init();
     tok.setname("<stdin>");
     tok.settokens(tokens);
@@ -798,9 +800,10 @@ void Angort::feed(const char *buf){
                 // push the plugin's namespace ID ready for
                 // import or list-import
                 char buf[1024];
-                // will recurse
-                if(!tok.getnextstring(buf))
-                    throw FileNameExpectedException();
+                // the name can be basically anything
+                tok.getnext();
+                strcpy(buf,tok.getstring());
+                // and load the plugin
                 plugin(buf);
                 break;
             }
