@@ -33,8 +33,9 @@ int main(int argc,char *argv[]){
     
     // first, we'll try to include the standard startup
     try {
-        a.include(".angortrc",false);
+        a.include("angortrc",false);
     } catch(FileNotFoundException e){
+        // ignore if not there
     } catch(Exception e){
         showException(e,a);
     }
