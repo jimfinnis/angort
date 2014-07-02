@@ -40,11 +40,8 @@ void Angort::plugin(const char *name){
     
     const char *sp = searchPath?searchPath:DEFAULTSEARCHPATH;
     
-    path = findPlugin(sp,name);
-    if(!path){
-        snprintf(buf,256,"%s.angso",name);
-        path = findPlugin(sp,buf);
-    }
+    snprintf(buf,256,"%s.angso",name);
+    path = findPlugin(sp,buf);
     
     if(!path)
         throw RUNT("").set("cannot find library '%s'",name);
