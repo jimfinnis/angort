@@ -293,10 +293,19 @@ public
 
 :showprobs |:t|
     :"Scan for common errors in all ID3 tags - takes quite a while"
-    [] all
+    
+    all !t
     nl nl nl
     
-    each {i loadtags i over !`songhash ,}
+    # first check, scan the files for weird null data
+    ?t each {
+        i?`artist isnone if "Null artist: " spp i?`name . then
+        i?`title isnone if "Null title: " spp  i?`name . then
+    }
+    
+    # below here won't work unless the data is local. It stores
+    # the tag data in the song hash.
+    [] ?t each {i loadtags i over !`songhash ,}
     
     each {
         i?`artist isnone if "Null artist: " spp i `name gfs +. then
