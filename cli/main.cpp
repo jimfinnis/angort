@@ -15,25 +15,32 @@
 
 WORDS(stdmath)
 
-struct MyProperty : public Property {
-    int ctr;
-    
-    virtual void postSet(){
-        printf("You've set the property to %f\n",v.toFloat());
+static void showException(Exception& e,Angort& a){
+    printf("Error: %s\n",e.what());
+    const Instruction *ip = a.getIPException();
+    if(ip){
+        char buf[1024];
+        ip->getDetails(buf,1024);
+        printf("Error at %s\n",buf);
     }
     
-    virtual void preGet(){
-        Types::tFloat->set(&v,(float)ctr++);
-        printf("Property is about to be got.\n");
-    }
-};
+    a.clearStack();
+}
 
 int main(int argc,char *argv[]){
     Angort a;
     REGWORDS(a,stdmath);
     
+    // first, we'll try to include the standard startup
+    try {
+        a.include(".angortrc",false);
+    } catch(FileNotFoundException e){
+    } catch(Exception e){
+        showException(e,a);
+    }
+    
+    // then any file on the command line
     char buf[256];
-    a.registerProperty("testpropertyignore",new MyProperty);
     if(argc>1){
         FILE *f = fopen(argv[1],"r");
         if(!f){
@@ -44,14 +51,7 @@ int main(int argc,char *argv[]){
         try{
             a.fileFeed(argv[1]);
         }catch(Exception e){
-            printf("Error: %s\n",e.what());
-            const Instruction *ip = a.getIPException();
-            if(ip){
-                char buf[1024];
-                ip->getDetails(buf,1024);
-                printf("Error at %s\n",buf);
-            }
-            exit(1);
+            showException(e,a);
         }
     }
     
@@ -60,6 +60,7 @@ int main(int argc,char *argv[]){
     printf("Angort version %d.%d (c) Jim Finnis 2014\nUse '\"word\" help' to get help on a word.\n",
            vv / 100,
            vv % 100);
+    
     for(;;){
         char prompt=0;
         if(a.isDefining())
@@ -76,18 +77,10 @@ int main(int argc,char *argv[]){
         if(!line)break;
         if(*line){
             add_history(line);
-            try{
+            try {
                 a.feed(line);
             } catch(Exception e){
-                printf("Error: %s\n",e.what());
-                const Instruction *ip = a.getIPException();
-                if(ip){
-                    char buf[1024];
-                    ip->getDetails(buf,1024);
-                    printf("Error at %s\n",buf);
-                }
-                
-                a.clearStack();
+                showException(e,a);
             }
         }
     }

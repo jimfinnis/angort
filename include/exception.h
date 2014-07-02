@@ -101,7 +101,7 @@ public:
 class BadConversionException : public Exception {
 public:
     BadConversionException(const char *from, const char *to)
-                : Exception("bad conversion") {
+                : Exception() {
                     sprintf(error,"cannot convert types: '%s' to '%s'",from,to);
                 }
 };
@@ -120,6 +120,18 @@ class FileNameExpectedException : public SyntaxException {
 public:
     FileNameExpectedException() : 
         SyntaxException("filename expected") {}
+};
+
+class FileNotFoundException : public Exception {
+public:
+    char fname[1024];
+    
+    FileNotFoundException(const char *name) :  Exception() {
+        snprintf(error,1023,"cannot find file : %s",name);
+        strncpy(fname,name,1023);
+        
+    }
+    
 };
 
 

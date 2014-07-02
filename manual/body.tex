@@ -728,7 +728,7 @@ to generate a string. This is useful in many cases where hashes are used
 as data structures.
 
 \section{Garbage collection}
-Garbage collection is done automatically - up to a point. Specifically,
+Garbage collection is done automatically --- up to a point. Specifically,
 the system does reference-counted garbage collection continuously,
 which works well in most cases. However, it is possible to
 create cycles:
@@ -741,14 +741,24 @@ Now there are two objects referencing each other --- a cycle. This can
 happen in lists, hashes and closures. Reference-counted garbage
 collection will never delete these. Therefore it may be necessary
 in programs with a complex structure to call the full garbage collector
-occasionally. This is done manually by the word
+occasionally.
+
+This is done periodically, by default every 100000 instructions or so.
+This interval can be changed by writing to the \verb+autogc+ property
+with a new interval:
+\begin{v}
+1000 !autogc
+\end{v}
+It can also be disabled entirely by setting \texttt{autogc} to a negative
+value.
+
+A full garbage collect can be done manually by the word
 \begin{v}
     gc
 \end{v}
-This will scan the entire system for cycles, and delete cycles of
-objects which are unreferenced from elsewhere. Incidentally, this is
-the same style of garbage collection used by Python, but Angort
-does not run the full collector automatically.
+Incidentally, this is
+the same style of garbage collection used by Python.
+
 
 
 \section{Functional programming}
@@ -1016,9 +1026,44 @@ definition, the fully specified name can be used. This is in the form
 \verb+module$name+, like that used for libraries or plugins. For example,
 if you have overriden the \texttt{p} word, you can use \verb+std$p+.
 
+\section{Plugin libraries (currently Linux only)}
+These are shared libraries which can be loaded into Angort. They communicate
+with Angort via a simplified interface, and are easy to write in C++ (see
+the plugins directory for some examples). 
 
+Once created, they should be named with the \texttt{.angso} extension
+and placed in Angort's library search path (a colon separated string).
+By default, this is 
+\begin{v}
+.:~/.angort:/usr/local/share/angort
+\end{v}
+but it can be changed using the 
+\texttt{searchpath} property (note that \verb+~+ will be expanded
+to the user's home directory). For example, to append \texttt{/home/foo/bin}
+to the path, you could write
+\begin{v}
+?searchpath ":/home/foo/bin" + !searchpath
+\end{v}
+Plugin libraries are loaded using the \texttt{library} word, which
+leaves a namespace handle on the stack so that \texttt{import} can be
+used, or \texttt{drop} to not import anything. The namespace is
+the library name, which may not be that of the library file --- it's defined
+in the plugin code. For example, to load the standard file IO library
+and import it, we would write
+\begin{v}
+`io library import
+\end{v}
+\textbf{Note that} unlike package loading with \texttt{require},
+the library name comes first.
+This is because \texttt{library} is an instruction which is compiled and
+then run, rather than a compiler directive which is acted on
+at compile time.
 
-
+This means we can do things like
+\begin{v}
+[`id3, `mpc, `io] each {i library import}
+\end{v}
+to import lists of libraries.
 
 \section{Topics missing from this document}
 There are several topics which will be discussed in later versions

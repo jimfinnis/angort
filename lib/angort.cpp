@@ -509,6 +509,13 @@ void Angort::run(const Instruction *ip){
                 }
                 ip++;
                 break;
+            case OP_LIBRARY:
+                // load a plugin (a shared library). Will
+                // push the plugin's namespace ID ready for
+                // import or list-import
+                plugin(popval()->toString().get());
+                ip++;    
+                break;
             case OP_IMPORT:
                 // the stack will have one of two configurations:
                 // (int --) will import everything (i.e. add the
@@ -684,11 +691,19 @@ void Angort::endPackageInScript(){
     names.setPrivate(false); // and clear the private flag
 }
 
-void Angort::include(const char *fh,bool isreq){
+void Angort::include(const char *filename,bool isreq){
+    // find the file
+    
+    const char *fh = findFile(filename);
+    if(!fh)
+        throw FileNotFoundException(filename);
+        
     int oldDir = open(".",O_RDONLY); // get the FD for the current directory so we can go back
     
     // first, find the real path of the file
     char *path=realpath(fh,NULL);
+    free((void *)fh); // and free the buffer
+    
     if(!path)
         throw Exception().set("cannot open file : %s",fh);
     
@@ -795,18 +810,9 @@ void Angort::feed(const char *buf){
             case T_IMPORT:
                 compile(OP_IMPORT);
                 break;
-            case T_LIBRARY:{
-                // load a plugin (a shared library). Will
-                // push the plugin's namespace ID ready for
-                // import or list-import
-                char buf[1024];
-                // the name can be basically anything
-                tok.getnext();
-                strcpy(buf,tok.getstring());
-                // and load the plugin
-                plugin(buf);
+            case T_LIBRARY:
+                compile(OP_LIBRARY);
                 break;
-            }
             case T_BACKTICK:{
                 char buf[256];
                 if(!tok.getnextidentorkeyword(buf))

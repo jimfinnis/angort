@@ -2,16 +2,13 @@
 
 package mpcc
 
-library mpc drop
-library id3 drop
-library io drop
+[`mpc,`id3,`io] each { i library drop}
 
 none 0 mpc$connect
 
 #number of songs to list in a listing
 
 20 !ListWindow
-
 
 private
 
