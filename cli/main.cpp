@@ -83,6 +83,6 @@ int main(int argc,char *argv[]){
                 showException(e,a);
             }
         }
-        return 0;
     }
+    return 0;
 }

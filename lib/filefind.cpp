@@ -41,9 +41,9 @@ const char *Angort::findFile(const char *name){
             if(!wordexp(path,&exp,0)){
                 // check all the possible results
                 for(unsigned int i=0;i<exp.we_wordc;i++){
-                    strncpy(path,exp.we_wordv[i],2048);
-                    strncat(path,"/",2048);
-                    strncat(path,name,2048);
+                    strncpy(path,exp.we_wordv[i],2047);
+                    strncat(path,"/",2047);
+                    strncat(path,name,2047);
                     if(!access(path,R_OK)){
                         wordfree(&exp);
                         return strdup(path);

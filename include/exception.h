@@ -127,8 +127,8 @@ public:
     char fname[1024];
     
     FileNotFoundException(const char *name) :  Exception() {
-        snprintf(error,1024,"cannot find file : %s",name);
-        strncpy(fname,name,1024);
+        snprintf(error,1023,"cannot find file : %s",name);
+        strncpy(fname,name,1023);
         
     }
     
