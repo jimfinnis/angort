@@ -39,3 +39,6 @@ add_test(range cli/angort ${ANGORT_SOURCE_DIR}/testfiles/range.ang)
 add_test(list cli/angort ${ANGORT_SOURCE_DIR}/testfiles/list.ang)
 add_test(hash cli/angort ${ANGORT_SOURCE_DIR}/testfiles/hash.ang)
 add_test(cycle cli/angort ${ANGORT_SOURCE_DIR}/testfiles/cycle.ang)
+
+# this only works in the testfiles directory.
+#add_test(pkg cli/angort ${ANGORT_SOURCE_DIR}/testfiles/pkg.ang)

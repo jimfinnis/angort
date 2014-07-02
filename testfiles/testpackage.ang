@@ -1,0 +1,13 @@
+package foo
+
+:fooble
+    4 +
+;
+
+public
+
+:barble
+    5 +
+;
+    
+    

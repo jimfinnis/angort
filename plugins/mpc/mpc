@@ -2,9 +2,7 @@
 
 package mpcc
 
-library mpc drop
-library id3 drop
-library io drop
+[`mpc,`id3,`io] each { i library drop}
 
 none 0 mpc$connect
 
@@ -14,6 +12,10 @@ private
 
 # "decorate" a song hash, giving it a toString member.
 :addstrconv |s:|
+    # we could use the hash which is passed in as an argument.
+    # But for fun, we'll drop that argument and instead use
+    # a closure to hold the value. This is more expensive memory-wise
+    # but more interesting!
     (   drop
         ?s?`artist 
         ": " +

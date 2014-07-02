@@ -384,10 +384,33 @@ public:
         a->autoCycleCount = a->autoCycleInterval;
     }
     
-    virtual void postGet(){
+    virtual void preGet(){
         Types::tInteger->set(&v,a->autoCycleInterval);
     }
 };
+
+/// a property to get and set the library search path,
+/// called "searchpath".
+class SearchPathProperty : public Property {
+private:
+    Angort *a;
+public:
+    SearchPathProperty(Angort *_a){
+        a = _a;
+    }
+    
+    virtual void postSet(){
+        if(a->searchPath)
+            free((void *)a->searchPath);
+        a->searchPath = strdup(v.toString().get());
+    }
+    
+    virtual void preGet(){
+        Types::tString->set(&v,
+                            a->searchPath ? a->searchPath:DEFAULTSEARCHPATH);
+    }
+};
+    
 
 
 /// this is called directly to register word, and also any other
@@ -399,5 +422,6 @@ void initStdPackage(Angort *a)
     REGWORDS(*a,std);
     
     a->registerProperty("autogc",new AutoGCProperty(a));
+    a->registerProperty("searchpath",new SearchPathProperty(a));
 }
     

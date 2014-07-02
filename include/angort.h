@@ -34,7 +34,7 @@ struct CodeBlock;
 /// autogc property (or stopped with a value of -1)
 #define AUTOGCINTERVAL 100000
 /// the default search path for plugins
-#define DEFAULTSEARCHPATH ".:/usr/local/share/angort"
+#define DEFAULTSEARCHPATH ".:~/.angort:/usr/local/share/angort"
 
 
 /// this is a closure - it's a CodeBlock (a function, if you will) associated with
@@ -612,11 +612,6 @@ private:
             i = names.add(name);
         return i;
     }
-    /// file inclusion mechanism - if ispkg is set, the file
-    /// should contain a package definition defining a new
-    /// namespace, which will be left on the stack.
-    void include(const char *path,bool ispkg);
-    
     /// add a plugin (Linux only, uses shared libraries)
     void plugin(const char *path);
     
@@ -628,6 +623,10 @@ private:
     
     /// clear all stacks etc.
     void clearAtEndOfFeed();
+    
+    /// look for a file in the search path. Will attempt to use wordexp
+    /// to do shell expansions of the path if it is available.
+    const char *findFile(const char *name);
     
 public:
     /// if non-neg, GC cycle detect is called after this number of instructions
@@ -815,8 +814,14 @@ public:
     void feed(const char *s);
     /// feed a whole file; will print a message and return
     /// false if there is a problem, or (and this is the default)
-    /// throw an exception
+    /// throw an exception. Might be best to use include().
     bool fileFeed(const char *name,bool rethrow=true);
+    
+    /// file inclusion mechanism - if ispkg is set, the file
+    /// should contain a package definition defining a new
+    /// namespace, which will be left on the stack.
+    void include(const char *path,bool ispkg);
+    
     
     /// run until OP_END received and no return stack
     void run(const Instruction *ip);
