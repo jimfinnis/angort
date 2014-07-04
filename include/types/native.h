@@ -8,6 +8,8 @@
 #define __NATIVE_H
 
 #include "plugins.h"
+struct Property;
+
 
 /// the type for a native function
 class NativeType : public Type {
@@ -19,10 +21,34 @@ public:
     virtual bool isCallable(){
         return true;
     }
-    PluginFunc *get(const Value *v);
-    void set(Value *v,PluginFunc *f);
+    NativeFunc get(const Value *v);
+    void set(Value *v,NativeFunc f);
 };
 
 
+/// the type for a native property object
+class PropType : public Type {
+public:
+    PropType(){
+        add("natprop","NATP");
+    }
+    
+    Property *get(const Value *v);
+    void set(Value *v,Property *f);
+};
+
+/// the type for a plugin function
+class PluginFuncType : public Type {
+public:
+    PluginFuncType(){
+        add("native","NATV");
+    }
+    
+    virtual bool isCallable(){
+        return true;
+    }
+    PluginFunc *get(const Value *v);
+    void set(Value *v,PluginFunc *f);
+};
 
 #endif /* __NATIVE_H */

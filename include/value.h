@@ -38,7 +38,10 @@ struct Value {
         class HashObject *hash;
         class GarbageCollected *gc;
         class IteratorObject *iter;
-        PluginFunc *native;
+        NativeFunc native;
+        struct Property *property;
+        PluginFunc *pluginfunc;
+        
         class PluginObjectWrapper *plobj;
     } v;
     
@@ -60,7 +63,7 @@ struct Value {
     
     /// decrement reference count and set type to NONE
     void clr(){
-        if(t!=Types::tNone){
+        if(t&&t!=Types::tNone){
             decRef();
             t=Types::tNone;
         }

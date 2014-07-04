@@ -48,7 +48,7 @@ void Angort::plugin(const char *name){
     while(f->name){
         int idx = names.addConst(f->name);
         Value *v = names.getVal(idx);
-        Types::tNative->set(v,f);
+        Types::tPluginFunc->set(v,f);
         f++;
     }
     names.pop();

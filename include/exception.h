@@ -134,5 +134,15 @@ public:
     
 };
 
+/// this exception is thrown when a generic runtime error occurs
+
+class AssertException : public Exception {
+public:
+    AssertException(const char *desc,int line){
+        snprintf(error,1024,"Assertion failed at line %d:  %s",line,desc);
+    }
+};
+
+
 
 #endif /* __EXCEPTION_H */

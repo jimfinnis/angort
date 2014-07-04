@@ -274,6 +274,11 @@ struct Types {
     static SymbolType *tSymbol;
     /// v.native is a native function
     static NativeType *tNative;
+    /// v.property is a property
+    static PropType *tProp;
+    
+    /// v.pluginfunc is a plugin function in a .angso
+    static PluginFuncType *tPluginFunc;
     /// v.plobj is a wrapper around PluginObject
     static PluginObjectType *tPluginObject;
     

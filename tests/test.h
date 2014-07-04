@@ -16,7 +16,6 @@
 #include <vector>
 using namespace std;
 
-#include "assertions.h"
 extern Angort *newAngort();
 
 class Test {
@@ -31,7 +30,7 @@ public:
     }
     
     void die(const char *s){
-        throw AssertionFailedException(s);
+        throw AssertException(s,0);
     }
     
     virtual void run(Angort *a)=0;

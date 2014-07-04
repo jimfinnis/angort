@@ -10,6 +10,8 @@
 #ifndef __ANGORT_H
 #define __ANGORT_H
 
+typedef void (*NativeFunc)(class Angort *a);
+
 #include <stdint.h>
 #include "stack.h"
 #include "stringbuf.h"
@@ -23,8 +25,6 @@
 #define SOURCEDATA 1
 
 extern TokenRegistry tokens[];
-
-typedef void (*NativeFunc)(class Angort *a);
 
 struct CodeBlock;
 
@@ -156,16 +156,16 @@ class CompileContext {
     
     CompileContext *parent; //!< pointer to containing context or NULL, set up by pushCompileContext
     int leaveListHead; //!< the head of a leave list - the index of the first OP_LEAVE etc. instruction, or -1.
-    const char *spec; //!< specification string
     
     Tokeniser *tokeniser; //!< the tokeniser
 public:
+    
+    const char *spec; //!< specification string, which we strdup.
     
     CompileContext(){
         spec=NULL;
         reset(NULL,NULL);
     }
-    
     
     /// reset a new compile context and set the containing context.
     void reset(CompileContext *p,Tokeniser *tok){
@@ -366,7 +366,6 @@ public:
 struct CodeBlock {
     
     void setFromContext(CompileContext *con){
-        spec = NULL;
         ip = con->copyInstructions();
         locals = con->getLocalCount();
         params = con->getParamCount();
@@ -381,10 +380,8 @@ struct CodeBlock {
     void clear(){
         if(ip) delete[] ip;
         if(closureMap) delete[] closureMap;
-        if(spec)free((void *)spec);
         ip=NULL;
         closureMap=NULL;
-        spec=NULL;
     }
     
     
@@ -394,7 +391,6 @@ struct CodeBlock {
     
     CodeBlock(const Instruction *i){
         ip=i;
-        spec = NULL;
         size=0;
         locals = 0;
         params = 0;
@@ -403,7 +399,6 @@ struct CodeBlock {
     }
     
     const Instruction *ip; //!< the instructions themselves, must be delete[]ed
-    const char *spec; //!< the specification --- null by default, but if present must be freed
     int size;
     int locals,params;
     ClosureMapEntry *closureMap;
@@ -522,6 +517,7 @@ private:
     VarStack locals;
     Value *closureTable; //!< the current closure table
     
+    int stdNamespace; //!< the default "std" namespace index
     const char *searchPath; //!< colon-separated library search path
     
     int autoCycleCount; //!< current auto GC count
@@ -530,15 +526,6 @@ private:
     /// the last instruction.
     const Instruction *ipException;
     
-    StringMap<Module *> modules; //!< a map of names to modules
-    /// the functions, duplicates of the module entries
-    StringMap<NativeFunc> funcs;
-    StringMap<const char *> funcSpecs;
-    /// and the properties, duplicates of the module entries
-    StringMap<Property *> props; 
-    StringMap<const char *> propSpecs;
-   
-   
    /// have we already done "package" in this file?
     bool definingPackage;
     /// the current compile context
@@ -759,42 +746,8 @@ public:
         return StringBuffer(popval());
     }
     
-    Module *findOrCreateModule(const char *n){
-        Module *m;
-        
-        if(!n)n="";
-        if(!modules.find(n)){
-            m = new Module();
-            modules.set(n,m);
-        } else
-            m = modules.found();
-        return m;
-    }
-    
-    /// split a name like foo$bar, setting the returned 
-    /// pointer to the bar part and returning the module;
-    /// or returning NULL and leaving the name unchanged if there
-    /// is no dollar.
-    Module *splitFullySpecified(const char **name);
-    
-    NativeFunc getFunc(const char *s);
-    Property *getProp(const char *s);
-    const char *getFuncSpec(const char *s);
-    const char *getPropSpec(const char *s);
-    
-    void registerFunc(const char *name,NativeFunc f,const char *module=NULL,const char *spec=NULL){
-        Module *m = findOrCreateModule(module);
-        m->funcs.set(name,f);
-        funcSpecs.set(name,spec);
-        funcs.set(name,f);
-    }
-    
-    void registerProperty(const char *name, Property *p, const char *module=NULL,const char *spec=NULL){
-        Module *m = findOrCreateModule(module);
-        m->props.set(name,p);
-        propSpecs.set(name,spec);
-        props.set(name,p);
-    }
+    void registerFunc(const char *name,NativeFunc f,const char *ns=NULL,const char *spec=NULL);
+    void registerProperty(const char *name, Property *p, const char *ns=NULL,const char *spec=NULL);
     
     /// register a whole bunch of words
     void registerWords(AngortWordDef *first){

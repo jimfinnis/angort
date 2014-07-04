@@ -92,16 +92,6 @@
     a->disasm(a->popString().get());
 }
 
-
-/// this exception is thrown when a generic runtime error occurs
-
-class AssertException : public Exception {
-public:
-    AssertException(const char *desc,int line){
-        snprintf(error,1024,"Assertion failed at line %d:  %s",line,desc);
-    }
-};
-
 %word assertdebug (bool --) turn assertion printout on/off
 {
     a->assertDebug = a->popInt()!=0;
@@ -277,11 +267,6 @@ public:
         NamespaceEnt *e = s->getEnt(i);
         if(!e->isPriv){
             Value *v = &e->v;
-            if(v->t == Types::tCode){
-                spec = v->v.cb->spec;
-            } else if(v->t == Types::tCode){
-                spec = v->v.closure->codeBlockValue.v.cb->spec;
-            }
             if(spec)
                 printf("%-20s : %s\n",s->getName(i),spec);
             else

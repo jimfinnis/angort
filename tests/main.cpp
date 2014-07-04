@@ -15,9 +15,7 @@
 #include <unistd.h>
 
 Angort *newAngort(){
-    WORDS(test);
     Angort *a = new Angort();
-    REGWORDS((*a),test);
 }
 
 

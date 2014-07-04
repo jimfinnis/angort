@@ -144,6 +144,12 @@ SymbolType *Types::tSymbol = &_Symbol;
 static NativeType _Native;
 NativeType *Types::tNative = &_Native;
 
+static PropType _Prop;
+PropType *Types::tProp = &_Prop;
+
+
+static PluginFuncType _PluginFunc;
+PluginFuncType *Types::tPluginFunc = &_PluginFunc;
 static PluginObjectType _PluginObject;
 PluginObjectType *Types::tPluginObject = &_PluginObject;
 

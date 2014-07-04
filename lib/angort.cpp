@@ -34,7 +34,7 @@ Angort *Angort::callingInstance=NULL;
 Angort::Angort() {
     Types::createTypes();
     // create and set default namespace
-    names.create("default",true);
+    stdNamespace = names.create("std",true); // the default namespace
     lineNumber=1;
     definingPackage=false;
     
@@ -79,7 +79,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
            ip->opcode);
     switch(ip->opcode){
     case OP_FUNC:
-        printf(" (%s)",funcs.getKey(ip->d.func));
+        printf(" (TODO)");
         break;
     case OP_JUMP:
     case OP_LEAVE:
@@ -98,7 +98,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         break;
     case OP_PROPSET:
     case OP_PROPGET:
-        printf("(%s)",props.getKey(ip->d.prop));
+        printf("(TODO)");
         break;
     case OP_LITERALSTRING:
         printf("(%s)",ip->d.s);
@@ -121,12 +121,16 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     
     t=a->getType();
     
-    /// very simple to handle a native.
-    if(t==Types::tNative) {
-        callPlugin(Types::tNative->get(a));
+    /// very simple to handle a native or plugin
+    if(t==Types::tPluginFunc) {
+        callPlugin(Types::tPluginFunc->get(a));
+        return returnip;
+    } else if(t==Types::tNative){
+        (*a->v.native)(this);
         return returnip;
     }
     
+    // otherwise it must be a code block or closure
     GarbageCollected *toPushOntoGCRStack=NULL;
     
 //    printf("CLOSURE SNARK PUSH");
@@ -570,10 +574,9 @@ void Angort::endDefine(CompileContext *c){
         throw SyntaxException("not defining a word");
     
     CodeBlock *cb = new CodeBlock(c);
-    cb->spec = c->getSpec() ? strdup(c->getSpec()) : NULL;    
-    
     Value *wordVal = names.getVal(wordValIdx);
     Types::tCode->set(wordVal,cb);
+    names.setSpec(wordValIdx,c->spec);
     wordValIdx = -1;
 }
 
@@ -954,15 +957,18 @@ void Angort::feed(const char *buf){
                 {
                     char *s = tok.getstring();
                     if((t = names.get(s))>=0){
-                        compile(OP_GLOBALDO)->d.i = t;
-                    } else if(NativeFunc f = getFunc(s)){
-                        compile(OP_FUNC)->d.func = f;
+                        // fast option for functions
+                        Value *v = names.getVal(t);
+                        if(v->t == Types::tNative)
+                            compile(OP_FUNC)->d.func = v->v.native;
+                        else if(v->t == Types::tProp)
+                            throw SyntaxException(NULL)
+                              .set("property '%s' requires ? or !",s);
+                        else
+                            compile(OP_GLOBALDO)->d.i = t;
                     } else if(barewords){
                         compile(OP_LITERALSYMB)->d.i=
                               Types::tSymbol->getSymbol(s);
-                    } else if(getProp(s)) {
-                        throw SyntaxException(NULL)
-                              .set("property '%s' requires ? or !",s);
                     } else {
                         throw SyntaxException(NULL)
                               .set("unknown identifier: %s",s);
@@ -997,11 +1003,15 @@ void Angort::feed(const char *buf){
                         // we managed to create a closure from here to upstairs,
                         // so store the closure index
                         compile(OP_CLOSUREGET)->d.i=t;
-                    } else if(Property *p = getProp(tok.getstring())){
-                        compile(OP_PROPGET)->d.prop = p;
                     } else if((t = names.get(tok.getstring()))>=0){
-                        // it's a global; use it - but don't call it if it's a function
-                        compile(OP_GLOBALGET)->d.i = t;
+                        Value *v = names.getVal(t);
+                        if(v->t == Types::tProp){
+                            // it's a property
+                            compile(OP_PROPGET)->d.prop = v->v.property;
+                        } else {
+                            // it's a global; use it - but don't call it if it's a function
+                            compile(OP_GLOBALGET)->d.i = t;
+                        }
                     } else if(isupper(*tok.getstring())){
                         // if it's upper case, immediately define as a global
                         compile(OP_GLOBALGET)->d.i=
@@ -1037,13 +1047,17 @@ void Angort::feed(const char *buf){
                         // we managed to create a closure from here to upstairs,
                         // so store the closure index
                         compile(OP_CLOSURESET)->d.i=t;
-                    } else if(Property *p = getProp(tok.getstring())){
-                        compile(OP_PROPSET)->d.prop = p;
                     } else if((t = names.get(tok.getstring()))>=0){
-                        if(names.getEnt(t)->isConst)
-                            throw RUNT("").set("attempt to set constant %s",tok.getstring());
-                        // it's a global; use it
-                        compile(OP_GLOBALSET)->d.i = t;
+                        Value *v = names.getVal(t);
+                        if(v->t == Types::tProp){
+                            // it's a property
+                            compile(OP_PROPSET)->d.prop = v->v.property;
+                        } else {
+                            if(names.getEnt(t)->isConst)
+                                throw RUNT("").set("attempt to set constant %s",tok.getstring());
+                            // it's a global; use it
+                            compile(OP_GLOBALSET)->d.i = t;
+                        }
                     } else if(isupper(*tok.getstring())){
                         // if it's upper case, immediately define as a global
                         compile(OP_GLOBALSET)->d.i=
@@ -1173,97 +1187,31 @@ const char *Instruction::getDetails(char *buf,int len) const{
 }
 
 const char *Angort::getSpec(const char *s){
-    int idx;
-    const char *spec;
-    
-    if((idx=names.get(s))>=0){
-        Value *v = names.getVal(idx);
-        if(v->t != Types::tCode)
-            return "<not a function>";
-        else
-            return v->v.cb->spec;
-    } else if((spec=getFuncSpec(s))){
-        return spec;
-    } else if((spec=getPropSpec(s))){
-        return spec;
-    }
     return NULL;
 }
 
 void Angort::list(){
-    printf("GLOBALS:\n");
     names.list();
-    
-    StringMapIterator<Module *> iter(&modules);
-    for(iter.first();!iter.isDone();iter.next()){
-        const char *name = iter.current()->key;
-        Module *m = iter.current()->value;
-        
-        if(m->funcs.count()>0){
-            printf("MODULE %s WORDS:\n",*name?name:"(none)");
-            m->funcs.listKeys();
-        }
-        if(m->props.count()>0){
-            printf("MODULE %s PROPS:\n",*name?name:"(none)");
-            m->props.listKeys();
-        }
-    }
 }
 
-Module *Angort::splitFullySpecified(const char **name){
-    char *dollar;
-    if((dollar=strchr((char *)*name,'$'))){
-        char buf[32];
-        if(dollar- *name > 32){
-            throw RUNT("namespace name too long");
-        }
-        strncpy(buf,*name,dollar- *name);
-        buf[dollar- *name]=0;
-        
-        Module *m = modules.get(buf);
-        if(!m)
-            throw RUNT("").set("not found: %s",*name);
-        *name = dollar+1;
-        return m;
-    } else {
-        return NULL;
-    }
-}
-    
-        
 
-NativeFunc Angort::getFunc(const char *name){
-    if(Module *m = splitFullySpecified(&name)){
-        return m->funcs.get(name);
-    } else {
-        return funcs.get(name);
-    }
+void Angort::registerFunc(const char *name,NativeFunc f,const char *ns,const char *spec){
+    //    Namespace *sp = names.getSpaceByName(ns?ns:"default",true);
+    Namespace *sp = names.getSpaceByIdx(stdNamespace);
+    int i = sp->addConst(name,false);
+    sp->setSpec(i,spec);
+    Value *v = sp->getVal(i);
+    Types::tNative->set(v,f);
 }
 
-Property *Angort::getProp(const char *name){
-    if(Module *m = splitFullySpecified(&name)){
-        return m->props.get(name);
-    } else {
-        return props.get(name);
-    }
+void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
+    //    Namespace *sp = names.getSpaceByName(ns?ns:"default",true);
+    Namespace *sp = names.getSpaceByIdx(stdNamespace);
+    int i = sp->addConst(name,false);
+    sp->setSpec(i,spec);
+    Value *v = sp->getVal(i);
+    Types::tProp->set(v,p);
 }
-
-const char *Angort::getFuncSpec(const char *name){
-    if(splitFullySpecified(&name)!=NULL){
-        throw RUNT("fully specified specs not supported");
-    } else {
-        return funcSpecs.get(name);
-    }
-}
-
-const char *Angort::getPropSpec(const char *name){
-    if(splitFullySpecified(&name)!=NULL){
-        throw RUNT("fully specified specs not supported");
-    } else {
-        return propSpecs.get(name);
-    }
-}
-
 
 
 /// comparator for ArrayList sorting

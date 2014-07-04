@@ -40,7 +40,7 @@ int NamespaceManager::get(const char *name){
     
     // first, scan the current list
     
-    int idx = getFromNamespace(current,name);
+    int idx = getFromNamespace(spaces.getEnt(currentIdx),name);
     if(idx>=0)
         return idx;
     

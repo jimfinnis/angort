@@ -74,10 +74,24 @@ struct NamespaceEnt {
     Value v;
     bool isConst;
     bool isPriv;
+    const char *spec; //!< specification value, may be NULL. Owned by this.
     
     NamespaceEnt(){
         isConst=false;
         isPriv=false;
+        spec=NULL;
+    }
+    
+    /// set a specification, which will have been allocated elsewhere
+    void setSpec(const char *s){
+        spec = s;
+    }
+    
+    void reset(){
+        isConst=false;
+        isPriv=false;
+        spec=NULL;
+        v.clr();
     }
 };
 
@@ -100,6 +114,7 @@ public:
         NamespaceEnt *e = getEnt(i);
         e->isConst=false;
         e->isPriv=priv;
+        e->spec=NULL;
         return i;
     }
     
@@ -108,7 +123,11 @@ public:
         NamespaceEnt *e = getEnt(i);
         e->isConst=true;
         e->isPriv=priv;
+        e->spec=NULL;
         return i;
+    }
+    void setSpec(int idx,const char *spec){
+        getEnt(idx)->spec = spec;
     }
     
     Value *getVal(int i){
@@ -122,6 +141,7 @@ public:
         NamespaceEnt *e = getEnt(i);
         e->isConst = ent->isConst;
         e->isPriv = ent->isPriv;
+        e->spec = strdup(ent->spec);
         e->v.copy(&(ent->v));
     }
     
@@ -129,9 +149,7 @@ public:
     void clear(){
         for(int i=0;i<count();i++){
             NamespaceEnt *e = getEnt(i);
-            e->v.clr();
-            e->isConst=false;
-            e->isPriv=false;
+            e->reset();
         }
         NamespaceBase<NamespaceEnt>::clear();
     }
@@ -163,8 +181,6 @@ private:
     NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
     int defaultIdx; //!< the index of the default namespace
-    
-    Namespace *current; //!< the namespace to which names are currently being added
     int currentIdx; //!< the index of the current namespace
     
     Stack<int,8> stack; //!< we maintain a stack of namespaces for when packages include others
@@ -210,7 +226,6 @@ public:
         if(isdefault){
             defaultIdx = idx;
             currentIdx = idx;
-            current = spaces.getEnt(defaultIdx);
         }
         return idx;
     }
@@ -226,7 +241,6 @@ public:
     void push(int idx){
         stack.push(idx);
         currentIdx = idx;
-        current = spaces.getEnt(currentIdx);
     }
     
     int pop(){
@@ -235,7 +249,6 @@ public:
             currentIdx=stack.peek();
         else
             currentIdx=defaultIdx;
-        current = spaces.getEnt(currentIdx);
         return idx;
     }
     
@@ -255,10 +268,12 @@ public:
     //////////////////// manipulating the current namespace ///////////
     
     int add(const char *name){
+        Namespace *current = spaces.getEnt(currentIdx);
         return makeIndex(currentIdx,current->addNonConst(name,privNames));
     }
     
     int addConst(const char *name){
+        Namespace *current = spaces.getEnt(currentIdx);
         return makeIndex(currentIdx,current->addConst(name,privNames));
     }
     
@@ -276,6 +291,14 @@ public:
         
         return spaces.getEnt(nsidx)->getVal(idx);
     }
+    
+    void setSpec(int idx,const char *spec){
+        int nsidx = getNamespaceIndex(idx);
+        idx = getItemIndex(idx);
+        
+        spaces.getEnt(nsidx)->setSpec(idx,spec);
+    }
+        
     
     NamespaceEnt *getEnt(int idx){
         int nsidx = getNamespaceIndex(idx);
@@ -296,11 +319,15 @@ public:
         return spaces.getEnt(i);
     }
     
-    /// get a namespace
-    Namespace *getSpaceByName(const char *s){
+    /// get a namespace, optionally create if not there
+    Namespace *getSpaceByName(const char *s,bool createIfNotFound=false){
         int idx=spaces.get(s);
-        if(idx<0)
-            throw RUNT("cannot find namespace");
+        if(idx<0){
+            if(createIfNotFound)
+                idx = create(s);
+            else
+                throw RUNT("cannot find namespace");
+        }
         return spaces.getEnt(idx);
     }
     

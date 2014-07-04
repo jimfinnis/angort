@@ -6,3 +6,13 @@ There should be an Angort namespace.
 Given that there are quite a few singletons (e.g type objects)
 there's no real point in Angort not being a singleton.
 
+
+
+
+Namespacing:
+    listing
+    need to find a way of quickly getting a func/prop name from ptr for showop
+    what to do with "modules?" e.g. coll etc..
+    at the moment, we set up separate namespaces. For now, I'm
+    going to read everything into the default "std" space regardless.
+    
