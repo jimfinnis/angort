@@ -14,12 +14,11 @@
 #include "test.h"
 #include <unistd.h>
 
+
 Angort *newAngort(){
-    Angort *a = new Angort();
+    return new Angort();
 }
-
-
-
+          
 
 TestSuite suite("tests");
 
@@ -34,6 +33,4 @@ int main(int argc,char *argv[]){
         return 1;
     else
         return 0;
-    
-    
 }
