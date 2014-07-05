@@ -81,8 +81,8 @@ private
         then
         
         [?i, 
-         i?`artist chknone ?artlen truncstr ?artlen padleft,
-         i?`title  chknone ?titlen truncstr ?titlen padleft] 
+         i?`artist chknone ?artlen trunc ?artlen padleft,
+         i?`title  chknone ?titlen trunc ?titlen padleft] 
         "%4d %s %s" format .
         ?i 1+ !i
     }
@@ -201,12 +201,13 @@ global list # force a new definition in this namespace
     mpc$stat !stat
     mpc$list !list # don't need to decorate
     
-    "State : "std$p ?stat?`state.
+    "State : " ?stat?`state +
+    "  Volume : " ?stat?`volume + +.
     ?stat?`pos 0 < not if
         ?stat?`pos ?list get dup
         "Current Song: " std$p ?`title.
         "              " std$p ?`artist.
-        ?stat?`elapsed std$p "/" std$p ?stat?`total.
+        ?stat?`elapsed "/" ?stat?`total + + .
     then
     
     
@@ -340,7 +341,7 @@ global list # force a new definition in this namespace
             ?ct 1+ !ct
             
             i "\n" + ?f io$write
-            0 i artist get?`name 50 padleft "\n"+ ?f io$write
+            0 i artist get?`name 48 trunc 50 padleft "\n"+ ?f io$write
         }
         0!f
     then

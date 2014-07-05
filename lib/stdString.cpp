@@ -132,7 +132,7 @@ inline int wstrlen(const char *s){
 }
 
 
-%word truncstr (string maxlen -- string) truncate a string if required
+%word trunc (string maxlen -- string) truncate a string if required
 {
     wchar_t buf[1024];
     

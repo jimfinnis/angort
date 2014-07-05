@@ -382,6 +382,14 @@ error:
     mpd_response_finish(conn.mpd);
 }
 
+%word setvol 1 (vol --) set the volume
+{
+    conn.check();
+    if(!mpd_run_set_volume(conn.mpd,params[0].getInt()))
+        conn.throwError();
+}
+        
+
 
 /// this is used for functions which are harder to do!
 
