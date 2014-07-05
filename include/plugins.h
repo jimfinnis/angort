@@ -103,8 +103,9 @@ struct PluginValue {
         type = PV_INT;
     }
     float getFloat(){
-        if(type!=PV_FLOAT)throw "not a float";
-        return v.f;
+        if(type==PV_INT)return (float)v.i;
+        else if(type==PV_FLOAT)return v.f;
+        else throw "not a number";
     }
     void setFloat(float f){
         v.f = f;

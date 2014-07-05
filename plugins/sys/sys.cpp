@@ -13,7 +13,7 @@
 %word sleep 1 (time --) sleep for some time
 {
     float t = params[0].getFloat();
-    usleep((int)(t*1000.0f));
+    usleep((int)(t*1.0e6f));
 }
 
 %init
