@@ -149,6 +149,7 @@ public
     :"(cmd --) run an mpc$mpc command and list the output"
     mpc$mpc each {i.};
 
+global p # force a new definition in this namespace
 :p
     :"(--) start playing"
     none mpc$play;
@@ -162,6 +163,7 @@ public
 
 
     
+global list # force a new definition in this namespace
 :list |:stat,start,end|
     :"(n --) list the current playlist around the given song index"
     ?ListWindow 2/ -

@@ -15,4 +15,45 @@ Namespacing:
     what to do with "modules?" e.g. coll etc..
     at the moment, we set up separate namespaces. For now, I'm
     going to read everything into the default "std" space regardless.
+
+How namespaces now work:
+    When a namespace is imported, it is both added to the import list
+    and all entries which are not private are marked as imported.
+    The space itself is marked as imported, so that new entries made
+    after the import are also marked as imported. This only applies
+    when the entire space is imported - partial imports just mark the
+    imported items, not the whole space.
+
+    Two namespaces are created at startup: std and user.
+    All standard words are added to std, notwithstanding their
+    "module" name which is currently ignored. The user namespace
+    is then left as the current namespace into which words are defined.
+    Both these namespaces are fully imported.
+
+    When searching for a name, fully specified names are resolved by
+    searching only the given space (including privates.) Otherwise,
+    the current space is searched, followed by the entries marked as
+    imported in the imported spaces.
+    
+    An exception to this is when the "global" directive is used to define
+    a new global - in this case, the imported spaces are not searched.
+
+    Consider the following situation: you want to create a new definition
+    for a standard word, say "p". If you write:
+    
+        :p .. ;
+    
+    the error "cannot redefine constant p" will result - this is 
+    because the system finds std$p and thinks you want to write over
+    it. However, if you do
+    
+        global p
+        :p ... ;
+        
+    that will work, because the "global" will create a new definition
+    in the user namespace (because it doesn't search the imported namespaces).
+    The word definition will find this new value first, and will
+    write the word codeblock to it. The std$p word will still be
+    available by using its full name.
+          
     

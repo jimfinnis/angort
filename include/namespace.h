@@ -73,12 +73,19 @@ public:
 struct NamespaceEnt {
     Value v;
     bool isConst;
+    /// the entry will not be marked as imported in an import-all
     bool isPriv;
+    /// the entry should be considered for matching when found
+    /// in a scan of the imported namespaces.
+    bool isImported;
+    
+    
     const char *spec; //!< specification value, may be NULL. Owned by this.
     
     NamespaceEnt(){
         isConst=false;
         isPriv=false;
+        isImported=false;
         spec=NULL;
     }
     
@@ -103,10 +110,15 @@ struct NamespaceEnt {
 
 
 class Namespace : public NamespaceBase<NamespaceEnt> {
+    friend class NamespaceManager;
+    
+    bool isImported; //!< the namespace is in the import list; add new public items to it
+    
 public:
     
     // each namespace has room for 32 names initially
     Namespace() : NamespaceBase<NamespaceEnt>(32) {
+        isImported=false;
     }
     
     int addNonConst(const char *name,bool priv){
@@ -114,6 +126,7 @@ public:
         NamespaceEnt *e = getEnt(i);
         e->isConst=false;
         e->isPriv=priv;
+        e->isImported = (isImported && !priv);
         e->spec=NULL;
         return i;
     }
@@ -123,6 +136,7 @@ public:
         NamespaceEnt *e = getEnt(i);
         e->isConst=true;
         e->isPriv=priv;
+        e->isImported = (isImported && !priv);
         e->spec=NULL;
         return i;
     }
@@ -134,16 +148,19 @@ public:
         return &(getEnt(i)->v);
     }
     
-    /// make a new entry in the namespace identical to
-    /// the one passed in
-    void copy(const char *name ,const NamespaceEnt *ent){
-        int i = NamespaceBase<NamespaceEnt>::add(name);
-        NamespaceEnt *e = getEnt(i);
-        e->isConst = ent->isConst;
-        e->isPriv = ent->isPriv;
-        e->spec = strdup(ent->spec);
-        e->v.copy(&(ent->v));
+    /// mark all non-private items as imported - to really
+    /// be imported, the namespace must be part of the imported
+    /// namespaces list.
+    
+    void markAllImported(){
+        for(int i=0;i<count();i++){
+            NamespaceEnt *e = getEnt(i);
+            if(!e->isPriv)
+                e->isImported=true;
+        }
     }
+    
+    
     
     /// wipe everything
     void clear(){
@@ -154,15 +171,10 @@ public:
         NamespaceBase<NamespaceEnt>::clear();
     }
     
-    /// import all permitted entries into the given namespace
-    void importAllTo(Namespace *dest);
-    
-    /// import a given entry into the given namespace (throw RUNT if not found)
-    void importTo(Namespace *dest,const char *name);
-    
     void list();
     
     int idx; //!< index within namespace manager's "spaces" namespace.
+    
 };
 
 //#define MKIDX(i)
@@ -180,7 +192,6 @@ class NamespaceManager {
 private:
     NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
-    int defaultIdx; //!< the index of the default namespace
     int currentIdx; //!< the index of the current namespace
     
     Stack<int,8> stack; //!< we maintain a stack of namespaces for when packages include others
@@ -208,49 +219,43 @@ private:
     /// created public.
     bool privNames;
     
+    /// imported namespace list. Can't be a linked link because
+    /// of the way namespaces move around, being in an arraylist.
+    ArrayList<int> importedNamespaces;
+    
 public:
     
     // the namespace system has room for 4 namespaces initially, but can grow.
-    NamespaceManager() : spaces(4) {
+    NamespaceManager() : spaces(4),importedNamespaces(4) {
+        currentIdx=-1; // initially no namespace
         privNames=false;
     }
     
     //////////////////// manipulating namespaces /////////////////////
     
-    /// create a new idx and return it, optionally setting the initial,
-    /// default namespace
-    int create(const char *name,bool isdefault=false){
+    /// create a new idx and return it
+    int create(const char *name){
         int idx = spaces.add(name);
         // set the index in the ns we created
         spaces.getEnt(idx)->idx = idx;
-        if(isdefault){
-            defaultIdx = idx;
-            currentIdx = idx;
-        }
         return idx;
     }
         
-        
-    int getStackTop(){
-        if(stack.ct>0)
-            return stack.peek();
-        else
-            return -1;
-    }
-    
+    /// push the current namespace onto the stack,
+    /// and set a new current namespace.
     void push(int idx){
-        stack.push(idx);
+        stack.push(currentIdx);
         currentIdx = idx;
     }
     
+    /// pop the namespace stack, returning the namespace
+    /// we have just left - NOT the new current namespace.
     int pop(){
-        int idx=stack.pop();
-        if(stack.ct>0)
-            currentIdx=stack.peek();
-        else
-            currentIdx=defaultIdx;
-        return idx;
+        int rv = currentIdx;
+        currentIdx=stack.pop();
+        return rv;
     }
+    
     
     void clear(){
         for(int i=0;i<spaces.count();i++){
@@ -337,9 +342,10 @@ public:
     // What needs to happen here:
     // check for explicit '$'. If so, search that namespace only. Otherwise search:
     // 1) current namespace
-    // 2) default namespace
+    // 2) imported namespaces (if scanImports is true)
+    //
     
-    int get(const char *name);
+    int get(const char *name,bool scanImports=true);
     
     /// import either all symbols or some symbols from a namespace.
     void import(int nsidx,ArrayList<Value> *lst);

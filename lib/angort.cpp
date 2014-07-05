@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 226
+#define ANGORT_VERSION 227
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,7 +34,12 @@ Angort *Angort::callingInstance=NULL;
 Angort::Angort() {
     Types::createTypes();
     // create and set default namespace
-    stdNamespace = names.create("std",true); // the default namespace
+    stdNamespace = names.create("std");
+    // import everything from it
+    names.import(stdNamespace,NULL);
+    // and that's the namespace we're working in
+    
+    names.push(stdNamespace);
     lineNumber=1;
     definingPackage=false;
     
@@ -50,6 +55,13 @@ Angort::Angort() {
     REGWORDS((*this),coll);
     REGWORDS((*this),string);
     initStdPackage(this);
+    
+    // now the standard package has been imported, set up the
+    // user package into which their words are defined.
+    
+    int userNamespace = names.create("user");
+    names.import(userNamespace,NULL);
+    names.push(userNamespace);
     
     debug=false;
     printLines=false;
@@ -685,12 +697,10 @@ const Instruction *Angort::compile(const char *s){
 }
 
 void Angort::endPackageInScript(){
-    // see the similar code below in include()
-    if(names.getStackTop()>=0){
-        // pop the namespace stack
-        int idx=names.pop();
-        pushInt(idx);
-    }
+    // see the similar code below in include().
+    // pop the namespace stack
+    int idx=names.pop();
+    pushInt(idx);
     names.setPrivate(false); // and clear the private flag
 }
 
@@ -722,16 +732,16 @@ void Angort::include(const char *filename,bool isreq){
     tok.saveContext(&c);
     fileFeed(file);
     tok.restoreContext(&c);
-    if(names.getStackTop()>=0){
-        // pop the namespace stack
-        int idx=names.pop();
-        if(isreq){
+    
+    // pop the namespace stack
+    int idx=names.pop();
+    if(isreq){
             // push the idx of the package which was defined. 
             // A bit dodgy since this isn't taking place in
             // a code block..
             pushInt(idx);
-        }
     }
+    
     names.setPrivate(false); // and clear the private flag
     
     
@@ -1073,7 +1083,8 @@ void Angort::feed(const char *buf){
                     throw SyntaxException(NULL)
                       .set("expected an identifier, got %s",tok.getstring());
                 
-                if(names.get(tok.getstring())<0)// ignore multiple defines
+                // "false" here so we don't look in imported namespaces!
+                if(names.get(tok.getstring(),false)<0)// ignore multiple defines
                     names.add(tok.getstring());
                 break;
             case T_OPREN:// open lambda
