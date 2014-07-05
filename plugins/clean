@@ -1,0 +1,3 @@
+find . -name "*_plugin*" -exec rm {} \;
+find . -name "~*" -exec rm {} \;
+find . -name "words" -exec rm {} \;

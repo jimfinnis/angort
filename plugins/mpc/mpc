@@ -199,7 +199,7 @@ global list # force a new definition in this namespace
 :stat |:stat,list|
     :"(--) show current status"
     mpc$stat !stat
-    mpc$list !list # don't need to decorate
+    mpc$list !list # don't need to decorate with a toString member
     
     "State : " ?stat?`state +
     "  Volume : " ?stat?`volume + +.
@@ -326,7 +326,7 @@ global list # force a new definition in this namespace
     :"(--) sort playlist by album, then track"
     mpc$list dup (mpcc$sortFunc) fsort clr add
 ;
-    
+
 :qqq |:f,len,ct|
     "Generate a list of all songs into alist (y/n)? " std$p
     
