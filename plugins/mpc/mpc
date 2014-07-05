@@ -326,16 +326,27 @@ global list # force a new definition in this namespace
     mpc$list dup (mpcc$sortFunc) fsort clr add
 ;
     
+:qqq |:f,len,ct|
+    "Generate a list of all songs into alist (y/n)? " std$p
+    
+    0 1 none io$readstr slice
+    dup "y" = swap "Y" = or if
+        "alist" "w" io$open !f
+        `artist [%] mpc$tags dup sort
+        dup len !len
+        0!ct
+        each {
+            ?ct tofloat ?len / 100 * toint "\r" + std$p none io$flush
+            ?ct 1+ !ct
+            
+            i "\n" + ?f io$write
+            0 i artist get?`name 50 padleft "\n"+ ?f io$write
+        }
+        0!f
+    then
+;
+    
+
 endpackage import
 
 
-:qqq |:f|
-    "alist" "w" io$open !f
-    `artist [%] mpc$tags dup sort
-    each {
-        i "\n" + ?f io$write
-        0 i artist get?`name 50 padleft "\n"+ ?f io$write
-    }
-    0!f
-;
-    

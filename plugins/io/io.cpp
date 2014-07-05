@@ -325,6 +325,12 @@ static void doreadhash(FILE *f,PluginValue *res){
     else
         res->setNone();
 }
+
+%word flush 1 (fileobj/none -- ) flush the file buffer
+{
+    FILE *f = getf(params,true);
+    fflush(f);
+}
     
 
 %word stat 1 (path -- hash/none) read the file statistics, or none if not found
