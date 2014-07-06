@@ -45,5 +45,5 @@
     flip
 ) ondraw
 
-[] 0 5000 range each {mkthingy,} !Thingies
+[] 0 10000 range each {mkthingy,} !Thingies
 -1 -1  fullscreenopen loop close quit

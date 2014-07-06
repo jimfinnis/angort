@@ -161,7 +161,6 @@ private:
             // need to grow the list
 //            printf("oldct %d, newct %d, cap %d\n",ct,newct,capacity);
             capacity = newct + (newct>>3) + (newct<9?3:6);
-//            printf("GROW to %d\n",capacity);
         } else if(capacity>baseCapacity && newct<(capacity>>1)) {
             // need to shrink the list. New capacity should still
             // have at least one empty space left at the end, for popped
