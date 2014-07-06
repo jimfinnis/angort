@@ -4,35 +4,35 @@
 :randc [] 0 3 range each {rand 128 % 128+,};
 
 
-:mkthingy [%
+    
+
+:mkthingy |:self| [% dup!self
  `x 0,
  `y 0,
  `dx randd,
  `dy randd,
- `col randc
+ `col randc,
+ `move (|:x,y|
+     ?self?`x ?self?`dx + !x
+     ?x 290 > ?x 0 < or if
+         ?self?`dx neg ?self!`dx
+     then
+     ?self?`y ?self?`dy + !y
+     ?y 290 > ?y 0 < or if
+         ?self?`dy neg ?self!`dy
+     then
+     ?x ?self!`x
+     ?y ?self!`y
+ ),
+ `draw (
+     ?self?`col each{i} col
+     ?self?`x ?self?`y 10 10 fillrect
+ )
  ]
 ;
 
 [] 0 1000 range each {mkthingy,} !Thingies
 
-    
-:moveThingy |t:x,y|
-    ?t?`x ?t?`dx + !x
-    ?x 290 > ?x 0 < or if
-        ?t?`dx neg ?t!`dx
-    then
-    ?t?`y ?t?`dy + !y
-    ?y 290 > ?y 0 < or if
-        ?t?`dy neg ?t!`dy
-    then
-    ?x ?t!`x
-    ?y ?t!`y
-;
-
-:drawThingy |t:|
-    ?t?`col each{i} col
-    ?t?`x ?t?`y 10 10 fillrect
-;
 
 (
     |x:| "key down " ?x + .
@@ -41,7 +41,7 @@
 
 (
     clear
-    Thingies each {i moveThingy i drawThingy}
+    Thingies each { i?`move@ i?`draw@ }
     flip
 ) ondraw
 
