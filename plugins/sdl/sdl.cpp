@@ -22,9 +22,15 @@ static bool done = false; // set when we want to quit
 class Surface : public PluginObject {
 public:
     SDL_Surface *s;
+    bool isScreen;
     
     Surface(SDL_Surface *_s){
         s=_s;
+    }
+    
+    virtual ~Surface(){
+        if(!isScreen)
+            SDL_FreeSurface(s);
     }
 };
 
@@ -40,11 +46,10 @@ static void chkscr(){
     screen=NULL;
 }
 
-%word open 2 (x y -- ) init SDL and open a window
-{
+static void openwindow(int w,int h,int flags){
     // must be 24-bit
-    screen = SDL_SetVideoMode(params[0].getInt(),params[1].getInt(),
-                              24,0);//SDL_NOFRAME);
+    screen = SDL_SetVideoMode(w,h,
+                              24,flags);//SDL_NOFRAME);
     if(!screen)
         throw "cannot open screen";
     
@@ -54,6 +59,46 @@ static void chkscr(){
     SDL_Flip(screen);
     SDL_FillRect(screen,NULL,backcol);
     SDL_Flip(screen);
+}
+
+%word fullscreenopen 2 (x/-1 y/-1 --) init SDL and open a fullscreen hw window
+{
+    int w = params[0].getInt();
+    int h = params[1].getInt();
+    if(w<0){
+        const SDL_VideoInfo *v = SDL_GetVideoInfo();
+        w = v->current_w;
+        h = v->current_h;
+    }
+    openwindow(w,h,SDL_FULLSCREEN|SDL_HWSURFACE);
+}
+
+%word open 2 (x y -- ) init SDL and open a window
+{
+    openwindow(params[0].getInt(),params[1].getInt(),0);
+}
+
+%word scr 0 (-- surface) get the screen surface
+{
+    // got to make a new one of these each time, rather
+    // than keep it static, because the object will keep
+    // getting deleted.
+    Surface *screenSurf = new Surface(screen);
+    screenSurf->isScreen=true;
+    
+    res->setObject(screenSurf);
+}
+
+%word width 1 (surface -- int) get width of surface
+{
+    Surface *so = (Surface *)(params[0].getObject());
+    res->setInt(so->s->w);
+}
+
+%word height 1 (surface -- int) get width of surface
+{
+    Surface *so = (Surface *)(params[0].getObject());
+    res->setInt(so->s->h);
 }
 
 %word load 1 (file -- surf/none) load an image into a surface
@@ -206,4 +251,5 @@ Value *onDraw = NULL;
 {
     api=interface;
     printf("Initialising SDL plugin, %s %s\n",__DATE__,__TIME__);
+    SDL_Init(SDL_INIT_EVERYTHING);
 }
