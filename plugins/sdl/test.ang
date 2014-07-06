@@ -3,7 +3,7 @@
 -1 !autogc # turn off major GC
 
 :randd rand 10000 % 5000 - 1500.0 / ;
-:randc [] 0 3 range each {rand 128 % 128+,};
+:randc |:f| (rand 128 % 128+)!f [?f@,?f@,?f@];
 
 :mkthingy |:self| 
     [% dup!self
@@ -45,5 +45,5 @@
     flip
 ) ondraw
 
-[] 0 10000 range each {mkthingy,} !Thingies
+[] 0 500 range each {mkthingy,} !Thingies
 -1 -1  fullscreenopen loop close quit
