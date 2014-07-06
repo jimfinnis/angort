@@ -14,3 +14,8 @@ cd mpc
 ./buildid3
 cd ..
 
+# and these won't work if you don't have SDL installed
+
+cd sdl
+./build
+cd ..

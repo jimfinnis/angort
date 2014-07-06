@@ -6,18 +6,14 @@
 
 #include "angort.h"
 #include "hash.h"
-#include "plugins.h"
 
 #ifdef LINUX
 #include <dlfcn.h>
-
-
 
 void Angort::plugin(const char *name){
     char *err;
     const char *path;
     char buf[256];
-    
     
     snprintf(buf,256,"%s.angso",name);
     path = findFile(buf);
@@ -36,7 +32,7 @@ void Angort::plugin(const char *name){
     }
     
     // init the plugin and get the data
-    PluginInfo *info = (*init)();
+    PluginInfo *info = (*init)(this);
     
     // create the namespace
     int ns = names.create(info->name);
@@ -58,6 +54,11 @@ void Angort::plugin(const char *name){
 
 static void pluginToAngort(Value *out, PluginValue *in){
     switch(in->type){
+    case PV_CALLABLE:
+        // really we should never pass a callable out!
+        throw RUNT("").set("cannot return callable from plugin");
+//        out = in->v.v;
+        break;
     case PV_INT:
         Types::tInteger->set(out,in->getInt());
         break;
@@ -163,6 +164,14 @@ static void angortToPlugin(PluginValue *out,Value *in){
         }
     } else if(in->t == Types::tPluginObject){
         out->setObject(in->v.plobj->obj);
+    } else if(in->t->isCallable()){
+        // we have to make a copy of the input value, because
+        // otherwise it's just a pointer into the Angort stack
+        // which will get stale. It's up to the plugin to
+        // release it later, with AngortPluginInterface::releaseCallable().
+        out->v.v = new Value();
+        out->v.v->copy(in);
+        out->type = PV_CALLABLE;
     } else
         // inconvertible type, set to None
         out->setNone(); 
@@ -190,10 +199,22 @@ void Angort::callPlugin(const PluginFunc *native){
     } catch(const char *s){
         throw RUNT(s);
     }
-    
-          
-    
 }
+
+void AngortPluginInterface::call(const class Value *v,PluginValue *pv){
+    // we know that this is *really* Angort itself
+    Angort *a = (Angort *)this;
+    if(pv){
+        Value *out = a->pushval();
+        pluginToAngort(out,pv);
+    }
+    a->runValue(v);
+}
+
+void AngortPluginInterface::releaseCallable(Value *v){
+    delete v;
+}
+
 
 #else
 
@@ -203,5 +224,11 @@ void Angort::callPlugin(const PluginFunc *p){
 
 void Angort::plugin(const char *path){
     throw RUNT("Plugins not supported on this platform.");
+}
+
+void AngortPluginInterface::call(const class Value *v,PluginValue *pv){
+}
+
+void AngortPluginInterface::releaseCallable(Value *v){
 }
 #endif

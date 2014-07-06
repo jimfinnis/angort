@@ -8,12 +8,16 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
-#include <angort/plugins.h>
+#include "../../include/plugins.h"
+//#include <angort/plugins.h>
 
 %plugin sdl
 
+static AngortPluginInterface *api;
 static SDL_Surface *screen = NULL;
-static uint8_t colr=255,colg=255,colb=255;
+static uint32_t forecol;
+static uint32_t backcol;
+static bool done = false; // set when we want to quit
 
 class Surface : public PluginObject {
 public:
@@ -29,21 +33,26 @@ static void chkscr(){
         throw "SDL not initialised";
 }
 
-%word quit 0 (--) close down SDL
+%word close 0 (--) close down SDL
 {
     if(screen)
         SDL_Quit();
     screen=NULL;
 }
 
-%word init 2 (x y -- ) init SDL and open a window
+%word open 2 (x y -- ) init SDL and open a window
 {
     // must be 24-bit
     screen = SDL_SetVideoMode(params[0].getInt(),params[1].getInt(),
                               24,0);//SDL_NOFRAME);
     if(!screen)
         throw "cannot open screen";
+    
+    forecol = SDL_MapRGB(screen->format,255,255,255);
+    backcol = SDL_MapRGB(screen->format,0,0,0);
+    SDL_FillRect(screen,NULL,backcol);
     SDL_Flip(screen);
+    SDL_FillRect(screen,NULL,backcol);
     SDL_Flip(screen);
 }
 
@@ -85,38 +94,116 @@ static void chkscr(){
     SDL_Flip(screen);
 }
 
-%word col 3 set colour (r g b --)
+%word col 3 (r g b --) set colour 
 {
-    colr = (uint8_t)params[0].getInt();
-    colg = (uint8_t)params[1].getInt();
-    colb = (uint8_t)params[2].getInt();
+    chkscr();
+    int colr = params[0].getInt();
+    int colg = params[1].getInt();
+    int colb = params[2].getInt();
+    forecol = SDL_MapRGB(screen->format,colr,colg,colb);
+}
+%word bcol 3 (r g b --) set back colour 
+{
+    chkscr();
+    int colr = params[0].getInt();
+    int colg = params[1].getInt();
+    int colb = params[2].getInt();
+    backcol = SDL_MapRGB(screen->format,colr,colg,colb);
+}
+
+%word clear 0 (--) clear the screen to the background colour
+{
+    chkscr();
+    SDL_FillRect(screen,NULL,backcol);
 }
 
 %word fillrect 4 (x y w h --) draw a filled rectangle in current colour
 {
     chkscr();
+    SDL_Rect r;
     
-    int x = params[0].getInt();
-    int y = params[1].getInt();
-    int w = params[2].getInt();
-    int h = params[3].getInt();
+    r.x = params[0].getInt();
+    r.y = params[1].getInt();
+    r.w = params[2].getInt();
+    r.h = params[3].getInt();
     
-    SDL_LockSurface(screen);
-    int bpp = screen->format->BytesPerPixel;
-    for(int j=0;j<h;j++,y++){
-        uint8_t *p = (uint8_t*)screen->pixels+y*screen->pitch+x*bpp;
-        for(int i=0;i<w;i++){
-            p[0] = colb;
-            p[1] = colg;
-            p[2] = colr;
-            p+=bpp;
-        }
-    }
-    SDL_UnlockSurface(screen);
+    SDL_FillRect(screen,&r,forecol);
 }
-        
+
+// various callbacks
+Value *onKeyDown = NULL;
+Value *onKeyUp = NULL;
+Value *onMouse = NULL;
+Value *onDraw = NULL;
+
+%word ondraw 1 (callable --) set the draw callback, of spec (--)
+{
+    if(onDraw)
+        api->releaseCallable(onDraw);
+    onDraw = params[0].getCallable();
+}
+
+%word onkeyup 1 (callable --) set the key up callback, of spec (keysym --)
+{
+    if(onKeyUp)
+        api->releaseCallable(onKeyUp);
+    onKeyUp = params[0].getCallable();
+}
+
+%word onkeydown 1 (callable --) set the key down callback, of spec (keysym --)
+{
+    if(onKeyDown)
+        api->releaseCallable(onKeyDown);
+    onKeyDown = params[0].getCallable();
+}
+
+%word onmouse 1 (callable --) set the draw callback, of spec (--)
+{
+    if(onMouse)
+        api->releaseCallable(onMouse);
+    onMouse = params[0].getCallable();
+}
+
+
+
+%word loop 0 (--) start the main game loop
+{
+    chkscr();
+    PluginValue pv; // used to pass data to callbacks
+    while(!done){
+        SDL_Event e;
+        while(SDL_PollEvent(&e)){
+            switch(e.type){
+            case SDL_QUIT:
+                done=true;break;
+            case SDL_KEYDOWN:
+                if(onKeyDown){
+                    pv.setInt(e.key.keysym.sym);
+                    api->call(onKeyDown,&pv);
+                }
+                break;
+            case SDL_KEYUP:
+                if(onKeyUp){
+                    pv.setInt(e.key.keysym.sym);
+                    api->call(onKeyUp,&pv);
+                }
+                break;
+            default:break;
+            }
+        }
+        if(onDraw)
+            api->call(onDraw);
+    }
+}
+
+%word done 0 (--) set the done flag to end the main loop
+{
+    done=true;
+}
+
 
 %init
 {
+    api=interface;
     printf("Initialising SDL plugin, %s %s\n",__DATE__,__TIME__);
 }

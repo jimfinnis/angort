@@ -20,6 +20,7 @@ typedef void (*NativeFunc)(class Angort *a);
 #include "types.h"
 #include "value.h"
 #include "namespace.h"
+#include "plugins.h"
 
 /// true to compile debugging data into opcodes
 #define SOURCEDATA 1
@@ -498,7 +499,7 @@ struct Module {
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
-class Angort {
+class Angort : public AngortPluginInterface {
     friend struct CodeBlock;
     friend class AutoGCProperty;
     friend class SearchPathProperty;
@@ -629,6 +630,9 @@ public:
         return callingInstance;
     }
     
+    /// used to run a codeblock or closure - works by doing call() and then run() until exit.
+    /// Will not push the closuretable or return stacks.
+    void runValue(const class Value *v);
     
     /// if an exception occurred in a run, this will have the IP.
     const Instruction *getIPException(){
@@ -778,10 +782,6 @@ public:
     
     /// run until OP_END received and no return stack
     void run(const Instruction *ip);
-    
-    /// used to run a codeblock or closure - works by doing call() and then run() until exit.
-    /// Will not push the closuretable or return stacks.
-    void runValue(const Value *v);
     
     /// disassemble a named word
     void disasm(const char *name);

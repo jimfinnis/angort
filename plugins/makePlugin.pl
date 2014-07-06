@@ -40,7 +40,7 @@ while(<>){
         print WORDSFILE "$word,";
         print "static void _plugin_$word"."(PluginValue *res,PluginValue *params)\n";
     }elsif(/^%init/){
-        print "static void _plugininit_()\n";
+        print "static void _plugininit_(AngortPluginInterface *interface)\n";
     } else {
         print "$_\n";
     }
@@ -60,8 +60,8 @@ static PluginInfo info = {
     "$listname",_pluginfuncs_
 };
 
-extern "C" PluginInfo *init(){
-    _plugininit_();
+extern "C" PluginInfo *init(AngortPluginInterface *api){
+    _plugininit_(api);
     return &info;
 }
 EOT

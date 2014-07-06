@@ -12,19 +12,20 @@
 #define PV_FLOAT    2
 #define PV_STRING   3
 #define PV_OBJ      4 // subclass of PluginObject
-
 // for PV_LIST and PV_HASH, the data is a linked list of PluginValue.
 // In the hash case, the values come in pairs key->value->key->value.
 // The subvalues will be deleted when the main value is deleted.
-
 #define PV_LIST	    5
 #define PV_HASH	    6
-
 // is a string but will be converted to a symbol in return values
 // (used in hash keys)
 #define PV_SYMBOL   7 
-
 #define PV_NONE     8 // the return value is NONE.
+// here we're passing in an opaque angort value, typically something
+// which we can call using the AngortCaller.
+#define PV_CALLABLE     9
+
+class Value; // fwd declaration of opaque (in plugins) angort value
 
 /// This is the base of a plugin object, which Angort will
 /// handle garbage collection for. Note that
@@ -57,7 +58,8 @@ struct PluginValue {
         float f;
         const char *s;
         PluginObject *obj;
-        PluginValue *head;
+        PluginValue *head; //!< head or list or hash
+        Value *v; //!< opaque value, probably a callable
     }v;
     
     
@@ -95,8 +97,9 @@ struct PluginValue {
         
     
     int getInt(){
-        if(type!=PV_INT)throw "not an int";
-        return v.i;
+        if(type==PV_INT)return v.i;
+        else if(type==PV_FLOAT)return (int)v.f;
+        else throw "not a number";
     }
     void setInt(int i){
         v.i = i;
@@ -127,7 +130,6 @@ struct PluginValue {
     void setNone(){
         type = PV_NONE;
     }
-    
     void setList(){
         type = PV_LIST;
         v.head = NULL;
@@ -186,6 +188,11 @@ struct PluginValue {
         return n/2;
     }
     
+    Value *getCallable(){
+        if(type!=PV_CALLABLE)throw "not a callable";
+        return v.v;
+    }
+          
     
     PluginObject *getObject(){
         if(type!=PV_OBJ)throw "not an object";
@@ -224,9 +231,27 @@ struct PluginInfo {
     PluginFunc *funcs;
 };
 
+/// this defines an object which the plugin can use to
+/// call Angort callables. It's actually the Angort object
+/// itself.
+
+class AngortPluginInterface {
+public:
+    /// takes a value to call, and an optional PluginValue
+    /// to put onto the stack for the Angort callable to pop.
+    /// Memory for this is handled by the plugin, but it
+    /// is safe to delete after the call.
+    void call(const Value *v,PluginValue *p=NULL);
+    /// use this to release callback values when we're finished
+    /// with them or are overwriting them.
+    void releaseCallable(Value *v);
+};
+
 
 /// each plugin exposes a function of this type called "init"
-/// which initialises the plugin and returns the above list
-typedef PluginInfo *(*PluginInitFunc)();
+/// which initialises the plugin and returns the above list.
+/// The argument is an object which allows the plugin to do
+/// certain things inside Angort.
+typedef PluginInfo *(*PluginInitFunc)(AngortPluginInterface *a);
 
 #endif /* __PLUGINS_H */

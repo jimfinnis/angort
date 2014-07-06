@@ -1,4 +1,48 @@
-
-
 "../libs/sdl" library import
 
+:randd rand 100 % 50 - 15.0 /;
+:randc [] 0 3 range each {rand 128 % 128+,};
+
+
+:mkthingy [%
+ `x 0,
+ `y 0,
+ `dx randd,
+ `dy randd,
+ `col randc
+ ]
+;
+
+[] 0 1000 range each {mkthingy,} !Thingies
+
+    
+:moveThingy |t:x,y|
+    ?t?`x ?t?`dx + !x
+    ?x 290 > ?x 0 < or if
+        ?t?`dx neg ?t!`dx
+    then
+    ?t?`y ?t?`dy + !y
+    ?y 290 > ?y 0 < or if
+        ?t?`dy neg ?t!`dy
+    then
+    ?x ?t!`x
+    ?y ?t!`y
+;
+
+:drawThingy |t:|
+    ?t?`col each{i} col
+    ?t?`x ?t?`y 10 10 fillrect
+;
+
+(
+    |x:| "key down " ?x + .
+    ?x 113 = if done then
+) onkeydown
+
+(
+    clear
+    Thingies each {i moveThingy i drawThingy}
+    flip
+) ondraw
+
+300 300 open loop close quit
