@@ -259,14 +259,13 @@
     printf("%s: %s\n",name.get(),s);
 }
 
-%word pkghelp (s --) list all public functions in the given package
+%word listhelp (s --) list and show help for all public functions in the given namespace
 {
     Namespace *s = a->names.getSpaceByName(a->popString().get());
     for(int i=0;i<s->count();i++){
-        const char *spec = NULL;
         NamespaceEnt *e = s->getEnt(i);
         if(!e->isPriv){
-            Value *v = &e->v;
+            const char *spec = e->spec?e->spec:"";
             if(spec)
                 printf("%-20s : %s\n",s->getName(i),spec);
             else

@@ -1198,7 +1198,10 @@ const char *Instruction::getDetails(char *buf,int len) const{
 }
 
 const char *Angort::getSpec(const char *s){
-    return NULL;
+    int idx = names.get(s);
+    if(idx<0)
+        return NULL;
+    return names.getEnt(idx)->spec;
 }
 
 void Angort::list(){

@@ -1,4 +1,5 @@
-"../libs/sdl" library import
+#"../libs/sdl" library import
+`sdl library import
 
 -1 !autogc # turn off major GC
 
@@ -44,7 +45,7 @@ PI 2 * const TWOPI
 
 (
     |x:| "key down " ?x + .
-    ?x 113 = if done then
+    ?x "q" asc = if done then
 ) onkeydown
 
 (

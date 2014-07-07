@@ -217,10 +217,10 @@ typedef void (*PLUGINFUNC)(PluginValue *res,PluginValue *params);
 /// a null name.
 struct PluginFunc {
 public:
-    const char *name;
-    PLUGINFUNC func;
-    int nargs;
-    const char *desc;
+    const char *name; //!< name
+    PLUGINFUNC func; //!< pointer to function
+    int nargs; //!< number of arguments
+    const char *spec; //!< specification string
 };
 
 /// each plugin returns one of these, which has a pointer

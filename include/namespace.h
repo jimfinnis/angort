@@ -89,15 +89,18 @@ struct NamespaceEnt {
         spec=NULL;
     }
     
-    /// set a specification, which will have been allocated elsewhere
+    /// set a specification, which is copied in
     void setSpec(const char *s){
-        spec = s;
+        spec = s?strdup(s):NULL;
     }
     
     void reset(){
         isConst=false;
         isPriv=false;
-        spec=NULL;
+        if(spec){
+            free((void *)spec);
+            spec=NULL;
+        }
         v.clr();
     }
 };
@@ -140,8 +143,10 @@ public:
         e->spec=NULL;
         return i;
     }
+    
+    /// set the specification - a copy is made.
     void setSpec(int idx,const char *spec){
-        getEnt(idx)->spec = spec;
+        getEnt(idx)->setSpec(spec);
     }
     
     Value *getVal(int i){

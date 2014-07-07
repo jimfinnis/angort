@@ -43,6 +43,7 @@ void Angort::plugin(const char *name){
     PluginFunc *f=info->funcs;
     while(f->name){
         int idx = names.addConst(f->name);
+        names.setSpec(idx,f->spec);
         Value *v = names.getVal(idx);
         Types::tPluginFunc->set(v,f);
         f++;
