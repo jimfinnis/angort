@@ -2,15 +2,25 @@
 
 -1 !autogc # turn off major GC
 
-:randd rand 10000 % 5000 - 1500.0 / ;
+:frand # (max -- num) random float
+    rand 50000 % 50000.0 / *;
+
+3.1415927 const PI
+PI 2 * const TWOPI
+
+# return x,y on the stack - a random vector of length len
+:randv |len:| TWOPI frand dup cos ?len * swap sin ? len *;
+
+# random colour
 :randc |:f| (rand 128 % 128+)!f [?f@,?f@,?f@];
 
-:mkthingy |:self| 
+:mkthingy |:self,dx,dy| 
+    2 frand dup* randv !dy !dx
     [% dup!self
-     `x 395,
-     `y 395,
-     `dx randd,
-     `dy randd,
+     `x ?Width 2/,
+     `y ?Height 2/,
+     `dx ?dx,
+     `dy ?dy,
      `col randc,
      `move (|:x,y|
          ?self?`x ?self?`dx + !x
@@ -38,12 +48,14 @@
 ) onkeydown
 
 (
-    scr width 10 - !Width 
-    scr height 10 - !Height
     clear
     ?Thingies each { i?`move@ i?`draw@ }
     flip
 ) ondraw
 
-[] 0 500 range each {mkthingy,} !Thingies
--1 -1  fullscreenopen loop close quit
+-1 -1  fullscreenopen
+scr width 10 - !Width 
+scr height 10 - !Height
+
+[] 0 1500 range each {mkthingy,} !Thingies
+loop close quit
