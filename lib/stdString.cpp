@@ -88,18 +88,20 @@ inline int wstrlen(const char *s){
     int padding = a->popInt();
     Value *v = a->stack.peekptr();
     const StringBuffer &s = v->toString();
-    mbstowcs(buf,s.get(),1024);
+    mbstowcs(buf,s.get(),1023);
     
     int len = wstrlen(s.get());
     if(len>=padding)
         return;
+    if(len<0)
+        return; // invalid length - do nothing
     
     wchar_t *newstr = (wchar_t *)malloc(sizeof(wchar_t)*(padding+1));
     int i;
     for(i=0;i<padding-len;i++)
         newstr[i]=L' ';
     wcscpy(newstr+i,buf);
-    wcstombs(sbuf,newstr,1024);
+    wcstombs(sbuf,newstr,1023);
     
     Types::tString->set(v,sbuf);
     free(newstr);
@@ -109,15 +111,18 @@ inline int wstrlen(const char *s){
 {
     wchar_t buf[1024];
     
+    
     int padding = a->popInt();
     Value *v = a->stack.peekptr();
     const StringBuffer &s = v->toString();
-    mbstowcs(buf,s.get(),1024);
+    mbstowcs(buf,s.get(),1023);
     
     
     int len = wstrlen(s.get());
     if(len>=padding)
         return;
+    if(len<0)
+        return; // invalid length - do nothing
     
     wchar_t *newstr = (wchar_t *)malloc(sizeof(wchar_t)*(padding+1));
     int i;
@@ -125,7 +130,7 @@ inline int wstrlen(const char *s){
     for(i=0;i<padding-len;i++)
         newstr[len+i]=L' ';
     newstr[padding]=0;
-    wcstombs(sbuf,newstr,1024);
+    wcstombs(sbuf,newstr,1023);
     
     Types::tString->set(v,sbuf);
     free(newstr);
@@ -139,14 +144,14 @@ inline int wstrlen(const char *s){
     int maxlen = a->popInt();
     Value *v = a->stack.peekptr();
     const StringBuffer &s = v->toString();
-    mbstowcs(buf,s.get(),1024);
+    int rv = mbstowcs(buf,s.get(),1023);
     
-    if(maxlen>1024 || maxlen<0 || wcslen(buf)<(unsigned int)maxlen)
+    if(rv<0 || maxlen>1024 || maxlen<0 || wcslen(buf)<(unsigned int)maxlen)
         return;
     
     // might not actually be a string.
     buf[maxlen]=0;
-    wcstombs(sbuf,buf,1024);
+    wcstombs(sbuf,buf,1023);
     Types::tString->set(v,sbuf);
 }
 

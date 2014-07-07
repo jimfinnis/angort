@@ -43,10 +43,7 @@ PI 2 * const TWOPI
 ;
 
 
-(
-    |x:| "key down " ?x + .
-    ?x "q" asc = if done then
-) onkeydown
+("q" asc = if done then) onkeydown
 
 (
     clear
@@ -58,5 +55,5 @@ PI 2 * const TWOPI
 scr width 10 - !Width 
 scr height 10 - !Height
 
-[] 0 1500 range each {mkthingy,} !Thingies
+[] 0 3000 range each {mkthingy,} !Thingies
 loop close quit

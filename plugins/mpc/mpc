@@ -275,7 +275,7 @@ global list # force a new definition in this namespace
     
 :h
     :"(--) list all music player public words"
-    "mpcc" pkghelp
+    "mpcc" listhelp
 ;
 
 :getfn 
@@ -347,7 +347,21 @@ global list # force a new definition in this namespace
     then
 ;
     
-
+:listRatios |:f|
+    [] all each {
+        [%
+         `name    i i?`toString@,
+         `ratio   i?`duration 
+                  i getfn io$stat?`size tofloat /
+         ],
+    }
+    dup (|x,y:| ?x?`ratio ?y?`ratio - !x
+        ?x 0 < if -1 else 1 then
+    ) fsort
+    "ratios" "w" io$open !f
+    each {i?`name 50 trunc 50 padright i?`ratio + "\n"+ ?f io$write}
+    0!f
+;
 endpackage import
 
 
