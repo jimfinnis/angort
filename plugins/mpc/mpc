@@ -327,52 +327,6 @@ global list # force a new definition in this namespace
     mpc$list dup (mpcc$sortFunc) fsort clr add
 ;
 
-:qqq |:f,len,ct|
-    "Generate a list of all songs into alist (y/n)? " std$p
-    
-    0 1 none io$readstr slice
-    dup "y" = swap "Y" = or if
-        "alist" "w" io$open !f
-        `artist [%] mpc$tags dup sort
-        dup len !len
-        0!ct
-        each {
-            ?ct tofloat ?len / 100 * toint "\r" + std$p none io$flush
-            ?ct 1+ !ct
-            
-            i "\n" + ?f io$write
-            0 i artist get?`name 48 trunc 50 padleft "\n"+ ?f io$write
-        }
-        0!f
-    then
-;
-
-# stuff for checking file length / duration ratios.
-
-:saveFileLengths |:f|
-    # generate and save a hash of name to length
-    "lengths" "w" io$open !f
-    [%] all each {
-        i i?`toString@
-        i getfn io$stat?`size tofloat,
-    }
-    ?f io$write;
-    
-
-:listRatios |:f,lens,n|
-    "lengths" "r" io$open io$readhash !lens
-    [] all each {
-        [%
-         `name    i i?`toString@ dup!n,
-         `ratio   i?`duration tofloat ?n ?lens get /
-                  
-         ],
-    }
-    dup (|x,y:| ?x?`ratio ?y?`ratio cmp) fsort
-    "ratios" "w" io$open !f
-    each {i?`name 50 trunc 50 padright i?`ratio + "\n"+ ?f io$write}
-    0!f
-;
 endpackage import
 
 
