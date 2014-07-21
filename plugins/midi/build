@@ -1,0 +1,11 @@
+perl ../makePlugin.pl midi.cpp >midi_plugin.cpp
+
+
+g++ -fPIC -O3 -c -Wall `pkg-config rtmidi --cflags` midi_plugin.cpp
+
+g++  -shared -Wl,-soname,midi.angso \
+    -o ../libs/midi.angso \
+    midi_plugin.o\
+    `pkg-config rtmidi --libs`
+    
+
