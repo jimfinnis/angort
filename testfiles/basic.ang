@@ -35,7 +35,7 @@ global s
 global t
 5 !t
 global t
-?t 5 = "multiple global define" assert
+?t isnone "multiple global define" assert
 
 5 !t
 2 !s

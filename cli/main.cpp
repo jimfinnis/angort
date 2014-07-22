@@ -23,6 +23,8 @@ static void showException(Exception& e,Angort& a){
         ip->getDetails(buf,1024);
         printf("Error at %s\n",buf);
     }
+    if(e.fatal)
+        exit(1);
     
     a.clearStack();
 }

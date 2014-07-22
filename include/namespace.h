@@ -125,22 +125,26 @@ public:
     }
     
     int addNonConst(const char *name,bool priv){
-        int i = NamespaceBase<NamespaceEnt>::add(name);
+        int i = get(name);
+        if(i<0)
+            i = NamespaceBase<NamespaceEnt>::add(name);
         NamespaceEnt *e = getEnt(i);
+        e->reset();
         e->isConst=false;
         e->isPriv=priv;
         e->isImported = (isImported && !priv);
-        e->spec=NULL;
         return i;
     }
     
     int addConst(const char *name,bool priv){
-        int i = NamespaceBase<NamespaceEnt>::add(name);
+        int i = get(name);
+        if(i<0)
+            i = NamespaceBase<NamespaceEnt>::add(name);
         NamespaceEnt *e = getEnt(i);
+        e->reset();
         e->isConst=true;
         e->isPriv=priv;
         e->isImported = (isImported && !priv);
-        e->spec=NULL;
         return i;
     }
     
@@ -317,6 +321,7 @@ public:
         return sp->getEnt(idx);
     }
     
+    
     const char *getName(int idx){
         int nsidx = getNamespaceIndex(idx);
         idx = getItemIndex(idx);
@@ -351,6 +356,18 @@ public:
     //
     
     int get(const char *name,bool scanImports=true);
+    
+    /// return true if a name is constant, false if it isn't or is
+    /// not yet defined.
+    bool isConst(const char *name){
+        int idx = get(name);
+        if(idx>=0)
+            return getEnt(idx)->isConst;
+        else
+            return false;
+    }
+        
+    
     
     /// import either all symbols or some symbols from a namespace.
     void import(int nsidx,ArrayList<Value> *lst);

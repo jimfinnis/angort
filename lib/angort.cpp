@@ -547,7 +547,15 @@ void Angort::run(const Instruction *ip){
                     throw SyntaxException("expected package list or package im import");
                 ip++;
                 break;
-                
+            case OP_DEF:{
+                const StringBuffer& sb = popString();
+                if(names.isConst(sb.get()))
+                    throw Exception().set("const %s already set",sb.get());
+                int idx = ip->d.i ? names.addConst(sb.get()):names.add(sb.get());
+                names.getVal(idx)->copy(popval());
+                ip++;
+                break;
+            }
             default:
                 throw RUNT("unknown opcode");
             }
@@ -840,7 +848,7 @@ void Angort::feed(const char *buf){
                     if(tok.getnext()!=T_IDENT)
                         throw SyntaxException("expected an identifier");
                     
-                    if(names.get(tok.getstring())>=0)
+                    if(names.isConst(tok.getstring()))
                         throw Exception().set("const %s already set",tok.getstring());
                     
                     int n = names.addConst(tok.getstring());
@@ -848,6 +856,12 @@ void Angort::feed(const char *buf){
                     // store this const
                     compile(OP_GLOBALSET)->d.i=n;
                 }
+                break;
+            case T_DEF:
+                compile(OP_DEF)->d.i = 0;
+                break;
+            case T_DEFCONST:
+                compile(OP_DEF)->d.i = 1;
                 break;
             case T_COLON:
                 if(isDefining()){
@@ -1084,8 +1098,10 @@ void Angort::feed(const char *buf){
                       .set("expected an identifier, got %s",tok.getstring());
                 
                 // "false" here so we don't look in imported namespaces!
-                if(names.get(tok.getstring(),false)<0)// ignore multiple defines
-                    names.add(tok.getstring());
+                
+                if(names.isConst(tok.getstring()))
+                    throw Exception().set("const %s already set",tok.getstring());
+                names.add(tok.getstring());
                 break;
             case T_OPREN:// open lambda
                 //                printf("Pushing: context is %p, ",context);

@@ -23,7 +23,7 @@ const char *opcodenames[]=
     "litsymb","over","closureget","closureget","dot",
     "iterlvifdone","iterstart","cmp","library",
     "newlist","appendlist", "closelist","loopstart","stop",
-    "hashgetsymb","hashsetsymb","import"
+    "hashgetsymb","hashsetsymb","import","def"
 };
 #endif
     
@@ -94,5 +94,6 @@ const char *opcodenames[]=
 #define OP_HASHGETSYMB 52
 #define OP_HASHSETSYMB 53
 #define OP_IMPORT 54
+#define OP_DEF 55
 
 #endif /* __OPCODES_H */

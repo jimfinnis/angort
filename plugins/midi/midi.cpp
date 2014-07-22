@@ -25,8 +25,16 @@ public:
         out = new RtMidiOut();
     }
     
+    void close(){
+        printf("Closing port\n");
+        if(out)delete out;
+        out=NULL;
+    }
+        
+    
     ~Out(){
-        delete out;
+        if(out)
+            delete out;
     }
 };
 
@@ -48,8 +56,14 @@ public:
     o->out->openPort(n);
 }
 
+%word closeout 1 (port --) wait 0.3s, then close an output port
+{
+    Out *o = (Out *)(params[0].getObject());
+    usleep(300000L); // sleep a tiny bit
+    o->close();
+}
 
-%word getouts 1 (port -- list) get list of ports for an output
+%word getouts 1 (port -- list) get list of possible ports for an output
 {
     res->setList();
     Out *o = (Out *)(params[0].getObject());
@@ -62,21 +76,35 @@ public:
 
 %word on 4 (note vel chan port --)
 {
+    int note = params[0].getInt();
+    int vel = params[1].getInt();
+    int chan = params[2].getInt();
     Out *o = (Out *)(params[3].getObject());
-    std::vector<unsigned char> vec;
-    vec[0]=144 + params[2].getInt();
-    vec[1]=params[0].getInt();
-    vec[2]=params[1].getInt();
+    
+    std::vector<unsigned char> vec(3);
+    vec[0]=144+chan;
+    vec[1]=note;
+    vec[2]=vel;
+    fflush(stdout);
     o->out->sendMessage(&vec);
 }
 
 %word off 3 (note chan port --)
 {
     Out *o = (Out *)(params[2].getObject());
-    std::vector<unsigned char> vec;
+    std::vector<unsigned char> vec(2);
     vec[0]=128 + params[1].getInt();
     vec[1]=params[0].getInt();
+    
+    
     o->out->sendMessage(&vec);
+}
+
+%word delay 1 (float --) wait for a number of seconds
+{
+    float f = params[0].getFloat();
+    f *= 1e6f;
+    usleep((int)f);
 }
 
 %init

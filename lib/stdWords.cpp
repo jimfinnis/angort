@@ -346,7 +346,6 @@ static NamespaceEnt *getNSEnt(Angort *a){
     
 }
 
-
 %word endpackage () mark end of package, only when used within a single script
 {
     a->endPackageInScript();

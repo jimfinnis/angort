@@ -23,6 +23,7 @@ public:
             strncpy(error,e,1024);
         else
             strcpy(error,"???");
+        fatal=false;
     }
     
     /// a variadic fluent modifier to set a better string with sprintf
@@ -55,6 +56,7 @@ public:
     
     /// a copy of the error string
     char error[1024];
+    bool fatal;
 };
 
 #define RUNT(x) RuntimeException(x,__FILE__,__LINE__)
@@ -140,6 +142,7 @@ class AssertException : public Exception {
 public:
     AssertException(const char *desc,int line){
         snprintf(error,1024,"Assertion failed at line %d:  %s",line,desc);
+        fatal=true;
     }
 };
 
