@@ -1,0 +1,38 @@
+
+
+"../libs/midi" library import
+
+makeout !O
+0 ?O openout
+
+# build the note constants. Sorry we can't say "a#1" because the hash
+# is the comment symbol; instead we say "as1".
+
+( |:notes,midi|
+    ["c","cs","d","ds","e","f","fs",
+     "g","gs","a","as","b"] !notes
+    12!midi
+    [0,1,2,3,4,5,6,7] each {
+        ?notes each {
+            ?midi i j + defconst
+            ?midi 1+ !midi
+        }
+    }
+)@ 
+
+:n 
+    0 ?O on;
+
+:o 
+    0 ?O off;
+
+:alloff
+    0 127 range each { i o };
+   
+:r {
+    [a3,c4,e4,a4,d4] each {
+        i 120 n
+        0.5 delay
+        i o
+    }
+};
