@@ -100,13 +100,6 @@ public:
     o->out->sendMessage(&vec);
 }
 
-%word delay 1 (float --) wait for a number of seconds
-{
-    float f = params[0].getFloat();
-    f *= 1e6f;
-    usleep((int)f);
-}
-
 %init
 {
     api = interface;

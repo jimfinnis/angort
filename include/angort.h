@@ -510,6 +510,7 @@ private:
     /// also parallels the return stack, used for closures-during-use
     /// (see closures.ang test cases)
     Stack<GarbageCollected *,32> gcrstack;
+    Stack<Value,32> recstack;
     
     Stack<int,32> cstack;
     Stack<Value,8> loopIterStack; // stack of loop iterators

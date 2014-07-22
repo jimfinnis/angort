@@ -1,0 +1,13 @@
+perl ../makePlugin.pl time.cpp >time_plugin.cpp
+
+
+g++ -fPIC -O3 -c -Wall time_plugin.cpp
+
+g++  -shared \
+    time_plugin.o \
+    -Wl,-soname,time.angso \
+    -o ../libs/time.angso \
+    -Wl,--whole-archive -lrt -Wl,--no-whole-archive
+ 
+    
+

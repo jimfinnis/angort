@@ -65,5 +65,6 @@ public  :   T_PUBLIC
 importall   :   T_IMPORTALL
 def : T_DEF
 defconst : T_DEFCONST
-
+recurse : T_RECURSE
+self : T_SELF
 library :   T_LIBRARY

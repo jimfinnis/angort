@@ -1,5 +1,7 @@
 Not yet documented:
     barewords
+    recurse
+    def defconst
 
 There should be an Angort namespace.
 

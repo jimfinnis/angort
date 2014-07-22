@@ -179,6 +179,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     }
     
     gcrstack.push(toPushOntoGCRStack);
+    recstack.pushptr()->copy(a);
     
     // stack the return ip and return the new one.
     // This might be null, and in that case we ignore it when we pop it.
@@ -220,6 +221,7 @@ const Instruction *Angort::ret()
             if(gc->decRefCt())
                 delete gc;
         }
+        recstack.popptr()->clr();
         closureTable = closureStack.pop();
         //                        printf("CLOSURE SNARK POP\n");
         debugwordbase = ip;
@@ -363,6 +365,14 @@ void Angort::run(const Instruction *ip){
                     // we overwrite it.
                     ip=call(popval(),ip+1); // this JUST CHANGES THE IP AND STACKS STUFF.
                 }
+                break;
+            case OP_SELF:
+                stack.pushptr()->copy(recstack.peekptr());
+                ip++;
+                break;
+            case OP_RECURSE:
+                a = recstack.peekptr();
+                ip=call(a,ip+1);
                 break;
             case OP_END:
             case OP_STOP:
@@ -862,6 +872,12 @@ void Angort::feed(const char *buf){
                 break;
             case T_DEFCONST:
                 compile(OP_DEF)->d.i = 1;
+                break;
+            case T_RECURSE:
+                compile(OP_RECURSE);
+                break;
+            case T_SELF:
+                compile(OP_SELF);
                 break;
             case T_COLON:
                 if(isDefining()){

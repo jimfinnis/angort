@@ -1,6 +1,9 @@
 
 
 "../libs/midi" library import
+"../libs/time" library import
+
+require "queue.ang" import
 
 makeout !O
 0 ?O openout
@@ -28,11 +31,30 @@ makeout !O
 
 :alloff
     0 127 range each { i o };
-   
-:r {
-    [a3,c4,e4,a4,d4] each {
-        i 120 n
-        0.5 delay
-        i o
+
+:mknotelist |notelist,gap:x|
+    "GENERATING.".
+    [] ?notelist each { i!x
+        [ ?gap 0.1*, (?x 100 n)],
+        [ ?gap 0.9*, (?x o)],
     }
-};
+;
+
+:gen |notes,interval:|
+    (?notes ?interval mknotelist self mkqueue) @
+;
+
+[a3,c4,e4,d3] 3 gen
+[a3,f4,e4,c4,e4] 4 gen
+[a5,g5,d5,e4,f4,f5,e5] 5 gen
+
+:loop |:t,t2|
+    now!t
+    {
+        0.01 delay
+        now !t2
+        ?t2 ?t - process
+        ?t2 !t
+    }
+;
+        
