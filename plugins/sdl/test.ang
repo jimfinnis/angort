@@ -8,43 +8,40 @@
 
 3.1415927 const PI
 PI 2 * const TWOPI
-
 # return x,y on the stack - a random vector of length len
 :randv |len:| TWOPI frand dup cos ?len * swap sin ? len *;
-
 # random colour
 :randc |:f| (rand 128 % 128+)!f [?f@,?f@,?f@];
 
-:mkthingy |:self,dx,dy| 
+:mkthingy |:this,dx,dy| 
     2 frand dup* randv !dy !dx
-    [% dup!self
+    [% dup!this
      `x ?Width 2/,
      `y ?Height 2/,
      `dx ?dx,
      `dy ?dy,
      `col randc,
      `move (|:x,y|
-         ?self?`x ?self?`dx + !x
-         ?self?`y ?self?`dy + !y
+         ?this?`x ?this?`dx + !x
+         ?this?`y ?this?`dy + !y
          ?x ?Width > ?x 0 < or if
-             ?self?`dx neg ?self!`dx
+             ?this?`dx neg ?this!`dx
          then
          ?y ?Height > ?y 0 < or if
-             ?self?`dy neg ?self!`dy
+             ?this?`dy neg ?this!`dy
          then
-         ?x ?self!`x
-         ?y ?self!`y
+         ?x ?this!`x
+         ?y ?this!`y
      ),
      `draw (
-         ?self?`col each{i} col
-         ?self?`x ?self?`y 10 10 fillrect
+         ?this?`col each{i} col
+         ?this?`x ?this?`y 10 10 fillrect
      )
      ]
 ;
 
 
 ("q" asc = if done then) onkeydown
-
 (
     clear
     ?Thingies each { i?`move@ i?`draw@ }

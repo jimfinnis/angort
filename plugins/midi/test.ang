@@ -1,7 +1,8 @@
 
 
 "../libs/midi" library import
-"../libs/time" library import
+"time" library import
+"sdl" library drop
 
 require "queue.ang" import
 
@@ -58,3 +59,9 @@ makeout !O
     }
 ;
         
+(dup. "q" asc = if sdl$done then) sdl$onkeydown
+(sdl$clear loop sdl$flip) sdl$ondraw
+    
+300 300 sdl$open
+sdl$loop sdl$close 
+quit

@@ -22,7 +22,8 @@ static void showException(Exception& e,Angort& a){
         char buf[1024];
         ip->getDetails(buf,1024);
         printf("Error at %s\n",buf);
-    }
+    }else
+          printf("Last line input: %s\n",a.getLastLine());
     if(e.fatal)
         exit(1);
     
