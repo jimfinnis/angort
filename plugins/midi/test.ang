@@ -5,7 +5,6 @@
 "sdl" library drop
 
 require "queue.ang" import
-
 makeout !O
 0 ?O openout
 
@@ -24,30 +23,29 @@ makeout !O
     }
 )@ 
 
-:n 
-    0 ?O on;
-
-:o 
-    0 ?O off;
-
 :alloff
-    0 127 range each { i o };
+    0 10 range each {
+        0 127 range each { i j ?O off }
+        0.1 delay
+    };
 
-:mknotelist |notelist,gap:x|
+:mknotelist |chan,notelist,gap:x|
     "GENERATING.".
     [] ?notelist each { i!x
-        [ ?gap 0.1*, (?x 100 n)],
-        [ ?gap 0.9*, (?x o)],
+        [ ?gap 0.01*, (?x 100 ?chan ?O on)],
+        [ ?gap 0.99*, (?x ?chan ?O off)],
     }
 ;
 
-:gen |notes,interval:|
-    (?notes ?interval mknotelist self mkqueue) @
+:gen |chan,notes,interval:|
+    (?chan ?notes ?interval mknotelist self mkqueue) @
 ;
 
-[a3,c4,e4,d3] 3 gen
-[a3,f4,e4,c4,e4] 4 gen
-[a5,g5,d5,e4,f4,f5,e5] 5 gen
+1 [a2,a3,e3,d3,c3,e2,c2,b2] 4 gen
+
+0 [a3,c4,e4,d3] 3 gen
+0 [a3,f4,e4,c4,e4] 4 gen
+0 [a5,g5,d5,e4,f4,f5,e5] 5 gen
 
 now !PrevTime
 :loop |:t,t2|
