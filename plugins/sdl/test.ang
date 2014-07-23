@@ -48,7 +48,7 @@ PI 2 * const TWOPI
     flip
 ) ondraw
 
--1 -1  fullscreenopen
+-1 -1 fullscreenopen
 scr width 10 - !Width 
 scr height 10 - !Height
 

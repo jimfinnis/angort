@@ -49,19 +49,23 @@ makeout !O
 [a3,f4,e4,c4,e4] 4 gen
 [a5,g5,d5,e4,f4,f5,e5] 5 gen
 
+now !PrevTime
 :loop |:t,t2|
     now!t
-    {
-        0.01 delay
-        now !t2
-        ?t2 ?t - process
-        ?t2 !t
-    }
+    ?t ?PrevTime - process
+    ?t !PrevTime
 ;
         
 (dup. "q" asc = if sdl$done then) sdl$onkeydown
 (sdl$clear loop sdl$flip) sdl$ondraw
     
 300 300 sdl$open
-sdl$loop sdl$close 
+
+sdl$loop
+
+alloff
+0.2 delay
+sdl$close 
+?O closeout
+0!O
 quit
