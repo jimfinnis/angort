@@ -1,69 +1,8 @@
 
 
-"../libs/midi" library import
-"time" library import
-"sdl" library drop
+require "makenotes.ang" import
+require "music.ang" import
+include "player.ang"
 
-require "queue.ang" import
-makeout !O
-0 ?O openout
+0   Dorian (70+) map   1 gen
 
-# build the note constants. Sorry we can't say "a#1" because the hash
-# is the comment symbol; instead we say "as1".
-
-( |:notes,midi|
-    ["c","cs","d","ds","e","f","fs",
-     "g","gs","a","as","b"] !notes
-    12!midi
-    [0,1,2,3,4,5,6,7] each {
-        ?notes each {
-            ?midi i j + defconst
-            ?midi 1+ !midi
-        }
-    }
-)@ 
-
-:alloff
-    0 10 range each {
-        0 127 range each { i j ?O off }
-        0.1 delay
-    };
-
-:mknotelist |chan,notelist,gap:x|
-    "GENERATING.".
-    [] ?notelist each { i!x
-        [ ?gap 0.01*, (?x 100 ?chan ?O on)],
-        [ ?gap 0.99*, (?x ?chan ?O off)],
-    }
-;
-
-:gen |chan,notes,interval:|
-    (?chan ?notes ?interval mknotelist self mkqueue) @
-;
-
-1 [a2,a3,e3,d3,c3,e2,c2,b2] 4 gen
-
-0 [a3,c4,e4,d3] 3 gen
-0 [a3,f4,e4,c4,e4] 4 gen
-0 [a5,g5,d5,e4,f4,f5,e5] 5 gen
-
-now !PrevTime
-:loop |:t,t2|
-    now!t
-    ?t ?PrevTime - process
-    ?t !PrevTime
-;
-        
-(dup. "q" asc = if sdl$done then) sdl$onkeydown
-(sdl$clear loop sdl$flip) sdl$ondraw
-    
-300 300 sdl$open
-
-sdl$loop
-
-alloff
-0.2 delay
-sdl$close 
-?O closeout
-0!O
-quit

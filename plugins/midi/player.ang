@@ -1,0 +1,50 @@
+"../libs/midi" library import
+"time" library import
+"sdl" library drop
+require "queue.ang" import
+
+:alloff
+    0 10 range each {
+        0 127 range each { i j ?O off }
+        0.1 delay
+    };
+
+:mknotelist |chan,notelist,gap:x|
+    "GENERATING.".
+    [] ?notelist each { i!x
+        [ ?gap 0.01*, (?x 100 ?chan ?O on)],
+        [ ?gap 0.99*, (?x ?chan ?O off)],
+    }
+;
+
+:gen |chan,notes,interval:|
+    (?chan ?notes ?interval mknotelist self mkqueue) @
+;
+
+
+makeout !O
+0 ?O openout
+alloff
+
+:loop |:t,t2|
+    now!t
+    ?t ?PrevTime - process
+    ?t !PrevTime
+;
+
+:go
+    now !PrevTime
+        
+    (dup. "q" asc = if sdl$done then) sdl$onkeydown
+    (sdl$clear loop sdl$flip) sdl$ondraw
+    
+    300 300 sdl$open
+
+    sdl$loop
+
+    alloff
+    0.2 delay
+    sdl$close 
+    ?O closeout
+    0!O
+;    

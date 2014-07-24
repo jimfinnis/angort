@@ -1,0 +1,85 @@
+package scales
+[0, 2, 4, 5, 7, 9, 11, 12] const NaturalMajor
+[0, 2, 4, 5, 7, 9, 11, 12] const Ionian
+[0, 2, 4, 5, 7, 9, 11, 12] const Major
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] const Chromatic
+[0, 1, 3, 4, 5, 6, 8, 10, 12] const Spanish8Tone
+[0, 1, 3, 4, 5, 7, 8, 10, 12] const Flamenco
+[0, 1, 3, 4, 6, 7, 9, 10, 12] const Symmetrical
+[0, 1, 3, 4, 6, 7, 9, 10, 12] const InvertedDiminished
+[0, 2, 3, 5, 6, 8, 9, 11, 12] const Diminished
+[0, 2, 4, 6, 8, 10, 12] const WholeTone
+[0, 3, 4, 7, 8, 11, 12] const Augmented
+[0, 1, 3, 4, 6, 8, 9, 12] const LocrianUltra
+[0, 1, 3, 4, 6, 8, 10, 12] const LocrianSuper
+[0, 1, 3, 4, 7, 8, 10, 12] const Indian
+[0, 1, 3, 5, 6, 8, 10, 12] const Locrian
+[0, 1, 3, 5, 7, 8, 10, 12] const Phrygian
+[0, 1, 3, 5, 7, 8, 11, 12] const NeapolitanMinor
+[0, 1, 3, 5, 7, 9, 10, 12] const Javanese
+[0, 1, 3, 5, 7, 9, 11, 12] const NeapolitanMajor
+[0, 1, 3, 6, 7, 8, 11, 12] const Todi
+[0, 1, 4, 5, 6, 8, 11, 12] const Persian
+[0, 1, 4, 5, 6, 9, 10, 12] const Oriental
+[0, 1, 4, 5, 7, 8, 10, 12] const PhrygianMajor
+[0, 1, 4, 5, 7, 8, 10, 12] const Spanish
+[0, 1, 4, 5, 7, 8, 10, 12] const Jewish
+[0, 1, 4, 5, 7, 8, 11, 12] const DoubleHarmonic
+[0, 1, 4, 5, 7, 8, 11, 12] const Gypsy
+[0, 1, 4, 5, 7, 8, 11, 12] const Byzantine
+[0, 1, 4, 5, 7, 8, 11, 12] const Chahargah
+[0, 1, 4, 6, 7, 9, 11, 12] const Marva
+[0, 1, 4, 6, 8, 10, 11, 12] const Enigmatic
+[0, 2, 3, 5, 6, 8, 10, 12] const LocrianNatural
+[0, 2, 3, 5, 7, 8, 10, 12] const NaturalMinor
+[0, 2, 3, 5, 7, 8, 10, 12] const Minor
+[0, 2, 3, 5, 7, 9, 11, 12] const MelodicMinor
+[0, 2, 3, 5, 7, 8, 10, 12] const Aeolian
+[0, 2, 3, 5, 7, 8, 10, 12] const Algerian2
+[0, 2, 3, 6, 7, 8, 11, 12] const HungarianMinor
+[0, 2, 3, 6, 7, 8, 11, 12] const Algerian
+[0, 2, 3, 6, 7, 8, 11, 12] const Algerian1
+[0, 2, 3, 5, 7, 8, 11, 12] const HarmonicMinor
+[0, 2, 3, 5, 7, 8, 11, 12] const Mohammedan
+[0, 2, 3, 5, 7, 9, 10, 12] const Dorian
+[0, 2, 3, 6, 7, 8, 11, 12] const HungarianGypsy
+[0, 2, 3, 6, 7, 9, 10, 12] const Romanian
+[0, 2, 4, 5, 6, 8, 10, 12] const LocrianMajor
+[0, 1, 4, 5, 7, 8, 11, 12] const Arabian
+[0, 2, 4, 5, 7, 8, 10, 12] const Hindu
+[0, 2, 4, 5, 7, 8, 11, 12] const Ethiopian
+[0, 2, 4, 5, 7, 9, 10, 12] const Mixolydian
+[0, 2, 4, 5, 8, 9, 10, 12] const MixolydianAugmented
+[0, 2, 4, 5, 8, 9, 11, 12] const HarmonicMajor
+[0, 2, 4, 6, 7, 8, 10, 12] const LydianMinor
+[0, 2, 4, 6, 7, 9, 10, 12] const LydianDominant
+[0, 2, 4, 6, 7, 9, 10, 12] const Overtone
+[0, 2, 4, 6, 7, 9, 11, 12] const Lydian
+[0, 2, 4, 6, 8, 9, 10, 12] const LydianAugmented
+[0, 2, 4, 6, 8, 10, 11, 12] const LeadingWholeTone
+[0, 3, 5, 6, 7, 10, 12] const Blues
+[0, 3, 4, 6, 7, 9, 10, 12] const HungarianMajor
+[0, 1, 3, 6, 8, 12] const Pb
+[0, 1, 3, 7, 8, 12] const Balinese
+[0, 1, 3, 7, 8, 12] const Pe
+[0, 1, 3, 7, 10, 12] const Pelog
+[0, 1, 5, 6, 10, 12] const Iwato
+[0, 1, 5, 7, 8, 12] const Japanese
+[0, 1, 5, 7, 8, 12] const Kumoi
+[0, 2, 3, 7, 8, 12] const Hirajoshi
+[0, 2, 3, 7, 8, 12] const Pa
+[0, 2, 3, 7, 9, 12] const Pd
+[0, 2, 4, 7, 9, 12] const PentatonicMajor
+[0, 2, 4, 7, 9, 12] const Chinese
+[0, 2, 4, 7, 9, 12] const Chinese1
+[0, 2, 4, 7, 9, 12] const Mongolian
+[0, 2, 4, 7, 9, 12] const Pfcg
+[0, 2, 3, 6, 7, 8, 11, 12] const Egyptian
+[0, 3, 5, 7, 10, 12] const PentatonicMinor
+[0, 4, 6, 7, 11, 12] const Chinese2
+[0, 1, 3, 4, 6, 8, 10, 12] const Altered
+[0, 2, 4, 5, 7, 9, 10, 11, 12] const BebopDominant
+[0, 1, 4, 5, 7, 9, 10, 11, 12] const BebopDominantFlatNine
+[0, 2, 4, 5, 7, 8, 9, 11, 12] const BebopMajor
+[0, 2, 3, 5, 7, 8, 9, 10, 12 ] const BebopMinor
+[0, 2, 3, 5, 7, 8, 9, 11, 12 ] const BebopTonicMinor

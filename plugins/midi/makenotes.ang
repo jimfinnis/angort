@@ -1,0 +1,17 @@
+# build the note constants. Sorry we can't say "a#1" because the hash
+# is the comment symbol; instead we say "as1".
+
+# The constants will be created in the "notes" namespace.
+package notes
+
+( |:notes,midi|
+    ["c","cs","d","ds","e","f","fs",
+     "g","gs","a","as","b"] !notes
+    12!midi
+    [0,1,2,3,4,5,6,7] each {
+        ?notes each {
+            ?midi i j + defconst
+            ?midi 1+ !midi
+        }
+    }
+)@ 
