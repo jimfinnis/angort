@@ -3,6 +3,167 @@
 require "makenotes.ang" import
 require "music.ang" import
 include "player.ang"
+:octget |idx,scale:offset|
+    :"(idx scale -- note) get the nth note in a scale, allows out-of-range with octaves"
+    
+    # scales, irritatingly, have the octave note on the end.
+    # Make a copy without it.
+    ?scale clone dup pop drop !scale
+    
+    60 24+
+    !offset # offset to be added for octave
+    {
+        ?idx 0 < not ifleave
+        ?idx ?scale len + !idx
+        ?offset 12 - !offset
+    }
+    {
+        ?idx ?scale len < ifleave
+        ?idx ?scale len - !idx
+        ?offset 12 + !offset
+    }
+    ?idx ?scale get ?offset+
+;
 
-0   Dorian (70+) map   1 gen
+:notetostr |l:|
+    "(" 0 ?l get +
+    "," 1 ?l get + ")"+
+;
 
+:upnote |:note,oct|
+    :"get the next note up in an 8-note scale"
+    each{i} !oct 1+ !note
+    ?note 7 > if
+        0!note ?oct 1+ !oct
+    then
+    [?note,?oct]
+;
+
+:downnote |:note,oct|
+    :"get the next note down in an 8-note scale"
+    each{i} !oct 1- !note
+    ?note 0 < if
+        7!note ?oct 1- !oct
+    then
+    [?note,?oct]
+;
+
+:uptriad |n:|
+    :"get the next triad note in an 8-note scale"
+    {
+        ?n upnote !n
+        0 ?n get
+        [0,2,4]
+        in ifleave
+    }
+    ?n
+;
+
+:downtriad |n:|
+    :"get the previous triad note in an 8-note scale"
+    {
+        ?n downnote !n
+        0 ?n get
+        [0,2,4]
+        in ifleave
+    }
+    ?n
+;
+
+[
+ (uptriad),(downtriad),
+ (uptriad),(downtriad),
+ (upnote),(downnote)
+] !Notefuncs
+
+:randfunc |in,flist:|
+    ?in
+    rand ?flist len % ?flist get call
+;
+    
+ 
+
+:mkmotif |:list,note,t|
+    :"generates a 'motif' - a sequence of notes within an 8-note scale"
+    
+    [] !list
+    
+    # start on the tonic in the middle octave
+    [0,0]
+    0 10 range each {
+        # run a random function on the note, adding
+        # the next one to the list
+        Notefuncs randfunc dup ?list push
+    }
+    drop # drop that final one
+    # now convert note-octave pairs into notes, assuming 8 per octave
+    [] ?list each {
+        i each{i} 8* +,
+    }
+;
+
+:zipWith |a,b,f:|
+    []
+    0 ?a len ?b len < if ?a else ?b then len range each {
+        i ?a get 
+        i ?b get ?f call ,
+};
+
+:zip (|x,y:| [?x, ?y]) zipWith;
+
+
+:mkmeasuredurations |len,speed:t,p|
+    :"(notelist -- pairlist)"
+    # first, generate a list of durations which add up to the
+    # desired length
+    0!t
+    ?speed tofloat !speed
+    []
+    {
+        rand 3 % [0.25,0.5,1] get ?speed / !p
+        ?t ?p + ?len < not ifleave
+        ?p, ?p ?t + !t
+    }
+    !t
+    ?len 0 ?t each{i+} - ?t push
+    ?t
+;
+
+:shownotelist
+    each {
+        i each{i} p " "p .
+    }
+;
+
+:repeatlist |list,n:|
+    [] 0 ?n range each {?list +};
+
+:mapnotes |in,f:|
+    [] ?in each {
+        [0 i get ?f@,
+         1 i get],
+        }
+;
+
+:reverse |a:l| [] !l ?a each {i ?l unshift} ?l;
+    
+    
+:t1
+    mkmotif 2 2.0 mkmeasuredurations zip !A
+    mkmotif 2 2.0 mkmeasuredurations zip !B
+    ?A ?B + ?A +
+;
+
+now 1000 * srand    
+
+t1
+2 repeatlist !T
+?T (Major octget) mapnotes
+?T (Minor octget) mapnotes +
+10 repeatlist
+    
+0 mkplayeventlist
+[5.0,("Dummy".)],
+
+(playqueue) mkqueue playqueue
+go

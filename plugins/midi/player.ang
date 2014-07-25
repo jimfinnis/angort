@@ -9,16 +9,25 @@ require "queue.ang" import
         0.1 delay
     };
 
-:mknotelist |chan,notelist,gap:x|
+:mkplayeventlist |notelist,chan:note,dur|
+    :"([note,dur]pairs -- list) generate event list from notes"
     "GENERATING.".
-    [] ?notelist each { i!x
-        [ ?gap 0.01*, (?x 100 ?chan ?O on)],
-        [ ?gap 0.99*, (?x ?chan ?O off)],
+    [] ?notelist each {
+        0 i get !note
+        1 i get !dur
+        [ ?dur 0.01*, (?note 100 ?chan ?O on)],
+        [ ?dur 0.99*, (?note ?chan ?O off)],
     }
 ;
 
-:gen |chan,notes,interval:|
-    (?chan ?notes ?interval mknotelist self mkqueue) @
+:repeater |notes,chan:|
+    :"enqueue a forever repeating set of notes"
+    (?notes ?chan mkplayeventlist self mkqueue) @
+;
+
+:single |notes,chan:|
+    :"enqueue a non-repeating set of notes"
+    ?notes ?chan mkplayeventlist none mkqueue
 ;
 
 
@@ -26,17 +35,14 @@ makeout !O
 0 ?O openout
 alloff
 
-:loop |:t,t2|
-    now!t
-    ?t ?PrevTime - process
-    ?t !PrevTime
-;
-
 :go
-    now !PrevTime
-        
+
     (dup. "q" asc = if sdl$done then) sdl$onkeydown
-    (sdl$clear loop sdl$flip) sdl$ondraw
+    (
+        sdl$clear
+        process
+        sdl$flip
+    ) sdl$ondraw
     
     300 300 sdl$open
 
@@ -48,3 +54,4 @@ alloff
     ?O closeout
     0!O
 ;    
+

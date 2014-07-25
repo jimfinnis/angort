@@ -239,6 +239,7 @@ Value *onDraw = NULL;
         if(onDraw)
             api->call(onDraw);
     }
+    done = false; // reset the done flag
 }
 
 %word done 0 (--) set the done flag to end the main loop

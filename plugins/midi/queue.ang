@@ -9,56 +9,72 @@ private
 # the main loop
 [] !NewQueues
 
-:processqueue |q,interval:item|
-    :"(q time --) process a queue - takes the queue and the time since last processed"
-    ?q?`nexttime ?interval - dup ?q!`nexttime
-    0 < if
+:processqueue |q:item|
+    :"(q --) process a queue, running any new event"
+    
+    "Waiting for " p ?q?`nexttime.
+    ?q?`nexttime now < if
         # the next item has matured, run it
         ?q?`nextfunc @
         # when the list is not empty, get the next item
         ?q?`queue len 0 != if
             ?q?`queue shift !item
-            0 ?item get ?q!`nexttime
-            "Setting next item time to " ?q?`nexttime +.
+            0 ?item get ?q?`starttime + ?q!`nexttime
             1 ?item get ?q!`nextfunc
         else
             # otherwise mark the list as dead
             -1 ?q!`nexttime 
-            # and call the callback
-            ?q?`cb @
+            # and call the callback with the queue
+            ?q?`cb isnone not if 
+                ?q ?q?`cb @ then
         then
     then
 ;
 
 public
 
-# a queue consists of the queue itself, the next item in
+
+# a queue consists of the event list itself, the next item in
 # the queue, and how much time remains before that item
 # is triggered. A queue item is a tuple of an anonymous function,
 # typically a closure which plays a note or something; and
 # the time after which it should run.
+# The event list consists of time since previous event and code to call.
 
-:mkqueue |list,callback:item|
-    :"(list callback -- ) make a queue and add to system"
+:mkqueue |list,callback:item,t|
+    :"(list callback -- queue) make a queue"
     
-    # first we strip off the first item
+    # first we process the queue, turning all the durations
+    # into times from start
+    0!t
+    ?list clone dup !list each {
+        0 i get ?t + !t
+        ?t 0 i set
+    } 
+    
+    # we strip off the first item
     
     ?list shift !item
     
+    # and make the queue using that first item
     [%
-     `nexttime 0 ?item get,
+     `nexttime 0 ?item get now +,
      `nextfunc 1 ?item get,
      `queue ?list,
      `cb ?callback
      ]
-    
-    ?NewQueues push
 ;
 
-:process |t:|
-    :"(t --) process all queues, given a time interval"
+:playqueue |q:|
+    :"(queue --) add a queue to the system"
+    now ?q!`starttime
+    ?q ?NewQueues push
+;
+
+:process
+    :"(t --) process all queues"
     ?Queues each {
-        i ?t processqueue
+        i processqueue
     }
     # now remove zombies
     ?Queues ( ?`nexttime 0 < not) filter
