@@ -359,8 +359,8 @@ public:
     
     /// return true if a name is constant, false if it isn't or is
     /// not yet defined.
-    bool isConst(const char *name){
-        int idx = get(name);
+    bool isConst(const char *name,bool scanImports=true){
+        int idx = get(name,scanImports);
         if(idx>=0)
             return getEnt(idx)->isConst;
         else

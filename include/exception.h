@@ -118,6 +118,13 @@ public:
     SyntaxException(const char *s) : Exception(s) {}
 };
 
+class AlreadyDefinedException : public Exception {
+public:
+    AlreadyDefinedException(const char *name) : Exception(NULL){
+        set("'%s' is already defined in this namespace");
+    }
+};
+
 class FileNameExpectedException : public SyntaxException {
 public:
     FileNameExpectedException() : 

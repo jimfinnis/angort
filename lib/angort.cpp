@@ -559,8 +559,8 @@ void Angort::run(const Instruction *ip){
                 break;
             case OP_DEF:{
                 const StringBuffer& sb = popString();
-                if(names.isConst(sb.get()))
-                    throw Exception().set("const %s already set",sb.get());
+                if(names.isConst(sb.get(),false))
+                    throw AlreadyDefinedException(sb.get());
                 int idx = ip->d.i ? names.addConst(sb.get()):names.add(sb.get());
                 names.getVal(idx)->copy(popval());
                 ip++;
@@ -858,8 +858,8 @@ void Angort::feed(const char *buf){
                     if(tok.getnext()!=T_IDENT)
                         throw SyntaxException("expected an identifier");
                     
-                    if(names.isConst(tok.getstring()))
-                        throw Exception().set("const %s already set",tok.getstring());
+                    if(names.isConst(tok.getstring(),false))
+                        throw AlreadyDefinedException(tok.getstring());
                     
                     int n = names.addConst(tok.getstring());
                     // we write an instruction to 
@@ -1115,8 +1115,8 @@ void Angort::feed(const char *buf){
                 
                 // "false" here so we don't look in imported namespaces!
                 
-                if(names.isConst(tok.getstring()))
-                    throw Exception().set("const %s already set",tok.getstring());
+                if(names.isConst(tok.getstring(),false))
+                    throw AlreadyDefinedException(tok.getstring());
                 names.add(tok.getstring());
                 break;
             case T_OPREN:// open lambda
