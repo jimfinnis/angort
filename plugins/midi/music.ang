@@ -1,6 +1,0 @@
-
-package music
-
-# Music manipulation, using MIDI numbers not actual notes.
-
-require "scales.ang" import

@@ -1,3 +1,0 @@
-zynaddsubfx -l test.xmz &
-sleep 2
-angort test.ang
