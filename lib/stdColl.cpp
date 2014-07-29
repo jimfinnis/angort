@@ -162,7 +162,14 @@
 %word clone (in -- out) construct a shallow copy of a collection
 {
     Value *v = a->stack.peekptr();
-    v->t->clone(v,v);
+    v->t->clone(v,v,false);
+}
+
+%word deepclone (in -- out) produce a deep copy of a value
+{
+    Value *v = a->stack.peekptr();
+    v->t->clone(v,v,true);
+    
 }
 
 struct StdComparator : public ArrayListComparator<Value> {

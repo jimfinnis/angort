@@ -5,6 +5,11 @@ Not yet documented:
 
 There should be an Angort namespace.
 
+Need to show func names in debugging
+
+multiple requires/library loads need to work
+
+
 Given that there are quite a few singletons (e.g type objects)
 there's no real point in Angort not being a singleton.
 
@@ -19,13 +24,6 @@ Closures:
     
     In upshot, then, there is only one closure created, and it belongs
     to both the children and the outer function.
-
-Namespacing:
-    listing
-    need to find a way of quickly getting a func/prop name from ptr for showop
-    what to do with "modules?" e.g. coll etc..
-    at the moment, we set up separate namespaces. For now, I'm
-    going to read everything into the default "std" space regardless.
 
 How namespaces now work:
     When a namespace is imported, it is both added to the import list

@@ -38,7 +38,7 @@ public:
     virtual int getCount(Value *coll);
     virtual void removeAndReturn(Value *coll,Value *k,Value *result);
     virtual void slice(Value *out,Value *coll,int start,int len);
-    virtual void clone(Value *out,const Value *in);
+    virtual void clone(Value *out,const Value *in,bool deep=false);
 };
 
 

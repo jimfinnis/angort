@@ -48,7 +48,7 @@ public:
     virtual void slice(Value *out,Value *coll,int start,int len){
         throw RUNT("cannot get slice of hash");
     }
-    virtual void clone(Value *out,const Value *in);
+    virtual void clone(Value *out,const Value *in,bool deep=false);
 };
 
     

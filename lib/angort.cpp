@@ -660,7 +660,6 @@ void Angort::compileParamsAndLocals(){
 }
 
 bool Angort::fileFeed(const char *name,bool rethrow){
-    definingPackage=false;
     const char *oldName = tok.getname();
     int oldLN = lineNumber;
     lineNumber=1;
@@ -758,6 +757,7 @@ void Angort::include(const char *filename,bool isreq){
             // A bit dodgy since this isn't taking place in
             // a code block..
             pushInt(idx);
+        definingPackage=false; // and we're no longer in a package
     }
     
     names.setPrivate(false); // and clear the private flag

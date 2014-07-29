@@ -99,7 +99,7 @@ public:
     virtual void decRef(Value *v){
     }
     
-    /// the "default" operator is a value iterator for lists etc,
+    /// the "default" iterator is a value iterator for lists etc,
     /// and a key iterator for hashes.
     virtual Iterator<Value *> *makeIterator(Value *v){
         return makeValueIterator(v);
@@ -142,13 +142,12 @@ public:
         throw RUNT("cannot get slice of non-collection");
     }
     
-    /// generate a shallow copy of the object:
+    /// generate a shallow or deep copy of the object:
     /// default action is to just copy the value; collections
     /// need to do more. Note that in and out may point to
     /// the same Value.
-    virtual void clone(Value *out,const Value *in);
+    virtual void clone(Value *out,const Value *in,bool deep=false);
     
-   
     /// find a type by ID
     static Type *findByID(uint32_t id){
         for(Type *p = head;p;p=p->next)

@@ -79,22 +79,33 @@ bool HashType::isIn(Value *coll,Value *item){
         return false;
 }
 
-void HashType::clone(Value *out,const Value *in){
+void HashType::clone(Value *out,const Value *in,bool deep){
     HashObject *p = new HashObject();
     Hash *h = get(const_cast<Value *>(in));
     
     // cast away constness - makeIterator() can't be const
     // because it modifies refcounts
-    Iterator<Value *> *iter = makeIterator(
-                                           const_cast<Value *>(in));
-    for(iter->first();!iter->isDone();iter->next()){
-        Value *k = iter->current();
+    
+    HashKeyIterator iter(h);
+    for(iter.first();!iter.isDone();iter.next()){
+        Value *k = iter.current();
         Value *v;
         if(h->find(k))
             v = h->getval();
         else
             throw WTF;
-        p->hash->set(k,v);
+        
+        // because collections can't be keys, we only need worry
+        // about the value for deep cloning.
+        
+        if(deep){
+            Value deepv;
+            v->t->clone(&deepv,v);
+            p->hash->set(k,&deepv); // hash will copy the value
+        } else {
+            p->hash->set(k,v);
+        }
+        
  
     }
     

@@ -24,13 +24,11 @@ void Type::createIterator(Value *dest,Value *src){
     Types::tIter->set(dest,src,i);
 }
 
-void Type::clone(Value *out,const Value *in){
+void Type::clone(Value *out,const Value *in,bool deep){
     // default action is to just copy the value; collections
     // need to do more.
     out->copy(in);
 }
-
-
 
 
 
