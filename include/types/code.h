@@ -13,7 +13,7 @@
 class CodeType : public Type { // note, they're not managed memory at all!
 public:
     CodeType(){
-        add("codeblock","CODE");
+        add("codeblock");
     }
     virtual bool isReference(){
         return true;

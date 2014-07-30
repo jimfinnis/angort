@@ -23,7 +23,7 @@ struct HashObject: public GarbageCollected {
 class HashType: public GCType {
 public:
     HashType(){
-        add("hash","HASH");
+        add("hash");
     }
     
     /// get the hash, throwing if it's not one

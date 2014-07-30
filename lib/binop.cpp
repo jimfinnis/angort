@@ -58,7 +58,9 @@ void Angort::binop(Value *a,Value *b,int opcode){
             throw RUNT("invalid operation with a list operand");
         }
         Types::tList->set(pushval(),lo);
-    } else if((at == Types::tString || at == Types::tSymbol) && bt == Types::tInteger && opcode == OP_MUL){
+    } else if((at == Types::tString || at == Types::tSymbol) &&
+              bt == Types::tInteger &&
+              opcode == OP_MUL){
         /**
          * Special case for multiplying a string/symbol by a number
          */
@@ -169,9 +171,9 @@ void Angort::binop(Value *a,Value *b,int opcode){
          */
         switch(opcode){
         case OP_EQUALS:
-            pushInt(a->v.i == (b->v.i?1:0));break;
+            pushInt((a->v.i == b->v.i)?1:0);break;
         case OP_NEQUALS:
-            pushInt(a->v.i != (b->v.i?1:0));break;
+            pushInt((a->v.i != b->v.i)?1:0);break;
         case OP_GT:{
             const StringBuffer& p = a->toString();
             const StringBuffer& q = b->toString();

@@ -14,7 +14,7 @@
 class NoneType : public Type {
 public:
     NoneType(){
-        add("none","NONE");
+        add("none");
     }
     
     virtual int toInt(const Value *v) const {

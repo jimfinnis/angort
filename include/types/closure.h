@@ -13,7 +13,7 @@
 class ClosureType : public GCType {
 public:
     ClosureType(){
-        add("closure","CLOS");
+        add("closure");
     }
     virtual bool isCallable(){
         return true;

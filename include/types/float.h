@@ -17,7 +17,7 @@
 class FloatType : public Type {
 public:
     FloatType(){
-        add("float","FLOT");
+        add("float");
     }
     /// get the value of v as a float
     float get(Value *v);

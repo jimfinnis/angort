@@ -162,6 +162,12 @@
     Types::tInteger->set(s,s->isNone()?1:0);
 }
 
+%word iscallable (val -- bool) return true if is codeblock or closure
+{
+    Value *s = a->stack.peekptr();
+    Types::tInteger->set(s,s->t->isCallable()?1:0);
+}
+
 %word gccount (-- val) return the number of GC objects
 {
     a->pushInt(GarbageCollected::getGlobalCount());
@@ -275,13 +281,10 @@
 }
 
 
-%word type (v --) get the type of the item as a string
+%word type (v -- symb) get the type of the item as a symbol
 {
-    Value *v = a->popval();
-    const char *name = v->t->name;
-    
-    v = a->pushval();
-    Types::tString->set(v,name);
+    Value *v = a->stack.peekptr();
+    Types::tSymbol->set(v,v->t->nameSymb);
 }
 
 %word srand (i --) set the random number generator seed. If -1, use the timestamp.

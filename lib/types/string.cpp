@@ -107,13 +107,11 @@ void StringType::slice(Value *out,Value *coll,int start,int len){
     free(s); // free the buffer
 }
 
-void StringType::clone(Value *out,const Value *in){
+void StringType::clone(Value *out,const Value *in,bool deep){
     const char *s = getData(in);
     // note - will work for UTF-8, because gives memory size,
     // not character count
     int len = strlen(s); 
-    
-    printf("CLONING %s\n",s);
     
     BlockAllocHeader *h = (BlockAllocHeader *)malloc(len+1+sizeof(BlockAllocHeader));
     h->refct=1;

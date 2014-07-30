@@ -1,6 +1,7 @@
 #include "angort.h"
 
-Type *Type::head = NULL;
+Type *Type::head=NULL;
+
 int  GarbageCollected::globalCount=0;
 
 const char *Type::toString(bool *allocated,const Value *v) const{
@@ -29,6 +30,13 @@ void Type::clone(Value *out,const Value *in,bool deep){
     // need to do more.
     out->copy(in);
 }
+
+void Type::add(const char *_name){
+    name = _name;
+    next = head;
+    head = this;
+}
+
 
 
 
@@ -107,7 +115,8 @@ GarbageCollected *GCType::getGC(Value *v){
 
 static NoneType _tNone;
 NoneType *Types::tNone= &_tNone;
-static Type _tDeleted;
+
+static Type _tDeleted; // has to be added by hand in createTypes
 Type *Types::tDeleted= &_tDeleted;
 
 static IntegerType _Int;
@@ -151,15 +160,24 @@ PluginFuncType *Types::tPluginFunc = &_PluginFunc;
 static PluginObjectType _PluginObject;
 PluginObjectType *Types::tPluginObject = &_PluginObject;
 
-
-
 static IteratorType _Iterator;
 IteratorType *Types::tIter = &_Iterator;
 
 
 
 void Types::createTypes(){
-    tNone->add("NONE","NONE");
-    tDeleted->add("DELETED","DELT");
+    tDeleted->add("DELETED");
+    
+    // because of the undefined execution order of static heap
+    // objects, we set up all the type names here rather than in
+    // "add"
+    
+    for(Type *p = Type::head;p;p=p->next){
+        if(SymbolType::exists(p->name))
+            throw Exception().set("type already exists: %s",p->name);
+           
+        p->nameSymb = SymbolType::getSymbol(p->name);
+    }
+    
     
 }

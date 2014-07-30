@@ -13,7 +13,7 @@
 class StringType : public BlockAllocType {
 public:
     StringType() {
-        add("string","STRN");
+        add("string");
     }
     virtual bool isReference(){
         return true;
@@ -44,7 +44,7 @@ public:
     virtual bool equalForHashTable(Value *a,Value *b);
     virtual void slice(Value *out,Value *coll,int start,int len);
     
-    virtual void clone(Value *out,const Value *in);
+    virtual void clone(Value *out,const Value *in,bool deep=false);
 
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const;

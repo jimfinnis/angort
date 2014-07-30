@@ -27,7 +27,7 @@ struct PluginObjectWrapper : public GarbageCollected {
 class PluginObjectType : public GCType {
 public:
     PluginObjectType(){
-        add("pluginobject","PLIO");
+        add("pluginobject");
     }
     
     PluginObjectWrapper *get(const Value *v);

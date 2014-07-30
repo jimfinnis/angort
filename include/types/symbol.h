@@ -14,11 +14,17 @@
 class SymbolType : public Type {
 public:
     SymbolType(){
-        add("symbol","SYMB");
+        add("symbol");
     }
+    
+    /// delete all symbols
+    static void deleteAll();
     
     /// get or create a new symbol
     static int getSymbol(const char *s);
+    
+    /// return false if the symbol does not exist
+    static bool exists(const char *s);
     
     static const char *getString(int id);
     

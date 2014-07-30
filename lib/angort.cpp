@@ -77,6 +77,10 @@ Angort::Angort() {
     context->reset(NULL,&tok);
 }
 
+Angort::~Angort(){
+    Type::clearList();
+    SymbolType::deleteAll();
+}
 
 void Angort::showop(const Instruction *ip,const Instruction *base){
     printf("%8p [%s:%d] : %04d : %s (%d) ",

@@ -764,6 +764,7 @@ public:
     
     
     Angort();
+    ~Angort();
     
     /// just compile a string into a set of instructions
     const Instruction *compile(const char *s);

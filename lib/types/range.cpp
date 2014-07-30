@@ -11,10 +11,10 @@
 #include <math.h>
 
 template<> RangeType<int>::RangeType(){
-    add("range","RANG");
+    add("range");
 }
 template<> RangeType<float>::RangeType(){
-    add("frange","FRNG");
+    add("frange");
 }
 
 template <> void RangeType<float>::set(Value *v, float start,float end,float step){

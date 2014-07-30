@@ -13,7 +13,7 @@
 class IntegerType : public Type {
 public:
     IntegerType(){
-        add("integer","INTG");
+        add("integer");
     }
     /// get the value of v as a int
     int get(Value *v);

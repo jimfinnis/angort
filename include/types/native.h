@@ -15,7 +15,7 @@ struct Property;
 class NativeType : public Type {
 public:
     NativeType(){
-        add("native","NATV");
+        add("native");
     }
     
     virtual bool isCallable(){
@@ -30,7 +30,7 @@ public:
 class PropType : public Type {
 public:
     PropType(){
-        add("natprop","NATP");
+        add("natprop");
     }
     
     Property *get(const Value *v);
@@ -41,7 +41,7 @@ public:
 class PluginFuncType : public Type {
 public:
     PluginFuncType(){
-        add("native","NATV");
+        add("plugin");
     }
     
     virtual bool isCallable(){

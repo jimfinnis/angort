@@ -12,18 +12,16 @@ struct Value;
 /// singletons describing each type's allocation behaviour etc.
 
 class Type {
-    friend class StringBuffer;
-private:
-    /// head of list of types
-    static Type *head; 
-    /// next pointer for type list
-    Type *next;
-    /// and ID
-    uint32_t id;
-
+    friend class Types;
+    
+    static Type *head; //!< head of list of types
+    Type *next; //!< linking field of type list
 public:
     /// a constant name
     const char *name;
+    /// a symbol for the above string - this is what angort stacks
+    /// when the "type" word is called on a value.
+    int nameSymb;
     
     /// convert to a UTF-8 string - if memory was allocated,
     /// the boolean is set.
@@ -49,14 +47,13 @@ public:
     }
           
     
-    /// set the ID and name and add to the type list
-    void add(const char *_name, const char *_id){
-        name = _name;
-        const unsigned char *n = (const unsigned char *)_id;
-        id = n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24);
-        
-        next = head;
-        head = this;
+    /// set name of type, add to global type list
+    void add(const char *_name);
+    
+    /// reset the type list, does not delete anything because
+    /// the type objects are static
+    static void clearList(){
+        head = NULL;
     }
     
     /// dereference a reference value, returning the value to which
@@ -147,15 +144,6 @@ public:
     /// need to do more. Note that in and out may point to
     /// the same Value.
     virtual void clone(Value *out,const Value *in,bool deep=false);
-    
-    /// find a type by ID
-    static Type *findByID(uint32_t id){
-        for(Type *p = head;p;p=p->next)
-            if(p->id == id)
-                return p;
-        return NULL;
-    }
-    
 protected:
     
 };

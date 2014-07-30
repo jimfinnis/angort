@@ -16,16 +16,28 @@ struct SymbolName {
 
 /// symbols have their own private namespace
 static StringMap<int> locations;
-static ArrayList<SymbolName> strings(16);
+static ArrayList<SymbolName> strings(32);
 static int ctr=1;
 
+void SymbolType::deleteAll(){
+    locations.clear();
+    strings.clear();
+}
+
+
 const char *SymbolType::get(const Value *v) const {
-    if(v->t == Types::tSymbol)
+    
+    if(v->t == Types::tSymbol){
         return strings.get(v->v.i)->s;
-    else
+    } else
         throw BadConversionException(v->t->name,name);
           
 }
+
+bool SymbolType::exists(const char *s){
+    return locations.find(s);
+}
+
 
 int SymbolType::getSymbol(const char *s){
     if(strlen(s)>MAXSYMBOLLEN)
