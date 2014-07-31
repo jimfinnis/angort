@@ -13,6 +13,8 @@
 #include <time.h>
 #include <angort/plugins.h>
 
+%plugin time
+
 static AngortPluginInterface *api;
 static timespec progstart;
 
