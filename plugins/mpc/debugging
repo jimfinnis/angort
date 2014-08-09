@@ -58,8 +58,35 @@ all !All # we'll always need the Big List
     0!f
 ;
 
+"duplist" "w" io$open !File
+
+:chkdup |fieldname,compareop:|
+    # note that compareop returns 1 if they are the same.
+    :"Look for duplicates, given a field name and comparison operator"
+    ?All each {
+        ?All each {
+            i?`name j?`name != if
+                ?fieldname i get
+                ?fieldname j get ?compareop@ if
+                    i?`name " = " j?`name "\n" +++ ?File io$write
+                then
+            then
+            
+        }
+    }
+;
 
 :checkSizeDups
-    ?All (`size (=)) chkdup
-;
+    "Checking for duplicates by size..\n" ?File io$write
+    ?All `size (=) chkdup;
     
+
+:checkNameDups
+    "Checking for duplicates by name..\n" ?File io$write
+    ?All `title (mpc$strneareq) chkdup;
+
+
+checkNameDups
+checkSizeDups
+
+0!File

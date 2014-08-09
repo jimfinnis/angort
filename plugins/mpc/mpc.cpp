@@ -413,6 +413,43 @@ error:
         res->setNone();
 }
 
+#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
+
+int levenshtein(const char *s1, const char *s2) {
+    unsigned int x, y, s1len, s2len;
+    s1len = strlen(s1);
+    s2len = strlen(s2);
+    unsigned int matrix[s2len+1][s1len+1];
+    matrix[0][0] = 0;
+    for (x = 1; x <= s2len; x++)
+        matrix[x][0] = matrix[x-1][0] + 1;
+    for (y = 1; y <= s1len; y++)
+        matrix[0][y] = matrix[0][y-1] + 1;
+    for (x = 1; x <= s2len; x++)
+        for (y = 1; y <= s1len; y++)
+            matrix[x][y] = MIN3(matrix[x-1][y] + 1, matrix[x][y-1] + 1,
+                                matrix[x-1][y-1] +
+                                (tolower(s1[y-1]) == tolower(s2[x-1]) ? 0 : 1));
+ 
+    return(matrix[s2len][s1len]);
+}
+
+%word strneareq 2 (a b--bool) compares two strings for near equality
+{
+    const char *a = params[0].getString();
+    const char *b = params[1].getString();
+    
+    int x = levenshtein(a,b);
+    
+    int lena = strlen(a);
+    int lenb = strlen(b);
+    int mn = (lena<lenb)?lena:lenb;
+    
+    float rat = (float)x / (float)mn;
+    
+    res->setInt((rat<0.0001)?1:0);
+} 
+
 %init
 {
     printf("Initialising MPD client plugin, %s %s\n",__DATE__,__TIME__);

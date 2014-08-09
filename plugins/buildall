@@ -1,21 +1,10 @@
 #!/bin/sh
 
+for d in sys "time" mpc sdl midi io
+do
+    echo $d
+    cd $d
+    ./build
+    cd ..
+done
 
-cd io
-./build
-cd ..
-
-
-# These won't work if you don't have the appropriate libraries
-# (libmpdclient and libtaglib)
-
-cd mpc
-./buildmpc
-./buildid3
-cd ..
-
-# and these won't work if you don't have SDL installed
-
-cd sdl
-./build
-cd ..

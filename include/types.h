@@ -233,7 +233,6 @@ struct Types {
     static NoneType *tNone;
     /// the type object for deleted hash keys
     static Type *tDeleted;
-    /// not a real type; d.fixup gives the ID of a datum in the fixup table;
     
     /// the d.i value gives the integer value
     static IntegerType *tInteger;

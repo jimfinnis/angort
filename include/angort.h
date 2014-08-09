@@ -112,7 +112,6 @@ struct Instruction {
             int l; //!< how many locals in total
             int p; //!< how many of those are params to pop
         } locals;
-        uint32_t fixup; //!< ID of a saved fixup block
     }d;
 };
 
