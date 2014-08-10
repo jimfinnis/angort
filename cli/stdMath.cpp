@@ -11,7 +11,6 @@
 
 %name stdmath
 
-
 %word cos (x -- cos x)
 {
     FN(cosf);
@@ -51,4 +50,11 @@
     float y = a->popFloat();
     float x = a->popFloat();
     a->pushFloat(powf(x,y));
+}
+
+%word fmod (x y -- fmod(x,y))
+{
+    float y = a->popFloat();
+    float x = a->popFloat();
+    a->pushFloat(fmodf(x,y));
 }
