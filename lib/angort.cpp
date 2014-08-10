@@ -6,7 +6,7 @@
  * @date $Date$
  */
 
-#define ANGORT_VERSION 227
+#define ANGORT_VERSION 228
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -22,9 +22,8 @@
 #include "tokens.h"
 #include "hash.h"
 
-WORDS(coll);WORDS(string);
-
-
+extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std);
+    
 namespace angort {
 
 int Angort::getVersion(){
@@ -55,9 +54,9 @@ Angort::Angort() {
     
     extern void initStdPackage(Angort *a);
     
-    REGWORDS((*this),coll);
-    REGWORDS((*this),string);
-    initStdPackage(this);
+    registerLibrary(&LIBNAME(std)); // already imported by default.
+    registerLibrary(&LIBNAME(coll),true);
+    registerLibrary(&LIBNAME(string),true);
     
     // now the standard package has been imported, set up the
     // user package into which their words are defined.
@@ -1248,22 +1247,35 @@ void Angort::list(){
 }
 
 
-void Angort::registerFunc(const char *name,NativeFunc f,const char *ns,const char *spec){
-    //    Namespace *sp = names.getSpaceByName(ns?ns:"default",true);
-    Namespace *sp = names.getSpaceByIdx(stdNamespace);
-    int i = sp->addConst(name,false);
-    sp->setSpec(i,spec);
-    Value *v = sp->getVal(i);
-    Types::tNative->set(v,f);
-}
-
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
-    //    Namespace *sp = names.getSpaceByName(ns?ns:"default",true);
-    Namespace *sp = names.getSpaceByIdx(stdNamespace);
+    Namespace *sp = names.getSpaceByName(ns?ns:"default",true);
     int i = sp->addConst(name,false);
     sp->setSpec(i,spec);
     Value *v = sp->getVal(i);
     Types::tProp->set(v,p);
+}
+
+int Angort::registerLibrary(LibraryDef *lib,bool import){
+    // make the namespace. Multiple imports into the same one
+    // are permitted.
+    Namespace *sp = names.getSpaceByName(lib->name,true);
+    for(int i=0;;i++){
+        if(!lib->wordList[i].name)break;
+        int id = sp->addConst(lib->wordList[i].name,false);
+        Value *v = sp->getVal(id);
+        Types::tNative->set(v,lib->wordList[i].f);
+        sp->setSpec(id,lib->wordList[i].desc);
+    }
+    
+    if(lib->initfunc){
+        (*lib->initfunc)(this);
+    }
+    
+    if(import)
+        names.import(sp->idx,NULL);
+    
+    return sp->idx;
+    
 }
 
 

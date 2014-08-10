@@ -10,6 +10,38 @@
 
 using namespace angort;
 
+namespace angort {
+struct RevStdComparator : public ArrayListComparator<Value> {
+    Angort *ang;
+    RevStdComparator(Angort *a){
+        ang = a;
+    }
+    virtual int compare(const Value *a, const Value *b){
+        // binop isn't const, sadly.
+        ang->binop(const_cast<Value *>(b),
+                   const_cast<Value *>(a),OP_CMP);
+        return ang->popInt();
+    }
+};
+
+struct FuncComparator : public ArrayListComparator<Value> {
+    Value *func;
+    Angort *ang;
+    
+    FuncComparator(Angort *a,Value *f){
+        ang = a;
+        func = f;
+    }
+    virtual int compare(const Value *a, const Value *b){
+        ang->pushval()->copy(a);
+        ang->pushval()->copy(b);
+        ang->runValue(func);
+        return ang->popInt();
+    }
+};
+
+}
+
 %name coll
 
 %word dumplist (list --) Dump a list
@@ -196,38 +228,6 @@ struct StdComparator : public ArrayListComparator<Value> {
     
     StdComparator cmp(a);
     list->sort(&cmp);
-}
-
-namespace angort {
-struct RevStdComparator : public ArrayListComparator<Value> {
-    Angort *ang;
-    RevStdComparator(Angort *a){
-        ang = a;
-    }
-    virtual int compare(const Value *a, const Value *b){
-        // binop isn't const, sadly.
-        ang->binop(const_cast<Value *>(b),
-                   const_cast<Value *>(a),OP_CMP);
-        return ang->popInt();
-    }
-};
-
-struct FuncComparator : public ArrayListComparator<Value> {
-    Value *func;
-    Angort *ang;
-    
-    FuncComparator(Angort *a,Value *f){
-        ang = a;
-        func = f;
-    }
-    virtual int compare(const Value *a, const Value *b){
-        ang->pushval()->copy(a);
-        ang->pushval()->copy(b);
-        ang->runValue(func);
-        return ang->popInt();
-    }
-};
-
 }
 
 %word rsort (in --) reverse sort a list in place using default comparator

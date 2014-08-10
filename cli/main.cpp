@@ -15,8 +15,6 @@
 
 using namespace angort;
 
-WORDS(stdmath)
-
 static void showException(Exception& e,Angort& a){
     printf("Error: %s\n",e.what());
     const Instruction *ip = a.getIPException();
@@ -34,10 +32,12 @@ static void showException(Exception& e,Angort& a){
 
 int main(int argc,char *argv[]){
     Angort a;
-    REGWORDS(a,stdmath);
+    
+    extern LibraryDef LIBNAME(stdmath);
     
     // first, we'll try to include the standard startup
     try {
+        a.registerLibrary(&LIBNAME(stdmath),true);
         a.include("angortrc",false);
     } catch(FileNotFoundException e){
         // ignore if not there

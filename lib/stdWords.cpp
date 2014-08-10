@@ -12,6 +12,63 @@
 
 using namespace angort;
 
+
+namespace angort {
+
+/// define a property to set and get the auto cycle detection interval.
+/// It will be called "autogc".
+
+class AutoGCProperty: public Property {
+private:
+    Angort *a;
+public:
+    AutoGCProperty(Angort *_a){
+        a = _a;
+    }
+    
+    virtual void postSet(){
+        a->autoCycleInterval = v.toInt();
+        a->autoCycleCount = a->autoCycleInterval;
+    }
+    
+    virtual void preGet(){
+        Types::tInteger->set(&v,a->autoCycleInterval);
+    }
+};
+
+/// a property to get and set the library search path,
+/// called "searchpath".
+class SearchPathProperty : public Property {
+private:
+    Angort *a;
+public:
+    SearchPathProperty(Angort *_a){
+        a = _a;
+    }
+    
+    virtual void postSet(){
+        if(a->searchPath)
+            free((void *)a->searchPath);
+        a->searchPath = strdup(v.toString().get());
+    }
+    
+    virtual void preGet(){
+        Types::tString->set(&v,
+                            a->searchPath ? a->searchPath:DEFAULTSEARCHPATH);
+    }
+};
+
+static NamespaceEnt *getNSEnt(Angort *a){
+    const StringBuffer &s = a->popString();
+    Namespace *ns = a->names.getSpaceByIdx(a->popInt());
+    
+    int idx = ns->get(s.get());
+    if(idx<0)
+        throw RUNT("ispriv: cannot find name in namespace");
+    return ns->getEnt(idx);
+}
+}// end namespace
+
 %name std
 
 
@@ -328,17 +385,6 @@ using namespace angort;
     
 }
 
-namespace angort {
-static NamespaceEnt *getNSEnt(Angort *a){
-    const StringBuffer &s = a->popString();
-    Namespace *ns = a->names.getSpaceByIdx(a->popInt());
-    
-    int idx = ns->get(s.get());
-    if(idx<0)
-        throw RUNT("ispriv: cannot find name in namespace");
-    return ns->getEnt(idx);
-}
-}
 
 %word ispriv (handle name -- bool) return true if the definition is private in the namespace
 {
@@ -358,68 +404,10 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->endPackageInScript();
 }
 
-WORDS(std); // defined in the standard namespace!
-
-// but we need to define the other stuff in the angort namespace
-// so it can access private data
-
-namespace angort {
-
-/// define a property to set and get the auto cycle detection interval.
-/// It will be called "autogc".
-
-class AutoGCProperty: public Property {
-private:
-    Angort *a;
-public:
-    AutoGCProperty(Angort *_a){
-        a = _a;
-    }
-    
-    virtual void postSet(){
-        a->autoCycleInterval = v.toInt();
-        a->autoCycleCount = a->autoCycleInterval;
-    }
-    
-    virtual void preGet(){
-        Types::tInteger->set(&v,a->autoCycleInterval);
-    }
-};
-
-/// a property to get and set the library search path,
-/// called "searchpath".
-class SearchPathProperty : public Property {
-private:
-    Angort *a;
-public:
-    SearchPathProperty(Angort *_a){
-        a = _a;
-    }
-    
-    virtual void postSet(){
-        if(a->searchPath)
-            free((void *)a->searchPath);
-        a->searchPath = strdup(v.toString().get());
-    }
-    
-    virtual void preGet(){
-        Types::tString->set(&v,
-                            a->searchPath ? a->searchPath:DEFAULTSEARCHPATH);
-    }
-};
-
-/// this is called directly to register word, and also any other
-/// things - such as properties
-
-void initStdPackage(Angort *a)
+%shared
+%init
 {
-    REGWORDS(*a,std);
-    
     a->registerProperty("autogc",new angort::AutoGCProperty(a));
     a->registerProperty("searchpath",new angort::SearchPathProperty(a));
 }
     
-
-
-}
-

@@ -9,8 +9,6 @@
 
 using namespace angort;
 
-%name string
-
 namespace angort {
 static char sbuf[1024];
 void format(Value *out,Value *formatVal,ArrayList<Value> *items);
@@ -20,6 +18,8 @@ inline int wstrlen(const char *s){
 }
 
 }
+
+%name string
 
 %word stridx (haystack needle -- int) return index if h contains n, else none
 {
