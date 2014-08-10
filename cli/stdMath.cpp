@@ -1,6 +1,7 @@
 #include <math.h>
 #include "angort.h"
 
+using namespace angort;
 /*
  * Mappings for (some) standard maths library functions
  */

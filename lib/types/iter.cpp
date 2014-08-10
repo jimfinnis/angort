@@ -8,6 +8,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 IteratorObject::IteratorObject(Iterator<Value *> *iter, Value *src) {
     iterator = iter;
     iterable = new Value;
@@ -32,4 +34,7 @@ void IteratorType::set(Value *v,Value *src,Iterator<Value *> *iter){
 Iterator<Value *> *IteratorType::get(Value *v){
     IteratorObject *i = (IteratorObject *)v->v.gc;
     return i->iterator;
+}
+
+
 }

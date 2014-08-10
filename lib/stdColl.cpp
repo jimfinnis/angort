@@ -8,6 +8,8 @@
 #include "hash.h"
 #include "opcodes.h"
 
+using namespace angort;
+
 %name coll
 
 %word dumplist (list --) Dump a list
@@ -196,6 +198,7 @@ struct StdComparator : public ArrayListComparator<Value> {
     list->sort(&cmp);
 }
 
+namespace angort {
 struct RevStdComparator : public ArrayListComparator<Value> {
     Angort *ang;
     RevStdComparator(Angort *a){
@@ -208,17 +211,6 @@ struct RevStdComparator : public ArrayListComparator<Value> {
         return ang->popInt();
     }
 };
-
-%word rsort (in --) reverse sort a list in place using default comparator
-{
-    Value listv;
-    // need copy because comparators use the stack
-    listv.copy(a->popval());
-    ArrayList<Value> *list = Types::tList->get(&listv);
-    
-    RevStdComparator cmp(a);
-    list->sort(&cmp);
-}
 
 struct FuncComparator : public ArrayListComparator<Value> {
     Value *func;
@@ -235,6 +227,20 @@ struct FuncComparator : public ArrayListComparator<Value> {
         return ang->popInt();
     }
 };
+
+}
+
+%word rsort (in --) reverse sort a list in place using default comparator
+{
+    Value listv;
+    // need copy because comparators use the stack
+    listv.copy(a->popval());
+    ArrayList<Value> *list = Types::tList->get(&listv);
+    
+    RevStdComparator cmp(a);
+    list->sort(&cmp);
+}
+
 
 %word fsort (in func --) sort a list in place using function comparator
 {

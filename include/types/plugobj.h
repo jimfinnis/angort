@@ -9,6 +9,8 @@
 
 #include "plugins.h"
 
+namespace angort {
+
 struct PluginObjectWrapper : public GarbageCollected {
     /// to be deleted when I am deleted
     PluginObject *obj;
@@ -35,5 +37,5 @@ public:
     
 };
 
-
+}
 #endif /* __PLUGOBJ_H */

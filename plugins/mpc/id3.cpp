@@ -14,6 +14,8 @@
 
 #include <angort/plugins.h>
 
+using namespace angort;
+
 %plugin id3
 
 inline void setStr(PluginValue *hash,const char *name,TagLib::String s){

@@ -11,6 +11,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 template <class T> struct Range : public GarbageCollected {
     T start,end,step;
     virtual Iterator<class Value *> *makeValueIterator();
@@ -35,4 +37,5 @@ public:
     virtual bool equalForHashTable(Value *a,Value *b);
 };
 
+}
 #endif /* __RANGE_H */

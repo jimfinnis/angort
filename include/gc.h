@@ -9,6 +9,8 @@
 #ifndef __GC_H
 #define __GC_H
 
+namespace angort {
+
 struct Value;
 
 //#define dprintf printf
@@ -97,5 +99,5 @@ public:
     static void gc();
 };
 
-
+}
 #endif /* __GC_H */

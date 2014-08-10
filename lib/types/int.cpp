@@ -8,6 +8,9 @@
 
 
 #include "angort.h"
+
+namespace angort {
+
     
 
 int IntegerType::get(Value *v){
@@ -53,3 +56,4 @@ bool IntegerType::equalForHashTable(Value *a,Value *b){
 }
 
 
+}

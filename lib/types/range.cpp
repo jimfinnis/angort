@@ -10,6 +10,8 @@
 
 #include <math.h>
 
+namespace angort {
+
 template<> RangeType<int>::RangeType(){
     add("range");
 }
@@ -160,3 +162,4 @@ template<> bool RangeType<float>::isIn(Value *v,Value *item){
     throw RUNT("cannot determine membership of float range");
 }
 
+}

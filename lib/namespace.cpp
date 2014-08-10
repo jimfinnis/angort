@@ -5,6 +5,7 @@
  */
 #include "angort.h"
 
+namespace angort {
 
 void Namespace::list(){
     locations.listKeys();
@@ -89,3 +90,4 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
     }
 }
 
+}

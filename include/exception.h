@@ -16,6 +16,8 @@
 #include <stdarg.h>
 #include <exception>
 
+namespace angort {
+
 class Exception : public std::exception {
 public:
     Exception(const char *e){
@@ -153,6 +155,6 @@ public:
     }
 };
 
-
+}
 
 #endif /* __EXCEPTION_H */

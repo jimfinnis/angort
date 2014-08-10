@@ -9,6 +9,8 @@
 #ifndef __SYMBOL_H
 #define __SYMBOL_H
 
+namespace angort {
+
 /// symbol (i.e. string identified by ID) type
 
 class SymbolType : public Type {
@@ -43,5 +45,5 @@ protected:
     virtual const char *toString(bool *allocated,const Value *v) const;
 };
 
-
+}
 #endif /* __SYMBOL_H */

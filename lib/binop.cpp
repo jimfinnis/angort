@@ -7,6 +7,8 @@
 #include "angort.h"
 #include "opcodes.h"
 
+namespace angort {
+
 /// append to a list. If the element to add is itself a list,
 /// split it apart and and the items individually.
 
@@ -263,4 +265,5 @@ void Angort::binop(Value *a,Value *b,int opcode){
         pushInt(r);
     }
     
+}
 }

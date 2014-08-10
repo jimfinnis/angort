@@ -24,6 +24,9 @@
 
 WORDS(coll);WORDS(string);
 
+
+namespace angort {
+
 int Angort::getVersion(){
     return ANGORT_VERSION;
 }
@@ -1282,3 +1285,4 @@ template<> void ArrayList<Value>::sort(ArrayListComparator<Value> *cmp){
     qsort(data,ct,sizeof(Value),arrayCmp);
 }
 
+}

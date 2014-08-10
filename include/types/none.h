@@ -9,6 +9,8 @@
 #ifndef __NONE_H
 #define __NONE_H
 
+namespace angort {
+
 /// The special 'none' type
 
 class NoneType : public Type {
@@ -27,6 +29,6 @@ protected:
     }
 };
 
-
+}
 
 #endif /* __NONE_H */

@@ -9,6 +9,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 
 float FloatType::get(Value *v){
     if(v->t == Types::tInteger)
@@ -50,4 +52,8 @@ uint32_t FloatType::getHash(Value *v){
 
 bool FloatType::equalForHashTable(Value *a,Value *b){
     return a->toFloat() == b->toFloat();
+}
+
+
+
 }

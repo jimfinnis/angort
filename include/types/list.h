@@ -9,6 +9,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 struct ListObject : public GarbageCollected {
     ArrayList<Value> list;
     virtual Iterator<class Value *> *makeValueIterator();
@@ -41,5 +43,5 @@ public:
     virtual void clone(Value *out,const Value *in,bool deep=false);
 };
 
-
+}
 #endif /* __LIST_H */

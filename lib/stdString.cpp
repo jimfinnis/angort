@@ -7,12 +7,18 @@
 #include "angort.h"
 #include <wchar.h>
 
+using namespace angort;
+
 %name string
 
+namespace angort {
 static char sbuf[1024];
+void format(Value *out,Value *formatVal,ArrayList<Value> *items);
 
 inline int wstrlen(const char *s){
     return mbstowcs(NULL,s,0);
+}
+
 }
 
 %word stridx (haystack needle -- int) return index if h contains n, else none
@@ -71,7 +77,6 @@ inline int wstrlen(const char *s){
 
 %word format (list string -- string) string formatting
 {
-    void format(Value *out,Value *formatVal,ArrayList<Value> *items);
     
     Value *f = a->popval();
     Value *l = a->popval();

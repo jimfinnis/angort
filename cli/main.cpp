@@ -13,6 +13,8 @@
 
 #include "angort.h"
 
+using namespace angort;
+
 WORDS(stdmath)
 
 static void showException(Exception& e,Angort& a){

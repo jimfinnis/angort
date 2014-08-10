@@ -1,6 +1,7 @@
 #ifndef __ITERATOR_H
 #define __ITERATOR_H
 
+namespace angort {
 /// the base iterator interface, providing the type-invariant first(), next() and isDone() method definitions -
 /// See \ref iters for more details.
 
@@ -47,5 +48,5 @@ private:
     Iterator<T> *_i;
 };
 
-
+}
 #endif /* __ITERATOR_H */

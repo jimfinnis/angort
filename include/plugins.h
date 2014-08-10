@@ -25,6 +25,8 @@
 // which we can call using the AngortCaller.
 #define PV_CALLABLE     9
 
+namespace angort {
+
 class Value; // fwd declaration of opaque (in plugins) angort value
 
 /// This is the base of a plugin object, which Angort will
@@ -254,4 +256,5 @@ public:
 /// certain things inside Angort.
 typedef PluginInfo *(*PluginInitFunc)(AngortPluginInterface *a);
 
+}
 #endif /* __PLUGINS_H */

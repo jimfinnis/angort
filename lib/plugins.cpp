@@ -10,6 +10,8 @@
 #ifdef LINUX
 #include <dlfcn.h>
 
+namespace angort {
+
 void Angort::plugin(const char *name){
     char *err;
     const char *path;
@@ -233,3 +235,5 @@ void AngortPluginInterface::call(const class Value *v,PluginValue *pv){
 void AngortPluginInterface::releaseCallable(Value *v){
 }
 #endif
+
+}

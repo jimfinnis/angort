@@ -9,6 +9,8 @@
 #include "angort.h"
 #include <wchar.h>
 
+namespace angort {
+
 void StringType::set(Value *v,const char *s){
     int len = strlen(s);
     strcpy(allocate(v,len+1,this),s);
@@ -120,4 +122,7 @@ void StringType::clone(Value *out,const Value *in,bool deep){
     out->v.block = h;
     out->t = this;
     
+}
+
+
 }

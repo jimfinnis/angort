@@ -12,6 +12,8 @@
 #include "types.h"
 #include "plugins.h"
 
+namespace angort {
+
 /// all Angort values are instances of these --- the type of a value is
 /// determined by the t field, and the TypeData structure pointer. 
 /// Why not just have a hierarchy of Value types, with a VFT defining
@@ -175,5 +177,6 @@ private:
     }
 };
 
+}
 
 #endif /* __VALUE_H */

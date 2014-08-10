@@ -9,6 +9,8 @@
 
 #include <wchar.h>
 
+namespace angort {
+
 /// This wraps a string value converted from a Value. It may or
 /// may not allocate a buffer, which will be freed when the value
 /// deletes.
@@ -60,5 +62,6 @@ public:
     }
 };
 
+}
 
 #endif /* __STRINGBUF_H */

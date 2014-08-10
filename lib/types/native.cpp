@@ -7,6 +7,9 @@
 
 #include "angort.h"
 
+namespace angort {
+
+
 NativeFunc NativeType::get(const Value *v) {
     if(v->t == this)
         return v->v.native;
@@ -48,3 +51,4 @@ void PluginFuncType::set(Value *v,PluginFunc *f) {
     v->t = this;
 }
     
+}

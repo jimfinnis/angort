@@ -7,6 +7,8 @@
 #include "angort.h"
 #include "cycle.h"
 
+
+namespace angort {
 CycleDetector *CycleDetector::instance = NULL;
 
 //#define dprintf printf
@@ -171,3 +173,4 @@ void GarbageCollected::gc(){
 }
     
     
+}

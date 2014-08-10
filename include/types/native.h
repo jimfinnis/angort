@@ -8,6 +8,9 @@
 #define __NATIVE_H
 
 #include "plugins.h"
+
+namespace angort {
+
 struct Property;
 
 
@@ -51,4 +54,5 @@ public:
     void set(Value *v,PluginFunc *f);
 };
 
+}
 #endif /* __NATIVE_H */

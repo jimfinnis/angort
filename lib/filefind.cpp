@@ -12,6 +12,8 @@
 #include <unistd.h>
 #endif
 
+namespace angort {
+
 const char *Angort::findFile(const char *name){
     char path[2048];
     const char *p = searchPath?searchPath:DEFAULTSEARCHPATH;
@@ -63,3 +65,4 @@ const char *Angort::findFile(const char *name){
     return NULL;
 }
 
+}

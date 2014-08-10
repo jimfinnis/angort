@@ -2,6 +2,7 @@ Not yet documented:
     barewords
     recurse
     def defconst
+    closure iterators - WTF?
 
 There should be an Angort namespace.
 

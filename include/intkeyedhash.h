@@ -18,6 +18,7 @@
 #include <string.h>
 #include <new>
 
+namespace angort {
 
 // 5 in original
 #define PERTURB_SHIFT 5
@@ -258,5 +259,5 @@ public:
     }
 };
 
-    
+}    
 #endif /* __INTKEYEDHASH_H */

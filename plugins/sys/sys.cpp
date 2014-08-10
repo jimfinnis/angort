@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <angort/plugins.h>
 
+using namespace angort;
+
 %word sleep 1 (time --) sleep for some time
 {
     float t = params[0].getFloat();

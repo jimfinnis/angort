@@ -11,6 +11,8 @@
 
 #include "../types.h"
 
+namespace angort {
+
 /// floating point type object, permitting
 /// conversions
 
@@ -36,4 +38,5 @@ protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;
 };
 
+}
 #endif /* __FLOAT_H */

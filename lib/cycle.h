@@ -12,6 +12,8 @@
 
 /// doubly-linked list of GarbageCollected objects
 
+namespace angort {
+
 class GCList {
     friend class GarbageCollected;
 public:
@@ -215,5 +217,5 @@ private:
     void clearZombieReferencesIterator(GarbageCollected *gc,bool iskey);
 };
     
-
+}
 #endif /* __CYCLE_H */

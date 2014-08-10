@@ -8,6 +8,8 @@
 #include "angort.h"
 #include "cycle.h"
 
+using namespace angort;
+
 
 Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
     if(c)

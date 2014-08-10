@@ -6,6 +6,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 PluginObjectWrapper *PluginObjectType::get(const Value *v){
     if(v->t == this)
         return v->v.plobj;
@@ -18,4 +20,7 @@ void PluginObjectType::set(Value *v,PluginObjectWrapper *obj){
     v->v.plobj=obj;
     incRef(v);
     v->t=this;
+}
+
+
 }
