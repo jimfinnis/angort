@@ -10,6 +10,9 @@
 #define __OPCODES_H
 
 #if DEFOPCODENAMES
+
+namespace angort {
+
 const char *opcodenames[]=
 { "?","end","litint","litfloat",
     "func","globaldo","mod","localget",
@@ -25,6 +28,8 @@ const char *opcodenames[]=
     "newlist","appendlist", "closelist","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse","self"
 };
+
+}
 #endif
     
 #define OP_INVALID 0

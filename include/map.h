@@ -11,6 +11,8 @@
 
 #include "iterator.h"
 
+namespace angort {
+
 /// can't be bothered to write a proper string->item dictionary 
 /// for this project, so this is just a linked list.
 
@@ -173,5 +175,5 @@ template<class T> void StringMap<T>::listKeys(){
     if(lengthSoFar>0)puts("");
 }
 
-
+}
 #endif /* __MAP_H */

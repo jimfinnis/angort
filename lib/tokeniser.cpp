@@ -6,6 +6,8 @@
 
 #include "tokeniser.h"
 
+namespace angort {
+
 void Tokeniser::dprintf(const char *s,...)
 {
     if(trace)
@@ -350,3 +352,4 @@ void Tokeniser::settokens(TokenRegistry *k)
 
 
 
+}

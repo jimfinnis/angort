@@ -36,7 +36,7 @@ while(<>){
         push(@list,$word);
         $descs{$word}=$text;
         print WORDSFILE "$word,";
-        print "static void _word__$word"."(Angort *a)\n";
+        print "static void _word__$word"."(angort::Angort *a)\n";
     } else {
         print "$_\n";
     }
@@ -44,7 +44,7 @@ while(<>){
 
 print "\n\n";
 print "static const char *_modulename_$listname = \"$listname\";\n";
-print "AngortWordDef _wordlist_$listname"."[]={\n";
+print "angort::AngortWordDef _wordlist_$listname"."[]={\n";
 foreach $v (@list) {
     $t = $descs{$v};
     print "    {_modulename_$listname, \"$v\",\"$t\",_word__$v},\n";

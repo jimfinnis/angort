@@ -1,12 +1,14 @@
+/** @file
+ * ArrayList, An array list implementation
+ */
+
 #ifndef __ARRAYLIST_H
 #define __ARRAYLIST_H
 
 // we need placement new, sadly.
 #include <new> 
 
-/** @file
- * ArrayList, An array list implementation
- */
+namespace angort {
 
 /// array list exception - typically get out of range or pop on empty list
 class ArrayListException : public Exception {
@@ -222,7 +224,7 @@ protected:
 
 template<> void ArrayList<Value>::sort(ArrayListComparator<Value> *cmp);
 
-
+}
 
 
 #endif /* __ARRAYLIST_H */

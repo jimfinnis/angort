@@ -16,6 +16,8 @@
 
 #include <angort/plugins.h>
 
+using namespace angort;
+
 %plugin io
 
 class File : public PluginObject {

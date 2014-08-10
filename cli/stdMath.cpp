@@ -1,6 +1,7 @@
 #include <math.h>
 #include "angort.h"
 
+using namespace angort;
 /*
  * Mappings for (some) standard maths library functions
  */
@@ -10,7 +11,6 @@
 #define FN(f) a->pushFloat(f(a->popFloat()))
 
 %name stdmath
-
 
 %word cos (x -- cos x)
 {
@@ -51,4 +51,11 @@
     float y = a->popFloat();
     float x = a->popFloat();
     a->pushFloat(powf(x,y));
+}
+
+%word fmod (x y -- fmod(x,y))
+{
+    float y = a->popFloat();
+    float x = a->popFloat();
+    a->pushFloat(fmodf(x,y));
 }

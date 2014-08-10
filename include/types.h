@@ -1,11 +1,13 @@
 #ifndef __TYPES_H
 #define __TYPES_H
 
-struct Value;
-
 #include "iterator.h"
 #include "gc.h"
 #include "arraylist.h"
+
+namespace angort {
+
+struct Value;
 
 
 /// Each Value has a pointer to one of these, which exist as a set of
@@ -203,7 +205,7 @@ public:
         
 };
 
-
+}
 
 /*
  * Add new types down here and in types.cpp
@@ -224,6 +226,8 @@ public:
 #include "types/native.h"
 #include "types/plugobj.h"
 
+
+namespace angort {
 
 /// this is effectively a namespace for the type data
 struct Types {
@@ -272,4 +276,5 @@ struct Types {
     static GCType *tGC;
 };
 
+}
 #endif /* __TYPES_H */

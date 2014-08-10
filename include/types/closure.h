@@ -9,6 +9,8 @@
 #ifndef __CLOSURE_H
 #define __CLOSURE_H
 
+namespace angort {
+
 /// closure type
 class ClosureType : public GCType {
 public:
@@ -20,5 +22,7 @@ public:
     }
     void set(Value *v,struct Closure *c);
 };
+
+}
 
 #endif /* __CLOSURE_H */

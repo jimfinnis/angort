@@ -10,6 +10,8 @@
 
 #include <time.h>
 
+using namespace angort;
+
 %name std
 
 
@@ -326,6 +328,7 @@
     
 }
 
+namespace angort {
 static NamespaceEnt *getNSEnt(Angort *a){
     const StringBuffer &s = a->popString();
     Namespace *ns = a->names.getSpaceByIdx(a->popInt());
@@ -334,6 +337,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     if(idx<0)
         throw RUNT("ispriv: cannot find name in namespace");
     return ns->getEnt(idx);
+}
 }
 
 %word ispriv (handle name -- bool) return true if the definition is private in the namespace
@@ -353,6 +357,13 @@ static NamespaceEnt *getNSEnt(Angort *a){
 {
     a->endPackageInScript();
 }
+
+WORDS(std); // defined in the standard namespace!
+
+// but we need to define the other stuff in the angort namespace
+// so it can access private data
+
+namespace angort {
 
 /// define a property to set and get the auto cycle detection interval.
 /// It will be called "autogc".
@@ -396,18 +407,19 @@ public:
                             a->searchPath ? a->searchPath:DEFAULTSEARCHPATH);
     }
 };
-    
-
 
 /// this is called directly to register word, and also any other
 /// things - such as properties
 
 void initStdPackage(Angort *a)
 {
-    WORDS(std);
     REGWORDS(*a,std);
     
-    a->registerProperty("autogc",new AutoGCProperty(a));
-    a->registerProperty("searchpath",new SearchPathProperty(a));
+    a->registerProperty("autogc",new angort::AutoGCProperty(a));
+    a->registerProperty("searchpath",new angort::SearchPathProperty(a));
 }
     
+
+
+}
+

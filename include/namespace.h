@@ -7,6 +7,8 @@
 #ifndef __NAMESPACE_H
 #define __NAMESPACE_H
 
+namespace angort {
+
 /// this is a core 'namespace', which is an integer-and-string keyed array of things.
 /// You can't remove things from it, because existing integer keys would become invalid.
 
@@ -374,6 +376,6 @@ public:
 };
 
 
-
+}
 
 #endif /* __NAMESPACE_H */

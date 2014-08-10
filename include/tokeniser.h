@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <string.h>
 
+
 /**
  * @file
  * The Tokeniser and associated classes, which split a line
  * of input into tokens such as keywords, strings, numbers and
  * identifiers.
  */
+
+namespace angort {
 
 struct TokenRegistry
 {
@@ -281,5 +284,5 @@ private:
     ITokeniserErrorHandler *handler;
 };
 
-
+}
 #endif /* __TOKENISER_H */

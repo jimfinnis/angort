@@ -13,6 +13,8 @@
 #include <time.h>
 #include <angort/plugins.h>
 
+using namespace angort;
+
 %plugin time
 
 static AngortPluginInterface *api;

@@ -15,6 +15,8 @@
 #include <RtMidi.h>
 #include <angort/plugins.h>
 
+using namespace angort;
+
 static AngortPluginInterface *api;
 
 class Out : public PluginObject {

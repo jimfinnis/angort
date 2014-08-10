@@ -12,6 +12,8 @@
 
 #include "exception.h"
 
+namespace angort {
+
 /// the root stack exception
 class StackException : public Exception {
 public:
@@ -123,5 +125,5 @@ public:
     int ct;
 };
 
-
+}
 #endif /* __STACK_H */

@@ -17,6 +17,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 // 5 in original
 #define PERTURB_SHIFT 5
 // 32 in original
@@ -323,7 +325,7 @@ inline Iterator<Value *> *Hash::createIterator(bool iskeyiterator) {
 };
 
 
-
+}
 
 #endif /* __MYHASH_H */
 

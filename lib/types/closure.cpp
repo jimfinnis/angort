@@ -8,6 +8,8 @@
 #include "angort.h"
 #include "cycle.h"
 
+namespace angort {
+
 
 Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
     if(c)
@@ -86,4 +88,6 @@ public:
 
 Iterator<class Value *> *Closure::makeValueIterator(){
     return new ClosureIterator(this);
+}
+
 }

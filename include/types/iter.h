@@ -11,6 +11,8 @@
 
 #include "angort.h"
 
+namespace angort {
+
 /// a garbage-collectable object wrapped around an iterator of any sort.
 class IteratorObject : public GarbageCollected {
 public:
@@ -40,4 +42,5 @@ public:
     Iterator<Value *> *get(Value *v);
 };
 
+}
 #endif /* __ITER_H */

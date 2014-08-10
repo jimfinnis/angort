@@ -9,6 +9,7 @@
 #ifndef __STRING_H
 #define __STRING_H
 
+namespace angort {
 
 class StringType : public BlockAllocType {
 public:
@@ -50,5 +51,5 @@ protected:
     virtual const char *toString(bool *allocated,const Value *v) const;
 };
 
-
+}
 #endif /* __STRING_H */

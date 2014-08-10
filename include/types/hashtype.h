@@ -9,6 +9,8 @@
 #ifndef __HASHTYPE_H
 #define __HASHTYPE_H
 
+namespace angort {
+
 class Hash;
 
 struct HashObject: public GarbageCollected {
@@ -51,6 +53,6 @@ public:
     virtual void clone(Value *out,const Value *in,bool deep=false);
 };
 
-    
+}    
 
 #endif /* __HASHTYPE_H */

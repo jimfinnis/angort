@@ -7,6 +7,8 @@
 #include "angort.h"
 #include "cycle.h"
 
+namespace angort {
+
 ListObject::ListObject() : GarbageCollected(), list(32) {
     CycleDetector::getInstance()->add(this);
 }
@@ -161,4 +163,6 @@ void ListType::clone(Value *out,const Value *in,bool deep){
     }
     
     set(out,p);
+}
+
 }

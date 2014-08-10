@@ -11,6 +11,8 @@
 #include <ctype.h>
 #define max(a,b) ((a)>(b)?(a):(b))
 
+namespace angort {
+
 static void formatSignedInt(char *s,int i,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     sprintf(format,"%%%s%dd",zeropad?"0":"",negpad?-width:width);
@@ -189,4 +191,6 @@ end:
     *s=0;
     Types::tString->set(out,base);
     free(base);
+}
+
 }

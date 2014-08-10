@@ -10,6 +10,8 @@
 #include "cycle.h"
 #include "types/symbol.h"
 
+namespace angort {
+
 HashObject::HashObject(){
     hash = new Hash();
     CycleDetector::getInstance()->add(this);
@@ -145,4 +147,6 @@ const char *HashType::toString(bool *allocated,const Value *v) const {
         
     // otherwise, do the default operation
     return Type::toString(allocated,v);
+}
+
 }

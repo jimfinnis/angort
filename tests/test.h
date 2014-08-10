@@ -15,6 +15,7 @@
 
 #include <vector>
 using namespace std;
+using namespace angort;
 
 extern Angort *newAngort();
 

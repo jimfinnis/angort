@@ -8,8 +8,9 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
-#include "../../include/plugins.h"
-//#include <angort/plugins.h>
+#include <angort/plugins.h>
+
+using namespace angort;
 
 %plugin sdl
 

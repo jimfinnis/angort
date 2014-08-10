@@ -1,5 +1,7 @@
 #include "angort.h"
 
+namespace angort {
+
 Type *Type::head=NULL;
 
 int  GarbageCollected::globalCount=0;
@@ -180,4 +182,5 @@ void Types::createTypes(){
     }
     
     
+}
 }

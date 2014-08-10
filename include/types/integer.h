@@ -9,6 +9,8 @@
 #ifndef __INT_H
 #define __INT_H
 
+namespace angort {
+
 /// integer type
 class IntegerType : public Type {
 public:
@@ -33,5 +35,5 @@ protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;
 };
 
-
+}
 #endif /* __INT_H */
