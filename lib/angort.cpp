@@ -542,7 +542,7 @@ void Angort::run(const Instruction *ip){
                 // load a plugin (a shared library). Will
                 // push the plugin's namespace ID ready for
                 // import or list-import
-                plugin(popval()->toString().get());
+                pushInt(plugin(popval()->toString().get()));
                 ip++;    
                 break;
             case OP_IMPORT:

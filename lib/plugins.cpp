@@ -15,7 +15,7 @@ namespace angort {
 typedef LibraryDef *(*PluginInitFunc)(class Angort *a);
 
 
-void Angort::plugin(const char *name){
+int Angort::plugin(const char *name){
     char *err;
     const char *path;
     char buf[256];
@@ -38,7 +38,8 @@ void Angort::plugin(const char *name){
     
     // init the plugin and get the data, and register it.
     LibraryDef *info = (*init)(this);
-    int nsidx = registerLibrary(info);
+    
+    return registerLibrary(info);
 }
 
 #else

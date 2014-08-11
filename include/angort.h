@@ -591,8 +591,10 @@ private:
             i = names.add(name);
         return i;
     }
-    /// add a plugin (Linux only, uses shared libraries)
-    void plugin(const char *path);
+    
+    /// add a plugin (Linux only, uses shared libraries). Returns
+    /// the new namespace ID.
+    int plugin(const char *path);
     
     
     /// called at the end of a block of code,

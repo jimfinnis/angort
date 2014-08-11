@@ -1,9 +1,7 @@
 /**
- * @file
- * brief description, full stop.
+ * @file time.cpp
+ * @brief  Brief description of file.
  *
- * long description, many sentences.
- * 
  */
 
 #include <stdio.h>
@@ -11,13 +9,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <angort/plugins.h>
+#include <angort/angort.h>
 
 using namespace angort;
 
-%plugin time
+%name time
+%shared
 
-static AngortPluginInterface *api;
 static timespec progstart;
 
 inline double time_diff(timespec start, timespec end)
@@ -37,19 +35,19 @@ inline double time_diff(timespec start, timespec end)
     return t;
 }
 
-%word now 0 (-- float) get current time
+%word now (-- float) get current time
 {
     struct timespec t;
     extern struct timespec progstart;
     
     clock_gettime(CLOCK_MONOTONIC,&t);
     double diff=time_diff(progstart,t);
-    res->setFloat((float)diff);
+    a->pushFloat((float)diff);
 }
 
-%word delay 1 (float --) wait for a number of seconds
+%word delay (float --) wait for a number of seconds
 {
-    float f = params[0].getFloat();
+    float f = a->popFloat();
     f *= 1e6f;
     usleep((int)f);
 }
@@ -58,6 +56,6 @@ inline double time_diff(timespec start, timespec end)
 %init
 {
     clock_gettime(CLOCK_MONOTONIC,&progstart);
-    api = interface;
     printf("Initialising Time plugin, %s %s\n",__DATE__,__TIME__);
 }
+

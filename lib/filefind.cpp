@@ -19,10 +19,10 @@ const char *Angort::findFile(const char *name){
     const char *p = searchPath?searchPath:DEFAULTSEARCHPATH;
     const char *q;
     
-    // don't do any of this if the name is absolute. Will require
+    // don't do searches if the name starts with a path element. Will require
     // some work on Windows!
-    if(*name=='/'){
-        if(!access(path,R_OK))
+    if(*name=='/' || *name == '.'){
+        if(!access(name,R_OK))
             return strdup(name);
         else
             return NULL;

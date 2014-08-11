@@ -1,4 +1,4 @@
-perl ../makePlugin.pl time.cpp >time_plugin.cpp
+perl ../../makeWords.pl time.cpp >time_plugin.cpp
 
 
 g++ -fPIC -O3 -c -Wall time_plugin.cpp
