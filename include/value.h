@@ -10,7 +10,6 @@
 #define __VALUE_H
 
 #include "types.h"
-#include "plugins.h"
 
 namespace angort {
 
@@ -42,9 +41,6 @@ struct Value {
         class IteratorObject *iter;
         NativeFunc native;
         struct Property *property;
-        PluginFunc *pluginfunc;
-        
-        class PluginObjectWrapper *plobj;
     } v;
     
     

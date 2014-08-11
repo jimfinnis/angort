@@ -24,7 +24,6 @@ typedef void (*NativeFunc)(class Angort *a);
 #include "types.h"
 #include "value.h"
 #include "namespace.h"
-#include "plugins.h"
 
 namespace angort {
 
@@ -493,7 +492,7 @@ public:
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
-class Angort : public AngortPluginInterface {
+class Angort {
     friend struct CodeBlock;
     friend class AutoGCProperty;
     friend class SearchPathProperty;
@@ -583,9 +582,6 @@ private:
     /// is returned, and the old one is passed in
     /// (which could be NULL for top level).
     const Instruction *call(const Value *v, const Instruction *returnip);
-    
-    /// call a native
-    void callPlugin(const PluginFunc *p);
     
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.

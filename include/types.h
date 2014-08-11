@@ -224,7 +224,6 @@ public:
 #include "types/symbol.h"
 #include "types/none.h"
 #include "types/native.h"
-#include "types/plugobj.h"
 
 
 namespace angort {
@@ -266,11 +265,6 @@ struct Types {
     static NativeType *tNative;
     /// v.property is a property
     static PropType *tProp;
-    
-    /// v.pluginfunc is a plugin function in a .angso
-    static PluginFuncType *tPluginFunc;
-    /// v.plobj is a wrapper around PluginObject
-    static PluginObjectType *tPluginObject;
     
     /// v.gc is some unspecified garbage-collected type
     static GCType *tGC;

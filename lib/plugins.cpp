@@ -12,6 +12,9 @@
 
 namespace angort {
 
+typedef LibraryDef *(*PluginInitFunc)(class Angort *a);
+
+
 void Angort::plugin(const char *name){
     char *err;
     const char *path;
@@ -33,207 +36,17 @@ void Angort::plugin(const char *name){
         throw RUNT(err);
     }
     
-    // init the plugin and get the data
-    PluginInfo *info = (*init)(this);
-    
-    // create the namespace
-    int ns = names.create(info->name);
-    names.push(ns);
-    
-    // and add the functions. Irritatingly this
-    // provides no way of accessing the description/specification.
-    PluginFunc *f=info->funcs;
-    while(f->name){
-        int idx = names.addConst(f->name);
-        names.setSpec(idx,f->spec);
-        Value *v = names.getVal(idx);
-        Types::tPluginFunc->set(v,f);
-        f++;
-    }
-    names.pop();
-    pushInt(ns); // leave the NS on the stack
+    // init the plugin and get the data, and register it.
+    LibraryDef *info = (*init)(this);
+    int nsidx = registerLibrary(info);
 }
-
-
-static void pluginToAngort(Value *out, PluginValue *in){
-    switch(in->type){
-    case PV_CALLABLE:
-        // really we should never pass a callable out!
-        throw RUNT("").set("cannot return callable from plugin");
-//        out = in->v.v;
-        break;
-    case PV_INT:
-        Types::tInteger->set(out,in->getInt());
-        break;
-    case PV_FLOAT:
-        Types::tFloat->set(out,in->getFloat());
-        break;
-    case PV_STRING:
-        Types::tString->set(out,in->getString());
-        break;
-    case PV_SYMBOL:
-        Types::tSymbol->set(out,
-                            Types::tSymbol->getSymbol(in->getString()));
-        break;
-    case PV_OBJ:
-        {
-            PluginObject *obj = in->getObject();
-            if(!(obj->wrapper)){
-                // no wrapper exists, create a new one
-                obj->wrapper = new PluginObjectWrapper(obj);
-            }
-            Types::tPluginObject->set(out,obj->wrapper);
-            
-        }
-        break;
-    case PV_LIST:
-        {
-            // we copy the list out into an Angort list.
-            ArrayList<Value> *list = Types::tList->set(out);
-            PluginValue *q;
-            for(PluginValue *p = in->v.head;p;p=q){
-                q = p->next;
-                Value *dest = list->append();
-                pluginToAngort(dest,p);
-            }
-        }
-        break;
-    case PV_HASH:
-        {
-            // we copy the list out into an Angort hash
-            Hash *h = Types::tHash->set(out);
-            PluginValue *key,*value;
-            for(key = in->v.head;key;key=value->next){
-                value = key->next;
-                Value aVal,aKey;
-                pluginToAngort(&aKey,key);
-                pluginToAngort(&aVal,value);
-                h->set(&aKey,&aVal);
-            }
-        }
-        break;
-    case PV_NONE:
-        out->clr();
-        break;
-    default:
-        throw RUNT("").set("return from plugin invalid pv-type: %d",in->type);
-    }
-    
-}
-
-/*DOING THIS SO I CAN PASS LISTS TO PLUGINS (HASHES?)
-WILL BE RECURSIVE. THEN CAN IMPLEMENT ADD IN MPC,
-AND REWORK SEARCH SO IT TAKES A LIST/HASH.
- */
-static void angortToPlugin(PluginValue *out,Value *in);
-
-static void angortToPlugin(PluginValue *out,Value *in){
-    if(in->t == Types::tInteger)
-        out->setInt(in->v.i);
-    else if(in->t == Types::tFloat)
-        out->setFloat(in->v.f);
-    else if(in->t == Types::tNone)
-        out->setNone();
-    else if(in->t == Types::tString)
-        out->setString(Types::tString->getData(in));
-    else if(in->t == Types::tSymbol)
-        out->setString(Types::tSymbol->getString(in->v.i));
-    else if(in->t == Types::tList){
-        out->setList();
-        ArrayList<Value> *list = Types::tList->get(in);
-        for(int i=0;i<list->count();i++){
-            Value *v = list->get(i);
-            // responsibility to the plugin to delete
-            PluginValue *pv = new PluginValue();
-            angortToPlugin(pv,v);
-            out->addToList(pv);
-        }
-    } else if(in->t == Types::tHash){
-        out->setHash();
-        Hash *h = Types::tHash->get(in);
-        HashKeyIterator iter(h);
-        
-        for(iter.first();!iter.isDone();iter.next()){
-            Value *key = iter.current();
-            h->find(key); // must be there!
-            Value *val = h->getval();
-            PluginValue *pv = new PluginValue();
-            angortToPlugin(pv,key);
-            out->addToList(pv);
-            pv = new PluginValue();
-            angortToPlugin(pv,val);
-            out->addToList(pv);
-            
-        }
-    } else if(in->t == Types::tPluginObject){
-        out->setObject(in->v.plobj->obj);
-    } else if(in->t->isCallable()){
-        // we have to make a copy of the input value, because
-        // otherwise it's just a pointer into the Angort stack
-        // which will get stale. It's up to the plugin to
-        // release it later, with AngortPluginInterface::releaseCallable().
-        out->v.v = new Value();
-        out->v.v->copy(in);
-        out->type = PV_CALLABLE;
-    } else
-        // inconvertible type, set to None
-        out->setNone(); 
-}
-
-void Angort::callPlugin(const PluginFunc *native){
-    // pop the arguments in reverse order, converting
-    PluginValue v[16];
-    PluginValue *p=v+native->nargs-1;
-    for(int i=0;i<native->nargs;i++,p--){
-        Value *a = popval();
-        angortToPlugin(p,a);
-    }
-    
-    // call the plugin
-    
-    try {
-        PluginValue result;
-        (*native->func)(&result,v);
-        // and process the return
-        if(result.type != PV_NORETURN){
-            Value *a = pushval();
-            pluginToAngort(a,&result);
-        }
-    } catch(const char *s){
-        throw RUNT(s);
-    }
-}
-
-void AngortPluginInterface::call(const class Value *v,PluginValue *pv){
-    // we know that this is *really* Angort itself
-    Angort *a = (Angort *)this;
-    if(pv){
-        Value *out = a->pushval();
-        pluginToAngort(out,pv);
-    }
-    a->runValue(v);
-}
-
-void AngortPluginInterface::releaseCallable(Value *v){
-    delete v;
-}
-
 
 #else
-
-void Angort::callPlugin(const PluginFunc *p){
-    throw WTF;
-}
 
 void Angort::plugin(const char *path){
     throw RUNT("Plugins not supported on this platform.");
 }
 
-void AngortPluginInterface::call(const class Value *v,PluginValue *pv){
-}
-
-void AngortPluginInterface::releaseCallable(Value *v){
-}
 #endif
 
 }

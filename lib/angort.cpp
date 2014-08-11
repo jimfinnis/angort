@@ -139,11 +139,8 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     
     t=a->getType();
     
-    /// very simple to handle a native or plugin
-    if(t==Types::tPluginFunc) {
-        callPlugin(Types::tPluginFunc->get(a));
-        return returnip;
-    } else if(t==Types::tNative){
+    // if it's a native C++ function, just call it
+    if(t==Types::tNative){
         (*a->v.native)(this);
         return returnip;
     }

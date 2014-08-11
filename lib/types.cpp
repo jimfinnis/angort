@@ -157,10 +157,6 @@ static PropType _Prop;
 PropType *Types::tProp = &_Prop;
 
 
-static PluginFuncType _PluginFunc;
-PluginFuncType *Types::tPluginFunc = &_PluginFunc;
-static PluginObjectType _PluginObject;
-PluginObjectType *Types::tPluginObject = &_PluginObject;
 
 static IteratorType _Iterator;
 IteratorType *Types::tIter = &_Iterator;

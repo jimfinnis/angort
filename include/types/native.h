@@ -7,8 +7,6 @@
 #ifndef __NATIVE_H
 #define __NATIVE_H
 
-#include "../plugins.h"
-
 namespace angort {
 
 struct Property;
@@ -38,20 +36,6 @@ public:
     
     Property *get(const Value *v);
     void set(Value *v,Property *f);
-};
-
-/// the type for a plugin function
-class PluginFuncType : public Type {
-public:
-    PluginFuncType(){
-        add("plugin");
-    }
-    
-    virtual bool isCallable(){
-        return true;
-    }
-    PluginFunc *get(const Value *v);
-    void set(Value *v,PluginFunc *f);
 };
 
 }
