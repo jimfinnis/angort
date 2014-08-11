@@ -145,13 +145,18 @@ public:
     
 };
 
-/// this exception is thrown when a generic runtime error occurs
-
 class AssertException : public Exception {
 public:
     AssertException(const char *desc,int line){
         snprintf(error,1024,"Assertion failed at line %d:  %s",line,desc);
         fatal=true;
+    }
+};
+
+class ParameterTypeException : public Exception {
+public:
+    ParameterTypeException(int paramNo, const char *expected){
+        snprintf(error,1024,"Bad parameter %d, expected %s",paramNo,expected);
     }
 };
 

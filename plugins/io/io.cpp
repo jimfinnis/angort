@@ -14,13 +14,16 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include <angort/plugins.h>
+#include <angort/angort.h>
+#include <angort/hash.h>
 
 using namespace angort;
 
-%plugin io
+%name io
+%shared
 
-class File : public PluginObject {
+
+class File : public GarbageCollected {
 public:
     File(FILE *_f){
         f = _f;
@@ -37,320 +40,420 @@ public:
     FILE *f;
 };
 
+class FileType : public GCType {
+public:
+    FileType(){
+        add("file","FILE");
+    }
+    
+    FILE *get(Value *v){
+        if(v->t!=this)
+            throw RUNT("not a file");
+        return ((File *)(v->v.gc))->f;
+    }
+    
+    void set(Value *v,FILE *f){
+        v->clr();
+        v->t=this;
+        v->v.gc = new File(f);
+        incRef(v);
+    }
+};
+
+static FileType tFile;
+
 %word open 2 (path mode -- fileobj) open a file, modes same as fopen()
 {
-    FILE *f = fopen(params[0].getString(),params[1].getString());
+    Value *p[2];
+    a->popParams(p,"ss");
+    FILE *f = fopen(p[0]->toString().get(),p[1]->toString().get());
     if(!f)
-        res->setNone();
-    else {
-        res->setObject(new File(f));
-    }
+        a->pushNone();
+    else
+        tFile.set(a->pushval(),f);
 }
 
 // possibly recursive binary write
-static void dowrite(FILE *f,PluginValue *v,bool inContainer=false){
-    switch(v->type){
-    case PV_INT:{
-        int32_t i = (int32_t)v->getInt();
+static void dowrite(FILE *f,Value *v,bool inContainer=false){
+    if(v->t == Types::tInteger){
+        int32_t i = (int32_t)v->toInt();
         fwrite(&i,sizeof(i),1,f);
-    }
-        break;
-    case PV_FLOAT:{
-        float i = (float)v->getFloat();
+    } else if(v->t == Types::tFloat) {
+        float i = (float)v->toFloat();
         fwrite(&i,sizeof(i),1,f);
-    }
-        break;
-    case PV_STRING:
-    case PV_SYMBOL:{
-        int len = strlen(v->getString());
+    } else if(v->t == Types::tString || v->t == Types::tSymbol) {
+        const StringBuffer &sb = v->toString();
+        int len = strlen(sb.get());
         if(inContainer)len++; // in containers, append a NULL
-        fwrite(v->getString(),len,1,f);
-    }
-        break;
-    case PV_LIST:{
-        int n = v->getListCount();
+        fwrite(sb.get(),len,1,f);
+    } else if(v->t == Types::tList) {
+        ArrayList<Value> *list = Types::tList->get(v);
+        int32_t n = list->count();
         fwrite(&n,sizeof(n),1,f);
-        for(PluginValue *p=v->v.head;p;p=p->next){
-            fwrite(&p->type,sizeof(p->type),1,f);
-            dowrite(f,p,true);
+        
+        ArrayListIterator<Value> iter(list);
+        for(iter.first();!iter.isDone();iter.next()){
+            Value *vv = iter.current();
+            fwrite(&vv->t->id,sizeof(vv->t->id),1,f);
+            dowrite(f,vv,true);
         }
-        break;
-    }
-    case PV_HASH:{
-        int n = v->getHashCount();
+    } else if(v->t == Types::tHash) {
+        Hash *h = Types::tHash->get(v);
+        int32_t n = h->count();
         fwrite(&n,sizeof(n),1,f);
-        for(PluginValue *p=v->v.head;p;p=p->next){
-            fwrite(&p->type,sizeof(p->type),1,f);
-            dowrite(f,p,true);
+        
+        HashKeyIterator iter(h);
+        for(iter.first();!iter.isDone();iter.next()){
+            Value *vk = iter.current();
+            fwrite(&vk->t->id,sizeof(vk->t->id),1,f);
+            dowrite(f,vk,true);
+            
+            if(h->find(vk)){
+                Value *vv = h->getval();
+                fwrite(&vv->t->id,sizeof(vv->t->id),1,f);
+                dowrite(f,vv,true);
+            } else
+                throw RUNT("unable to find value for key when saving hash");
         }
-        break;
-    }
-    default:
-        throw "file write of unsupported type";
+    } else {
+        throw RUNT("").set("file write of unsupported type '%s'",v->t->name);
     }
 }
 
-static FILE *getf(PluginValue *p,bool out){
-    if(p->type == PV_NONE)
+
+static FILE *getf(Value *p,bool out){
+    if(p->isNone())
         return out?stdout:stdin;
     else
-        return ((File *)p->getObject())->f;
+        return tFile.get(p);
 }
 
-%word write 2 (value fileobj/none --) write value as binary (int/float is 32 bits) to file or stdout
+%word write (value fileobj/none --) write value as binary (int/float is 32 bits) to file or stdout
 {
-    dowrite(getf(params+1,true),params);
+    Value *p[2];
+    a->popParams(p,"vA",&tFile);
+    
+    dowrite(getf(p[1],true),p[0]);
 }
 
 %word write8 2 (value fileobj/none --) write signed byte
 {
-    int8_t b = params->getInt();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    int8_t b = p[0]->toInt();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }
 
 %word write16 2 (value fileobj/none --) write 16-bit signed integer
 {
-    int16_t b = params->getInt();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    int16_t b = p[0]->toInt();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
 %word write32 2 (value fileobj/none --) write 32-bit signed integer
 {
-    int16_t b = params->getInt();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    int32_t b = p[0]->toInt();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
 %word writeu8 2 (value fileobj/none --) write unsigned byte
 {
-    uint8_t b = params->getInt();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    uint8_t b = p[0]->toInt();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }
 
 %word writeu16 2 (value fileobj/none --) write 16-bit unsigned integer
 {
-    uint16_t b = params->getInt();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    uint16_t b = p[0]->toInt();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
 %word writeu32 2 (value fileobj/none --) write 32-bit unsigned integer
 {
-    uint16_t b = params->getInt();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    uint32_t b = p[0]->toInt();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
 %word writefloat 2 (value fileobj/none --) write 32-bit float
 {
-    float b = params->getFloat();
-    fwrite(&b,sizeof(b),1,getf(params+1,true));
+    Value *p[2];
+    a->popParams(p,"nA",&tFile);
+    float b = p[0]->toFloat();
+    fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
 %word readfloat 1 (fileobj/none -- float/none) read 32-bit float
 {
+    Value *p;
     float i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setFloat(i);
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushFloat(i);
     else
-        res->setNone();
+        a->pushNone();
 }
 
 %word read8 1 (fileobj/none -- int/none) read signed byte
 {
+    Value *p;
     int8_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setInt((int)i);
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushInt((int)i);
     else
-        res->setNone();
+        a->pushNone();
 }
 %word read16 1 (fileobj/none -- int/none) read 16-bit signed int
 {
+    Value *p;
     int16_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setInt((int)i);
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushInt((int)i);
     else
-        res->setNone();
+        a->pushNone();
 }
 %word read32 1 (fileobj/none -- int/none) read 32-bit signed int
 {
-    int32_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setInt((int)i);
+    Value *p;
+    int16_t i;
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushInt((int)i);
     else
-        res->setNone();
+        a->pushNone();
 }
 
 %word readu8 1 (fileobj/none -- int/none) read unsigned byte
 {
+    Value *p;
     uint8_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setInt((int)i);
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushInt((int)i);
     else
-        res->setNone();
+        a->pushNone();
 }
 %word readu16 1 (fileobj/none -- int/none) read 16-bit unsigned int
 {
+    Value *p;
     uint16_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setInt((int)i);
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushInt((int)i);
     else
-        res->setNone();
+        a->pushNone();
 }
 %word readu32 1 (fileobj/none -- int/none) read 32-bit unsigned int
 {
+    Value *p;
     uint32_t i;
-    if(fread(&i,sizeof(i),1,getf(params,false))>0)
-        res->setInt((int)i);
+    a->popParams(&p,"A",&tFile);
+    
+    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+        a->pushInt((int)i);
     else
-        res->setNone();
+        a->pushNone();
 }
 
 
-static const char *readstr(FILE *f){
-    static char buf[1024];
-    char *p=buf;
+/// allocates a data buffer!
+static const char *readstr(FILE *f,bool endAtEOL=false){
+    int bufsize = 128;
+    int ct=0;
+    char *buf = (char *)malloc(bufsize);
+    
     for(;;){
         char c = fgetc(f);
-        if(c==EOF || c=='\n' || c=='\r' || !c)
+        if(c==EOF || (endAtEOL && (c=='\n' || c=='\r')) || !c)
             break;
-        if(p-buf==1023)
-            break;
-        *p++=c;
+        if(ct==bufsize){
+            bufsize *= 2;
+            buf = (char *)realloc(buf,bufsize);
+        }
+        buf[ct++]=c;
     }
-    *p=0;
+    buf[ct]=0;
     return buf;
 }
 
-%word readstr 1 (fileobj/none -- str) read string until null/EOL/EOF (max len 1023)
+%word readstr 1 (fileobj/none -- str) read string until null/EOL/EOF
 {
-    FILE *f = getf(params,false);
-    res->setString(readstr(f));
+    Value *p;
+    a->popParams(&p,"A",&tFile);
+    
+    FILE *f = getf(p,false);
+    const char *s = readstr(f);
+    a->pushString(s);
+    free((char *)s);
+}
+
+%word readfilestr 1 (fileobj/none -- str) read an entire text file
+{
+    Value *p;
+    a->popParams(&p,"A",&tFile);
+    
+    FILE *f = getf(p,false);
+    const char *s = readstr(f,false);
+    a->pushString(s);
+    free((char *)s);
 }
 
 %word eof 1 (fileobj/none -- boolean) indicates if EOF has been read
 {
-    FILE *f = getf(params,false);
-    res->setInt(feof(f)?1:0);
+    Value *p;
+    a->popParams(&p,"A",&tFile);
+    
+    FILE *f = getf(p,false);
+    a->pushInt(feof(f)?1:0);
 }
     
-static void doreadlist(FILE *f,PluginValue *res);
-static void doreadhash(FILE *f,PluginValue *res);
+static void doreadlist(FILE *f,Value *res);
+static void doreadhash(FILE *f,Value *res);
 
-static bool readval(FILE *f,PluginValue *res){
+static bool readval(FILE *f,Value *res){
     
-    int type;
+    uint32_t typeID;
     int32_t i;
     float fl;
-    if(fread(&type,sizeof(type),1,f)<=0)
+    
+    if(fread(&typeID,sizeof(typeID),1,f)<=0)
         return false;
-    switch(type){
-    case PV_INT:
+    
+    if(typeID == Types::tInteger->id) {
         fread(&i,sizeof(i),1,f);
-        res->setInt((int)i);
-        break;
-    case PV_FLOAT:
+        Types::tInteger->set(res,(int)i);
+    } else if(typeID == Types::tFloat->id) {
         fread(&fl,sizeof(fl),1,f);
-        res->setFloat(fl);
-        break;
-    case PV_STRING:
-        res->setString(readstr(f));
-        break;
-    case PV_SYMBOL:
-        res->setSymbol(readstr(f));
-        break;
-    case PV_LIST:
+        Types::tFloat->set(res,fl);
+    } else if(typeID == Types::tString->id) {
+        const char *s = readstr(f);
+        Types::tString->set(res,s);
+        free((char *)s);
+    } else if(typeID == Types::tSymbol->id) {
+        const char *s = readstr(f);
+        int sid = SymbolType::getSymbol(s);
+        Types::tSymbol->set(res,sid);
+        free((char *)s);
+    } else if(typeID == Types::tList->id) {
         doreadlist(f,res);
-        break;
-    case PV_HASH:
+    } else if(typeID == Types::tHash->id) {
         doreadhash(f,res);
-        break;
-    default:
-        throw "file read of unsupported type";
-    }
+    } else
+        throw RUNT("").set("file read of unsupported type %x",typeID);
     return true;
 }
     
-static void doreadlist(FILE *f,PluginValue *res){
-    res->setList();
-    int n;
+static void doreadlist(FILE *f,Value *res){
+    ArrayList<Value> *list = Types::tList->set(res);
+    int32_t n;
     fread(&n,sizeof(n),1,f);
     for(int i=0;i<n;i++){
-        PluginValue *v = new PluginValue();
-        if(readval(f,v))
-            res->addToList(v);
-        else {
-            delete v;
-            throw "premature end of list read";
-        }
+        Value *v = list->append();
+        if(!readval(f,v))
+            throw RUNT("").set("premature end of list read");
     }
 }
-static void doreadhash(FILE *f,PluginValue *res){
-    res->setHash();
-    int n;
+static void doreadhash(FILE *f,Value *res){
+    Hash *h = Types::tHash->set(res);
+    
+    int32_t n;
     fread(&n,sizeof(n),1,f);
-    for(int i=0;i<n;i++){
-        PluginValue *k = new PluginValue();
-        if(readval(f,k)){
-            PluginValue *v = new PluginValue();
-            if(readval(f,v)){
-                res->addToList(k);
-                res->addToList(v);
-            } else {
-                delete v;
-                throw "badly formed hash in read";
-            }
-        } else {
-            delete k;
-            throw "premature end of hash read";
+    try {
+        for(int i=0;i<n;i++){
+            Value k,v;
+            if(!readval(f,&k))
+                throw "key";
+            if(!readval(f,&v))
+                throw "val";
+            h->set(&k,&v);
         }
+    } catch(const char *s) {
+        throw RUNT("").set("badly formed hash in read on reading %s",s);
     }
 }
 
 %word readlist 1 (fileobj/none -- list) read a binary list (as written by 'write')
 {
-    res->setList();
-    FILE *f = getf(params,false);
-    doreadlist(f,res);
+    Value *p;
+    a->popParams(&p,"A",&tFile);
+    FILE *f = getf(p,false);
+    doreadlist(f,a->pushval());
 }
 %word readhash 1 (fileobj/none -- hash) read a binary hash (as written by 'write')
 {
-    res->setList();
-    FILE *f = getf(params,false);
-    doreadhash(f,res);
+    Value *p;
+    a->popParams(&p,"A",&tFile);
+    FILE *f = getf(p,false);
+    doreadhash(f,a->pushval());
 }
 
 %word exists 1 (path -- boolean/none) does a file/directory exist? None indicates some other problem
 {
+    Value *p;
+    a->popParams(&p,"s");
+    
     struct stat b;
-    if(stat(params->getString(),&b)==0)
-        res->setInt(1);
+    if(stat(p->toString().get(),&b)==0)
+        a->pushInt(1);
     else if(errno==ENOENT)
-        res->setInt(0);
+        a->pushInt(0);
     else
-        res->setNone();
+        a->pushNone();
 }
 
 %word flush 1 (fileobj/none -- ) flush the file buffer
 {
-    FILE *f = getf(params,true);
+    Value *p;
+    a->popParams(&p,"A",&tFile);
+    FILE *f = getf(p,true);
     fflush(f);
 }
-    
+
+inline void setIntInHash(Hash *h, const char *key,uint32_t value){
+    Value k,v;
+    Types::tString->set(&k,key);
+    Types::tInteger->set(&v,(int)value);
+    h->set(&k,&v);
+}
 
 %word stat 1 (path -- hash/none) read the file statistics, or none if not found
 {
+    Value *p;
+    a->popParams(&p,"s");
+    
     struct stat b;
-    if(stat(params->getString(),&b)==0){
-        res->setHash();
-        res->setHashVal("mode",new PluginValue(b.st_mode));
-        res->setHashVal("uid",new PluginValue(b.st_uid));
-        res->setHashVal("gid",new PluginValue(b.st_gid));
-        res->setHashVal("size",new PluginValue(b.st_size));
-        res->setHashVal("atime",new PluginValue(b.st_atime));
-        res->setHashVal("mtime",new PluginValue(b.st_mtime));
-        res->setHashVal("ctime",new PluginValue(b.st_ctime));
+    Value *res = a->pushval();
+    
+    if(stat(p->toString().get(),&b)==0){
+        Hash *h = Types::tHash->set(res);
+        
+        setIntInHash(h,"mode",b.st_mode);
+        setIntInHash(h,"uid",b.st_uid);
+        setIntInHash(h,"gid",b.st_gid);
+        setIntInHash(h,"size",b.st_size);
+        setIntInHash(h,"atime",b.st_atime);
+        setIntInHash(h,"mtime",b.st_mtime);
+        setIntInHash(h,"ctime",b.st_ctime);
     } else
-        res->setNone();
+        res->clr();
 }
-
 
 %init
 {

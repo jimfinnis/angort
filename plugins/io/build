@@ -1,4 +1,4 @@
-perl ../makePlugin.pl io.cpp >io_plugin.cpp
+perl ../../makeWords.pl io.cpp >io_plugin.cpp
 
 
 g++ -fPIC -g -c -Wall io_plugin.cpp 

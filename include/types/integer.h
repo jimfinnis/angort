@@ -15,7 +15,7 @@ namespace angort {
 class IntegerType : public Type {
 public:
     IntegerType(){
-        add("integer");
+        add("integer","INTG");
     }
     /// get the value of v as a int
     int get(Value *v);

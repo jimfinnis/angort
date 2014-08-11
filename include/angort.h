@@ -733,6 +733,10 @@ public:
         Types::tString->set(stack.pushptr(),s);
     }
     
+    void pushNone(){
+        stack.pushptr()->clr();
+    }
+    
     int popInt(){
         return Types::tInteger->get(popval());
     }
@@ -742,6 +746,26 @@ public:
     StringBuffer popString(){
         return StringBuffer(popval());
     }
+    
+    /// pop parameters for a C++ function, with type checking.
+    /// Each parameter is checked against the next character in the type
+    /// string, and an exception is thrown if there is a mismatch
+    /// which specifies which parameter failed.
+    /// The type characters are:
+    /// - n : numeric
+    /// - c : callable (codeblock/closure)
+    /// - s : string or symbol
+    /// - S : symbol only
+    /// - v : variable (i.e. no checking)
+    /// - a : type passed in as type0
+    /// - b : type passed in as type1
+    /// - A : type passed in as type0 or none
+    /// - B : type passed in as type1 or none
+    /// Each new parameter is added into the Value pointer array passed
+    /// in - these are direct pointers into the Angort main stack.
+    /// MAKE SURE THE OUT ARRAY CONTAINS AT ENOUGH ROOM.
+    void popParams(Value **out,const char *spec,const Type *type0=NULL,
+                   const Type *type1=NULL);
     
     /// function for registering properties
     void registerProperty(const char *name, Property *p, const char *ns=NULL,const char *spec=NULL);

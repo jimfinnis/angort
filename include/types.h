@@ -21,9 +21,15 @@ class Type {
 public:
     /// a constant name
     const char *name;
+    /// a 32 bit unique ID (used in serialisation, etc.)
+    uint32_t id;
+    
     /// a symbol for the above string - this is what angort stacks
     /// when the "type" word is called on a value.
     int nameSymb;
+    
+    /// scan global list for a type by ID
+    static Type *getByID(const char *_id);
     
     /// convert to a UTF-8 string - if memory was allocated,
     /// the boolean is set.
@@ -50,7 +56,8 @@ public:
           
     
     /// set name of type, add to global type list
-    void add(const char *_name);
+    /// ID is a 4-byte identifier.
+    void add(const char *_name,const char *_id);
     
     /// reset the type list, does not delete anything because
     /// the type objects are static
@@ -202,7 +209,7 @@ public:
     virtual Iterator<class Value *> *makeValueIterator(Value *v);
     /// make an iterator by calling the gc's method
     virtual Iterator<class Value *> *makeKeyIterator(Value *v);
-        
+    
 };
 
 }

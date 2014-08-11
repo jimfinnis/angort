@@ -48,7 +48,7 @@ while(<>){
     if(/^%name/){
         ($dummy,$libname)=split(/\s/,$_,2);
         $nsname = "_angortlib_ns_$libname";
-        print "\n\nnamespace $nsname {\n";
+        print "namespace $nsname {\n";
     }elsif(/^%word/){
         defined($libname) || die "%name is required";
         ($dummy,$word,$text)=split(/\s/,$_,3);
@@ -61,6 +61,7 @@ while(<>){
         $hasinit = 1;
     }elsif(/^%shared/){
         $shared=1;
+        print "\n";
     } else {
         print "$_\n";
     }

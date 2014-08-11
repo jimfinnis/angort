@@ -19,7 +19,7 @@ namespace angort {
 class FloatType : public Type {
 public:
     FloatType(){
-        add("float");
+        add("float","FLOT");
     }
     /// get the value of v as a float
     float get(Value *v);

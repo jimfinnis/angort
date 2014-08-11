@@ -14,7 +14,7 @@ namespace angort {
 class StringType : public BlockAllocType {
 public:
     StringType() {
-        add("string");
+        add("string","STRN");
     }
     virtual bool isReference(){
         return true;

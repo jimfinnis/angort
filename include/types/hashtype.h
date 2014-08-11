@@ -25,13 +25,13 @@ struct HashObject: public GarbageCollected {
 class HashType: public GCType {
 public:
     HashType(){
-        add("hash");
+        add("hash","HASH");
     }
     
     /// get the hash, throwing if it's not one
     Hash *get(Value *v);
     
-    /// create a new hash, throwing if it's not one
+    /// create a new hash
     Hash *set(Value *v);
     
     /// the default iterator for a hash is the key iterator

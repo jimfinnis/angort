@@ -3,6 +3,7 @@
 namespace angort {
 
 Type *Type::head=NULL;
+static bool createTypesDone=false;
 
 int  GarbageCollected::globalCount=0;
 
@@ -33,12 +34,33 @@ void Type::clone(Value *out,const Value *in,bool deep){
     out->copy(in);
 }
 
-void Type::add(const char *_name){
+void Type::add(const char *_name,const char *_id){
+    const unsigned char *n = (const unsigned char *)_id;
+    id = n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24);
     name = _name;
     next = head;
     head = this;
+    
+    // normally symbols are generated after the static initialisation
+    // but before anything else in createTypes(). If this chance has
+    // been missed, perhaps because this type is being added by a plugin,
+    // add the symbol.
+    
+    if(createTypesDone){
+        if(SymbolType::exists(name))
+            throw Exception().set("type already exists: %s",name);
+        nameSymb = SymbolType::getSymbol(name);
+    }
 }
 
+Type *Type::getByID(const char *_id){
+    const unsigned char *n = (const unsigned char *)_id;
+    uint32_t i = n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24);
+    
+    for(Type *t = head;t;t=t->next)
+        if(t->id == i)return t;
+    return NULL;
+}
 
 
 
@@ -164,11 +186,14 @@ IteratorType *Types::tIter = &_Iterator;
 
 
 void Types::createTypes(){
-    tDeleted->add("DELETED");
+    tDeleted->add("DELETED","DELE");
     
     // because of the undefined execution order of static heap
     // objects, we set up all the type names here rather than in
-    // "add"
+    // "add" to make sure the symbol system is already up.
+    
+    // IF you add types later in plugins, the system should detect
+    // this.
     
     for(Type *p = Type::head;p;p=p->next){
         if(SymbolType::exists(p->name))
@@ -176,6 +201,7 @@ void Types::createTypes(){
            
         p->nameSymb = SymbolType::getSymbol(p->name);
     }
+    createTypesDone = true;
     
     
 }

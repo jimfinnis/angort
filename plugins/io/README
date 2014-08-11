@@ -1,7 +1,7 @@
 Fairly crude file IO plugin.
 
 Import with
-    library "./libangortio.so" import
+    library "io" import
     
 and then
 
@@ -22,7 +22,17 @@ something like
 
     1 ""+ ?F write
     
-to coerce to a string.
+to coerce to a string. To read a string, do
+
+    ?F readstr
+    
+to read the next line, or 
+
+    ?F readfilestr
+    
+to read the entire file into a string.
+
+
 
 More binary stuff:
 
@@ -66,3 +76,9 @@ will write a list or hash to a file, and
     
 will read them back. Lists and hashes can be combined and nested,
 provided they ultimately consist of ints, floats, strings or symbols.
+
+
+
+To recap, you'll typically write using just "write", and read using
+the appropriate word for the type you know you've written.
+

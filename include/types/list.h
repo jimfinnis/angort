@@ -21,7 +21,7 @@ struct ListObject : public GarbageCollected {
 class ListType : public GCType {
 public:
     ListType(){
-        add("list");
+        add("list","LIST");
     }
     
     /// get this value's arraylist, throwing if it's not a list

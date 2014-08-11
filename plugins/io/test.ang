@@ -1,6 +1,6 @@
 
 
-library "./libangortio.so" import
+"io" library import
 
 "foo" "wb" open !F
 

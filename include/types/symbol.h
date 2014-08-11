@@ -16,7 +16,7 @@ namespace angort {
 class SymbolType : public Type {
 public:
     SymbolType(){
-        add("symbol");
+        add("symbol","SYMB");
     }
     
     /// delete all symbols

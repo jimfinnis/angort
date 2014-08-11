@@ -15,7 +15,7 @@ namespace angort {
 class ClosureType : public GCType {
 public:
     ClosureType(){
-        add("closure");
+        add("closure","CLOS");
     }
     virtual bool isCallable(){
         return true;

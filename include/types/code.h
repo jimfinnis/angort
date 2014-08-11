@@ -15,7 +15,7 @@ namespace angort {
 class CodeType : public Type { // note, they're not managed memory at all!
 public:
     CodeType(){
-        add("codeblock");
+        add("codeblock","CODE");
     }
     virtual bool isReference(){
         return true;

@@ -16,7 +16,7 @@ namespace angort {
 class NoneType : public Type {
 public:
     NoneType(){
-        add("none");
+        add("none","NONE");
     }
     
     virtual int toInt(const Value *v) const {

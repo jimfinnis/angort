@@ -13,10 +13,10 @@
 namespace angort {
 
 template<> RangeType<int>::RangeType(){
-    add("range");
+    add("range","RANI");
 }
 template<> RangeType<float>::RangeType(){
-    add("frange");
+    add("frange","RANF");
 }
 
 template <> void RangeType<float>::set(Value *v, float start,float end,float step){

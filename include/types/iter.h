@@ -33,7 +33,7 @@ public:
 class IteratorType : public GCType {
 public:
     IteratorType(){
-        add("iterator");
+        add("iterator","ITER");
     }
     
     void set(Value *v,Value *src,Iterator<Value *> *iter);
