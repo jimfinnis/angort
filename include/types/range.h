@@ -9,8 +9,6 @@
 #ifndef __RANGE_H
 #define __RANGE_H
 
-#include "angort.h"
-
 namespace angort {
 
 template <class T> struct Range : public GarbageCollected {

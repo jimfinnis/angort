@@ -7,7 +7,7 @@
 #ifndef __PLUGOBJ_H
 #define __PLUGOBJ_H
 
-#include "plugins.h"
+#include "../plugins.h"
 
 namespace angort {
 

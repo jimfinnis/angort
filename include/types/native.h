@@ -7,7 +7,7 @@
 #ifndef __NATIVE_H
 #define __NATIVE_H
 
-#include "plugins.h"
+#include "../plugins.h"
 
 namespace angort {
 

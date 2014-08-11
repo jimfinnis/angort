@@ -7,8 +7,6 @@
 #ifndef __LIST_H
 #define __LIST_H
 
-#include "angort.h"
-
 namespace angort {
 
 struct ListObject : public GarbageCollected {

@@ -9,8 +9,6 @@
 #ifndef __ITER_H
 #define __ITER_H
 
-#include "angort.h"
-
 namespace angort {
 
 /// a garbage-collectable object wrapped around an iterator of any sort.
