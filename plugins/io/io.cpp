@@ -62,7 +62,7 @@ public:
 
 static FileType tFile;
 
-%word open 2 (path mode -- fileobj) open a file, modes same as fopen()
+%word open (path mode -- fileobj) open a file, modes same as fopen()
 {
     Value *p[2];
     a->popParams(p,"ss");
@@ -136,7 +136,7 @@ static FILE *getf(Value *p,bool out){
     dowrite(getf(p[1],true),p[0]);
 }
 
-%word write8 2 (value fileobj/none --) write signed byte
+%word write8 (value fileobj/none --) write signed byte
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -144,7 +144,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }
 
-%word write16 2 (value fileobj/none --) write 16-bit signed integer
+%word write16 (value fileobj/none --) write 16-bit signed integer
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -152,7 +152,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
-%word write32 2 (value fileobj/none --) write 32-bit signed integer
+%word write32 (value fileobj/none --) write 32-bit signed integer
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -160,7 +160,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
-%word writeu8 2 (value fileobj/none --) write unsigned byte
+%word writeu8 (value fileobj/none --) write unsigned byte
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -168,7 +168,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }
 
-%word writeu16 2 (value fileobj/none --) write 16-bit unsigned integer
+%word writeu16 (value fileobj/none --) write 16-bit unsigned integer
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -176,7 +176,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
-%word writeu32 2 (value fileobj/none --) write 32-bit unsigned integer
+%word writeu32 (value fileobj/none --) write 32-bit unsigned integer
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -184,7 +184,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
-%word writefloat 2 (value fileobj/none --) write 32-bit float
+%word writefloat (value fileobj/none --) write 32-bit float
 {
     Value *p[2];
     a->popParams(p,"nA",&tFile);
@@ -192,7 +192,7 @@ static FILE *getf(Value *p,bool out){
     fwrite(&b,sizeof(b),1,getf(p[1],true));
 }    
 
-%word readfloat 1 (fileobj/none -- float/none) read 32-bit float
+%word readfloat (fileobj/none -- float/none) read 32-bit float
 {
     Value *p;
     float i;
@@ -204,7 +204,7 @@ static FILE *getf(Value *p,bool out){
         a->pushNone();
 }
 
-%word read8 1 (fileobj/none -- int/none) read signed byte
+%word read8 (fileobj/none -- int/none) read signed byte
 {
     Value *p;
     int8_t i;
@@ -215,7 +215,7 @@ static FILE *getf(Value *p,bool out){
     else
         a->pushNone();
 }
-%word read16 1 (fileobj/none -- int/none) read 16-bit signed int
+%word read16 (fileobj/none -- int/none) read 16-bit signed int
 {
     Value *p;
     int16_t i;
@@ -226,7 +226,7 @@ static FILE *getf(Value *p,bool out){
     else
         a->pushNone();
 }
-%word read32 1 (fileobj/none -- int/none) read 32-bit signed int
+%word read32 (fileobj/none -- int/none) read 32-bit signed int
 {
     Value *p;
     int16_t i;
@@ -238,7 +238,7 @@ static FILE *getf(Value *p,bool out){
         a->pushNone();
 }
 
-%word readu8 1 (fileobj/none -- int/none) read unsigned byte
+%word readu8 (fileobj/none -- int/none) read unsigned byte
 {
     Value *p;
     uint8_t i;
@@ -249,7 +249,7 @@ static FILE *getf(Value *p,bool out){
     else
         a->pushNone();
 }
-%word readu16 1 (fileobj/none -- int/none) read 16-bit unsigned int
+%word readu16 (fileobj/none -- int/none) read 16-bit unsigned int
 {
     Value *p;
     uint16_t i;
@@ -260,7 +260,7 @@ static FILE *getf(Value *p,bool out){
     else
         a->pushNone();
 }
-%word readu32 1 (fileobj/none -- int/none) read 32-bit unsigned int
+%word readu32 (fileobj/none -- int/none) read 32-bit unsigned int
 {
     Value *p;
     uint32_t i;
@@ -293,7 +293,7 @@ static const char *readstr(FILE *f,bool endAtEOL=false){
     return buf;
 }
 
-%word readstr 1 (fileobj/none -- str) read string until null/EOL/EOF
+%word readstr (fileobj/none -- str) read string until null/EOL/EOF
 {
     Value *p;
     a->popParams(&p,"A",&tFile);
@@ -304,7 +304,7 @@ static const char *readstr(FILE *f,bool endAtEOL=false){
     free((char *)s);
 }
 
-%word readfilestr 1 (fileobj/none -- str) read an entire text file
+%word readfilestr (fileobj/none -- str) read an entire text file
 {
     Value *p;
     a->popParams(&p,"A",&tFile);
@@ -315,7 +315,7 @@ static const char *readstr(FILE *f,bool endAtEOL=false){
     free((char *)s);
 }
 
-%word eof 1 (fileobj/none -- boolean) indicates if EOF has been read
+%word eof (fileobj/none -- boolean) indicates if EOF has been read
 {
     Value *p;
     a->popParams(&p,"A",&tFile);
@@ -389,14 +389,14 @@ static void doreadhash(FILE *f,Value *res){
     }
 }
 
-%word readlist 1 (fileobj/none -- list) read a binary list (as written by 'write')
+%word readlist (fileobj/none -- list) read a binary list (as written by 'write')
 {
     Value *p;
     a->popParams(&p,"A",&tFile);
     FILE *f = getf(p,false);
     doreadlist(f,a->pushval());
 }
-%word readhash 1 (fileobj/none -- hash) read a binary hash (as written by 'write')
+%word readhash (fileobj/none -- hash) read a binary hash (as written by 'write')
 {
     Value *p;
     a->popParams(&p,"A",&tFile);
@@ -404,7 +404,7 @@ static void doreadhash(FILE *f,Value *res){
     doreadhash(f,a->pushval());
 }
 
-%word exists 1 (path -- boolean/none) does a file/directory exist? None indicates some other problem
+%word exists (path -- boolean/none) does a file/directory exist? None indicates some other problem
 {
     Value *p;
     a->popParams(&p,"s");
@@ -418,7 +418,7 @@ static void doreadhash(FILE *f,Value *res){
         a->pushNone();
 }
 
-%word flush 1 (fileobj/none -- ) flush the file buffer
+%word flush (fileobj/none -- ) flush the file buffer
 {
     Value *p;
     a->popParams(&p,"A",&tFile);
@@ -433,7 +433,7 @@ inline void setIntInHash(Hash *h, const char *key,uint32_t value){
     h->set(&k,&v);
 }
 
-%word stat 1 (path -- hash/none) read the file statistics, or none if not found
+%word stat (path -- hash/none) read the file statistics, or none if not found
 {
     Value *p;
     a->popParams(&p,"s");

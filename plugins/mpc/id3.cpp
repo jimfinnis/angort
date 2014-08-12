@@ -12,64 +12,105 @@
 #include <fileref.h>
 #include <tag.h>
 
-#include <angort/plugins.h>
+#include <angort/angort.h>
+#include <angort/hash.h>
 
 using namespace angort;
 
-%plugin id3
+%name id3
+%shared
 
-inline void setStr(PluginValue *hash,const char *name,TagLib::String s){
+inline void setStr(Hash *h, const char *key,TagLib::String s){
+    Value k,v;
     if(!s.isNull()){
-        hash->setHashVal(name,new PluginValue(s.toCString(true)));
+        Types::tSymbol->set(&k,SymbolType::getSymbol(key));
+        Types::tString->set(&v,s.toCString(true));
+        h->set(&k,&v);
     }
 }
 
-%word loadtags 1 (fileName -- hash) load ID3 tags (also stores filename) in hash
+inline void setInt(Hash *h, const char *key,uint32_t value){
+    Value k,v;
+    Types::tSymbol->set(&k,SymbolType::getSymbol(key));
+    Types::tInteger->set(&v,(int)value);
+    h->set(&k,&v);
+}
+
+%word loadtags (fileName -- hash) load ID3 tags (also stores filename) in hash
 {
-    TagLib::FileRef f(params[0].getString());
+    Value *p;
+    a->popParams(&p,"s");
+    
+    TagLib::FileRef f(p->toString().get());
+    
+    p=a->pushval();
+    
     if(f.isNull())
-        res->setNone();
+        p->setNone();
     else {
         TagLib::Tag *t= f.tag();
-        res->setHash();
+        Hash *res = Types::tHash->set(p);
         
         setStr(res,"artist",t->artist());
         setStr(res,"title",t->title());
         setStr(res,"album",t->album());
         setStr(res,"comment",t->comment());
         setStr(res,"genre",t->genre());
-        res->setHashVal("year",new PluginValue(t->year()));
-        res->setHashVal("track",new PluginValue(t->track()));
-        res->setHashVal("filename",new PluginValue(params[0].getString()));
+        setInt(res,"year",t->year());
+        setInt(res,"track",t->track());
+        setStr(res,"filename",p->toString().get());
     }
 }
 
-inline TagLib::String getStr(PluginValue *hash, const char *name){
-    PluginValue *v = hash->getHashVal(name);
-    if(!v)
-        return TagLib::String::null;
+inline TagLib::String getStr(Hash *hash, const char *name){
+    Value k;
+    Types::tString->set(&k,name);
+    
+    if(hash->find(&k))
+        return TagLib::String(
+                              hash->getval()->toString().get(),
+                              TagLib::String::UTF8);
     else
-        return TagLib::String(v->getString(),TagLib::String::UTF8);
+        return TagLib::String::null;
 }
 
-%word savetags 1 (hash --) save ID3 tags as loaded by loadtags (filename is in hash)
+inline int getInt(Hash *hash,const char *name){
+    Value k;
+    Types::tString->set(&k,name);
+    
+    if(hash->find(&k))
+        return hash->getval()->toInt();
+    else
+        return -1;
+}
+    
+
+%word savetags (hash --) save ID3 tags as loaded by loadtags (filename is in hash)
 {
-    PluginValue *h = params;
-    const char *fn = h->getHashVal("filename")->getString();
-    TagLib::FileRef f(fn);
-    TagLib::Tag *t = f.tag();
+    Value *p;
+    a->popParams(&p,"h");
+    Hash *h = Types::tHash->get(p);
     
-    t->setArtist(getStr(h,"artist"));
-    t->setTitle(getStr(h,"title"));
-    t->setAlbum(getStr(h,"album"));
-    t->setComment(getStr(h,"comment"));
-    t->setGenre(getStr(h,"genre"));
+    Value k;
+    Types::tString->set(&k,"filename");
+    if(h->find(&k)){
+        Value *v = h->getval();
+        TagLib::FileRef f(v->toString().get());
+        TagLib::Tag *t = f.tag();
     
-    t->setTrack(h->getHashVal("track")->getInt());
-    t->setYear(h->getHashVal("year")->getInt());
+        t->setArtist(getStr(h,"artist"));
+        t->setTitle(getStr(h,"title"));
+        t->setAlbum(getStr(h,"album"));
+        t->setComment(getStr(h,"comment"));
+        t->setGenre(getStr(h,"genre"));
     
-    if(!f.save())
-        printf("Warning: could not save to file %s",fn);
+        t->setTrack(getInt(h,"track"));
+        t->setYear(getInt(h,"year"));
+        
+        if(!f.save())
+            printf("Warning: could not save to file %s",v->toString().get());
+    }
+    
                
 }
 

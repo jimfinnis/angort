@@ -1,4 +1,4 @@
-perl ../makePlugin.pl sys.cpp >sys_plugin.cpp
+perl ../../makeWords.pl sys.cpp >sys_plugin.cpp
 
 
 g++ -fPIC -g -c -Wall sys_plugin.cpp 

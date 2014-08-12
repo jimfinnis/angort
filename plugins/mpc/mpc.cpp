@@ -14,12 +14,13 @@
 #include <mpd/entity.h>
 #include <mpd/song.h>
 
-#include <angort/plugins.h>
+#include <angort/angort.h>
+#include <angort/hash.h>
 
 using namespace angort;
 
-%plugin mpc
-
+%name mpc
+%shared
 
 /// handles the connection. This should be created by "connect",
 /// and disconnection will be handled by the destructor, which
@@ -69,26 +70,41 @@ public:
     
     void check(){
         if(!mpd)
-            throw("MPD not connected");
+            throw RUNT("MPD not connected");
     }
     
     void throwError(){
         char buf[1024];
         sprintf(buf,"MPD error: %s",mpd_connection_get_error_message(mpd));
         mpd_connection_clear_error(mpd);
-        throw buf;
+        throw RUNT("").set(buf);
     }
 };
 
 Connection conn;
 
-static PluginValue *makeSong(const mpd_song *song){
-    PluginValue *p = new PluginValue();
-    p->setHash();
-    p->setHashVal("name",new PluginValue(mpd_song_get_uri(song)));
-    p->setHashVal("id",new PluginValue(mpd_song_get_id(song)));
-    p->setHashVal("pos",new PluginValue(mpd_song_get_pos(song)));
-    p->setHashVal("duration",new PluginValue(mpd_song_get_duration(song)));
+inline void setStringInHash(Hash *h, const char *key,const char *value){
+    Value k,v;
+    Types::tSymbol->set(&k,SymbolType::getSymbol(key));
+    Types::tString->set(&v,value);
+    h->set(&k,&v);
+}
+
+inline void setIntInHash(Hash *h, const char *key,uint32_t value){
+    Value k,v;
+    Types::tSymbol->set(&k,SymbolType::getSymbol(key));
+    Types::tInteger->set(&v,(int)value);
+    h->set(&k,&v);
+}
+
+void makeSong(Value *out, const mpd_song *song){
+    Hash *h = Types::tHash->set(out);
+    
+    
+    setStringInHash(h,"name",mpd_song_get_uri(song));
+    setIntInHash(h,"id",mpd_song_get_id(song));
+    setIntInHash(h,"pos",mpd_song_get_pos(song));
+    setIntInHash(h,"duration",mpd_song_get_duration(song));
     
     for(int i=(int)MPD_TAG_ARTIST;i<(int)MPD_TAG_COUNT;i++){
         const char *s = mpd_song_get_tag(song,(mpd_tag_type)i,0);
@@ -97,39 +113,36 @@ static PluginValue *makeSong(const mpd_song *song){
             const char *tagname = mpd_tag_name((mpd_tag_type)i);
             strcpy(buf,tagname);
             for(char *q=buf;*q;q++)*q=tolower(*q);
-            p->setHashVal(buf,new PluginValue(s));
+            
+            setStringInHash(h,buf,s);
         }
     }
-    
-    return p;
 }
 
-%word connect 2 (hostOrNone portOrZero --) connect to MPD
+%word connect (hostOrNone portOrZero --) connect to MPD
 {
+    Value *params[2];
+    
+    a->popParams(params,"An",Types::tString);
+    
     if(conn.mpd)
         conn.disconnect();
     
-    
-    const char *host;
-    if(params[0].type == PV_NONE)
-        host = NULL;
-    else
-        host = params[0].getString();
-    int port = params[1].getInt();
-    
-    const char *error = conn.connect(host,port);
+    const char *error = conn.connect(params[0]->isNone()?NULL:
+                                       params[0]->toString().get(),
+                                     params[1]->toInt());
     if(error)
-        throw error;
+        throw RUNT("").set(error);
 }
 
-%word search 2 (constraintHash exactbool -- songList) search for songs by tags
+%word search (constraintHash exactbool -- songList) search for songs by tags
 {
+    Value *params[2];
+    
+    a->popParams(params,"hn");
     conn.check();
     
-    if(params->type != PV_HASH)
-        throw "must be a hash in mpc$search";
-    
-    bool exact = params[1].getInt()?true:false;
+    bool exact = params[1]->toInt()?true:false;
     
     // start the search
     
@@ -137,26 +150,28 @@ static PluginValue *makeSong(const mpd_song *song){
         conn.throwError();
     
     // add constraints
-    PluginValue *key,*value;
-    for(key = params->v.head;key;key=value->next){
-        value = key->next;
-        
+    Hash *h = Types::tHash->get(params[0]);
+    HashKeyIterator iter(h);
+    
+    for(iter.first();!iter.isDone();iter.next()){
+        Value *key = iter.current();
+        Value *val = iter.curval();
         if(!mpd_search_add_tag_constraint(conn.mpd,MPD_OPERATOR_DEFAULT,
-                                          mpd_tag_name_iparse(key->getString()),
-                                          value->getString())){
+                                          mpd_tag_name_iparse(key->toString().get()),
+                                          val->toString().get())){
             mpd_search_cancel(conn.mpd);
             conn.throwError();
         }
     }
     if(!mpd_search_commit(conn.mpd))
         conn.throwError();
-        
     
-    res->setList();
+    Value *result = a->pushval();
+    ArrayList<Value> *list = Types::tList->set(result);
+    
     mpd_song *song;
     while((song=mpd_recv_song(conn.mpd))!=NULL){
-        PluginValue *pv = makeSong(song);
-        res->addToList(pv);
+        makeSong(list->append(),song);
         mpd_song_free(song);
     }
     if (mpd_connection_get_error(conn.mpd) != MPD_ERROR_SUCCESS) {
@@ -170,73 +185,94 @@ static PluginValue *makeSong(const mpd_song *song){
     return;
     // ugly, yes.
 error:
-    if(res->type == PV_LIST){
-        PluginValue *q;
-        for(PluginValue *p=res->v.head;p;p=q){
-            q=p->next;
-            delete p;
-        }
-    }
+    result->clr(); // should delete the list.
     throw mpd_connection_get_error_message(conn.mpd);
 }
 
-%word tags 2 (tag constraints -- list) find all unique values of a tag with given constraints
+%word tags (tag constraints -- list) find all unique values of a tag with given constraints
 {
+    Value *params[2];
+    a->popParams(params,"sh");
+    
     conn.check();
     
-    PluginValue *hash = params+1;
-    if(hash->type != PV_HASH)
-        throw "must be a hash in mpc$search";
-    
-    const char *tag = params->getString();
+    const StringBuffer& tag = params[0]->toString();
+    Hash *h = Types::tHash->get(params[1]);
     
     // start the search
     
-    mpd_tag_type tagid = mpd_tag_name_iparse(tag);
+    mpd_tag_type tagid = mpd_tag_name_iparse(tag.get());
     if(!mpd_search_db_tags(conn.mpd,tagid))
         conn.throwError();
     
     // add constraints
-    PluginValue *key,*value;
-    for(key = hash->v.head;key;key=value->next){
-        value = key->next;
+    HashKeyIterator iter(h);
+    for(iter.first();!iter.isDone();iter.next()){
+        Value *key = iter.current();
+        Value *val = iter.curval();
         
         if(!mpd_search_add_tag_constraint(conn.mpd,MPD_OPERATOR_DEFAULT,
-                                          mpd_tag_name_iparse(key->getString()),
-                                          value->getString())){
+                                          mpd_tag_name_iparse(key->toString().get()),
+                                          val->toString().get())){
             mpd_search_cancel(conn.mpd);
             conn.throwError();
         }
     }
     if(!mpd_search_commit(conn.mpd))
         conn.throwError();
-        
     
-    res->setList();
+    Value *result = a->pushval();
+    ArrayList<Value> *list = Types::tList->set(result);
+    
     while(mpd_pair *pair = mpd_recv_pair_tag(conn.mpd,tagid)){
-        res->addToList(new PluginValue(pair->value));
+        Value *v = list->append();
+        Types::tString->set(v,pair->value);
         mpd_return_pair(conn.mpd,pair);
     }
     
-    if (mpd_connection_get_error(conn.mpd) != MPD_ERROR_SUCCESS)
+    if (mpd_connection_get_error(conn.mpd) != MPD_ERROR_SUCCESS){
         conn.throwError();
+        result->clr();
+    }
     
-    if (!mpd_response_finish(conn.mpd))
+    if (!mpd_response_finish(conn.mpd)){
         conn.throwError();
+        result->clr();
+    }
 }
 
+// given a value which is a hash, get the name field and send this
+// as an "add" command.
+void sendAddOfNameInHash(Value *v){
+    Value k;
+    
+    if(v->t != Types::tHash)
+        throw RUNT("song must be a hash");
+    
+    Hash *h = Types::tHash->get(v);
+    Types::tString->set(&k,"name");
+    
+    if(h->find(&k)){
+        v = h->getval();
+        mpd_send_add(conn.mpd, v->toString().get());
+    } else
+        throw RUNT("song hash must contain name field");
+}
 
-%word add 1 (songlist -- ) add songs to queue
+%word add (songlist -- ) add songs to queue
 {
+    Value *v = a->popval();
+    
     conn.check();
     
     mpd_command_list_begin(conn.mpd,false);
     
-    if(params->type == PV_OBJ){
-        mpd_send_add(conn.mpd,params->getHashVal("name")->getString());
-    } else if(params->type == PV_LIST) {
-        for(PluginValue *p=params->v.head;p;p=p->next){
-            mpd_send_add(conn.mpd,p->getHashVal("name")->getString());
+    if(v->t == Types::tHash){
+        sendAddOfNameInHash(v);
+    } else if(v->t == Types::tList) {
+        ArrayListIterator<Value> iter(Types::tList->get(v));
+        for(iter.first();!iter.isDone();iter.next()){
+            sendAddOfNameInHash(iter.current());
         }
     } else throw("inappropriate type for 'mpc$add'");
     mpd_command_list_end(conn.mpd);
@@ -245,28 +281,28 @@ error:
         conn.throwError();
 }
 
-%word clr 0 (--) clear queue
+%word clr (--) clear queue
 {
     conn.check();
     if(!mpd_run_clear(conn.mpd))
         conn.throwError();
 }
 
-%word list 0 (-- songlist) list the queue
+%word list (-- songlist) list the queue
 {
     conn.check();
     mpd_command_list_begin(conn.mpd,true);
     mpd_send_list_queue_meta(conn.mpd);
     mpd_command_list_end(conn.mpd);
     
-    res->setList();
+    Value *res = a->pushval();
+    ArrayList<Value> *list = Types::tList->set(res);
+    
     for(mpd_entity* entity = mpd_recv_entity(conn.mpd);
         entity;
         entity = mpd_recv_entity(conn.mpd)) {
         if(mpd_entity_get_type(entity) == MPD_ENTITY_TYPE_SONG) {
-            const mpd_song* song = mpd_entity_get_song(entity);
-            PluginValue *pv = makeSong(song);
-            res->addToList(pv);
+            makeSong(list->append(),mpd_entity_get_song(entity));
         }
         mpd_entity_free(entity);
     }    
@@ -274,67 +310,74 @@ error:
         conn.throwError();
 }
 
-%word play 1 (posOrNone --) start playing from a position, or from the current position
+%word play (posOrNone --) start playing from a position, or from the current position
 {
+    Value *p;
+    a->popParams(&p,"A",Types::tInteger);
+    
     conn.check();
-    if(params->type == PV_NONE){
+    if(p->isNone()) {
         if(!mpd_run_play(conn.mpd))
             conn.throwError();
     } else {
-        if(!mpd_run_play_pos(conn.mpd,params->getInt()))
+        if(!mpd_run_play_pos(conn.mpd,p->toInt()))
             conn.throwError();
     }
 }
 
-%word pause 0 (--) pause the player
+%word pause (--) pause the player
 {
     conn.check();
     if(!mpd_run_toggle_pause(conn.mpd))
         conn.throwError();
 }
 
-%word stop 0 (--) stop the player
+%word stop (--) stop the player
 {
     conn.check();
     if(!mpd_run_stop(conn.mpd))
         conn.throwError();
 }
 
-%word next 0 (--) move to next item in queue
+%word next (--) move to next item in queue
 {
     conn.check();
     if(!mpd_run_next(conn.mpd))
         conn.throwError();
 }
 
-%word prev 0 (--) move to previous item in queue
+%word prev (--) move to previous item in queue
 {
     conn.check();
     if(!mpd_run_previous(conn.mpd))
         conn.throwError();
 }
 
-%word stat 0 (-- hash) produce a status hash
+%word stat (-- hash) produce a status hash
 {
     conn.check();
     mpd_status *stat = mpd_run_status(conn.mpd);
     if(!stat)
         conn.throwError();
-    res->setHash();
-    res->setHashVal("consume",new PluginValue(mpd_status_get_consume(stat)?1:0));
-    res->setHashVal("crossfade",new PluginValue((int)mpd_status_get_crossfade(stat)));
-    res->setHashVal("elapsed",new PluginValue((int)mpd_status_get_elapsed_time(stat)));
-    res->setHashVal("total",new PluginValue((int)mpd_status_get_total_time(stat)));
-    res->setHashVal("update",new PluginValue((int)mpd_status_get_update_id(stat)));
-    res->setHashVal("volume",new PluginValue((int)mpd_status_get_volume(stat)));
+    
+    Value *res = a->pushval();
+    Hash *h = Types::tHash->set(res);
+    
+    setIntInHash(h,"consume",mpd_status_get_consume(stat));
+    setIntInHash(h,"crossfade",mpd_status_get_crossfade(stat));
+    setIntInHash(h,"elapsed",mpd_status_get_elapsed_time(stat));
+    setIntInHash(h,"total",mpd_status_get_total_time(stat));
+    setIntInHash(h,"update",mpd_status_get_update_id(stat));
+    setIntInHash(h,"volume",mpd_status_get_volume(stat));
     if(mpd_status_get_error(stat))
-        res->setHashVal("error",new PluginValue(mpd_status_get_error(stat)));
-    res->setHashVal("queuelength",new PluginValue((int)mpd_status_get_queue_length(stat)));
-    res->setHashVal("queueversion",new PluginValue((int)mpd_status_get_queue_version(stat)));
+        setStringInHash(h,"error",mpd_status_get_error(stat));
+    setIntInHash(h,"queuelength",mpd_status_get_queue_length(stat));
+    setIntInHash(h,"queueversion",mpd_status_get_queue_version(stat));
     
-    res->setHashVal("id",new PluginValue((int)mpd_status_get_song_id(stat)));
-    res->setHashVal("pos",new PluginValue((int)mpd_status_get_song_pos(stat)));
+    setIntInHash(h,"id",mpd_status_get_song_id(stat));
+    setIntInHash(h,"pos",mpd_status_get_song_pos(stat));
     
+    // the state is a symbol, which is slightly fiddly.
     const char *state;
     switch(mpd_status_get_state(stat)){
     case MPD_STATE_UNKNOWN:state="unknown";break;
@@ -342,52 +385,69 @@ error:
     case MPD_STATE_PLAY:state="play";break;
     case MPD_STATE_PAUSE:state="pause";break;
     }
-    PluginValue *pv = new PluginValue();
-    pv->setSymbol(state);
-    res->setHashVal("state",pv);
     
-        
-    res->setHashVal("random",new PluginValue(mpd_status_get_random(stat)?1:0));
-    res->setHashVal("repeat",new PluginValue(mpd_status_get_repeat(stat)?1:0));
-    res->setHashVal("single",new PluginValue(mpd_status_get_single(stat)?1:0));
+    Value sym,k;
+    Types::tString->set(&k,"state");
+    int sid = SymbolType::getSymbol(state);
+    Types::tSymbol->set(&sym,sid);
+    h->set(&k,&sym);
+
+    
+    setIntInHash(h,"random",mpd_status_get_random(stat)?1:0);
+    setIntInHash(h,"repeat",mpd_status_get_repeat(stat)?1:0);
+    setIntInHash(h,"single",mpd_status_get_single(stat)?1:0);
 }
 
-%word load 1 (name --) load a playlist
+%word load (name --) load a playlist
 {
+    Value *p;
+    a->popParams(&p,"s");
+    
     conn.check();
-    if(!mpd_run_load(conn.mpd,params[0].getString()))
+    if(!mpd_run_load(conn.mpd,p->toString().get()))
         conn.throwError();
 }
 
-%word save 1 (name --) save a playlist
+%word save (name --) save a playlist
 {
+    Value *p;
+    a->popParams(&p,"s");
+    
     conn.check();
-    if(!mpd_run_save(conn.mpd,params[0].getString()))
+    if(!mpd_run_save(conn.mpd,p->toString().get()))
         conn.throwError();
 }
 
-%word rm 1 (name --) delete a playlist
+%word rm (name --) delete a playlist
 {
+    Value *p;
+    a->popParams(&p,"s");
+    
     conn.check();
-    if(!mpd_run_rm(conn.mpd,params[0].getString()))
+    if(!mpd_run_rm(conn.mpd,p->toString().get()))
         conn.throwError();
 }
 
-%word playlists 0 (-- list) produce a list of playlists
+%word playlists (-- list) produce a list of playlists
 {
     conn.check();
     mpd_send_list_playlists(conn.mpd);
-    res->setList();
+    
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
     while(mpd_playlist *p = mpd_recv_playlist(conn.mpd)){
-        res->addToList(new PluginValue(mpd_playlist_get_path(p)));
+        Types::tString->set(list->append(),mpd_playlist_get_path(p));
     }
     mpd_response_finish(conn.mpd);
 }
 
-%word setvol 1 (vol --) set the volume
+%word setvol (vol --) set the volume
 {
+    Value *p;
+    a->popParams(&p,"n");
+    
     conn.check();
-    if(!mpd_run_set_volume(conn.mpd,params[0].getInt()))
+    if(!mpd_run_set_volume(conn.mpd,p->toInt()))
         conn.throwError();
 }
         
@@ -395,20 +455,24 @@ error:
 
 /// this is used for functions which are harder to do!
 
-%word mpc 1 (string --) pass a command string to the standard MPC client
+%word mpc (string -- outlist/none) pass a command string to the standard MPC client
 {
     FILE *fp;
     
+    Value *p;
+    a->popParams(&p,"s");
+    
     char buf[1024];
-    snprintf(buf,1024,"/usr/bin/mpc %s",params[0].getString());
+    snprintf(buf,1024,"/usr/bin/mpc %s",p->toString().get());
+    
     fp = popen(buf,"r");
-    res->setList();
+    
+    Value *res = a->pushval();
     if(fp!=NULL){
+        ArrayList<Value> *list = Types::tList->set(res);
         while(fgets(buf,sizeof(buf)-1,fp)!=NULL){
-            PluginValue *pv = new PluginValue();
             buf[strlen(buf)-1]=0; // strip trailing LF
-            pv->setString(buf);
-            res->addToList(pv);
+            Types::tString->set(list->append(),buf);
         }
         pclose(fp);   
     } else 
@@ -436,20 +500,23 @@ int levenshtein(const char *s1, const char *s2) {
     return(matrix[s2len][s1len]);
 }
 
-%word strneareq 2 (a b--bool) compares two strings for near equality
+%word strneareq (a b--bool) compares two strings for near equality
 {
-    const char *a = params[0].getString();
-    const char *b = params[1].getString();
+    Value *params[2];
+    a->popParams(params,"vv");
     
-    int x = levenshtein(a,b);
+    const StringBuffer &p = params[0]->toString();
+    const StringBuffer &q = params[1]->toString();
     
-    int lena = strlen(a);
-    int lenb = strlen(b);
-    int mn = (lena<lenb)?lena:lenb;
+    int x = levenshtein(p.get(),q.get());
+    
+    int lenp = strlen(p.get());
+    int lenq = strlen(q.get());
+    int mn = (lenp<lenq)?lenp:lenq;
     
     float rat = (float)x / (float)mn;
     
-    res->setInt((rat<0.0001)?1:0);
+    Types::tInteger->set(a->pushval(),(rat<0.0001)?1:0);
 } 
 
 %init

@@ -1,4 +1,4 @@
-perl ../makePlugin.pl id3.cpp >id3_plugin.cpp
+perl ../../makeWords.pl id3.cpp >id3_plugin.cpp
 
 
 g++ -fPIC -g -c -Wall `pkg-config taglib --cflags` id3_plugin.cpp 

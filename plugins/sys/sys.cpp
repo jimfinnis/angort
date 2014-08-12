@@ -8,14 +8,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <angort/plugins.h>
+#include <angort/angort.h>
 
 using namespace angort;
 
-%word sleep 1 (time --) sleep for some time
+%name sys
+%shared
+
+%word sleep (time --) sleep for some time
 {
-    float t = params[0].getFloat();
-    usleep((int)(t*1.0e6f));
+    Value *p;
+    a->popParams(&p,"n");
+    usleep((int)(p->toFloat()*1.0e6f));
 }
 
 %init

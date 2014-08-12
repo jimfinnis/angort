@@ -757,6 +757,8 @@ public:
     /// - s : string or symbol
     /// - S : symbol only
     /// - v : variable (i.e. no checking)
+    /// - l : list
+    /// - h : hash
     /// - a : type passed in as type0
     /// - b : type passed in as type1
     /// - A : type passed in as type0 or none

@@ -36,6 +36,14 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
             if(v->t != Types::tSymbol )
                 throw ParameterTypeException(i,"symbol");
             break;
+        case 'l':
+            if(v->t != Types::tList )
+                throw ParameterTypeException(i,"list");
+            break;
+        case 'h':
+            if(v->t != Types::tHash )
+                throw ParameterTypeException(i,"hash");
+            break;
         case 'a':
         case 'b':
         case 'A':
@@ -44,7 +52,7 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
             if(!tt)
                 throw RUNT("unsupplied special type specified in parameter check");
             // if the parameter is T, we don't allow NONE through.
-            if(v->t != tt && (!v->isNone() || *p=='A' || *p=='B'))
+            if(v->t != tt && (!v->isNone() || *p=='a' || *p=='a'))
                 throw ParameterTypeException(i,tt->name);
             break;
                 

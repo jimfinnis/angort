@@ -311,6 +311,12 @@ public:
             throw Exception("first() not called on iterator");
         return &ent->k;
     }
+    Value *curval(){
+        if(!ent)
+            throw Exception("first() not called on iterator");
+        return &ent->v;
+    }
+        
 private:
     Hash *hash;
     int idx,size;
