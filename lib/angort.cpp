@@ -1245,7 +1245,7 @@ void Angort::list(){
 
 
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
-    Namespace *sp = names.getSpaceByName(ns?ns:"default",true);
+    Namespace *sp = names.getSpaceByName(ns?ns:"std",true);
     int i = sp->addConst(name,false);
     sp->setSpec(i,spec);
     Value *v = sp->getVal(i);

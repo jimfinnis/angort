@@ -1,4 +1,4 @@
-perl ../makePlugin.pl sdl.cpp >sdl_plugin.cpp
+perl ../../makeWords.pl sdl.cpp >sdl_plugin.cpp
 
 
 g++ -fPIC -O3 -c -Wall `pkg-config sdl --cflags` sdl_plugin.cpp
@@ -6,6 +6,6 @@ g++ -fPIC -O3 -c -Wall `pkg-config sdl --cflags` sdl_plugin.cpp
 g++  -shared -Wl,-soname,sdl.angso \
     -o ../libs/sdl.angso \
     sdl_plugin.o\
-    `pkg-config sdl --libs`
+    `pkg-config sdl --libs` -lSDL_image
     
 

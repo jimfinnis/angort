@@ -250,7 +250,7 @@ void sendAddOfNameInHash(Value *v){
         throw RUNT("song must be a hash");
     
     Hash *h = Types::tHash->get(v);
-    Types::tString->set(&k,"name");
+    Types::tSymbol->set(&k,SymbolType::getSymbol("name"));
     
     if(h->find(&k)){
         v = h->getval();
@@ -387,9 +387,8 @@ void sendAddOfNameInHash(Value *v){
     }
     
     Value sym,k;
-    Types::tString->set(&k,"state");
-    int sid = SymbolType::getSymbol(state);
-    Types::tSymbol->set(&sym,sid);
+    Types::tSymbol->set(&k,SymbolType::getSymbol("state"));
+    Types::tSymbol->set(&sym,SymbolType::getSymbol(state));
     h->set(&k,&sym);
 
     

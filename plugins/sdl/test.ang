@@ -1,4 +1,4 @@
-#"../libs/sdl" library import
+#../libs/sdl" library import
 `sdl library import
 
 -1 !autogc # turn off major GC

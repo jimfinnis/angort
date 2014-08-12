@@ -8,19 +8,20 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
-#include <angort/plugins.h>
+#include <angort/angort.h>
 
 using namespace angort;
 
-%plugin sdl
+%name sdl
+%shared
 
-static AngortPluginInterface *api;
 static SDL_Surface *screen = NULL;
 static uint32_t forecol;
 static uint32_t backcol;
 static bool done = false; // set when we want to quit
 
-class Surface : public PluginObject {
+
+class Surface : public GarbageCollected {
 public:
     SDL_Surface *s;
     bool isScreen;
@@ -35,12 +36,34 @@ public:
     }
 };
 
+class SurfaceType : public GCType {
+public:
+    SurfaceType(){
+        add("surface","SDLS");
+    }
+    
+    Surface *get(Value *v){
+        if(v->t != this)
+            throw RUNT("not a surface");
+        return (Surface *)(v->v.gc);
+    }
+    
+    void set(Value *v, Surface *s){
+        v->clr();
+        v->t = this;
+        v->v.gc = s;
+        incRef(v);
+    }
+};
+
+static SurfaceType tSurface;
+
 static void chkscr(){
     if(!screen)
         throw "SDL not initialised";
 }
 
-%word close 0 (--) close down SDL
+%word close (--) close down SDL
 {
     if(screen)
         SDL_Quit();
@@ -62,10 +85,13 @@ static void openwindow(int w,int h,int flags){
     SDL_Flip(screen);
 }
 
-%word fullscreenopen 2 (x/-1 y/-1 --) init SDL and open a fullscreen hw window
+%word fullscreenopen (w/-1 h/-1 --) init SDL and open a fullscreen hw window
 {
-    int w = params[0].getInt();
-    int h = params[1].getInt();
+    Value *p[2];
+    a->popParams(p,"nn");
+    
+    int w = p[0]->toInt();
+    int h = p[1]->toInt();
     if(w<0){
         const SDL_VideoInfo *v = SDL_GetVideoInfo();
         w = v->current_w;
@@ -74,12 +100,18 @@ static void openwindow(int w,int h,int flags){
     openwindow(w,h,SDL_FULLSCREEN|SDL_HWSURFACE);
 }
 
-%word open 2 (x y -- ) init SDL and open a window
+%word open (w h -- ) init SDL and open a window
 {
-    openwindow(params[0].getInt(),params[1].getInt(),0);
+    Value *p[2];
+    a->popParams(p,"nn");
+    
+    int w = p[0]->toInt();
+    int h = p[1]->toInt();
+    
+    openwindow(w,h,0);
 }
 
-%word scr 0 (-- surface) get the screen surface
+%word scr (-- surface) get the screen surface
 {
     // got to make a new one of these each time, rather
     // than keep it static, because the object will keep
@@ -87,135 +119,161 @@ static void openwindow(int w,int h,int flags){
     Surface *screenSurf = new Surface(screen);
     screenSurf->isScreen=true;
     
-    res->setObject(screenSurf);
+    tSurface.set(a->pushval(),screenSurf);
 }
 
-%word width 1 (surface -- int) get width of surface
+%word width (surface -- int) get width of surface
 {
-    Surface *so = (Surface *)(params[0].getObject());
-    res->setInt(so->s->w);
+    Value *p;
+    a->popParams(&p,"a",&tSurface);
+    
+    Surface *so = tSurface.get(p);
+    a->pushInt(so->s->w);
 }
 
-%word height 1 (surface -- int) get width of surface
+%word height (surface -- int) get width of surface
 {
-    Surface *so = (Surface *)(params[0].getObject());
-    res->setInt(so->s->h);
+    Value *p;
+    a->popParams(&p,"a",&tSurface);
+    
+    Surface *so = tSurface.get(p);
+    a->pushInt(so->s->h);
 }
 
-%word load 1 (file -- surf/none) load an image into a surface
+%word load (file -- surf/none) load an image into a surface
 {
+    Value *p;
+    a->popParams(&p,"s");
     chkscr();
-    SDL_Surface *tmp = IMG_Load(params[0].getString());
+    
+    printf("attempting load: %s\n",p->toString().get());
+    SDL_Surface *tmp = IMG_Load(p->toString().get());
+    printf("Load OK\n");
+    p = a->pushval();
+    
     if(!tmp)
-        res->setNone();
+        p->setNone();
     else {
         Surface *s = new Surface(SDL_DisplayFormat(tmp));
+        tSurface.set(p,s);
         SDL_FreeSurface(tmp);
-        res->setObject(s);
     }
 }
 
-%word blit 7 (dx dy sx sy sw/none sh/none surf --) blit a surface to the screen
+%word blit (dx dy sx sy sw/none sh/none surf --) blit a surface to the screen
 {
+    Value *p[7];
+    a->popParams(p,"nnnnAAb",Types::tInteger,&tSurface);
+    
     chkscr();
-    Surface *so = (Surface *)(params[6].getObject());
+    Surface *so = tSurface.get(p[6]);
     SDL_Surface *s = so->s;
     SDL_Rect src,dst;
     
-    dst.x = params[0].getInt(); // destination x
-    dst.y = params[1].getInt(); // destination y
+    dst.x = p[0]->toInt(); // destination x
+    dst.y = p[1]->toInt(); // destination y
     dst.w = 0;
     dst.h = 0;
-    src.x = params[2].getInt(); // source x
-    src.y = params[3].getInt(); // source y
-    src.h = params[4].type == PV_NONE ? params[4].getInt() : s->w; // source width / none if all
-    src.w = params[5].type == PV_NONE ? params[5].getInt() : s->h; // source height / none if all
+    src.x = p[2]->toInt(); // source x
+    src.y = p[3]->toInt(); // source y
+    src.w = p[4]->isNone() ? s->w : p[4]->toInt(); // source width
+    src.h = p[5]->isNone() ? s->h : p[5]->toInt(); // source height
     
-    SDL_BlitSurface(s,&src,screen,&dst);
+    if(SDL_BlitSurface(s,&src,screen,&dst)<0){
+        printf("blit error: %s\n",SDL_GetError());
+    }
 }
 
-%word flip 0 (--) flip front and back buffer
+%word flip (--) flip front and back buffer
 {
     chkscr();
     SDL_Flip(screen);
 }
 
-%word col 3 (r g b --) set colour 
+%word col (r g b --) set colour 
 {
+    Value *p[3];
+    a->popParams(p,"nnn");
+    
     chkscr();
-    int colr = params[0].getInt();
-    int colg = params[1].getInt();
-    int colb = params[2].getInt();
+    int colr = p[0]->toInt();
+    int colg = p[1]->toInt();
+    int colb = p[2]->toInt();
     forecol = SDL_MapRGB(screen->format,colr,colg,colb);
 }
-%word bcol 3 (r g b --) set back colour 
+%word bcol (r g b --) set back colour 
 {
+    Value *p[3];
+    a->popParams(p,"nnn");
+    
     chkscr();
-    int colr = params[0].getInt();
-    int colg = params[1].getInt();
-    int colb = params[2].getInt();
+    int colr = p[0]->toInt();
+    int colg = p[1]->toInt();
+    int colb = p[2]->toInt();
     backcol = SDL_MapRGB(screen->format,colr,colg,colb);
 }
 
-%word clear 0 (--) clear the screen to the background colour
+%word clear (--) clear the screen to the background colour
 {
     chkscr();
     SDL_FillRect(screen,NULL,backcol);
 }
 
-%word fillrect 4 (x y w h --) draw a filled rectangle in current colour
+%word fillrect (x y w h --) draw a filled rectangle in current colour
 {
+    Value *p[4];
+    a->popParams(p,"nnnn");
+    
     chkscr();
     SDL_Rect r;
     
-    r.x = params[0].getInt();
-    r.y = params[1].getInt();
-    r.w = params[2].getInt();
-    r.h = params[3].getInt();
+    r.x = p[0]->toInt();
+    r.y = p[1]->toInt();
+    r.w = p[2]->toInt();
+    r.h = p[3]->toInt();
     
     SDL_FillRect(screen,&r,forecol);
 }
 
-// various callbacks
-Value *onKeyDown = NULL;
-Value *onKeyUp = NULL;
-Value *onMouse = NULL;
-Value *onDraw = NULL;
+// various callbacks, all initially "none"
+Value onKeyDown;
+Value onKeyUp;
+Value onMouse;
+Value onDraw;
 
-%word ondraw 1 (callable --) set the draw callback, of spec (--)
+%word ondraw (callable --) set the draw callback, of spec (--)
 {
-    if(onDraw)
-        api->releaseCallable(onDraw);
-    onDraw = params[0].getCallable();
+    Value *p;
+    a->popParams(&p,"c");
+    onDraw.copy(p);
 }
 
-%word onkeyup 1 (callable --) set the key up callback, of spec (keysym --)
+%word onkeyup (callable --) set the key up callback, of spec (keysym --)
 {
-    if(onKeyUp)
-        api->releaseCallable(onKeyUp);
-    onKeyUp = params[0].getCallable();
+    Value *p;
+    a->popParams(&p,"c");
+    onKeyUp.copy(p);
 }
 
-%word onkeydown 1 (callable --) set the key down callback, of spec (keysym --)
+%word onkeydown (callable --) set the key down callback, of spec (keysym --)
 {
-    if(onKeyDown)
-        api->releaseCallable(onKeyDown);
-    onKeyDown = params[0].getCallable();
+    Value *p;
+    a->popParams(&p,"c");
+    onKeyDown.copy(p);
 }
 
-%word onmouse 1 (callable --) set the draw callback, of spec (--)
+%word onmouse (callable --) set the draw callback, of spec (--)
 {
-    if(onMouse)
-        api->releaseCallable(onMouse);
-    onMouse = params[0].getCallable();
+    Value *p;
+    a->popParams(&p,"c");
+    onMouse.copy(p);
 }
 
 
 
-%word loop 0 (--) start the main game loop
+%word loop (--) start the main game loop
 {
     chkscr();
-    PluginValue pv; // used to pass data to callbacks
     while(!done){
         SDL_Event e;
         while(SDL_PollEvent(&e)){
@@ -223,27 +281,27 @@ Value *onDraw = NULL;
             case SDL_QUIT:
                 done=true;break;
             case SDL_KEYDOWN:
-                if(onKeyDown){
-                    pv.setInt(e.key.keysym.sym);
-                    api->call(onKeyDown,&pv);
+                if(!onKeyDown.isNone()){
+                    a->pushInt(e.key.keysym.sym);
+                    a->runValue(&onKeyDown);
                 }
                 break;
             case SDL_KEYUP:
-                if(onKeyUp){
-                    pv.setInt(e.key.keysym.sym);
-                    api->call(onKeyUp,&pv);
+                if(!onKeyUp.isNone()){
+                    a->pushInt(e.key.keysym.sym);
+                    a->runValue(&onKeyUp);
                 }
                 break;
             default:break;
             }
         }
-        if(onDraw)
-            api->call(onDraw);
+        if(!onDraw.isNone())
+            a->runValue(&onDraw);
     }
     done = false; // reset the done flag
 }
 
-%word done 0 (--) set the done flag to end the main loop
+%word done (--) set the done flag to end the main loop
 {
     done=true;
 }
@@ -251,7 +309,9 @@ Value *onDraw = NULL;
 
 %init
 {
-    api=interface;
     printf("Initialising SDL plugin, %s %s\n",__DATE__,__TIME__);
     SDL_Init(SDL_INIT_EVERYTHING);
+    printf("SDL itself init.\n");
+    IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG);
+    printf("SDL initialised\n");
 }

@@ -36,6 +36,10 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
             if(v->t != Types::tSymbol )
                 throw ParameterTypeException(i,"symbol");
             break;
+        case 'c':
+            if(v->t != Types::tCode && v->t != Types::tClosure )
+                throw ParameterTypeException(i,"function");
+            break;
         case 'l':
             if(v->t != Types::tList )
                 throw ParameterTypeException(i,"list");
