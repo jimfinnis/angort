@@ -60,10 +60,10 @@ static SurfaceType tSurface;
 
 static void chkscr(){
     if(!screen)
-        throw "SDL not initialised";
+        throw RUNT("SDL not initialised");
 }
 
-%word close (--) close down SDL
+%word close (--) close SDL window
 {
     if(screen)
         SDL_Quit();
@@ -75,7 +75,7 @@ static void openwindow(int w,int h,int flags){
     screen = SDL_SetVideoMode(w,h,
                               24,flags);//SDL_NOFRAME);
     if(!screen)
-        throw "cannot open screen";
+        throw RUNT("cannot open screen");
     
     forecol = SDL_MapRGB(screen->format,255,255,255);
     backcol = SDL_MapRGB(screen->format,0,0,0);
@@ -144,17 +144,29 @@ static void openwindow(int w,int h,int flags){
 {
     Value *p;
     a->popParams(&p,"s");
-    chkscr();
+    
+    chkscr(); // need a screen open to do format conversion
     
     printf("attempting load: %s\n",p->toString().get());
     SDL_Surface *tmp = IMG_Load(p->toString().get());
-    printf("Load OK\n");
+    if(!tmp)
+        printf("Failed to load %s\n",p->toString().get());
+    else
+        printf("Load OK\n");
+    
     p = a->pushval();
     
     if(!tmp)
         p->setNone();
     else {
-        Surface *s = new Surface(SDL_DisplayFormat(tmp));
+        SDL_Surface *sdls = SDL_DisplayFormat(tmp);
+        if(!sdls){
+            printf("Failed to convert %s\n",p->toString().get());
+            p->setNone();
+            SDL_FreeSurface(tmp);
+            return;
+        }
+        Surface *s = new Surface(sdls);
         tSurface.set(p,s);
         SDL_FreeSurface(tmp);
     }
@@ -183,6 +195,32 @@ static void openwindow(int w,int h,int flags){
         printf("blit error: %s\n",SDL_GetError());
     }
 }
+
+/* only in higher versions of SDL
+//%word blitscaled (dx dy dw sh sx sy sw/none sh/none surf --) scale and blit a surface to the screen
+{
+    Value *p[7];
+    a->popParams(p,"nnnnAAb",Types::tInteger,&tSurface);
+    
+    chkscr();
+    Surface *so = tSurface.get(p[6]);
+    SDL_Surface *s = so->s;
+    SDL_Rect src,dst;
+    
+    dst.x = p[0]->toInt(); // destination x
+    dst.y = p[1]->toInt(); // destination y
+    dst.w = p[2]->toInt(); // dest w;
+    dst.h = p[3]->toInt(); // dest w;
+    src.x = p[4]->toInt(); // source x
+    src.y = p[5]->toInt(); // source y
+    src.w = p[6]->isNone() ? s->w : p[6]->toInt(); // source width
+    src.h = p[7]->isNone() ? s->h : p[7]->toInt(); // source height
+    
+    if(SDL_BlitScaled(s,&src,screen,&dst)<0){
+        printf("blit error: %s\n",SDL_GetError());
+    }
+}
+*/
 
 %word flip (--) flip front and back buffer
 {
@@ -238,7 +276,7 @@ static void openwindow(int w,int h,int flags){
 // various callbacks, all initially "none"
 Value onKeyDown;
 Value onKeyUp;
-Value onMouse;
+Value onMouseMove,onMouseUp,onMouseDown;
 Value onDraw;
 
 %word ondraw (callable --) set the draw callback, of spec (--)
@@ -262,14 +300,24 @@ Value onDraw;
     onKeyDown.copy(p);
 }
 
-%word onmouse (callable --) set the draw callback, of spec (--)
+%word onmousemove (callable --) set the mouse motion callback, of spec (x y)
 {
     Value *p;
     a->popParams(&p,"c");
-    onMouse.copy(p);
+    onMouseMove.copy(p);
 }
-
-
+%word onmousedown (callable --) set the mouse down callback, of spec (x y button--)
+{
+    Value *p;
+    a->popParams(&p,"c");
+    onMouseDown.copy(p);
+}
+%word onmouseup (callable --) set the mouse up callback, of spec (x y button--)
+{
+    Value *p;
+    a->popParams(&p,"c");
+    onMouseUp.copy(p);
+}
 
 %word loop (--) start the main game loop
 {
@@ -292,6 +340,29 @@ Value onDraw;
                     a->runValue(&onKeyUp);
                 }
                 break;
+            case SDL_MOUSEMOTION:
+                if(!onMouseMove.isNone()){
+                    a->pushInt(e.motion.x);
+                    a->pushInt(e.motion.y);
+                    a->runValue(&onMouseMove);
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if(!onMouseDown.isNone()){
+                    a->pushInt(e.motion.x);
+                    a->pushInt(e.motion.y);
+                    a->pushInt(e.button.button);
+                    a->runValue(&onMouseDown);
+                }
+                break;
+            case SDL_MOUSEBUTTONUP:
+                if(!onMouseUp.isNone()){
+                    a->pushInt(e.motion.x);
+                    a->pushInt(e.motion.y);
+                    a->pushInt(e.button.button);
+                    a->runValue(&onMouseUp);
+                }
+                break;
             default:break;
             }
         }
@@ -311,7 +382,13 @@ Value onDraw;
 {
     printf("Initialising SDL plugin, %s %s\n",__DATE__,__TIME__);
     SDL_Init(SDL_INIT_EVERYTHING);
-    printf("SDL itself init.\n");
     IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG);
     printf("SDL initialised\n");
+}
+
+
+%shutdown
+{
+    printf("Closing down SDL\n");
+    SDL_Quit();
 }

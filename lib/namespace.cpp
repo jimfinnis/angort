@@ -11,12 +11,14 @@ void Namespace::list(){
     locations.listKeys();
 }
 
-int NamespaceManager::getFromNamespace(Namespace *sp, const char *name){
+int NamespaceManager::getFromNamespace(Namespace *sp, const char *name,bool allowPrivate){
     int iidx = sp->get(name);
-    if(iidx>=0)
-        return makeIndex(sp->idx,iidx);
-    else
-        return -1;
+    if(iidx>=0){
+        NamespaceEnt *ent = sp->getEnt(iidx);
+        if(allowPrivate || ent->isImported)
+            return makeIndex(sp->idx,iidx);
+    }
+    return -1;
 }
 
 int NamespaceManager::get(const char *name, bool scanImports){
@@ -38,9 +40,9 @@ int NamespaceManager::get(const char *name, bool scanImports){
     }
     
     // and this is for names in an unspecified space - 
-    // first, scan the current list
+    // first, scan the current list.
     
-    int idx = getFromNamespace(spaces.getEnt(currentIdx),name);
+    int idx = getFromNamespace(spaces.getEnt(currentIdx),name,true);
     if(idx>=0)
         return idx;
     
@@ -51,6 +53,7 @@ int NamespaceManager::get(const char *name, bool scanImports){
         for(int i=importedNamespaces.count()-1;i>=0;i--){
             int nsidx = *importedNamespaces.get(i);
             Namespace *ns = spaces.getEnt(nsidx);
+            // again, only returns public items.
             int idx = getFromNamespace(ns,name);
             if(idx>=0)
                 return idx;

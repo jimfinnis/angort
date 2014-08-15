@@ -39,10 +39,9 @@ public:
         error = NULL;
         mpd=NULL;
     }
+    
     ~Connection(){
-        if(error)free(error);
-        if(mpd)
-            mpd_connection_free(mpd);
+        disconnect();
     }
     
     const char *geterror(){
@@ -83,28 +82,15 @@ public:
 
 Connection conn;
 
-inline void setStringInHash(Hash *h, const char *key,const char *value){
-    Value k,v;
-    Types::tSymbol->set(&k,SymbolType::getSymbol(key));
-    Types::tString->set(&v,value);
-    h->set(&k,&v);
-}
-
-inline void setIntInHash(Hash *h, const char *key,uint32_t value){
-    Value k,v;
-    Types::tSymbol->set(&k,SymbolType::getSymbol(key));
-    Types::tInteger->set(&v,(int)value);
-    h->set(&k,&v);
-}
 
 void makeSong(Value *out, const mpd_song *song){
     Hash *h = Types::tHash->set(out);
     
     
-    setStringInHash(h,"name",mpd_song_get_uri(song));
-    setIntInHash(h,"id",mpd_song_get_id(song));
-    setIntInHash(h,"pos",mpd_song_get_pos(song));
-    setIntInHash(h,"duration",mpd_song_get_duration(song));
+    h->setSymStr("name",mpd_song_get_uri(song));
+    h->setSymInt("id",mpd_song_get_id(song));
+    h->setSymInt("pos",mpd_song_get_pos(song));
+    h->setSymInt("duration",mpd_song_get_duration(song));
     
     for(int i=(int)MPD_TAG_ARTIST;i<(int)MPD_TAG_COUNT;i++){
         const char *s = mpd_song_get_tag(song,(mpd_tag_type)i,0);
@@ -114,7 +100,7 @@ void makeSong(Value *out, const mpd_song *song){
             strcpy(buf,tagname);
             for(char *q=buf;*q;q++)*q=tolower(*q);
             
-            setStringInHash(h,buf,s);
+            h->setSymStr(buf,s);
         }
     }
 }
@@ -250,12 +236,10 @@ void sendAddOfNameInHash(Value *v){
         throw RUNT("song must be a hash");
     
     Hash *h = Types::tHash->get(v);
-    Types::tSymbol->set(&k,SymbolType::getSymbol("name"));
     
-    if(h->find(&k)){
-        v = h->getval();
-        mpd_send_add(conn.mpd, v->toString().get());
-    } else
+    if(Value *name = h->getSym("name"))
+        mpd_send_add(conn.mpd, name->toString().get());
+    else
         throw RUNT("song hash must contain name field");
 }
 
@@ -363,19 +347,19 @@ void sendAddOfNameInHash(Value *v){
     Value *res = a->pushval();
     Hash *h = Types::tHash->set(res);
     
-    setIntInHash(h,"consume",mpd_status_get_consume(stat));
-    setIntInHash(h,"crossfade",mpd_status_get_crossfade(stat));
-    setIntInHash(h,"elapsed",mpd_status_get_elapsed_time(stat));
-    setIntInHash(h,"total",mpd_status_get_total_time(stat));
-    setIntInHash(h,"update",mpd_status_get_update_id(stat));
-    setIntInHash(h,"volume",mpd_status_get_volume(stat));
+    h->setSymInt("consume",mpd_status_get_consume(stat));
+    h->setSymInt("crossfade",mpd_status_get_crossfade(stat));
+    h->setSymInt("elapsed",mpd_status_get_elapsed_time(stat));
+    h->setSymInt("total",mpd_status_get_total_time(stat));
+    h->setSymInt("update",mpd_status_get_update_id(stat));
+    h->setSymInt("volume",mpd_status_get_volume(stat));
     if(mpd_status_get_error(stat))
-        setStringInHash(h,"error",mpd_status_get_error(stat));
-    setIntInHash(h,"queuelength",mpd_status_get_queue_length(stat));
-    setIntInHash(h,"queueversion",mpd_status_get_queue_version(stat));
+        h->setSymStr("error",mpd_status_get_error(stat));
+    h->setSymInt("queuelength",mpd_status_get_queue_length(stat));
+    h->setSymInt("queueversion",mpd_status_get_queue_version(stat));
     
-    setIntInHash(h,"id",mpd_status_get_song_id(stat));
-    setIntInHash(h,"pos",mpd_status_get_song_pos(stat));
+    h->setSymInt("id",mpd_status_get_song_id(stat));
+    h->setSymInt("pos",mpd_status_get_song_pos(stat));
     
     // the state is a symbol, which is slightly fiddly.
     const char *state;
@@ -385,16 +369,11 @@ void sendAddOfNameInHash(Value *v){
     case MPD_STATE_PLAY:state="play";break;
     case MPD_STATE_PAUSE:state="pause";break;
     }
+    h->setSymSym("state",state);
     
-    Value sym,k;
-    Types::tSymbol->set(&k,SymbolType::getSymbol("state"));
-    Types::tSymbol->set(&sym,SymbolType::getSymbol(state));
-    h->set(&k,&sym);
-
-    
-    setIntInHash(h,"random",mpd_status_get_random(stat)?1:0);
-    setIntInHash(h,"repeat",mpd_status_get_repeat(stat)?1:0);
-    setIntInHash(h,"single",mpd_status_get_single(stat)?1:0);
+    h->setSymInt("random",mpd_status_get_random(stat)?1:0);
+    h->setSymInt("repeat",mpd_status_get_repeat(stat)?1:0);
+    h->setSymInt("single",mpd_status_get_single(stat)?1:0);
 }
 
 %word load (name --) load a playlist
@@ -521,4 +500,9 @@ int levenshtein(const char *s1, const char *s2) {
 %init
 {
     printf("Initialising MPD client plugin, %s %s\n",__DATE__,__TIME__);
+}
+
+%shutdown
+{
+    conn.disconnect();
 }

@@ -223,8 +223,9 @@ private:
         
     }
     
-    /// return the full superindex for a name, or -1
-    int getFromNamespace(Namespace *sp,const char *name);
+    /// return the full superindex for a name, or -1. Only
+    /// returns public items if "allowPrivate" is false
+    int getFromNamespace(Namespace *sp,const char *name,bool allowPrivate=false);
     
     /// if true, names are created private; otherwise names are
     /// created public.

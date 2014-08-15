@@ -246,6 +246,49 @@ public:
         }
     }
     
+    /// helper for setting values with symbolic keys
+    void setSym(const char *s,Value *v){
+        Value k;
+        Types::tSymbol->set(&k,SymbolType::getSymbol(s));
+        set(&k,v);
+    }
+    /// helper for setting integers with symbol keys
+    void setSymInt(const char *s,int i){
+        Value v;
+        Types::tInteger->set(&v,i);
+        setSym(s,&v);
+    }
+    /// helper for setting floats with symbol keys
+    void setSymFloat(const char *s,float f){
+        Value v;
+        Types::tFloat->set(&v,f);
+        setSym(s,&v);
+    }
+    /// helper for setting strings with symbol keys
+    void setSymStr(const char *s,const char *val){
+        Value v;
+        Types::tString->set(&v,val);
+        setSym(s,&v);
+    }
+    /// helper for setting symbol values with symbol keys
+    void setSymSym(const char *s,const char *val){
+        Value v;
+        Types::tSymbol->set(&v,SymbolType::getSymbol(val));
+        setSym(s,&v);
+    }
+    
+    /// helper for getting values with symbolic keys
+    Value *getSym(const char *s){
+        Value k;
+        Types::tSymbol->set(&k,SymbolType::getSymbol(s));
+        if(find(&k)){
+            return getval();
+        } else
+            return NULL;
+    }
+        
+    
+    
 };
 
 /// Hash iterator - you probably won't access this

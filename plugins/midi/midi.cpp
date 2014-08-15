@@ -10,101 +10,241 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <string>
-#include <vector>
-#include <RtMidi.h>
-#include <angort/plugins.h>
+#include <errno.h>
+#include <list>
+#include <jack/jack.h>
+#include <jack/midiport.h>
+#include <pthread.h>
+
+#include <angort/angort.h>
+#include <angort/hash.h>
 
 using namespace angort;
 
-static AngortPluginInterface *api;
+%name midi
+%shared
 
-class Out : public PluginObject {
+/// all ports must be linked into this.
+std::list<class MidiPort *> portList;
+
+static jack_client_t *jack=NULL;
+static void chkjack(){
+    if(!jack)
+        throw RUNT("midi$open must be called");
+}
+
+#define DATABUFSIZE 2048
+
+class MidiPort : public GarbageCollected {
 public:
-    RtMidiOut *out;
+    bool isInput;
+    jack_port_t *port;
+    MidiPort *next;
+    pthread_mutex_t mutex;
+
     
-    Out(){
-        out = new RtMidiOut();
+    uint8_t dataBuffer[DATABUFSIZE];
+    int ct;
+    
+    MidiPort(bool input,const char *name){
+        isInput = input;
+        port = jack_port_register(jack,name,
+                                  JACK_DEFAULT_MIDI_TYPE,
+                                  isInput?JackPortIsInput:JackPortIsOutput,0);
+        if(!port)
+            throw RUNT("failed to register Jack port");
+        portList.push_back(this);
+        ct=0;
     }
     
-    void close(){
-        printf("Closing port\n");
-        if(out)delete out;
-        out=NULL;
-    }
-        
+    // write a single event to the buffer - an event
+    // consists of a byte count followed by a number of bytes.
     
-    ~Out(){
-        if(out)
-            delete out;
+    void write(uint8_t *data,int len){
+        if(ct+len+1 >= DATABUFSIZE)
+            throw RUNT("out of space in write buffer");
+        pthread_mutex_lock(&mutex);
+        dataBuffer[ct++]=len;
+        memcpy(dataBuffer+ct,data,len);
+        ct+=len;
+        pthread_mutex_unlock(&mutex);
+    }
+    
+    ~MidiPort(){
+        if(port && jack)
+            jack_port_unregister(jack,port);
+        portList.remove(this);
     }
 };
 
+class MidiPortType : public GCType {
+public:
+    MidiPortType(){
+        add("midi","MIDI");
+    }
+    
+    MidiPort *get(Value *v){
+        if(v->t != this)
+            throw RUNT("not a midiport");
+        return (MidiPort *)v->v.gc;
+    }
+    
+    void set(Value *v,MidiPort *p){
+        v->clr();
+        v->t = this;
+        v->v.gc = p;
+        incRef(v);
+    }
+};
 
-%plugin midi
+static MidiPortType tMidiPort;
 
-%word makeout 0 (-- port) create an unconnected output
-{
-    Out *o = new Out();
-    res->setObject(o);
+
+// the jack processing callback, called from the jack thread.
+static int process(jack_nframes_t nframes, void *arg){
+    std::list<MidiPort *>::iterator i;
+    
+    // go through each port, see which are output and have data
+    // waiting to go, and send it.
+    
+    for(i=portList.begin();i!=portList.end();++i){
+        MidiPort *p = *i;
+        
+        if(!p->isInput){
+            void *buf = jack_port_get_buffer(p->port,nframes);
+            jack_midi_clear_buffer(buf);
+            pthread_mutex_lock(&p->mutex);
+            uint8_t *data = p->dataBuffer;
+            int idx=0;
+            while(idx<p->ct){
+                // run through the data, processing the events
+                int len = data[idx++];
+                jack_midi_event_write(buf,0,data+idx,len);
+                idx+=len;
+            }
+            p->ct=0;
+            pthread_mutex_unlock(&p->mutex);
+        }
+    }
+    return 0;
+}
+
+static void jack_shutdown(void *arg){
+    printf("Jack terminated the program\n");
+    exit(1);
 }
     
 
-%word openout 2 (n port --) link an output to a port
-{ 
-    int n = params->getInt();
-    Out *o = (Out *)(params[1].getObject());
+%word open (name --) create the jack MIDI client with a name
+{
+    Value *p;
+    a->popParams(&p,"s");
+    jack = jack_client_open(p->toString().get(),JackNullOption,NULL);
+    if(!jack)
+        throw RUNT("Jack client creation failed.");
+    jack_on_shutdown(jack,jack_shutdown,0);
+    jack_set_process_callback(jack,process,0);
+    jack_activate(jack);
     
-    o->out->openPort(n);
 }
 
-%word closeout 1 (port --) wait 0.3s, then close an output port
+%word close (--) close any open jack client
 {
-    Out *o = (Out *)(params[0].getObject());
-    usleep(300000L); // sleep a tiny bit
-    o->close();
-}
+    if(jack){
+        jack_deactivate(jack);
+        jack_client_close(jack);
+        jack=NULL;
+    }
+}    
 
-%word getouts 1 (port -- list) get list of possible ports for an output
+%word makeout (name -- port) make a MIDI output port
 {
-    res->setList();
-    Out *o = (Out *)(params[0].getObject());
-    int ports = o->out->getPortCount();
-    for(int i=0;i<ports;i++){
-        PluginValue *pv = new PluginValue(o->out->getPortName(i).c_str());
-        res->addToList(pv);
+    
+    Value *p;
+    a->popParams(&p,"s");
+    chkjack();
+    
+    MidiPort *port = new MidiPort(false,p->toString().get());
+    tMidiPort.set(a->pushval(),port);
+}    
+
+
+
+
+%word connect (srcname destname --) connect two Jack ports
+{
+    Value *p[2];
+    a->popParams(p,"ss");
+    chkjack();
+    switch(int err = jack_connect(jack,p[0]->toString().get(),
+                        p[1]->toString().get())){
+    case 0:break;
+    case EEXIST:
+        printf("connection between %s and %s already exists\n",
+               p[0]->toString().get(),
+               p[1]->toString().get());
+    default:
+        printf("cannot connect %s to %s : error %d\n",
+               p[0]->toString().get(),
+               p[1]->toString().get(),err);
+               
     }
 }
 
 %word on 4 (note vel chan port --)
 {
-    int note = params[0].getInt();
-    int vel = params[1].getInt();
-    int chan = params[2].getInt();
-    Out *o = (Out *)(params[3].getObject());
+    Value *params[4];
+    a->popParams(params,"nnna",&tMidiPort);
+    chkjack();
+          
+    int note = params[0]->toInt();
+    int vel = params[1]->toInt();
+    int chan = params[2]->toInt()-1; //channels start at 1!
     
-    std::vector<unsigned char> vec(3);
-    vec[0]=144+chan;
-    vec[1]=note;
-    vec[2]=vel;
-    fflush(stdout);
-    o->out->sendMessage(&vec);
+    MidiPort *p = tMidiPort.get(params[3]);
+    if(p->isInput)
+        throw RUNT("attempt to write to input port");
+    
+    uint8_t data[3];
+    data[0]=144+chan;
+    data[1]=note;
+    data[2]=vel;
+    
+    p->write(data,3);
 }
 
 %word off 3 (note chan port --)
 {
-    Out *o = (Out *)(params[2].getObject());
-    std::vector<unsigned char> vec(2);
-    vec[0]=128 + params[1].getInt();
-    vec[1]=params[0].getInt();
+    Value *params[4];
+    a->popParams(params,"nna",&tMidiPort);
+                 
+    int note = params[0]->toInt();
+    int chan = params[1]->toInt()-1; // channels start at 1!
     
+    MidiPort *p = tMidiPort.get(params[2]);
+    chkjack();
+    if(p->isInput)
+        throw RUNT("attempt to write to input port");
     
-    o->out->sendMessage(&vec);
+    uint8_t data[3];
+    data[0]=128+chan;
+    data[1]=note;
+    data[2]=64; // weird, I know.. why does noteoff have velocity?
+    p->write(data,3);
 }
+
 
 %init
 {
-    api = interface;
     printf("Initialising Midi plugin, %s %s\n",__DATE__,__TIME__);
+    
 }
           
+%shutdown
+{
+    if(jack){
+        printf("closing Jack client.\n");
+        jack_client_close(jack);
+        jack=NULL;
+    }
+}

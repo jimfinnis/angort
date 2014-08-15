@@ -22,6 +22,13 @@
 # {
 #     ...
 # }
+#
+# Similarly with the shutdown function:
+#
+# %shutdown
+# {
+#     ...
+# }
 # 
 # A structure called will be defined, which can
 # be imported into Angort using the RegisterLibrary() method.
@@ -39,6 +46,7 @@
 @list=();
 %descs=();
 $hasinit=0;
+$hasshutdown=0;
 $shared=0;
 
 open(WORDSFILE,">words");
@@ -59,6 +67,9 @@ while(<>){
     }elsif(/^%init/){
         print "static void __init__(angort::Angort *a)\n";
         $hasinit = 1;
+    }elsif(/^%shutdown/){
+        print "static void __shutdown__(angort::Angort *a)\n";
+        $hasshutdown = 1;
     }elsif(/^%shared/){
         $shared=1;
         print "\n";
@@ -83,13 +94,18 @@ if($hasinit){
 } else {
     $initname = "NULL";
 }
+if($hasshutdown){
+    $shutdownname="$nsname\::__shutdown__";
+} else {
+    $shutdownname = "NULL";
+}
 
 
 print <<EOT;
 angort::LibraryDef _angortlib_$libname = {
     "$libname",
     $nsname\::_wordlist_,
-    $initname
+    $initname,$shutdownname
 };
 EOT
 

@@ -138,6 +138,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
 
 %word quit ( -- ) exit with return code 0
 {
+    a->shutdown();
     exit(0);
 }
 

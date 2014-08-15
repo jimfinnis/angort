@@ -20,20 +20,8 @@ using namespace angort;
 %name id3
 %shared
 
-inline void setStr(Hash *h, const char *key,TagLib::String s){
-    Value k,v;
-    if(!s.isNull()){
-        Types::tSymbol->set(&k,SymbolType::getSymbol(key));
-        Types::tString->set(&v,s.toCString(true));
-        h->set(&k,&v);
-    }
-}
-
-inline void setInt(Hash *h, const char *key,uint32_t value){
-    Value k,v;
-    Types::tSymbol->set(&k,SymbolType::getSymbol(key));
-    Types::tInteger->set(&v,(int)value);
-    h->set(&k,&v);
+inline void setTagStr(Hash *h,const char *k,TagLib::String str){
+    h->setSymStr(k,str.toCString(true));
 }
 
 %word loadtags (fileName -- hash) load ID3 tags (also stores filename) in hash
@@ -51,35 +39,31 @@ inline void setInt(Hash *h, const char *key,uint32_t value){
         TagLib::Tag *t= f.tag();
         Hash *res = Types::tHash->set(p);
         
-        setStr(res,"artist",t->artist());
-        setStr(res,"title",t->title());
-        setStr(res,"album",t->album());
-        setStr(res,"comment",t->comment());
-        setStr(res,"genre",t->genre());
-        setInt(res,"year",t->year());
-        setInt(res,"track",t->track());
-        setStr(res,"filename",p->toString().get());
+        setTagStr(res,"artist",t->artist());
+        setTagStr(res,"title",t->title());
+        setTagStr(res,"album",t->album());
+        setTagStr(res,"comment",t->comment());
+        setTagStr(res,"genre",t->genre());
+        res->setSymInt("year",t->year());
+        res->setSymInt("track",t->track());
+        setTagStr(res,"filename",p->toString().get());
     }
 }
 
 inline TagLib::String getStr(Hash *hash, const char *name){
-    Value k;
-    Types::tString->set(&k,name);
-    
-    if(hash->find(&k))
+    Value *v = hash->getSym(name);
+    if(v)
         return TagLib::String(
-                              hash->getval()->toString().get(),
+                              v->toString().get(),
                               TagLib::String::UTF8);
     else
         return TagLib::String::null;
 }
 
 inline int getInt(Hash *hash,const char *name){
-    Value k;
-    Types::tString->set(&k,name);
-    
-    if(hash->find(&k))
-        return hash->getval()->toInt();
+    Value *v = hash->getSym(name);
+    if(v)
+        return v->toInt();
     else
         return -1;
 }

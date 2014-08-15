@@ -62,6 +62,7 @@ struct LibraryDef {
     const char *name; //!< library name (i.e. the angort Namespace)
     WordDef *wordList; //!< list of words, terminated with a null name
     NativeFunc initfunc; //!< possibly null initialisation function
+    NativeFunc shutdownfunc; //!< possibly null shutdown function
 };
     
 
@@ -339,6 +340,11 @@ public:
         leaveListHead = leaveListStack.pop();
     }
           
+    void checkStacksAtEnd(){
+        if(!cstack.isempty())
+            throw SyntaxException("'if' or iterator left unclosed?");
+    }
+        
     
     /// pop the location off the compile stack
     int pop(){
@@ -498,6 +504,7 @@ class Angort {
     friend class SearchPathProperty;
     static Angort *callingInstance; ///!< set when feed() is called.
 private:
+    bool running; //!< used by shutdown()
     Stack<const Instruction *,32> rstack;
     Stack<Value*,32> closureStack; //<! parallels the return stack, carries the closure table
     /// also parallels the return stack, used for closures-during-use
@@ -505,12 +512,13 @@ private:
     Stack<GarbageCollected *,32> gcrstack;
     Stack<Value,32> recstack;
     
-    Stack<int,32> cstack;
     Stack<Value,8> loopIterStack; // stack of loop iterators
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;
     Value *closureTable; //!< the current closure table
+    
+    ArrayList<LibraryDef *> *libs; //!< list of libraries
     
     int stdNamespace; //!< the default "std" namespace index
     const char *searchPath; //!< colon-separated library search path
@@ -562,11 +570,13 @@ private:
     /// We also return a pointer to the previous context, so we can reference
     /// its code. We do not reset it.
     CompileContext *popCompileContext(){
+        context->checkStacksAtEnd();
         CompileContext *p = context;
         contextStack.popptr();
         context = contextStack.peekptr();
         return p;
     }
+    
     
     /// compile a [params,locals] block, producing an OP_LOCALS instruction
     /// and filling the localTokens table with names to be used in this definition.
@@ -780,7 +790,13 @@ public:
     
     
     Angort();
-    ~Angort();
+    
+    /// the destructor just calls shutdown if Angort isn't shutdown
+    /// already - this is so we can get away with just calling exit()
+    /// after shutdown() in "quit".
+    ~Angort(); 
+    /// actually does destruction - see the destructor.
+    void shutdown();
     
     /// just compile a string into a set of instructions
     const Instruction *compile(const char *s);

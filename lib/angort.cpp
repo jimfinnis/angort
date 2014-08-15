@@ -34,6 +34,7 @@ Angort *Angort::callingInstance=NULL;
 
 
 Angort::Angort() {
+    running = true;
     Types::createTypes();
     // create and set default namespace
     stdNamespace = names.create("std");
@@ -47,6 +48,7 @@ Angort::Angort() {
     
     searchPath=NULL;
     
+    libs = new ArrayList<LibraryDef*>(8);
     tok.init();
     tok.setname("<stdin>");
     tok.settokens(tokens);
@@ -57,6 +59,8 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(std)); // already imported by default.
     registerLibrary(&LIBNAME(coll),true);
     registerLibrary(&LIBNAME(string),true);
+    
+    
     
     // now the standard package has been imported, set up the
     // user package into which their words are defined.
@@ -80,8 +84,23 @@ Angort::Angort() {
 }
 
 Angort::~Angort(){
+    if(running)
+        shutdown();
+}
+
+void Angort::shutdown(){
+    ArrayListIterator<LibraryDef *>iter(libs);
+    
+    for(iter.first();!iter.isDone();iter.next()){
+        LibraryDef *lib = *(iter.current());
+        NativeFunc shutdownFunc = lib->shutdownfunc;
+        if(shutdownFunc)
+            (*shutdownFunc)(this);
+    }
+    
     Type::clearList();
     SymbolType::deleteAll();
+    running = false;
 }
 
 void Angort::showop(const Instruction *ip,const Instruction *base){
@@ -1146,6 +1165,7 @@ void Angort::feed(const char *buf){
             case T_END:
                 // just return if we're still defining
                 if(!isDefining() && !inSubContext()){
+                    context->checkStacksAtEnd(); // check dangling constructs
                     // otherwise run the buffer we just made
                     compile(OP_END);
                     run(context->getCode());
@@ -1263,6 +1283,8 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
         Types::tNative->set(v,lib->wordList[i].f);
         sp->setSpec(id,lib->wordList[i].desc);
     }
+    
+    *libs->append() = lib;
     
     if(lib->initfunc){
         (*lib->initfunc)(this);
