@@ -6,8 +6,9 @@
  * 
  */
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_image.h>
 #include <angort/angort.h>
 
 using namespace angort;
@@ -15,40 +16,43 @@ using namespace angort;
 %name sdl
 %shared
 
-static SDL_Surface *screen = NULL;
-static uint32_t forecol;
-static uint32_t backcol;
-static bool done = false; // set when we want to quit
+static SDL_Window *screen = NULL;
+static SDL_Renderer *renderer = NULL;
 
-
-class Surface : public GarbageCollected {
-public:
-    SDL_Surface *s;
-    bool isScreen;
-    
-    Surface(SDL_Surface *_s){
-        s=_s;
-    }
-    
-    virtual ~Surface(){
-        if(!isScreen)
-            SDL_FreeSurface(s);
+struct Colour {
+    uint8_t r,g,b,a;
+    void set(){
+        SDL_SetRenderDrawColor(renderer,r,g,b,a);
     }
 };
 
-class SurfaceType : public GCType {
+Colour forecol={255,255,255,255};
+Colour backcol={0,0,0,255};
+
+static bool done = false; // set when we want to quit
+
+class Texture : public GarbageCollected {
 public:
-    SurfaceType(){
-        add("surface","SDLS");
+    SDL_Texture *t;
+    Texture(SDL_Texture *_t){  t=_t; }
+    virtual ~Texture(){
+        SDL_DestroyTexture(t);
+    }
+};
+
+class TextureType : public GCType {
+public:
+    TextureType(){
+        add("Texture","SDLS");
     }
     
-    Surface *get(Value *v){
+    Texture *get(Value *v){
         if(v->t != this)
-            throw RUNT("not a surface");
-        return (Surface *)(v->v.gc);
+            throw RUNT("not a Texture");
+        return (Texture *)(v->v.gc);
     }
     
-    void set(Value *v, Surface *s){
+    void set(Value *v, Texture *s){
         v->clr();
         v->t = this;
         v->v.gc = s;
@@ -56,7 +60,7 @@ public:
     }
 };
 
-static SurfaceType tSurface;
+static TextureType tTexture;
 
 static void chkscr(){
     if(!screen)
@@ -70,19 +74,23 @@ static void chkscr(){
     screen=NULL;
 }
 
-static void openwindow(int w,int h,int flags){
+static void openwindow(const char *title, int w,int h,int flags){
     // must be 24-bit
-    screen = SDL_SetVideoMode(w,h,
-                              24,flags);//SDL_NOFRAME);
+    
+    screen = SDL_CreateWindow(title,
+                              SDL_WINDOWPOS_UNDEFINED,
+                              SDL_WINDOWPOS_UNDEFINED,
+                              w,h,flags);
     if(!screen)
         throw RUNT("cannot open screen");
+    renderer = SDL_CreateRenderer(screen,-1,0);
     
-    forecol = SDL_MapRGB(screen->format,255,255,255);
-    backcol = SDL_MapRGB(screen->format,0,0,0);
-    SDL_FillRect(screen,NULL,backcol);
-    SDL_Flip(screen);
-    SDL_FillRect(screen,NULL,backcol);
-    SDL_Flip(screen);
+    backcol.set();
+    SDL_RenderFillRect(renderer,NULL);
+    SDL_RenderPresent(renderer);
+    SDL_RenderFillRect(renderer,NULL);
+    SDL_RenderPresent(renderer);
+    forecol.set();
 }
 
 %word fullscreenopen (w/-1 h/-1 --) init SDL and open a fullscreen hw window
@@ -93,139 +101,135 @@ static void openwindow(int w,int h,int flags){
     int w = p[0]->toInt();
     int h = p[1]->toInt();
     if(w<0){
-        const SDL_VideoInfo *v = SDL_GetVideoInfo();
-        w = v->current_w;
-        h = v->current_h;
+        SDL_DisplayMode disp;
+        int ret = SDL_GetCurrentDisplayMode(0,&disp);
+        if(ret)
+            throw RUNT("").set("could not get video mode: %s",SDL_GetError());
+        
+        w = disp.w;
+        h = disp.h;
     }
-    openwindow(w,h,SDL_FULLSCREEN|SDL_HWSURFACE);
+    openwindow("",w,h,SDL_WINDOW_FULLSCREEN|SDL_WINDOW_SHOWN);
 }
 
 %word open (w h -- ) init SDL and open a window
 {
-    Value *p[2];
-    a->popParams(p,"nn");
+    Value *p[3];
+    a->popParams(p,"snn");
     
-    int w = p[0]->toInt();
-    int h = p[1]->toInt();
+    int w = p[1]->toInt();
+    int h = p[2]->toInt();
     
-    openwindow(w,h,0);
+    openwindow(p[0]->toString().get(),w,h,SDL_WINDOW_SHOWN);
 }
 
-%word scr (-- surface) get the screen surface
+%word scrsize (-- height width) get screen dimensions
 {
-    // got to make a new one of these each time, rather
-    // than keep it static, because the object will keep
-    // getting deleted.
-    Surface *screenSurf = new Surface(screen);
-    screenSurf->isScreen=true;
-    
-    tSurface.set(a->pushval(),screenSurf);
+    int w,h;
+    SDL_GetWindowSize(screen,&w,&h);
+    a->pushInt(h);
+    a->pushInt(w);
 }
+    
 
-%word width (surface -- int) get width of surface
+%word texsize (t -- height width) get texture dimensions
 {
     Value *p;
-    a->popParams(&p,"a",&tSurface);
+    a->popParams(&p,"a",&tTexture);
     
-    Surface *so = tSurface.get(p);
-    a->pushInt(so->s->w);
+    int w,h;
+    SDL_QueryTexture(tTexture.get(p)->t,NULL,NULL,&w,&h);
+    a->pushInt(h);
+    a->pushInt(w);
 }
 
-%word height (surface -- int) get width of surface
-{
-    Value *p;
-    a->popParams(&p,"a",&tSurface);
-    
-    Surface *so = tSurface.get(p);
-    a->pushInt(so->s->h);
-}
-
-%word load (file -- surf/none) load an image into a surface
+%word load (file -- surf/none) load an image into a texture
 {
     Value *p;
     a->popParams(&p,"s");
     
     chkscr(); // need a screen open to do format conversion
     
-    printf("attempting load: %s\n",p->toString().get());
+//    printf("attempting load: %s\n",p->toString().get());
     SDL_Surface *tmp = IMG_Load(p->toString().get());
     if(!tmp)
         printf("Failed to load %s\n",p->toString().get());
-    else
-        printf("Load OK\n");
     
     p = a->pushval();
     
     if(!tmp)
         p->setNone();
     else {
-        SDL_Surface *sdls = SDL_DisplayFormat(tmp);
-        if(!sdls){
-            printf("Failed to convert %s\n",p->toString().get());
+        SDL_Texture *t = SDL_CreateTextureFromSurface(renderer,tmp);
+        if(!t){
+            printf("Failed to create texture %s: %s\n",p->toString().get(),
+                   SDL_GetError());
             p->setNone();
             SDL_FreeSurface(tmp);
             return;
         }
-        Surface *s = new Surface(sdls);
-        tSurface.set(p,s);
+        Texture *tt = new Texture(t);
+        tTexture.set(p,tt);
         SDL_FreeSurface(tmp);
     }
 }
 
-%word blit (dx dy sx sy sw/none sh/none surf --) blit a surface to the screen
+%word blit (dx dy dw/none dh/none surf --) basic texture blit
 {
-    Value *p[7];
-    a->popParams(p,"nnnnAAb",Types::tInteger,&tSurface);
+    Value *p[5];
+    a->popParams(p,"nnNNa",&tTexture);
     
     chkscr();
-    Surface *so = tSurface.get(p[6]);
-    SDL_Surface *s = so->s;
+    SDL_Texture *t = tTexture.get(p[4])->t;
     SDL_Rect src,dst;
+    
+    int w,h;
+    SDL_QueryTexture(t,NULL,NULL,&w,&h);
     
     dst.x = p[0]->toInt(); // destination x
     dst.y = p[1]->toInt(); // destination y
-    dst.w = 0;
-    dst.h = 0;
-    src.x = p[2]->toInt(); // source x
-    src.y = p[3]->toInt(); // source y
-    src.w = p[4]->isNone() ? s->w : p[4]->toInt(); // source width
-    src.h = p[5]->isNone() ? s->h : p[5]->toInt(); // source height
+    dst.w = p[2]->isNone() ? w : p[2]->toInt(); // dest width
+    dst.h = p[3]->isNone() ? h : p[3]->toInt(); // dest height
+    src.x = 0;
+    src.y = 0;
+    src.w = w;
+    src.h = h;
     
-    if(SDL_BlitSurface(s,&src,screen,&dst)<0){
+    if(SDL_RenderCopy(renderer,t,&src,&dst)<0){
         printf("blit error: %s\n",SDL_GetError());
     }
 }
 
-/* only in higher versions of SDL
-//%word blitscaled (dx dy dw sh sx sy sw/none sh/none surf --) scale and blit a surface to the screen
+%word exblit (dx dy dw/none dh/none sx sy sw/none sh/none surf --) blit a texture to the screen
 {
-    Value *p[7];
-    a->popParams(p,"nnnnAAb",Types::tInteger,&tSurface);
+    Value *p[9];
+    a->popParams(p,"nnNNnnNNa",&tTexture);
     
     chkscr();
-    Surface *so = tSurface.get(p[6]);
-    SDL_Surface *s = so->s;
+    SDL_Texture *t = tTexture.get(p[8])->t;
     SDL_Rect src,dst;
+    
+    int w,h;
+    SDL_QueryTexture(t,NULL,NULL,&w,&h);
     
     dst.x = p[0]->toInt(); // destination x
     dst.y = p[1]->toInt(); // destination y
-    dst.w = p[2]->toInt(); // dest w;
-    dst.h = p[3]->toInt(); // dest w;
+    dst.w = p[2]->isNone() ? w : p[2]->toInt(); // dest width
+    dst.h = p[3]->isNone() ? h : p[3]->toInt(); // dest height
     src.x = p[4]->toInt(); // source x
     src.y = p[5]->toInt(); // source y
-    src.w = p[6]->isNone() ? s->w : p[6]->toInt(); // source width
-    src.h = p[7]->isNone() ? s->h : p[7]->toInt(); // source height
+    src.w = p[6]->isNone() ? w : p[6]->toInt(); // source width
+    src.h = p[7]->isNone() ? h : p[7]->toInt(); // source height
     
-    if(SDL_BlitScaled(s,&src,screen,&dst)<0){
+    if(SDL_RenderCopy(renderer,t,&src,&dst)<0){
         printf("blit error: %s\n",SDL_GetError());
     }
 }
-*/
 
 %word flip (--) flip front and back buffer
 {
     chkscr();
-    SDL_Flip(screen);
+    SDL_RenderPresent(renderer);
 }
 
 %word col (r g b --) set colour 
@@ -234,10 +238,11 @@ static void openwindow(int w,int h,int flags){
     a->popParams(p,"nnn");
     
     chkscr();
-    int colr = p[0]->toInt();
-    int colg = p[1]->toInt();
-    int colb = p[2]->toInt();
-    forecol = SDL_MapRGB(screen->format,colr,colg,colb);
+    forecol.r = p[0]->toInt();
+    forecol.g = p[1]->toInt();
+    forecol.b = p[1]->toInt();
+    forecol.a = 255;
+    
 }
 %word bcol (r g b --) set back colour 
 {
@@ -245,16 +250,17 @@ static void openwindow(int w,int h,int flags){
     a->popParams(p,"nnn");
     
     chkscr();
-    int colr = p[0]->toInt();
-    int colg = p[1]->toInt();
-    int colb = p[2]->toInt();
-    backcol = SDL_MapRGB(screen->format,colr,colg,colb);
+    backcol.r = p[0]->toInt();
+    backcol.g = p[1]->toInt();
+    backcol.b = p[1]->toInt();
+    backcol.a = 255;
 }
 
 %word clear (--) clear the screen to the background colour
 {
     chkscr();
-    SDL_FillRect(screen,NULL,backcol);
+    backcol.set();
+    SDL_RenderFillRect(renderer,NULL);
 }
 
 %word fillrect (x y w h --) draw a filled rectangle in current colour
@@ -270,7 +276,8 @@ static void openwindow(int w,int h,int flags){
     r.w = p[2]->toInt();
     r.h = p[3]->toInt();
     
-    SDL_FillRect(screen,&r,forecol);
+    forecol.set();
+    SDL_RenderFillRect(renderer,&r);
 }
 
 // various callbacks, all initially "none"
@@ -390,5 +397,8 @@ Value onDraw;
 %shutdown
 {
     printf("Closing down SDL\n");
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(screen);
+    IMG_Quit();
     SDL_Quit();
 }

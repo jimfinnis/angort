@@ -53,6 +53,17 @@ using namespace angort;
     a->pushFloat(powf(x,y));
 }
 
+#define ABS(x) ((x)<0 ? -(x) : (x))
+
+%word abs (x -- abs(x))
+{
+    Value *v = a->popval();
+    if(v->t == Types::tInteger){
+        a->pushInt(ABS(v->toInt()));
+    } else 
+        a->pushFloat(ABS(v->toFloat()));
+}
+
 %word fmod (x y -- fmod(x,y))
 {
     float y = a->popFloat();

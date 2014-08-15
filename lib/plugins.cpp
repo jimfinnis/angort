@@ -28,6 +28,10 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
             if(v->t != Types::tInteger && v->t != Types::tFloat)
                 throw ParameterTypeException(i,"number");
             break;
+        case 'N':
+            if(v->t != Types::tInteger && v->t != Types::tFloat && v->t != Types::tNone)
+                throw ParameterTypeException(i,"number or none");
+            break;
         case 's':
             if(v->t != Types::tString && v->t != Types::tSymbol )
                 throw ParameterTypeException(i,"string");

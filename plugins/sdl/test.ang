@@ -49,8 +49,7 @@ PI 2 * const TWOPI
 ) ondraw
 
 -1 -1 fullscreenopen
-scr width 10 - !Width 
-scr height 10 - !Height
+scrsize 10 - !Width 10 - !Height
 
 [] 0 3000 range each {mkthingy,} !Thingies
 loop close quit

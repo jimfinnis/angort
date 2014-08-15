@@ -1,10 +1,13 @@
+VERY NASTY GC BUG - see the test playing card game. After a while,
+this crashes right in the GC cycle detector deleting a texture
+(which it shouldn't be doing anyway).
+
+
 Not yet documented:
     barewords
     recurse
     def defconst
     closure iterators - WTF?
-
-There should be an Angort namespace.
 
 Need to show func names in debugging
 
