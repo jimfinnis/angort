@@ -41,6 +41,7 @@ struct Value {
         class IteratorObject *iter;
         NativeFunc native;
         struct Property *property;
+        void *v;
     } v;
     
     

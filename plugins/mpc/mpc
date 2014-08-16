@@ -264,7 +264,7 @@ global list # force a new definition in this namespace
     :"(--) list all stored playlists"
     mpc$playlists each {i.};
 
-:all |:ids|
+:allsongs |:ids|
     :"(--list) list all songs (takes ages)"
     []
     `artist [%] mpc$tags each {i.
@@ -297,7 +297,7 @@ global list # force a new definition in this namespace
 :showprobs |:t|
     :"Scan for common errors in all ID3 tags - takes quite a while"
     
-    all !t
+    allsongs !t
     nl nl nl
     
     # first check, scan the files for weird null data

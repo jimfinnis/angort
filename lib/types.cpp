@@ -1,4 +1,5 @@
 #include "angort.h"
+#include "cycle.h"
 
 namespace angort {
 
@@ -128,6 +129,19 @@ Iterator<class Value *> *GCType::makeValueIterator(Value *v){
 GarbageCollected *GCType::getGC(Value *v){
     return v->v.gc;
 }
+
+GarbageCollected::GarbageCollected(){
+    refct=0;
+    globalCount++;
+    CycleDetector::getInstance()->add(this);
+}
+
+GarbageCollected::~GarbageCollected(){
+    globalCount--;
+    CycleDetector::getInstance()->remove(this);
+}
+
+
 
 
 

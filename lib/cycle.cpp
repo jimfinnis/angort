@@ -11,8 +11,6 @@
 namespace angort {
 CycleDetector *CycleDetector::instance = NULL;
 
-//#define dprintf printf
-
 /** A description of the algorithm: 
  * - For each container object, set gc_refs equal to the object's reference count.
  * - For each container object, find which container objects it references and decrement the referenced container's gc_refs field.
@@ -114,9 +112,9 @@ void CycleDetector::detect(){
     
 //    printf("Objects left:\n");
 //    for(p=mainlist.head();p;p=mainlist.next(p)){
-//        printf("  %p (ref %d)\n",(uint32_t)p,p->refct);
+//        printf("  %p (ref %d)\n",p,p->refct);
 //    }
-//    printf("DONE\n");
+    dprintf("----------------------------DONE\n");
 }
 
 void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool iskey) {

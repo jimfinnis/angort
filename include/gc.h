@@ -25,19 +25,17 @@ typedef uint16_t refct_t; //!< reference count - make sure it's unsigned
 class GarbageCollected {
     static int globalCount;
 public:
-    GarbageCollected() {
-        refct=0;
-        globalCount++;
-    }
+    
+    /// set refct to zero, add to cycle detection system
+    GarbageCollected();
+    /// remove from cycle detection system
+    virtual ~GarbageCollected();
     
     /// return the total number of refcounted objects
     static int getGlobalCount(){
         return globalCount;
     }
     
-    virtual ~GarbageCollected(){
-        globalCount--;
-    }
     
     /// the reference count
     refct_t refct;

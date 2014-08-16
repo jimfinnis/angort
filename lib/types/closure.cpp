@@ -14,7 +14,6 @@ namespace angort {
 Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
     if(c)
         Types::tCode->set(&codeBlockValue,c);
-    CycleDetector::getInstance()->add(this);
     ct=tabsize;
     table=t;
 //    printf("creating closure %p\n",this);
@@ -23,7 +22,6 @@ Closure::Closure(const CodeBlock *c,int tabsize,Value *t) : GarbageCollected() {
 Closure::~Closure(){
     //    printf("closure deletion\n");
     delete [] table; // should delete AND DECREF the contained objects
-    CycleDetector::getInstance()->remove(this);
 //    printf("deleting closure %p\n",this);
 }
 

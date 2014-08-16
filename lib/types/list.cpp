@@ -10,11 +10,9 @@
 namespace angort {
 
 ListObject::ListObject() : GarbageCollected(), list(32) {
-    CycleDetector::getInstance()->add(this);
 }
 
 ListObject::~ListObject(){
-    CycleDetector::getInstance()->remove(this);
 }
 
 void ListType::set(Value *v,ListObject *lo){

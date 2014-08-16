@@ -255,3 +255,47 @@ struct StdComparator : public ArrayListComparator<Value> {
     FuncComparator cmp(a,&func);
     list->sort(&cmp);
 }
+
+%word all (in func --) true if the function returns true for all items
+{
+    int rv=1; // true by default
+    
+    Value func;
+    func.copy(a->popval()); // need a local copy
+    
+    Value *iterable = a->popval();
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current()); // stack the iterator on top of the accum
+        a->runValue(&func); // run the function
+        if(!a->popInt()){
+            rv = 0;
+            break;
+        }
+    }
+    a->pushInt(rv);
+    delete iter;
+}
+
+%word any (in func --) true if the function returns true for all items
+{
+    int rv=0; // false by default
+    
+    Value func;
+    func.copy(a->popval()); // need a local copy
+    
+    Value *iterable = a->popval();
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current()); // stack the iterator on top of the accum
+        a->runValue(&func); // run the function
+        if(a->popInt()){
+            rv = 1;
+            break;
+        }
+    }
+    a->pushInt(rv);
+    delete iter;
+}

@@ -14,11 +14,9 @@ namespace angort {
 
 HashObject::HashObject(){
     hash = new Hash();
-    CycleDetector::getInstance()->add(this);
 }
 
 HashObject::~HashObject(){
-    CycleDetector::getInstance()->remove(this);
     delete hash;
 }
 
