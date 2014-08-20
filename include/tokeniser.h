@@ -109,7 +109,7 @@ public:
             return -9999;
     }
     /// get the value of the next token - must be a float or int
-    float getint()
+    int getint()
     {
         if(curtype==inttoken)
             return val.i;

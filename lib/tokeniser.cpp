@@ -238,64 +238,58 @@ loop:
         
         // check for number
         
-        bool gotPoint = false;
         
-        for(int i=0;i<len;i++)
-        {
-            if(val.s[i] == '.')
-                gotPoint = true;
-            
-            if(!(isdigit(val.s[i]) 
-                 || gotPoint || 
-                 (val.s[i]=='-' && (val.s[i+1]=='.' || isdigit(val.s[i+1])))))
+        if(isdigit(val.s[0]) || val.s[0]=='-'){ // starts with a digit, must be a number. Hex would be 0ffh etc.
+            bool gotPoint = false;
+            for(int i=0;i<len;i++)
             {
-                if(i && i==len-1 && isalpha(val.s[i])){
-                    // special weird case - a num-zero length numeric string terminated by a letter.
-                    // This is an integer with a base character: 15x or 0010b. Characters
-                    // supported are d, x, b, o for bases 10,16,2,8.
-                    char basechar = val.s[i];
-                    val.s[i]=0;
-                    int x;
-                    switch(basechar){
-                    case 'd':x=atoi(val.s);break;
-                    case 'h':
-                    case 'x':x=strtol(val.s,NULL,16);break;
-                    case 'b':x=strtol(val.s,NULL,2);break;
-                    case 'o':x=strtol(val.s,NULL,8);break;
-                    default:
-                        curtype=identtoken; // return as ident if bad char!
-                        return curtype;
-                    }
-                    val.i=x;
-                    curtype=inttoken;
+                if(val.s[i] == '.')
+                    gotPoint = true;
+            }
+            if(isalpha(val.s[len-1])){
+                // special weird case - a non-zero length numeric string terminated by a letter.
+                // This is an integer with a base character: 15x or 0010b. Characters
+                // supported are d, x, b, o for bases 10,16,2,8.
+                char basechar = val.s[len-1];
+                val.s[len-1]=0;
+                int x;
+                switch(basechar){
+                case 'd':x=atoi(val.s);break;
+                case 'h':
+                case 'x':x=strtol(val.s,NULL,16);break;
+                case 'b':x=strtol(val.s,NULL,2);break;
+                case 'o':x=strtol(val.s,NULL,8);break;
+                default:
+                    curtype=identtoken; // return as ident if bad char!
                     return curtype;
                 }
-                int w=-1;
-                if(!keywordsOff)
-                    w = findkeyword(val.s);
-                if(w>=0)
-                {
-                    dprintf("got keyword %s",val.s);
-                    curtype = w;
-                }
-                else
-                {
-                    dprintf("got ident - %s",val.s);
-                    curtype = identtoken;
-                }
+                val.i=x;
+                curtype=inttoken;
                 return curtype;
+            } else if(gotPoint){
+                float f = atof(val.s);
+                val.f= f;
+                curtype = floattoken;
+            } else {
+                val.i= atoi(val.s);
+                curtype = inttoken;
             }
+            return curtype;
         }
-        
-        if(gotPoint){
-            float f = atof(val.s);
-            val.f= f;
-            curtype = floattoken;
-        } else {
-            val.i= atoi(val.s);
-            curtype = inttoken;
+            
+        int w=-1;
+        if(!keywordsOff)
+            w = findkeyword(val.s);
+        if(w>=0)
+        {
+            dprintf("got keyword %s",val.s);
+            curtype = w;
         }
-        
+        else
+        {
+            dprintf("got ident - %s",val.s);
+            curtype = identtoken;
+        }
         return curtype;
     }
     curtype = endtoken;
