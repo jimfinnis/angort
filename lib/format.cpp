@@ -59,7 +59,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
     ArrayListIterator<Value> iter(items);
     iter.first();
     
-    int width,precision;
+    unsigned int width,precision;
     
     // pass 1, work out the buffer size
     int size=0;

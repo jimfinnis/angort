@@ -81,7 +81,7 @@ public:
         return used;
     }
     
-    ~Hash(){
+    virtual ~Hash(){
         delete [] table;
 #ifdef DEBUG
         //        fprintf(stderr,"misses : %d, size %d\n",miss,mask+1);
