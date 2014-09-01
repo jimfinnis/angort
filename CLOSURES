@@ -19,9 +19,6 @@ So. Compilation of variable:
 
 
 
-
-
-
 1) Function definitions shouldn't consist of just IP, there
    needs to be a local/param block, and a closure map (which maps
    locals in the creating context to those in the current one.) That way
@@ -101,3 +98,62 @@ so here we go.
     - local table now part of context
     - writing closure creation stuff (i.e. building the closure map during compile)
     
+
+
+NEW CLOSURES
+
+Data structures:
+    Closure table:  gives the codeblock and index of closures used in
+                    this function (indices into the closure block).
+                    Made at compile time.
+
+    Closure block:  array of values containing variables defined by this
+                    function, which are used in child functions. Created
+                    when the function value is instantiated???
+                    
+                    (this is iffy; consider a top-level function - can
+                    there really be only one closure block? Each call
+                    will need one.)
+                    
+                    This is reference counted and cycle detected.
+                    
+    Closure map:    This is a map of closure variable indices to
+                    Value pointers, and is generated at create time(?)
+                    
+    
+
+Closures are structured as above, with the following changes:
+
+Compile time:
+    If a local is not found, go up the tree until we find it. In
+    that function, convert the local into a closure and modify the
+    code, converting all references (OP_LOCAL*) into closures.
+    Creating a closure is just a matter of increasing the closure count.
+
+    Then add an entry to the closure table to both the new function
+    and the function containing the variable. This consists of
+    (CodeBlock *, int) tuples giving the owning codeblock and the
+    closure index. The findOrCreateClosure() method called on the owning
+    function (actually CompileContext) returns this tuple so it can be
+    added to the child's closure table.
+    
+    This data always goes into CodeBlocks.
+ 
+Create time:
+    Creating an instance of a function is done when a define completes,
+    or OP_LITERALCODE runs.
+
+    Firstly, if the function requires a closure block (that is, it owns
+    variables which were made into closures at compile time) one is created.
+    The closure block is just an array of values, all None initially.
+    
+    Then the function's closure table is studied. For each entry, the return
+    stack is scanned for the codeblock specified in the table, and a ..
+
+Call time:
+
+Return time:
+
+De-ref time:   
+
+
