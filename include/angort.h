@@ -66,25 +66,6 @@ struct LibraryDef {
 };
     
 
-/// this is a closure - it's a CodeBlock (a function, if you will) associated with
-/// the values which need to be bound to locals by the CodeBlock's closure map.
-struct Closure : public GarbageCollected {
-    Value codeBlockValue; //!< we store the codeblock as a value
-    Value *table;
-    int ct; // size of the table so we can copy it
-    
-    /// c may be NULL here, in which case the code block will
-    /// not be initialised.
-    Closure(const CodeBlock *c,int tabsize,Value *t);
-    
-    /// the value iterator for a closure means we can do cycle detection.
-    /// It does mean that you can do some interesting things with "each"
-    /// though...
-    virtual Iterator<class Value *> *makeValueIterator();
-
-    ~Closure();
-};
-
 
 /// a property - it's a value which can be accessed like
 /// a global variable, but has sideeffects on get or set.
@@ -125,15 +106,6 @@ struct Instruction {
 };
 
 
-/// an entry in the closure map - the variable in this slot should be obtained
-/// from the variable 'parent' in the parent context - isLocalInParent indicates
-/// whether it should come from the local variables or the closure variables.
-
-struct ClosureMapEntry {
-    int parent;
-    bool isLocalInParent;
-};
-
 
 #define MAXLOCALS	32
 
@@ -149,19 +121,6 @@ class CompileContext {
     char localTokens[MAXLOCALS][64]; //!< locals in the word currently being defined
     int localTokenCt; //!< number of locals in the word currently being defined
     int paramCt; //!< number of locals which are parameters; set by the compileLocalAndParams() method
-    
-    /// the closure map - which maps the closure variables onto locals or closures
-    /// in the containing context.
-    
-    ClosureMapEntry closureMap[MAXLOCALS]; 
-    char closureMapNames[MAXLOCALS][64]; //!< names of variable in the container context
-    int closureMapCt;
-    int addClosureMapEntry(const char *name, int parentidx, bool isLocalInParent){
-        strcpy(closureMapNames[closureMapCt],name);
-        closureMap[closureMapCt].isLocalInParent = isLocalInParent;
-        closureMap[closureMapCt].parent = parentidx;
-        return closureMapCt++;
-    }
     
     CompileContext *parent; //!< pointer to containing context or NULL, set up by pushCompileContext
     int leaveListHead; //!< the head of a leave list - the index of the first OP_LEAVE etc. instruction, or -1.
@@ -183,7 +142,6 @@ public:
 //        compileBuf[0].opcode=1; //OP_END
         paramCt=0;
         localTokenCt=0;
-        closureMapCt=0;
         tokeniser=tok;
         if(spec){
             free((void *)spec);
@@ -229,17 +187,6 @@ public:
         memcpy(buf,compileBuf,compileCt*sizeof(Instruction));
         return buf;
     }
-    /// return a newly allocated copy of the closure map
-    ClosureMapEntry *copyClosureMap(){
-        ClosureMapEntry *map = new ClosureMapEntry[closureMapCt];
-        memcpy(map,closureMap,closureMapCt*sizeof(ClosureMapEntry));
-        return map;
-    }
-    /// return the size of the closure map
-    int getClosureMapSize(){
-        return closureMapCt;
-    }
-    
                                            
     int addLocalToken(const char *s){
         int t = localTokenCt;
@@ -263,37 +210,6 @@ public:
     }
     
     
-    /// attempt to create a closure for the variable s in the context above.
-    /// We do this by asking the parent context for the local ID of that variable,
-    /// or if it can't find it to create a closure itself. This will recurse up
-    /// to the root.
-    
-    int findOrAttemptCreateClosure(const char *s){
-        int i;
-        
-        if(!parent)return -1; // no closure if there's no parent
-        
-        // do we already have a closure?
-        for(int i=0;i<closureMapCt;i++){
-            if(!strcmp(closureMapNames[i],s))
-                return i;
-        }
-        
-        
-        if((i=parent->getLocalToken(s))>=0){
-            // we've found a local in the parent, so we can create
-            // a closure which refers to a local
-            return addClosureMapEntry(s,i,true); // and return the new closure ID
-        }
-        
-        
-        // Find the local in the parent, so we can create a closure
-        if((i=parent->findOrAttemptCreateClosure(s))>=0){
-            // here, we've found a closure which refers to a closure in the parent
-            return addClosureMapEntry(s,i,false);
-        }
-        return -1;
-    }
     
     /// return the index of a local token, or -1 if it's not in the table
     int getLocalToken(const char *s){
@@ -371,11 +287,7 @@ public:
 
 
 /// a code block consists of a pointer to some instructions, a count of local variables,
-/// a count of how many of those should be popped off the stack (i.e. are parameters),
-/// and a optional closure map, which indicates how a closure table will be created
-/// when the OP_LITERALCODE to which this is attached is run.
-
-/// Both CodeBlocks and Closures can be called with OP_CALL.
+/// a count of how many of those should be popped off the stack (i.e. are parameters).
 
 struct CodeBlock {
     
@@ -384,18 +296,11 @@ struct CodeBlock {
         locals = con->getLocalCount();
         params = con->getParamCount();
         size = con->getCodeSize();
-        closureMapCt = con->getClosureMapSize();
-        if(closureMapCt)
-            closureMap = con->copyClosureMap();
-        else
-            closureMap = NULL;
     }
     
     void clear(){
         if(ip) delete[] ip;
-        if(closureMap) delete[] closureMap;
         ip=NULL;
-        closureMap=NULL;
     }
     
     
@@ -408,15 +313,11 @@ struct CodeBlock {
         size=0;
         locals = 0;
         params = 0;
-        closureMapCt=0;
-        closureMap=NULL;
     }
     
     const Instruction *ip; //!< the instructions themselves, must be delete[]ed
     int size;
     int locals,params;
-    ClosureMapEntry *closureMap;
-    int closureMapCt;
 };
 
 
@@ -506,17 +407,12 @@ class Angort {
 private:
     bool running; //!< used by shutdown()
     Stack<const Instruction *,32> rstack;
-    Stack<Value*,32> closureStack; //<! parallels the return stack, carries the closure table
-    /// also parallels the return stack, used for closures-during-use
-    /// (see closures.ang test cases)
-    Stack<GarbageCollected *,32> gcrstack;
-    Stack<Value,32> recstack;
+    Stack<Value,32> recstack; //!< recursion stack, for OP_SELF and OP_RECURSE
     
     Stack<Value,8> loopIterStack; // stack of loop iterators
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;
-    Value *closureTable; //!< the current closure table
     
     ArrayList<LibraryDef *> *libs; //!< list of libraries
     
@@ -586,9 +482,8 @@ private:
     /// show an instruction
     void showop(const Instruction *ip,const Instruction *base);
     
-    /// this will push the locals stack and then
-    /// resolve any closures in the value,
-    /// and finally push the rstack. The new IP
+    /// this will push the locals stack
+    /// and push the rstack. The new IP
     /// is returned, and the old one is passed in
     /// (which could be NULL for top level).
     const Instruction *call(const Value *v, const Instruction *returnip);
@@ -633,8 +528,8 @@ public:
         return callingInstance;
     }
     
-    /// used to run a codeblock or closure - works by doing call() and then run() until exit.
-    /// Will not push the closuretable or return stacks.
+    /// used to run a codeblock - works by doing call() and then run() until exit.
+    /// Will not push return stack.
     void runValue(const class Value *v);
     
     /// if an exception occurred in a run, this will have the IP.
@@ -763,7 +658,7 @@ public:
     /// which specifies which parameter failed.
     /// The type characters are:
     /// - n : numeric
-    /// - c : callable (codeblock/closure)
+    /// - c : callable
     /// - s : string or symbol
     /// - S : symbol only
     /// - v : variable (i.e. no checking)

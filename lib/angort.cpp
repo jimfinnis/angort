@@ -131,8 +131,6 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
-        printf("(%p)",closureTable+ip->d.i);
-        break;
     case OP_PROPSET:
     case OP_PROPGET:
         printf("(TODO)");
@@ -152,7 +150,6 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
 }
 
 const Instruction *Angort::call(const Value *a,const Instruction *returnip){
-    Closure *closure;
     const CodeBlock *cb;
     Type *t;
     
@@ -164,13 +161,6 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         return returnip;
     }
     
-    // otherwise it must be a code block or closure
-    GarbageCollected *toPushOntoGCRStack=NULL;
-    
-//    printf("CLOSURE SNARK PUSH");
-    closureStack.push(closureTable); // we *might* be changing the closure table
-    
-    
     locals.push(); // switch to new locals frame
     // get the codeblock, check the type, and in
     // the case of a closure, bind the closed locals
@@ -181,26 +171,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
                                        cb->params,&stack);
         if(!cb->ip)
             throw RUNT("call to a word with a deferred definition");
-    } else if(t==Types::tClosure) {
-        closure = a->v.closure;
-        // we need to push this and increment refct so that it won't
-        // be deleted by overwrite of the old stack entry inside the
-        // closure (see test cases)
-        toPushOntoGCRStack=closure;
-        closure->incRefCt();
-        
-        cb = closure->codeBlockValue.v.cb;
-        locals.allocLocalsAndPopParams(cb->locals,
-                                       cb->params,&stack);
-        if(!cb->closureMap)
-            throw RUNT("weird - the closure's codeblock has no closure map");
-        // set the closure table we're using
-        closureTable = closure->table;
     } else {
         throw RUNT("").set("attempt to 'call' something that isn't code, it's a %s",t->name);
     }
     
-    gcrstack.push(toPushOntoGCRStack);
     recstack.pushptr()->copy(a);
     
     // stack the return ip and return the new one.
@@ -231,21 +205,12 @@ void Angort::dumpStack(const char *s){
 
 const Instruction *Angort::ret()
 {
+    // TODO sanity check and pop of closure stack
     if(rstack.isempty()){
-        // sanity check --- the closure stack should also be zero
-        // when the return stack is empty
-        if(!closureStack.isempty())
-            throw RUNT("closure/return stack mismatch");
         return NULL;
     } else {
         ip = rstack.pop();
-        if(GarbageCollected *gc = gcrstack.pop()){
-            if(gc->decRefCt())
-                delete gc;
-        }
         recstack.popptr()->clr();
-        closureTable = closureStack.pop();
-        //                        printf("CLOSURE SNARK POP\n");
         debugwordbase = ip;
         locals.pop();
         return ip;
@@ -307,34 +272,13 @@ void Angort::run(const Instruction *ip){
                 break;
             case OP_LITERALCODE:
                 cb = ip->d.cb;
-                // if there is a closure map, we'll need to build the closure and push that
-                if(cb->closureMap){
-                    // building the closure
-                    int size = cb->closureMapCt;
-                    Value *table = new Value[size];
-                    
-                    for(int i=0;i<size;i++){
-                        // copy values from the parent, creating context into the closure
-                        if(cb->closureMap[i].isLocalInParent)
-                            table[i].copy(locals.get(cb->closureMap[i].parent));
-                        else
-                            table[i].copy(closureTable+cb->closureMap[i].parent);
-                    }
-                    Closure *closure = new Closure(cb,size,table);
-                    Types::tClosure->set(stack.pushptr(),closure);
-                } else
-                    // otherwise we just push the codeblock
-                    Types::tCode->set(stack.pushptr(),cb);
+                Types::tCode->set(stack.pushptr(),cb);
                 ip++;
                 break;
             case OP_CLOSUREGET:
-                a = stack.pushptr();
-                a->copy(closureTable+ip->d.i);
                 ip++;
                 break;
             case OP_CLOSURESET:
-                a = stack.popptr();
-                closureTable[ip->d.i].copy(a);
                 ip++;
                 break;
             case OP_GLOBALSET:
@@ -372,7 +316,7 @@ void Angort::run(const Instruction *ip){
                 }
                 break;
             case OP_GLOBALGET:
-                // like the above but does not run a codeblock/closure
+                // like the above but does not run a codeblock
                 a = names.getVal(ip->d.i);
                 b = stack.pushptr();
                 b->copy(a);
@@ -382,11 +326,7 @@ void Angort::run(const Instruction *ip){
                 // easy as this - pass in the value
                 // and the return ip, get the new ip
                 // out.
-                {
-                    // it's OK to pop a closure here, it only becomes a problem if
-                    // we overwrite it.
-                    ip=call(popval(),ip+1); // this JUST CHANGES THE IP AND STACKS STUFF.
-                }
+                ip=call(popval(),ip+1); // this JUST CHANGES THE IP AND STACKS STUFF.
                 break;
             case OP_SELF:
                 stack.pushptr()->copy(recstack.peekptr());
@@ -602,7 +542,6 @@ void Angort::run(const Instruction *ip){
         }
         // and the locals stack too
         locals.clear();
-        closureStack.clear();
         rstack.clear();
         throw e;
     }
@@ -1061,10 +1000,6 @@ void Angort::feed(const char *buf){
                         // local in the parent context. If that succeeds, we will have
                         // created a local for it.
                         compile(OP_LOCALGET)->d.i=t;
-                    } else if((t = context->findOrAttemptCreateClosure(tok.getstring()))>=0){
-                        // we managed to create a closure from here to upstairs,
-                        // so store the closure index
-                        compile(OP_CLOSUREGET)->d.i=t;
                     } else if((t = names.get(tok.getstring()))>=0){
                         Value *v = names.getVal(t);
                         if(v->t == Types::tProp){
@@ -1105,10 +1040,6 @@ void Angort::feed(const char *buf){
                         // local in the parent context. If that succeeds, we will have
                         // created a local for it.
                         compile(OP_LOCALSET)->d.i=t;
-                    } else if((t = context->findOrAttemptCreateClosure(tok.getstring()))>=0){
-                        // we managed to create a closure from here to upstairs,
-                        // so store the closure index
-                        compile(OP_CLOSURESET)->d.i=t;
                     } else if((t = names.get(tok.getstring()))>=0){
                         Value *v = names.getVal(t);
                         if(v->t == Types::tProp){
@@ -1155,8 +1086,7 @@ void Angort::feed(const char *buf){
                     CompileContext *lambdaContext = popCompileContext();
                     
                     // here, we compile LITERALCODE word with a codeblock created
-                    // from the context. This will contain a closure map if it was
-                    // required.
+                    // from the context.
                     
                     compile(OP_LITERALCODE)->d.cb = new CodeBlock(lambdaContext);
                     lambdaContext->reset(NULL,&tok);
@@ -1219,7 +1149,6 @@ void Angort::clearAtEndOfFeed(){
     // destroy any iterators left lying around
     while(!loopIterStack.isempty())
         loopIterStack.popptr()->clr();
-    closureStack.clear();
     locals.clear();
 }    
 

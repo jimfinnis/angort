@@ -1,0 +1,70 @@
+NEW CLOSURES
+
+Data structures:
+    Closure table:  gives the codeblock and index of closures used in
+                    this function (indices into the closure block).
+                    Made at compile time.
+
+    Closure block:  array of values containing variables defined by this
+                    function, which are used in child functions. Created
+                    when the function value is instantiated, which is done
+                    by OP_LITERALFUNC or when a named function is called.
+                    
+                    This is reference counted and cycle detected.
+                    
+    Closure map:    This is a map of closure variable indices to
+                    Value pointers, and is also generated at create time, as
+                    above.
+                    
+    
+
+Closures are structured as above, with the following changes:
+
+Compile time:
+    If a local is not found, go up the tree until we find it. In
+    that function, convert the local into a closure and modify the
+    code, converting all references (OP_LOCAL*) into closures.
+    Creating a closure is just a matter of increasing the closure count.
+
+    Then add an entry to the closure table to both the new function
+    and the function containing the variable. This consists of
+    (CodeBlock *, int) tuples giving the owning codeblock and the
+    closure index. The findOrCreateClosure() method called on the owning
+    function (actually CompileContext) returns this tuple so it can be
+    added to the child's closure table.
+    
+    This data always goes into CodeBlocks.
+ 
+Create time:
+    Creating an instance of a function is done when a named function is
+    called (just before the call itself) or OP_LITERALCODE runs. That way,
+    a named function is effectively
+    
+        ( (..code here..)@) const MyFunction
+        
+    and creates its closure block every time it runs, rather than once. If you
+    were to do 
+    
+        (...code..) const MyFunction
+        
+    you would just get the same closure every time MyFunction was run.
+
+    What happens: firstly, if the function requires a closure block (that is, it
+    owns variables which were made into closures at compile time) one is created.
+    The closure block is just an array of values, all None initially.
+    
+    Then the function's closure table is studied. For each entry, the return
+    stack is scanned for the codeblock specified in the table, and a map of
+    closure variable indices to value pointers in the various closure blocks
+    is made. The reference counts of closure blocks are incremented.
+
+Call time:
+    Values are popped into the closure block if they are parameters.
+    
+Return time:
+
+De-ref time:   
+    The reference counts of closure blocked referenced by the closure map are
+    decremented, and blocks are deleted on zero (including dereferencing the
+    stored values)
+
