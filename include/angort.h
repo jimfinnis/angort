@@ -396,6 +396,14 @@ public:
     }
 };
 
+/// this is a stack frame; we push this every time we go into
+/// a function and pop every time we return.
+struct Frame {
+    const Instruction *ip; //!< the return address
+    Value rec; //!< the recursion data (i.e. "this function")
+};
+
+
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
@@ -406,8 +414,7 @@ class Angort {
     static Angort *callingInstance; ///!< set when feed() is called.
 private:
     bool running; //!< used by shutdown()
-    Stack<const Instruction *,32> rstack;
-    Stack<Value,32> recstack; //!< recursion stack, for OP_SELF and OP_RECURSE
+    Stack<Frame,32> rstack; //!< the return stack
     
     Stack<Value,8> loopIterStack; // stack of loop iterators
     

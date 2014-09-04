@@ -175,11 +175,11 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         throw RUNT("").set("attempt to 'call' something that isn't code, it's a %s",t->name);
     }
     
-    recstack.pushptr()->copy(a);
-    
-    // stack the return ip and return the new one.
+    // do the push
+    Frame *f = rstack.pushptr();
     // This might be null, and in that case we ignore it when we pop it.
-    rstack.push(returnip);
+    f->ip = returnip;
+    f->rec.copy(a); // and also stack the value itself
     
     debugwordbase = cb->ip;
     return cb->ip;
@@ -209,8 +209,10 @@ const Instruction *Angort::ret()
     if(rstack.isempty()){
         return NULL;
     } else {
-        ip = rstack.pop();
-        recstack.popptr()->clr();
+        Frame *f = rstack.popptr();
+        ip = f->ip;
+        f->rec.clr();
+        
         debugwordbase = ip;
         locals.pop();
         return ip;
@@ -329,11 +331,11 @@ void Angort::run(const Instruction *ip){
                 ip=call(popval(),ip+1); // this JUST CHANGES THE IP AND STACKS STUFF.
                 break;
             case OP_SELF:
-                stack.pushptr()->copy(recstack.peekptr());
+                stack.pushptr()->copy(&(rstack.peekptr()->rec));
                 ip++;
                 break;
             case OP_RECURSE:
-                a = recstack.peekptr();
+                a = &(rstack.peekptr()->rec);
                 ip=call(a,ip+1);
                 break;
             case OP_END:
