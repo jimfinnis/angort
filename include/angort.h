@@ -106,8 +106,30 @@ struct Instruction {
 };
 
 
-
+/// MUST be <32, since we use a 32-bit int as a set of booleans
+/// in various places
 #define MAXLOCALS	32
+
+/// this structure is attached to contexts which refer to closures,
+/// including the codeblocks which defines the variable itself.
+/// It contains data about which cb the variable comes from,
+/// and which variable within the closure block it is.
+struct ClosureListEnt {
+    const CodeBlock *c; // parent cb defining variable
+    int i; // index in closure block
+    ClosureListEnt *next; // link
+    
+    ClosureListEnt(CodeBlock *_c,int _i){
+        c = _c; i = _i;
+    }
+};
+
+/// an array of these is built for any codeblocks which
+/// require access to closure variables
+struct ClosureTableEnt {
+    int levelsUp; //!< how many levels up the call stack the closure block is
+    int idx; //!< the index into the appropriate closure block
+};
 
 /// a compilation context - we have a stack of these so that we can
 /// do lambdas
@@ -120,36 +142,72 @@ class CompileContext {
     
     char localTokens[MAXLOCALS][64]; //!< locals in the word currently being defined
     int localTokenCt; //!< number of locals in the word currently being defined
-    int paramCt; //!< number of locals which are parameters; set by the compileLocalAndParams() method
+    int paramCt; //!< the first N locals are parameters
+    /// a bitfield indicating which of the variables should be closed;
+    /// they are referred to in subfunctions are therefore should be stored
+    /// in a closure.
+    uint32_t localsClosed;
+    /// this should be the number of bits set in localsClosed
+    int closureCt;
+    /// this is a map from local index (i.e. indices into localTokens) to
+    /// opcode index - i.e. the index of the closure or local variable.
+    char localIndices[MAXLOCALS];
+    
+    /// the closure table for the current function
+    ClosureListEnt *closureList;
+    int closureListCt;
     
     CompileContext *parent; //!< pointer to containing context or NULL, set up by pushCompileContext
     int leaveListHead; //!< the head of a leave list - the index of the first OP_LEAVE etc. instruction, or -1.
     
     Tokeniser *tokeniser; //!< the tokeniser
+    
+    /// convert a variable/parameter into a closure - we need
+    /// to scan through existing variables too!
+    void convertToClosure(const char *name);
+    
+    int addClosureListEnt(CodeBlock *c,int n){
+        ClosureListEnt *p = new ClosureListEnt(c,n);
+        p->next = closureList;
+        closureList = p;
+        return closureListCt++;
+    }
+    
+    void freeClosureList(){
+        ClosureListEnt *p,*q;
+        if(closureList){
+            for(p=closureList;p;p=q){
+                q=p->next;
+                delete p;
+            }
+            closureList=NULL;
+        }
+        closureListCt=0;
+    }
+          
+    
 public:
     
     const char *spec; //!< specification string, which we strdup.
-    
+    CodeBlock *cb; //!< the codeblock this context is compiling
     CompileContext(){
         spec=NULL;
+        closureList=NULL;
+        cb=NULL;
         reset(NULL,NULL);
     }
     
     /// reset a new compile context and set the containing context.
-    void reset(CompileContext *p,Tokeniser *tok){
-        parent = p;
-        compileCt=0;
-//        compileBuf[0].opcode=1; //OP_END
-        paramCt=0;
-        localTokenCt=0;
-        tokeniser=tok;
-        if(spec){
-            free((void *)spec);
-            spec=NULL;
-        }
-        leaveListHead = -1;
-        cstack.clear();
-    }
+    void reset(CompileContext *p,Tokeniser *tok);
+    
+    /// build a closure table which can be set into the codeblock,
+    /// out of the closure list (which can then be deleted)
+    ClosureTableEnt *makeClosureTable();
+    
+    /// scan functions above this for a variable, and convert to a closure if
+    /// required. Having found the closure, add an entry to this context's closure table
+    /// (creating one if required) if it's not already there.
+    int findOrCreateClosure(const char *name);
     
     /// add the current instruction to the leave list
     void compileAndAddToLeaveList(int opcode){
@@ -187,11 +245,13 @@ public:
         memcpy(buf,compileBuf,compileCt*sizeof(Instruction));
         return buf;
     }
-                                           
+    
+    /// add a new local, initially just a stack variable.
     int addLocalToken(const char *s){
         int t = localTokenCt;
         if(localTokenCt==MAXLOCALS)
             throw RUNT("too many local tokens");
+        localIndices[localTokenCt]=localTokenCt;
         strcpy(localTokens[localTokenCt++],s);
         return t;
     }
@@ -212,6 +272,8 @@ public:
     
     
     /// return the index of a local token, or -1 if it's not in the table
+    /// NOTE THAT you need to use the appropriate closure or local index,
+    /// by looking at isClosed() and getLocalIndex()
     int getLocalToken(const char *s){
         for(int i=0;i<localTokenCt;i++){
             if(!strcmp(s,localTokens[i]))
@@ -219,6 +281,18 @@ public:
         }
         return -1;
     }
+    
+    /// given local token index, return whether closed
+    bool isClosed(int t){
+        return 0 != ((1<<t) & localsClosed);
+    }
+    
+    /// given local token index, return index of either local or closure index.
+    int getLocalIndex(int t){
+        return localIndices[t];
+    }
+            
+    
     
     Instruction *compile(int opcode){
         if(compileCt==1024)
@@ -291,33 +365,35 @@ public:
 
 struct CodeBlock {
     
+    CodeBlock(){
+        used=false;
+    }
+    
     void setFromContext(CompileContext *con){
         ip = con->copyInstructions();
         locals = con->getLocalCount();
         params = con->getParamCount();
         size = con->getCodeSize();
+        closureTable = con->makeClosureTable();
+        used=true;
     }
     
     void clear(){
         if(ip) delete[] ip;
+        if(closureTable) delete[] closureTable;
         ip=NULL;
+        used=false;
     }
     
-    
-    CodeBlock(CompileContext *con){
-        setFromContext(con);
-    }
-    
-    CodeBlock(const Instruction *i){
-        ip=i;
-        size=0;
-        locals = 0;
-        params = 0;
-    }
     
     const Instruction *ip; //!< the instructions themselves, must be delete[]ed
+    /// describes the location of closed variables, by index in closure block and
+    /// how far up the call stack the closure block is. This is used to generate
+    /// a closure map on instantiation of the codeblock.
+    const ClosureTableEnt *closureTable;
     int size;
     int locals,params;
+    bool used; //!< true if the codeblock ends up being used (so the context mustn't delete it)
 };
 
 
@@ -452,8 +528,6 @@ private:
     
     /// define a word from a context - startDefine() must have been called
     void endDefine(class CompileContext *cb);
-    /// define a word just from a list of instructions - startDefine() must have been called
-    void endDefine(Instruction *i);
     
     char lastLine[1024]; //!< last line read
     

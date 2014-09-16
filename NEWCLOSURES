@@ -1,9 +1,15 @@
 NEW CLOSURES
 
 Data structures:
-    Closure table:  gives the codeblock and index of closures used in
+    Closure list:   generated for the context during compilation,
+                    contains the codeblock for each closed variable
+                    referenced and its index in the codeblock's
+                    closure block.
+                    
+    Closure table:  gives the codeblock (in levels up the stack)
+                    and index of closures used in
                     this function (indices into the closure block).
-                    Made at compile time.
+                    Made at compile time, generated from the closure list.
 
     Closure block:  array of values containing variables defined by this
                     function, which are used in child functions. Created
@@ -33,7 +39,9 @@ Compile time:
     function (actually CompileContext) returns this tuple so it can be
     added to the child's closure table.
     
-    This data always goes into CodeBlocks.
+    This data always goes into CodeBlocks. In practice, the closure
+    table actually shows levels up the return stack you need to 
+    go to get to the required closure block!
  
 Create time:
     Creating an instance of a function is done when a named function is

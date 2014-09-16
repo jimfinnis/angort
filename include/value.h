@@ -31,7 +31,6 @@ struct Value {
         char *s;
         struct BlockAllocHeader *block;
         const struct CodeBlock *cb;
-        struct Closure *closure;
         
         struct Range<int> *irange;
         struct Range<float> *frange;
@@ -41,6 +40,8 @@ struct Value {
         class IteratorObject *iter;
         NativeFunc native;
         struct Property *property;
+#pragma message "Replace Value::v.closure with proper struct"
+        void *closure;
         void *v;
     } v;
     

@@ -9,9 +9,13 @@
 3.1415927 const PI
 PI 2 * const TWOPI
 # return x,y on the stack - a random vector of length len
-:randv |len:| TWOPI frand dup cos ?len * swap sin ? len *;
+:randv |len:| TWOPI frand dup
+    cos ?len * 
+    swap 
+    sin ?len *;
+
 # random colour
-:randc |:f| (rand 128 % 128+)!f [?f@,?f@,?f@];
+:randc |:f| (rand 128 % 128+)!f [?f@,?f@,?f@,255];
 
 :mkthingy |:this,dx,dy| 
     2 frand dup* randv !dy !dx
@@ -34,7 +38,7 @@ PI 2 * const TWOPI
          ?y ?this!`y
      ),
      `draw (
-         ?this?`col each{i} col
+         ?this?`col !col
          ?this?`x ?this?`y 10 10 fillrect
      )
      ]
@@ -51,5 +55,5 @@ PI 2 * const TWOPI
 -1 -1 fullscreenopen
 scrsize 10 - !Width 10 - !Height
 
-[] 0 3000 range each {mkthingy,} !Thingies
+[] 0 300 range each {mkthingy,} !Thingies
 loop close quit

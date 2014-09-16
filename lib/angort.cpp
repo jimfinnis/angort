@@ -6,6 +6,7 @@
  * @date $Date$
  */
 
+
 #define ANGORT_VERSION 228
 
 #include <stdlib.h>
@@ -23,7 +24,7 @@
 #include "hash.h"
 
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std);
-    
+
 namespace angort {
 
 int Angort::getVersion(){
@@ -131,6 +132,9 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
+    case OP_LOCALSET:
+    case OP_LOCALGET:
+        printf("(%d)",ip->d.i);break;
     case OP_PROPSET:
     case OP_PROPGET:
         printf("(TODO)");
@@ -192,7 +196,7 @@ void Angort::runValue(const Value *v){
         run(ip);
         debugwordbase=oldbase;
     }
-//    locals.pop(); 
+    //    locals.pop(); 
 }
 
 void Angort::dumpStack(const char *s){
@@ -233,7 +237,7 @@ void Angort::run(const Instruction *ip){
                 if(!ip)
                     return;
             }
-               
+            
             int opcode = ip->opcode;
             if(debug&1){
                 showop(ip,debugwordbase);
@@ -560,26 +564,18 @@ void Angort::startDefine(const char *name){
             throw SyntaxException("").set("cannot redefine constant '%s'",name);
     wordValIdx = idx;
 }
-    
+
 
 void Angort::endDefine(CompileContext *c){
     if(!isDefining())
         throw SyntaxException("not defining a word");
     
-    CodeBlock *cb = new CodeBlock(c);
+    // get the codeblock out of the context and set it up.
+    CodeBlock *cb = c->cb;
+    cb->setFromContext(c);
     Value *wordVal = names.getVal(wordValIdx);
     Types::tCode->set(wordVal,cb);
     names.setSpec(wordValIdx,c->spec);
-    wordValIdx = -1;
-}
-
-void Angort::endDefine(Instruction *i){
-    if(!isDefining())
-        throw SyntaxException("not defining a word");
-    
-    CodeBlock *cb = new CodeBlock(i);
-    Value *wordVal = names.getVal(wordValIdx);
-    Types::tCode->set(wordVal,cb);
     wordValIdx = -1;
 }
 
@@ -656,25 +652,142 @@ bool Angort::fileFeed(const char *name,bool rethrow){
 const Instruction *Angort::compile(const char *s){
     RUNT("no longer supported");
     /*
-    // trick the system into thinking we're defining a colon
-    // word for one line only
-    defining = true'
-    feed(s);
-    compile(OP_END); // make sure it's terminated
-    
-    // get the code, copy it, reset the context and return.
-    int ct = context->getCodeSize();
-    Instruction *ip = context->getCode();
-    
-    Instruction *buf = new Instruction[ct];
-    memcpy(buf,ip,ct*sizeof(Instruction));
-    
-    context->reset(NULL);
-    defining=false; // must turn it off!
-    return buf;
+       // trick the system into thinking we're defining a colon
+       // word for one line only
+       defining = true'
+       feed(s);
+       compile(OP_END); // make sure it's terminated
+       
+       // get the code, copy it, reset the context and return.
+       int ct = context->getCodeSize();
+       Instruction *ip = context->getCode();
+       
+       Instruction *buf = new Instruction[ct];
+       memcpy(buf,ip,ct*sizeof(Instruction));
+       
+       context->reset(NULL);
+       defining=false; // must turn it off!
+       return buf;
      */    
     return NULL;
 }
+
+void CompileContext::reset(CompileContext *p,Tokeniser *tok){
+    parent = p;
+    compileCt=0;
+    // only delete the codeblock if it didn't end up
+    // being used, possibly due to a syntax error.
+    if(cb && !cb->used)delete cb;
+    // create the new codeblock we're going to compile into
+    cb = new CodeBlock();
+    //        compileBuf[0].opcode=1; //OP_END
+    paramCt=0;
+    localTokenCt=0;
+    closureCt=0;
+    localsClosed=0;
+    tokeniser=tok;
+    freeClosureList();
+    if(spec){
+        free((void *)spec);
+        spec=NULL;
+    }
+    leaveListHead = -1;
+    cstack.clear();
+}
+
+ClosureTableEnt *CompileContext::makeClosureTable(){
+    if(!closureList)return NULL; // make a null table if there aren't any
+    
+    ClosureTableEnt *t = new ClosureTableEnt[closureListCt];
+    for(ClosureListEnt *p=closureList;p;p=p->next){
+        // work out how far up the stack the entry is
+        int level=0;
+        CompileContext *cc;
+        for(cc=this;cc;cc=cc->parent){
+            if(cc->cb==p->c)break;
+            level++;
+        }
+        if(!cc)throw WTF; // didn't find it, and it should be there!
+        t->levelsUp = level;
+        t->idx = t->idx;
+    }
+    return t;
+}
+
+void CompileContext::convertToClosure(const char *name){
+    // find which local this is
+    int i;
+    for(i=0;i<localTokenCt;i++)
+        if(!strcmp(localTokens[i],name))break;
+    if(i==localTokenCt)throw WTF;
+    // got it. Now set this as a closure.
+    if((1<<i) & localsClosed)
+        return; // it's already converted.
+    
+    int localIndex = localIndices[i];
+    localIndices[i] = closureCt++;
+    // add an entry to the local closure table
+    addClosureListEnt(cb,localIndices[i]);
+    
+    // convert all access of the local into the closure
+    Instruction *inst = compileBuf;
+    for(i=0;i<compileCt;i++){
+        if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
+           inst->d.i == localIndex) {
+            inst->opcode = OP_CLOSUREGET;
+            inst->d.i = localIndices[i];
+        }
+    }
+    
+    // now decrement all indices of locals greater than this.
+    // Firstly do this in the table.
+    for(i=0;i<localTokenCt;i++){
+        if(!isClosed(i) && localIndices[i]>localIndex){
+            localIndices[i]--;
+        }
+    }
+    
+    // Then do it in the code generated thus far.
+    for(i=0;i<compileCt;i++){
+        if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
+           inst->d.i > localIndex){
+            inst->d.i--;
+        }
+    }
+}
+
+int CompileContext::findOrCreateClosure(const char *name){
+    // first, scan all functions above this for a local variable.
+    int localIndexInParent=-1;
+    CompileContext *parentContainingVariable;
+    
+    for(parentContainingVariable=parent;parentContainingVariable;
+        parentContainingVariable=parentContainingVariable->parent){
+        if((localIndexInParent = parentContainingVariable->getLocalToken(name))>=0){
+            // got it. If not already, turn it into a closure (which will add it to
+            // the closure table of that function)
+            if(!parentContainingVariable->isClosed(localIndexInParent)){
+                parentContainingVariable->convertToClosure(name);
+            }
+            break;
+        }
+    }
+    if(localIndexInParent<0)return -1; // didn't find it
+    
+    // get the index within the closure block
+    localIndexInParent = parentContainingVariable->getLocalIndex(localIndexInParent);
+    
+    // scan the closure table to see if we have this one already
+    int nn=0;
+    for(ClosureListEnt *p=closureList;p;p=p->next,nn++){
+        if(p->c == parentContainingVariable->cb && p->i == localIndexInParent)
+            return nn;
+    }
+    // if not, add it.
+    return addClosureListEnt(parentContainingVariable->cb,localIndexInParent);
+}
+
+
 
 void Angort::endPackageInScript(){
     // see the similar code below in include().
@@ -690,7 +803,7 @@ void Angort::include(const char *filename,bool isreq){
     const char *fh = findFile(filename);
     if(!fh)
         throw FileNotFoundException(filename);
-        
+    
     int oldDir = open(".",O_RDONLY); // get the FD for the current directory so we can go back
     
     // first, find the real path of the file
@@ -716,10 +829,10 @@ void Angort::include(const char *filename,bool isreq){
     // pop the namespace stack
     int idx=names.pop();
     if(isreq){
-            // push the idx of the package which was defined. 
-            // A bit dodgy since this isn't taking place in
-            // a code block..
-            pushInt(idx);
+        // push the idx of the package which was defined. 
+        // A bit dodgy since this isn't taking place in
+        // a code block..
+        pushInt(idx);
         definingPackage=false; // and we're no longer in a package
     }
     
@@ -761,9 +874,9 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw SyntaxException("expected a filename after 'include'");
-//                if(tok.getnext()!=T_END)
-//                    throw SyntaxException("include must be at end of line");
-                    
+                //                if(tok.getnext()!=T_END)
+                //                    throw SyntaxException("include must be at end of line");
+                
                 include(buf,false);
                 break;
             }
@@ -775,8 +888,8 @@ void Angort::feed(const char *buf){
                 // will recurse
                 if(!tok.getnextstring(buf))
                     throw FileNameExpectedException();
-//                if(tok.getnext()!=T_END)
-//                    throw SyntaxException("require must be at end of line");
+                //                if(tok.getnext()!=T_END)
+                //                    throw SyntaxException("require must be at end of line");
                 include(buf,true);
                 break;
             }
@@ -987,6 +1100,7 @@ void Angort::feed(const char *buf){
             case T_QUESTION:
                 {
                     if(tok.getnext()!=T_IDENT){
+                        // if it's not an ident, see if it's a hash symbol get
                         char buf[256];
                         switch(tok.getcurrent()){
                         case T_BACKTICK:
@@ -998,11 +1112,11 @@ void Angort::feed(const char *buf){
                             throw SyntaxException("expected an identifier");
                         }
                     } else if((t = context->getLocalToken(tok.getstring()))>=0){
-                        // if we couldn't find it as a local, try to find it as a 
-                        // local in the parent context. If that succeeds, we will have
-                        // created a local for it.
-                        compile(OP_LOCALGET)->d.i=t;
+                        // it's a local variable
+                        compile(context->isClosed(t) ? OP_CLOSUREGET : OP_LOCALGET)->d.i=
+                              context->getLocalIndex(t);
                     } else if((t = names.get(tok.getstring()))>=0){
+                        // it's a global
                         Value *v = names.getVal(t);
                         if(v->t == Types::tProp){
                             // it's a property
@@ -1011,6 +1125,9 @@ void Angort::feed(const char *buf){
                             // it's a global; use it - but don't call it if it's a function
                             compile(OP_GLOBALGET)->d.i = t;
                         }
+                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
+                        // it's a variable defined in a function above
+                        compile(OP_CLOSUREGET)->d.i = t;
                     } else if(isupper(*tok.getstring())){
                         // if it's upper case, immediately define as a global
                         compile(OP_GLOBALGET)->d.i=
@@ -1024,6 +1141,7 @@ void Angort::feed(const char *buf){
             case T_PLING:
                 {
                     if(tok.getnext()!=T_IDENT){
+                        // if it's not an ident, see if it's a hash symbol set
                         char buf[256];
                         switch(tok.getcurrent()){
                         case T_BACKTICK:
@@ -1038,11 +1156,11 @@ void Angort::feed(const char *buf){
                             throw SyntaxException("expected an identifier");
                         }
                     }else if((t = context->getLocalToken(tok.getstring()))>=0){
-                        // if we couldn't find it as a local, try to find it as a 
-                        // local in the parent context. If that succeeds, we will have
-                        // created a local for it.
-                        compile(OP_LOCALSET)->d.i=t;
+                        // it's a local variable
+                        compile(context->isClosed(t) ? OP_CLOSURESET : OP_LOCALSET)->d.i=
+                              context->getLocalIndex(t);
                     } else if((t = names.get(tok.getstring()))>=0){
+                        // it's a global
                         Value *v = names.getVal(t);
                         if(v->t == Types::tProp){
                             // it's a property
@@ -1053,6 +1171,9 @@ void Angort::feed(const char *buf){
                             // it's a global; use it
                             compile(OP_GLOBALSET)->d.i = t;
                         }
+                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
+                        // it's a variable defined in a function above
+                        compile(OP_CLOSURESET)->d.i = t;
                     } else if(isupper(*tok.getstring())){
                         // if it's upper case, immediately define as a global
                         compile(OP_GLOBALSET)->d.i=
@@ -1087,10 +1208,13 @@ void Angort::feed(const char *buf){
                     compile(OP_END); // finish the compile
                     CompileContext *lambdaContext = popCompileContext();
                     
+                    // set the codeblock up
+                    lambdaContext->cb->setFromContext(lambdaContext);
+                    
                     // here, we compile LITERALCODE word with a codeblock created
                     // from the context.
                     
-                    compile(OP_LITERALCODE)->d.cb = new CodeBlock(lambdaContext);
+                    compile(OP_LITERALCODE)->d.cb = lambdaContext->cb;
                     lambdaContext->reset(NULL,&tok);
                 }
                 break;
@@ -1161,7 +1285,7 @@ void Angort::disasm(const char *name){
     Value *v = names.getVal(idx);
     if(v->t != Types::tCode)
         throw RUNT("not a function");
-          
+    
     const CodeBlock *cb = v->v.cb;
     const Instruction *ip = cb->ip;
     const Instruction *base = ip;
