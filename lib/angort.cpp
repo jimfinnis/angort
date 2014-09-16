@@ -169,21 +169,53 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     // get the codeblock, check the type, and in
     // the case of a closure, bind the closed locals
     
+    Closure *clos;
     if(t==Types::tCode){
+        clos = NULL;
         cb = a->v.cb;
-        locals.allocLocalsAndPopParams(cb->locals,
-                                       cb->params,&stack);
-        if(!cb->ip)
-            throw RUNT("call to a word with a deferred definition");
+    } else if(t == Types::tClosure){
+        clos = a->v.closure;
+        cb = clos->cb;
     } else {
         throw RUNT("").set("attempt to 'call' something that isn't code, it's a %s",t->name);
     }
+
+    if(!cb->ip)
+        throw RUNT("call to a word with a deferred definition");
+    
+    // allocate true locals (stack locals)
+    locals.alloc(cb->locals - cb->closureTableSize);
+    
+    // now pop parameters, in reverse order, by
+    // peeking them and then dropping the whole
+    // lot in one go.
+    
+    for(int i=0;i<cb->params;i++){
+        Value *paramval = stack.peekptr((cb->params-1)-i);
+        if(cb->localsClosed & (1<<i)){
+            printf("Param %d is closed: %s\n",i,paramval->toString().get());
+            clos->map[i]->copy(paramval);
+        } else {
+            printf("Param %d is open: %s\n",i,paramval->toString().get());
+            locals.store(i,paramval);
+        }
+    }
+    stack.drop(cb->params);
+    if(clos)clos->show("VarStorePostParams");
+    
     
     // do the push
     Frame *f = rstack.pushptr();
     // This might be null, and in that case we ignore it when we pop it.
     f->ip = returnip;
     f->rec.copy(a); // and also stack the value itself
+    
+    // stack the current level's closure
+    f->clos.copy(&currClosure);
+    if(clos)
+        Types::tClosure->set(&currClosure,clos);
+    else
+        currClosure.clr();
     
     debugwordbase = cb->ip;
     return cb->ip;
@@ -216,12 +248,30 @@ const Instruction *Angort::ret()
         Frame *f = rstack.popptr();
         ip = f->ip;
         f->rec.clr();
+        // copy the current closure back in
+        currClosure.copy(&f->clos);
+        f->clos.clr();
         
         debugwordbase = ip;
         locals.pop();
         return ip;
     }
 }
+
+Value *Angort::getClosureForLevel(int lev){
+    Value *v;
+    if(!lev)
+        return &currClosure;
+    else
+        v = &(rstack.peekptr(lev-1)->clos);
+    
+    if(v->t == Types::tClosure)
+        return v;
+    else
+        return NULL;
+}
+
+
 
 void Angort::run(const Instruction *ip){
     
@@ -276,15 +326,31 @@ void Angort::run(const Instruction *ip){
                 pushString(ip->d.s);
                 ip++;
                 break;
-            case OP_LITERALCODE:
+            case OP_LITERALCODE:{
                 cb = ip->d.cb;
-                Types::tCode->set(stack.pushptr(),cb);
+                a = stack.pushptr();
+                // as in globaldo, here we construct a 
+                // closure if required and stack that instead.
+                if(cb->closureBlockSize || cb->closureTableSize){
+                    Closure *cl = new Closure(); // 1st stage of setup
+                    Types::tClosure->set(a,cl);
+                    a->v.closure->init(cb); // 2nd stage of setup
+                } else
+                    Types::tCode->set(a,cb);
                 ip++;
+            }
                 break;
             case OP_CLOSUREGET:
+                if(currClosure.t != Types::tClosure)throw WTF;
+                a = currClosure.v.closure->map[ip->d.i];
+                currClosure.v.closure->show("VarGet");
+                stack.pushptr()->copy(a);
                 ip++;
                 break;
             case OP_CLOSURESET:
+                if(currClosure.t != Types::tClosure)throw WTF;
+                a = currClosure.v.closure->map[ip->d.i];
+                a->copy(stack.popptr());
                 ip++;
                 break;
             case OP_GLOBALSET:
@@ -314,8 +380,25 @@ void Angort::run(const Instruction *ip){
             case OP_GLOBALDO:
                 a = names.getVal(ip->d.i);
                 if(a->t->isCallable()){
+                    Closure *clos;
+                    // here, we construct a closure block for the global if
+                    // required. This results in a new value being created which
+                    // goes into the frame.
+                    if(a->t == Types::tCode){
+                        const CodeBlock *cb = a->v.cb;
+                        if(cb->closureBlockSize || cb->closureTableSize){
+                            clos = new Closure(); // 1st stage of setup
+                            // if a closure was made, we store it in the current
+                            // frame.
+                            Types::tClosure->set(&currClosure,clos);
+                            a = &currClosure; // and this is the value we call.
+                            a->v.closure->init(cb); // 2nd stage of setup
+                        }
+                    }
+                    // we call this value.
                     ip = call(a,ip+1);
                 } else {
+                    // if not callable we just stack it.
                     b = stack.pushptr();
                     b->copy(a);
                     ip++;
@@ -574,6 +657,7 @@ void Angort::endDefine(CompileContext *c){
     CodeBlock *cb = c->cb;
     cb->setFromContext(c);
     Value *wordVal = names.getVal(wordValIdx);
+    
     Types::tCode->set(wordVal,cb);
     names.setSpec(wordValIdx,c->spec);
     wordValIdx = -1;
@@ -695,10 +779,11 @@ void CompileContext::reset(CompileContext *p,Tokeniser *tok){
     cstack.clear();
 }
 
-ClosureTableEnt *CompileContext::makeClosureTable(){
+ClosureTableEnt *CompileContext::makeClosureTable(int *count){
     if(!closureList)return NULL; // make a null table if there aren't any
     
-    ClosureTableEnt *t = new ClosureTableEnt[closureListCt];
+    ClosureTableEnt *table = new ClosureTableEnt[closureListCt];
+    ClosureTableEnt *t = table;
     for(ClosureListEnt *p=closureList;p;p=p->next){
         // work out how far up the stack the entry is
         int level=0;
@@ -709,9 +794,12 @@ ClosureTableEnt *CompileContext::makeClosureTable(){
         }
         if(!cc)throw WTF; // didn't find it, and it should be there!
         t->levelsUp = level;
-        t->idx = t->idx;
+        t->idx = p->i;
+        printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,t-table,level,t->idx);
+        t++;
     }
-    return t;
+    *count = closureListCt;
+    return table;
 }
 
 void CompileContext::convertToClosure(const char *name){
@@ -723,6 +811,8 @@ void CompileContext::convertToClosure(const char *name){
     // got it. Now set this as a closure.
     if((1<<i) & localsClosed)
         return; // it's already converted.
+    
+    localsClosed |= 1<<i; // set it to be closed
     
     int localIndex = localIndices[i];
     localIndices[i] = closureCt++;

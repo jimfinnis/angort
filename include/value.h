@@ -40,8 +40,7 @@ struct Value {
         class IteratorObject *iter;
         NativeFunc native;
         struct Property *property;
-#pragma message "Replace Value::v.closure with proper struct"
-        void *closure;
+        class Closure *closure;
         void *v;
     } v;
     

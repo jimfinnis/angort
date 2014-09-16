@@ -53,6 +53,14 @@ public:
         return stack[ct];
     }
     
+    /// just throw away N items
+    void drop(int n){
+        if(ct<n)
+            throw StackUnderflowException();
+        ct-=n;
+    }
+        
+    
     /// get the nth item from the top of the stack
     T peek(int n=0) {
         if(ct<=n)

@@ -127,6 +127,10 @@ struct ClosureListEnt {
 /// an array of these is built for any codeblocks which
 /// require access to closure variables
 struct ClosureTableEnt {
+    ClosureTableEnt(){
+        levelsUp=-1;
+        idx=-1;
+    }
     int levelsUp; //!< how many levels up the call stack the closure block is
     int idx; //!< the index into the appropriate closure block
 };
@@ -143,12 +147,6 @@ class CompileContext {
     char localTokens[MAXLOCALS][64]; //!< locals in the word currently being defined
     int localTokenCt; //!< number of locals in the word currently being defined
     int paramCt; //!< the first N locals are parameters
-    /// a bitfield indicating which of the variables should be closed;
-    /// they are referred to in subfunctions are therefore should be stored
-    /// in a closure.
-    uint32_t localsClosed;
-    /// this should be the number of bits set in localsClosed
-    int closureCt;
     /// this is a map from local index (i.e. indices into localTokens) to
     /// opcode index - i.e. the index of the closure or local variable.
     char localIndices[MAXLOCALS];
@@ -190,6 +188,13 @@ public:
     
     const char *spec; //!< specification string, which we strdup.
     CodeBlock *cb; //!< the codeblock this context is compiling
+    /// a bitfield indicating which of the variables should be closed;
+    /// they are referred to in subfunctions are therefore should be stored
+    /// in a closure.
+    uint32_t localsClosed;
+    /// this should be the number of bits set in localsClosed
+    int closureCt;
+    
     CompileContext(){
         spec=NULL;
         closureList=NULL;
@@ -201,8 +206,9 @@ public:
     void reset(CompileContext *p,Tokeniser *tok);
     
     /// build a closure table which can be set into the codeblock,
-    /// out of the closure list (which can then be deleted)
-    ClosureTableEnt *makeClosureTable();
+    /// out of the closure list (which can then be deleted).
+    /// The size of the table is set in count.
+    ClosureTableEnt *makeClosureTable(int *count);
     
     /// scan functions above this for a variable, and convert to a closure if
     /// required. Having found the closure, add an entry to this context's closure table
@@ -216,7 +222,7 @@ public:
         leaveListHead = compileCt-1; // previous instruction, we've incremented
     }
     
-    void dumpLeaveList(const char *s){   
+    void dumpLeaveList(const char *s){
         printf("Leave list %s:\n",s);
         for(Instruction *i=leaveListFirst();i;i=leaveListNext(i))
             printf("    %p [opcode %d]\n",i,i->opcode);
@@ -374,7 +380,9 @@ struct CodeBlock {
         locals = con->getLocalCount();
         params = con->getParamCount();
         size = con->getCodeSize();
-        closureTable = con->makeClosureTable();
+        closureTable = con->makeClosureTable(&closureTableSize);
+        closureBlockSize = con->closureCt;
+        localsClosed = con->localsClosed;
         used=true;
     }
     
@@ -386,13 +394,31 @@ struct CodeBlock {
     }
     
     
-    const Instruction *ip; //!< the instructions themselves, must be delete[]ed
+    /// the number of instructions in the codeblock
+    int size;
+    /// the instructions themselves, must be delete[]ed    
+    const Instruction *ip; 
+    
     /// describes the location of closed variables, by index in closure block and
     /// how far up the call stack the closure block is. This is used to generate
     /// a closure map on instantiation of the codeblock.
     const ClosureTableEnt *closureTable;
-    int size;
-    int locals,params;
+    /// the size of the closure table
+    int closureTableSize;
+    /// the number of closures local to this variable
+    int closureBlockSize;
+    
+    /// this is the total number of local variables,
+    /// including closures
+    int locals;
+    /// the first N of the locals/closures should be popped from the
+    /// stack when this CB is called
+    int params;
+    
+    /// indicates which locals are closed, and therefore
+    /// indexed into the closuretable
+    uint32_t localsClosed;
+    
     bool used; //!< true if the codeblock ends up being used (so the context mustn't delete it)
 };
 
@@ -453,19 +479,17 @@ public:
         //        printf("popping state: state now %d/%d\n",base,next);
     }
     
-    /// take the local parameters and variables from the stack
-    /// and put them into local variables.
-    /// localct is count of locals AND parms, parmct is just parms.
-    void allocLocalsAndPopParams(int localct,int parmct,
-                                 Stack<Value,MAINSTACKSIZE> *stack){
-        //        printf("locals : %d, params: %d\n",localct,parmct);
-        next += localct;
-        for(int i=0;i<parmct;i++){
-            vars[base+(parmct-i)-1].copy(stack->popptr());
-            //            printf("Parameter %d = variable %d = %s\n",
-            //                   i,base+(parmct-i)-1,vars[base+(parmct-i)-1].getAsString());
-        }
+    /// allocate space after push()
+    void alloc(int localct){
+        next+=localct;
     }
+    
+    /// store value into a local slot
+    void store(int n,Value *v){
+        vars[base+n].copy(v);
+    }
+    
+    
     
     Value *get(int n){
         return vars+base+n;
@@ -477,7 +501,9 @@ public:
 struct Frame {
     const Instruction *ip; //!< the return address
     Value rec; //!< the recursion data (i.e. "this function")
+    Value clos; //!< stores any closure created at this level
 };
+
 
 
 /// This is the main Angort class, of which there should be only
@@ -491,6 +517,7 @@ class Angort {
 private:
     bool running; //!< used by shutdown()
     Stack<Frame,32> rstack; //!< the return stack
+    Value currClosure; //!< the closure block of the current level
     
     Stack<Value,8> loopIterStack; // stack of loop iterators
     
@@ -673,6 +700,10 @@ public:
             throw RUNT("attempt to get i,j,k or iter when not in an iterable loop");
         return v->v.iter;
     }
+    
+    /// given a stack level, get the appropriate
+    /// closure block
+    Value *getClosureForLevel(int lev);
     
     /// clear the entire system
     void clear(){

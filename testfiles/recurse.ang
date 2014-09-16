@@ -6,6 +6,7 @@
         ?x 1 - fib
         ?x 2 - fib +
     then
+    dup.
 ;
 
 0 fib 0 = "fib0" assert
