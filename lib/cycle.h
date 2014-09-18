@@ -202,14 +202,6 @@ public:
     /// show reference counts of all objects
     void dump();
         
-
-private:
-    /// the list of items
-    GCList mainlist;
-    /// the list of items we build in the process of GC - becomes the new main list
-    GCList newlist;
-    
-    
     /// decrements the reference counts of all objects referred to in the iterable
     void decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool iskey);
     /// trace all collectable entities reachable from this iterable
@@ -219,6 +211,14 @@ private:
     
     /// deletion prepwork - clears all references to objects marked - see detect()
     void clearZombieReferencesIterator(GarbageCollected *gc,bool iskey);
+
+private:
+    /// the list of items
+    GCList mainlist;
+    /// the list of items we build in the process of GC - becomes the new main list
+    GCList newlist;
+    
+    
 };
     
 }

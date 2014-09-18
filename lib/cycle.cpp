@@ -36,8 +36,12 @@ void CycleDetector::detect(){
     // which refer to GCable entities.
     
     for(p=mainlist.head();p;p=mainlist.next(p)) {
+        dprintf("three phase decrement of refs from %p\n",p);
+        dprintf("Phase 1 : keys\n");
         decIteratorReferentsCycleRefCounts(p,true);
+        dprintf("Phase 1 : values\n");
         decIteratorReferentsCycleRefCounts(p,false);
+        dprintf("Phase 3 : extension\n");
         p->decReferentsCycleRefCounts();
     }
         

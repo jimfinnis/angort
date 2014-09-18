@@ -87,10 +87,9 @@ Closure::~Closure(){
     // dereference the blocks we have access to
     for(int i=0;i<cb->closureTableSize;i++){
         printf("decrementing referenced closure\n  ");
-        if(blocksUsed[i]){ // self-ref doesn't count (see above)
-            if(blocksUsed[i]->decRefCt())
+        // self-ref doesn't count (see above)
+        if(blocksUsed[i] && blocksUsed[i]->decRefCt())
                 delete blocksUsed[i];
-        }
         printf("done decrementing referenced closure\n");
     }
     
@@ -127,26 +126,18 @@ public:
     /// set the current value to the first item
     virtual void first(){
         idx=0;
-        if(idx<c->cb->closureBlockSize){
-            if(c->blocksUsed[idx]){
-                v.t = Types::tClosure;
-                v.v.closure = c->blocksUsed[idx];
-            } else
-                v.t = Types::tNone;
-        } else
-            v.t = Types::tNone;
+        if(idx<c->cb->closureBlockSize)
+            v.copy(c->block+idx);
+        else
+            v.clr();
     }
     /// set the current value to the next item
     virtual void next(){
         idx++;
-        if(idx<c->cb->closureBlockSize){
-            if(c->blocksUsed[idx]){
-                v.t = Types::tClosure;
-                v.v.closure = c->blocksUsed[idx];
-            } else
-                v.t = Types::tNone;
-        } else
-            v.t = Types::tNone;
+        if(idx<c->cb->closureBlockSize)
+            v.copy(c->block+idx);
+        else
+            v.clr();
     }
     
     /// return true if we're out of bounds
@@ -161,6 +152,57 @@ public:
 };
 
 
+void Closure::clearZombieReferences(){
+    for(int i=0;i<cb->closureTableSize;i++){
+        Value *v = map[i];
+        if(GarbageCollected *g = v->t->getGC(v)){
+            if(g->gc_refs == 0xffff) // if child not done
+                v->init(); // clear without any reference count changes
+        }
+    }
+}
+
+void Closure::decReferentsCycleRefCounts(){
+    // we have to do the references of the things stored in the closure (covered by the iterator),
+    // the closure blocks referred to, and the parent
+    
+    for(int i=0;i<cb->closureTableSize;i++){
+        printf("Decrementing %p\n",blocksUsed[i]);
+        if(blocksUsed[i]){
+            blocksUsed[i]->gc_refs--;
+            printf("decrementing cycle count for block use on %p, now %d\n",blocksUsed[i],
+                   blocksUsed[i]->gc_refs);
+        }
+    }
+    if(parent)
+        parent->gc_refs--;
+}
+
+void Closure::traceAndMove(class CycleDetector *cycle){
+    GarbageCollected *g;
+    for(int i=0;i<cb->closureTableSize;i++){
+        if(GarbageCollected *g = blocksUsed[i]){
+            if(!g->gc_refs) { // if child not done
+                cycle->move(g);
+                cycle->traceAndMoveIterator(g,true);
+                cycle->traceAndMoveIterator(g,false);
+                g->traceAndMove(cycle);
+            }
+        }
+    }
+    if(parent && !parent->gc_refs){
+        g=parent;
+        if(!g->gc_refs) { // if child not done
+            cycle->move(g);
+            cycle->traceAndMoveIterator(g,true);
+            cycle->traceAndMoveIterator(g,false);
+            g->traceAndMove(cycle);
+        }
+    }
+            
+}
+
+
 void Closure::show(const char *s){
     printf("Closure %s at %p: block %s\n",s,this,block?"Y":"N");
     printf("Block:\n");
@@ -170,6 +212,7 @@ void Closure::show(const char *s){
     printf("Map:\n");
     for(int i=0;i<cb->closureTableSize;i++){
         printf("  %2d : %p %s\n",i,map[i],map[i]->toString().get());
+        printf("     : contained in closure %p\n",blocksUsed[i]);
     }
     
     if(parent)

@@ -42,6 +42,10 @@ public:
     
     void show(const char *s);
     
+    virtual void clearZombieReferences();
+    virtual void decReferentsCycleRefCounts();
+    virtual void traceAndMove(class CycleDetector *cycle);
+
 };
 
 

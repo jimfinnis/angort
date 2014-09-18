@@ -54,7 +54,8 @@ snark
 
 :mklistprinter |list:| (?list each {i.});
 
-?A mklistprinter ?A push
+?A mklistprinter
+?A push
 
 # clear the locals stack
 
