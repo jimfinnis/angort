@@ -26,11 +26,12 @@ public:
     Value *block; //!< the variables I own
     Value **map; //!< pointers to both the above and other's variables I look at
     Closure **blocksUsed; //!< the blocks the map uses, so I can deref them
+    Closure *parent; //!< link to parent closure (which created me)
     
     /// constructing a closure does almost nothing, because the object may have
     /// to be inserted into various bits of Angort first. Once this is done,
     /// init() is called to complete the construction.
-    Closure();
+    Closure(Closure *parent);
     
     // this will create a table, and also a map if
     // required. To do this, it will scan Angort's return stack, which it will get access

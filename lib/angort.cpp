@@ -260,21 +260,6 @@ const Instruction *Angort::ret()
     }
 }
 
-Value *Angort::getClosureForLevel(int lev){
-    Value *v;
-    if(!lev)
-        return &currClosure;
-    else
-        v = &(rstack.peekptr(lev-1)->clos);
-    
-    if(v->t == Types::tClosure)
-        return v;
-    else
-        return NULL;
-}
-
-
-
 void Angort::run(const Instruction *ip){
     
     ipException = NULL;
@@ -334,7 +319,7 @@ void Angort::run(const Instruction *ip){
                 // as in globaldo, here we construct a 
                 // closure if required and stack that instead.
                 if(cb->closureBlockSize || cb->closureTableSize){
-                    Closure *cl = new Closure(); // 1st stage of setup
+                    Closure *cl = new Closure(currClosure.v.closure); // 1st stage of setup
                     Types::tClosure->set(a,cl);
                     a->v.closure->init(cb); // 2nd stage of setup
                 } else
@@ -389,7 +374,7 @@ void Angort::run(const Instruction *ip){
                     if(a->t == Types::tCode){
                         const CodeBlock *cb = a->v.cb;
                         if(cb->closureBlockSize || cb->closureTableSize){
-                            clos = new Closure(); // 1st stage of setup
+                            clos = new Closure(NULL); // 1st stage of setup
                             // if a closure was made, we store it in the current
                             // frame.
                             Types::tClosure->set(&currClosure,clos);
@@ -853,12 +838,16 @@ int CompileContext::findOrCreateClosure(const char *name){
     int localIndexInParent=-1;
     CompileContext *parentContainingVariable;
     
+    printf("Making closure list. Looking for %s\n",name);
     for(parentContainingVariable=parent;parentContainingVariable;
         parentContainingVariable=parentContainingVariable->parent){
+        printf("   Looking in %p\n",parentContainingVariable);
         if((localIndexInParent = parentContainingVariable->getLocalToken(name))>=0){
             // got it. If not already, turn it into a closure (which will add it to
             // the closure table of that function)
+            printf("     Got it.\n");
             if(!parentContainingVariable->isClosed(localIndexInParent)){
+                printf("     Got it, not closed, closing.\n");
                 parentContainingVariable->convertToClosure(name);
             }
             break;

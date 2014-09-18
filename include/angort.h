@@ -151,8 +151,9 @@ class CompileContext {
     /// opcode index - i.e. the index of the closure or local variable.
     char localIndices[MAXLOCALS];
     
-    /// the closure table for the current function
-    ClosureListEnt *closureList;
+    /// the closure list for the current function, from which
+    /// the closure table is made
+    ClosureListEnt *closureList,*closureListTail;
     int closureListCt;
     
     CompileContext *parent; //!< pointer to containing context or NULL, set up by pushCompileContext
@@ -166,8 +167,16 @@ class CompileContext {
     
     int addClosureListEnt(CodeBlock *c,int n){
         ClosureListEnt *p = new ClosureListEnt(c,n);
-        p->next = closureList;
-        closureList = p;
+        p->next = NULL;
+        
+        if(!closureList){
+            closureList = p;
+            closureListTail = p;
+        } else {
+            closureListTail->next = p;
+            closureListTail = p;
+        }
+        
         return closureListCt++;
     }
     
@@ -178,7 +187,7 @@ class CompileContext {
                 q=p->next;
                 delete p;
             }
-            closureList=NULL;
+            closureList=NULL;closureListTail=NULL;
         }
         closureListCt=0;
     }
@@ -197,7 +206,7 @@ public:
     
     CompileContext(){
         spec=NULL;
-        closureList=NULL;
+        closureList=NULL;closureListTail=NULL;
         cb=NULL;
         reset(NULL,NULL);
     }
@@ -708,10 +717,6 @@ public:
             throw RUNT("attempt to get i,j,k or iter when not in an iterable loop");
         return v->v.iter;
     }
-    
-    /// given a stack level, get the appropriate
-    /// closure block
-    Value *getClosureForLevel(int lev);
     
     /// clear the entire system
     void clear(){

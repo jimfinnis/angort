@@ -11,11 +11,19 @@
 namespace angort {
 
 
-Closure::Closure() : GarbageCollected() {
+Closure::Closure(Closure *p) : GarbageCollected() {
+    parent = p;
+    if(p)p->incRefCt();
+    printf("allocating closure %p, parent %p\n",this,parent);
 }
 
 void Closure::init(const CodeBlock *c){
-    printf("creating closure %p\n",this);
+    printf("creating closure %p, parent %p\n",this,parent);
+    
+    printf("Chain:\n");
+    for(Closure *qq=parent;qq;qq=qq->parent)
+        printf("  - %p\n",qq);
+    
     cb = c;
     
     if(cb->closureBlockSize)
@@ -33,11 +41,6 @@ void Closure::init(const CodeBlock *c){
     map = new Value * [cb->closureTableSize];
     blocksUsed = new Closure * [cb->closureTableSize];
     
-    // we're going to need to get stuff from Angort's
-    // global return stack to find the blocks
-    
-    Angort *a = Angort::getCallingInstance();
-    
     for(int i=0;i<cb->closureTableSize;i++){
         // iterate through each item, finding
         // the closure and thus the block in
@@ -47,16 +50,29 @@ void Closure::init(const CodeBlock *c){
         
         // this is another closure (or possibly
         // the same one) whose block contains the
-        // value we want
+        // value we want. We walk the appropriate
+        // number of levels up the parent chain
+        // to find it.
         
-        Value *reffed = a->getClosureForLevel(lev);
-        map[i] = reffed->v.closure->block+idx;
+        printf("Building map for %p. Looking for lev %d, idx %d\n",this,
+               lev,idx);
+        
+        Closure *reffed=this;
+        for(int j=0;j<lev;j++){
+            reffed=reffed->parent;
+            printf("  Ref jump %p\n",reffed);
+        }
+        
+        if(!reffed->block)throw WTF;
+        map[i] = reffed->block+idx;
+        
+        printf("  Value currently %s\n",map[i]->toString().get());
         
         // and we increment the refcount on the block
         // if the block is in a different closure
-        if(this!=reffed->v.closure){
-            blocksUsed[i] = reffed->v.closure;
-            reffed->incRef();
+        if(this!=reffed){
+            blocksUsed[i] = reffed;
+            reffed->incRefCt();
         } else blocksUsed[i]=NULL; // self-refs are NULL
     }    
 }
@@ -65,6 +81,8 @@ void Closure::init(const CodeBlock *c){
 Closure::~Closure(){
     printf("deleting closure %p\n",this);
     if(block)delete [] block;
+    if(parent && parent->decRefCt())
+        delete parent;
     
     // dereference the blocks we have access to
     for(int i=0;i<cb->closureTableSize;i++){
@@ -75,7 +93,7 @@ Closure::~Closure(){
         }
         printf("done decrementing referenced closure\n");
     }
-        
+    
     delete[] map;
 }
 
@@ -123,7 +141,7 @@ public:
         else
             v.clr();
     }
-
+    
     /// return true if we're out of bounds
     virtual bool isDone() const{
         return idx>=c->cb->closureBlockSize;
@@ -146,6 +164,10 @@ void Closure::show(const char *s){
     for(int i=0;i<cb->closureTableSize;i++){
         printf("  %2d : %p %s\n",i,map[i],map[i]->toString().get());
     }
+    
+    if(parent)
+        parent->show("Parent of previous");
+          
 }
 
 Iterator<class Value *> *Closure::makeValueIterator(){

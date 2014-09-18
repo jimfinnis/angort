@@ -412,6 +412,13 @@ static NamespaceEnt *getNSEnt(Angort *a){
     CycleDetector::getInstance()->dump();
 }
 
+%word showclosure (cl --)
+{
+    Value *v = a->popval();
+    if(v->t == Types::tClosure)
+        v->v.closure->show("Show command");
+}
+
 %shared
 %init
 {
