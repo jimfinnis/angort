@@ -502,6 +502,11 @@ struct Frame {
     const Instruction *ip; //!< the return address
     Value rec; //!< the recursion data (i.e. "this function")
     Value clos; //!< stores any closure created at this level
+    
+    void clear(){
+        rec.clr();
+        clos.clr();
+    }
 };
 
 
@@ -691,6 +696,9 @@ public:
         
     /// dump the stack to stdout
     void dumpStack(const char *s);
+    
+    /// dump the frame data
+    void dumpFrame();
     
     
     /// get the top iterator on the iterator stack (or the nth)

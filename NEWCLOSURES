@@ -64,7 +64,9 @@ Create time:
     Then the function's closure table is studied. For each entry, the return
     stack is scanned for the codeblock specified in the table, and a map of
     closure variable indices to value pointers in the various closure blocks
-    is made. The reference counts of closure blocks are incremented.
+    is made. The reference counts of closure blocks are incremented,
+    unless they are self-references (this avoids the case of closures
+    which only refer to themselves not being GC'd).
 
 Call time:
     Values are popped into the closure block if they are parameters.
@@ -74,5 +76,7 @@ Return time:
 De-ref time:   
     The reference counts of closure blocked referenced by the closure map are
     decremented, and blocks are deleted on zero (including dereferencing the
-    stored values)
+    stored values). Note that self-references are not counted in this
+    system, because they are not increffed in the first place.
+
 

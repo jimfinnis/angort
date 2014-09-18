@@ -169,6 +169,14 @@ void CycleDetector::clearZombieReferencesIterator(GarbageCollected *gc,bool iske
 void GarbageCollected::gc(){
     CycleDetector::getInstance()->detect();
 }
+
+void CycleDetector::dump(){
+    GarbageCollected *p;
+    printf("GC List:\n");
+    for(p=mainlist.head();p;p=mainlist.next(p)){
+        dprintf("  %p, refs %d\n",p,p->refct);
+    }
+}
     
     
 }

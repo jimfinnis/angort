@@ -1,3 +1,5 @@
+1 debug
+
 1 assertdebug
 # takes x, makes a function which adds x to the argument y
 :makeadder |x:| (|y:| ?x ?y +) ;

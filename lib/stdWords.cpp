@@ -7,6 +7,7 @@
  */
 
 #include "angort.h"
+#include "cycle.h"
 
 #include <time.h>
 
@@ -403,6 +404,12 @@ static NamespaceEnt *getNSEnt(Angort *a){
 %word endpackage () mark end of package, only when used within a single script
 {
     a->endPackageInScript();
+}
+
+%word dumpframe () debugging - dump the frame variables
+{
+    a->dumpFrame();
+    CycleDetector::getInstance()->dump();
 }
 
 %shared

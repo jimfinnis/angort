@@ -190,18 +190,20 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     // peeking them and then dropping the whole
     // lot in one go.
     
+    int clCount=0;
+    int locCount=0;
     for(int i=0;i<cb->params;i++){
         Value *paramval = stack.peekptr((cb->params-1)-i);
         if(cb->localsClosed & (1<<i)){
-            printf("Param %d is closed: %s\n",i,paramval->toString().get());
-            clos->map[i]->copy(paramval);
+//            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),clCount);
+            clos->map[clCount++]->copy(paramval);
         } else {
-            printf("Param %d is open: %s\n",i,paramval->toString().get());
-            locals.store(i,paramval);
+//            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),locCount);
+            locals.store(locCount++,paramval);
         }
     }
     stack.drop(cb->params);
-    if(clos)clos->show("VarStorePostParams");
+//    if(clos)clos->show("VarStorePostParams");
     
     
     // do the push
@@ -343,7 +345,7 @@ void Angort::run(const Instruction *ip){
             case OP_CLOSUREGET:
                 if(currClosure.t != Types::tClosure)throw WTF;
                 a = currClosure.v.closure->map[ip->d.i];
-                currClosure.v.closure->show("VarGet");
+//                currClosure.v.closure->show("VarGet");
                 stack.pushptr()->copy(a);
                 ip++;
                 break;
@@ -1205,6 +1207,9 @@ void Angort::feed(const char *buf){
                         // it's a local variable
                         compile(context->isClosed(t) ? OP_CLOSUREGET : OP_LOCALGET)->d.i=
                               context->getLocalIndex(t);
+                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
+                        // it's a variable defined in a function above
+                        compile(OP_CLOSUREGET)->d.i = t;
                     } else if((t = names.get(tok.getstring()))>=0){
                         // it's a global
                         Value *v = names.getVal(t);
@@ -1215,9 +1220,6 @@ void Angort::feed(const char *buf){
                             // it's a global; use it - but don't call it if it's a function
                             compile(OP_GLOBALGET)->d.i = t;
                         }
-                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
-                        // it's a variable defined in a function above
-                        compile(OP_CLOSUREGET)->d.i = t;
                     } else if(isupper(*tok.getstring())){
                         // if it's upper case, immediately define as a global
                         compile(OP_GLOBALGET)->d.i=
@@ -1249,6 +1251,9 @@ void Angort::feed(const char *buf){
                         // it's a local variable
                         compile(context->isClosed(t) ? OP_CLOSURESET : OP_LOCALSET)->d.i=
                               context->getLocalIndex(t);
+                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
+                        // it's a variable defined in a function above
+                        compile(OP_CLOSURESET)->d.i = t;
                     } else if((t = names.get(tok.getstring()))>=0){
                         // it's a global
                         Value *v = names.getVal(t);
@@ -1261,9 +1266,6 @@ void Angort::feed(const char *buf){
                             // it's a global; use it
                             compile(OP_GLOBALSET)->d.i = t;
                         }
-                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
-                        // it's a variable defined in a function above
-                        compile(OP_CLOSURESET)->d.i = t;
                     } else if(isupper(*tok.getstring())){
                         // if it's upper case, immediately define as a global
                         compile(OP_GLOBALSET)->d.i=
@@ -1353,6 +1355,7 @@ void Angort::feed(const char *buf){
 }
 
 void Angort::clearAtEndOfFeed(){
+    printf("Clearing at end of feed\n");
     // make sure we tidy up any state
     contextStack.clear(); // clear the context stack
     context = contextStack.pushptr();
@@ -1361,11 +1364,15 @@ void Angort::clearAtEndOfFeed(){
     // make sure the return stack gets cleared otherwise
     // really strange things can happen on the next processed
     // line
-    rstack.clear(); 
+    
+    while(!rstack.isempty()){
+        rstack.popptr()->clear();
+    }
     // destroy any iterators left lying around
     while(!loopIterStack.isempty())
         loopIterStack.popptr()->clr();
     locals.clear();
+    currClosure.clr();
 }    
 
 void Angort::disasm(const char *name){
@@ -1406,6 +1413,19 @@ const char *Angort::getSpec(const char *s){
 
 void Angort::list(){
     names.list();
+}
+
+void Angort::dumpFrame(){
+    printf("Frame data:\n");
+    printf("  Curclosure: %s\n",currClosure.toString().get());
+    printf("  Stack:\n");
+    for(int i=0;i<rstack.ct;i++){
+        Frame *f = rstack.peekptr(i);
+        printf("   Rec:-%30s   Clos:%s\n",
+               f->rec.toString().get(),
+               f->clos.toString().get());
+    }
+    
 }
 
 

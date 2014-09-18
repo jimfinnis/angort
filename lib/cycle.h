@@ -198,6 +198,10 @@ public:
       traceAndMoveIterator(p,false);
       p->traceAndMove(this);
     }
+    
+    /// show reference counts of all objects
+    void dump();
+        
 
 private:
     /// the list of items

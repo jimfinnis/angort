@@ -25,7 +25,7 @@ public:
     const CodeBlock *cb;
     Value *block; //!< the variables I own
     Value **map; //!< pointers to both the above and other's variables I look at
-    Value **blocksUsed; //!< the blocks the map uses, so I can deref them
+    Closure **blocksUsed; //!< the blocks the map uses, so I can deref them
     
     /// constructing a closure does almost nothing, because the object may have
     /// to be inserted into various bits of Angort first. Once this is done,

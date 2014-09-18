@@ -23,13 +23,15 @@ void Closure::init(const CodeBlock *c){
     else
         block = NULL;
     
-    // easy part done, now to create the map.
-    
     // this should never happen because new closures
     // should not be created for bare codeblocks.
     if(!cb->closureTableSize)throw WTF;
+    
+    // easy part done, now to create the map
+    // from the table
+    
     map = new Value * [cb->closureTableSize];
-    blocksUsed = new Value * [cb->closureTableSize];
+    blocksUsed = new Closure * [cb->closureTableSize];
     
     // we're going to need to get stuff from Angort's
     // global return stack to find the blocks
@@ -47,12 +49,15 @@ void Closure::init(const CodeBlock *c){
         // the same one) whose block contains the
         // value we want
         
-        Value *block = a->getClosureForLevel(lev);
-        map[i] = block->v.closure->block+idx;
-        blocksUsed[i] = block;
+        Value *reffed = a->getClosureForLevel(lev);
+        map[i] = reffed->v.closure->block+idx;
         
         // and we increment the refcount on the block
-        block->incRef();
+        // if the block is in a different closure
+        if(this!=reffed->v.closure){
+            blocksUsed[i] = reffed->v.closure;
+            reffed->incRef();
+        } else blocksUsed[i]=NULL; // self-refs are NULL
     }    
 }
 
@@ -63,7 +68,12 @@ Closure::~Closure(){
     
     // dereference the blocks we have access to
     for(int i=0;i<cb->closureTableSize;i++){
-        blocksUsed[i]->decRef();
+        printf("decrementing referenced closure\n  ");
+        if(blocksUsed[i]){ // self-ref doesn't count (see above)
+            if(blocksUsed[i]->decRefCt())
+                delete blocksUsed[i];
+        }
+        printf("done decrementing referenced closure\n");
     }
         
     delete[] map;
