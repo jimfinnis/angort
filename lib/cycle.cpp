@@ -130,6 +130,7 @@ void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool
             dprintf("decremented count for %p to %d\n",gc,gc->gc_refs);
         }
     }
+    dprintf("Done.-----------\n");
     delete iterator;
 }
 

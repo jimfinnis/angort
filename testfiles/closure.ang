@@ -76,8 +76,6 @@ gccount 0 = "closuregc0" assert # GC count should be zero here
 
 :quop |x:| (?x +);
 1 1 quop @ 2 = "closure weirdness" assert
-
-
 0 !t 1 1 1 drop drop drop
 # closure mutability
 
@@ -86,10 +84,11 @@ gccount 0 = "closuregc0" assert # GC count should be zero here
     (?ct 1+ dup !ct)
 ;
 
+
+"mkcounter" disasm
 global a
 global b
 
-1 debug
 mkcounter !a
 mkcounter !b
 
@@ -104,10 +103,20 @@ mkcounter !b
 ?b@ 2 = "mutclosb2" assert
 ?b@ 3 = "mutclosb3" assert
 
+# internal mutability
+
+( |:x|
+    0!x
+    (1!x)@
+    ?x 1 = "internal mutability" assert
+)@
+
+
 1 1 1 1 1 1 1 1 1 # stack overwrite
 0 !a
 0 !b
 0 !t
 "GCCOUNT=" p gccount p nl
 0 gccount = "GC count zero at end of closure tests" assert
+
 quit

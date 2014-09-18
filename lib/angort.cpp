@@ -330,12 +330,13 @@ void Angort::run(const Instruction *ip){
             case OP_CLOSUREGET:
                 if(currClosure.t != Types::tClosure)throw WTF;
                 a = currClosure.v.closure->map[ip->d.i];
-//                currClosure.v.closure->show("VarGet");
+                currClosure.v.closure->show("VarGet");
                 stack.pushptr()->copy(a);
                 ip++;
                 break;
             case OP_CLOSURESET:
                 if(currClosure.t != Types::tClosure)throw WTF;
+                currClosure.v.closure->show("VarSet");
                 a = currClosure.v.closure->map[ip->d.i];
                 a->copy(stack.popptr());
                 ip++;
@@ -767,6 +768,7 @@ void CompileContext::reset(CompileContext *p,Tokeniser *tok){
 }
 
 ClosureTableEnt *CompileContext::makeClosureTable(int *count){
+    *count = closureListCt;
     if(!closureList)return NULL; // make a null table if there aren't any
     
     ClosureTableEnt *table = new ClosureTableEnt[closureListCt];
@@ -785,47 +787,50 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
         printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,t-table,level,t->idx);
         t++;
     }
-    *count = closureListCt;
     return table;
 }
 
 void CompileContext::convertToClosure(const char *name){
     // find which local this is
-    int i;
-    for(i=0;i<localTokenCt;i++)
-        if(!strcmp(localTokens[i],name))break;
-    if(i==localTokenCt)throw WTF;
+    int previdx;
+    for(previdx=0;previdx<localTokenCt;previdx++)
+        if(!strcmp(localTokens[previdx],name))break;
+    if(previdx==localTokenCt)throw WTF;
     // got it. Now set this as a closure.
-    if((1<<i) & localsClosed)
+    if((1<<previdx) & localsClosed)
         return; // it's already converted.
     
-    localsClosed |= 1<<i; // set it to be closed
+    localsClosed |= 1<<previdx; // set it to be closed
     
-    int localIndex = localIndices[i];
-    localIndices[i] = closureCt++;
+    int localIndex = localIndices[previdx];
+    localIndices[previdx] = closureCt++;
     // add an entry to the local closure table
-    addClosureListEnt(cb,localIndices[i]);
+    addClosureListEnt(cb,localIndices[previdx]);
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
-    for(i=0;i<compileCt;i++){
-        if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
-           inst->d.i == localIndex) {
+    for(int i=0;i<compileCt;i++,inst++){
+        if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSUREGET;
-            inst->d.i = localIndices[i];
+            inst->d.i = localIndices[previdx];
+        }
+        if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
+            inst->opcode = OP_CLOSURESET;
+            printf("Rehashing to %d\n",localIndices[previdx]);
+            inst->d.i = localIndices[previdx];
         }
     }
     
     // now decrement all indices of locals greater than this.
     // Firstly do this in the table.
-    for(i=0;i<localTokenCt;i++){
+    for(int i=0;i<localTokenCt;i++){
         if(!isClosed(i) && localIndices[i]>localIndex){
             localIndices[i]--;
         }
     }
     
     // Then do it in the code generated thus far.
-    for(i=0;i<compileCt;i++){
+    for(int i=0;i<compileCt;i++){
         if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
            inst->d.i > localIndex){
             inst->d.i--;

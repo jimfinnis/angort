@@ -205,6 +205,7 @@ public:
     int closureCt;
     
     CompileContext(){
+        closureListCt=0;
         spec=NULL;
         closureList=NULL;closureListTail=NULL;
         cb=NULL;
@@ -394,14 +395,6 @@ struct CodeBlock {
         localsClosed = con->localsClosed;
         used=true;
     }
-    
-    void clear(){
-        if(ip) delete[] ip;
-        if(closureTable) delete[] closureTable;
-        ip=NULL;
-        used=false;
-    }
-    
     
     /// the number of instructions in the codeblock
     int size;

@@ -23,7 +23,7 @@ const char *opcodenames[]=
     "propset","not","equals","nequals",
     "swap","drop","and","or","lt","gt",
     "ifleave","for","forjump","newhash",
-    "litsymb","over","closureget","closureget","dot",
+    "litsymb","over","closureget","closureset","dot",
     "iterlvifdone","iterstart","cmp","library",
     "newlist","appendlist", "closelist","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse","self"

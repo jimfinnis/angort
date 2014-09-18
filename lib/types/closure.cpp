@@ -122,24 +122,31 @@ public:
         if(c->decRefCt()){
             delete c;
         }
-        v.clr();
     }
     
     /// set the current value to the first item
     virtual void first(){
         idx=0;
-        if(idx<c->cb->closureBlockSize)
-            v.copy(c->block+idx);
-        else
-            v.clr();
+        if(idx<c->cb->closureBlockSize){
+            if(c->blocksUsed[idx]){
+                v.t = Types::tClosure;
+                v.v.closure = c->blocksUsed[idx];
+            } else
+                v.t = Types::tNone;
+        } else
+            v.t = Types::tNone;
     }
     /// set the current value to the next item
     virtual void next(){
         idx++;
-        if(idx<c->cb->closureBlockSize)
-            v.copy(c->block+idx);
-        else
-            v.clr();
+        if(idx<c->cb->closureBlockSize){
+            if(c->blocksUsed[idx]){
+                v.t = Types::tClosure;
+                v.v.closure = c->blocksUsed[idx];
+            } else
+                v.t = Types::tNone;
+        } else
+            v.t = Types::tNone;
     }
     
     /// return true if we're out of bounds

@@ -1,5 +1,3 @@
-
-
 [%] !A
 [%] !B
 
@@ -37,6 +35,7 @@ gccount.
 
 # hashes appear to be OK, let's check lists.
 
+1 debug
 [10,20,30] !A
 [1,2,3,?A,4] !B
 ?B ?A push
@@ -50,6 +49,7 @@ gc
 
 # lists are good, let's do something with closures AND lists
 
+snark
 [10,20,30] !A
 
 :mklistprinter |list:| (?list each {i.});
@@ -57,12 +57,17 @@ gc
 ?A mklistprinter ?A push
 
 # clear the locals stack
-:foo |a,b,c,d:|;
-1 2 3 4 foo
 
-2 gccount  = "closurecyc1" assert
+:foo |a,b,c,d:|;
+
+1 2 3 4 foo
+gccount.
+3 gccount  = "closurecyc1" assert
 0!A
 gc
+gccount.
+dumpframe
+
 0 gccount  = "closurecyc2" assert
 
 quit
