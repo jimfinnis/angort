@@ -22,7 +22,7 @@ macro(add_words_files)
     endforeach(file)
 endmacro(add_words_files)
 
-add_words_files(stdMath.cpp)
+add_words_files(stdMath.cpp stdEnv.cpp)
 
 set(SOURCE main.cpp ${WORDFILELIST})
 
