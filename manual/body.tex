@@ -845,31 +845,6 @@ a few times, we will see an incrementing count - the value in the closure
 persists and is being incremented. We can call mkcounter several times and
 each time we will get a new closure.
 
-It's important to note that closures are copy closures - the anonymous
-function makes a copy of the local, and all changes inside the anonymous
-function happen to that copy, not the local in the parent:
-
-\begin{lstlisting}
-:foo |:x| 4!x       # store 4 in the local x
-    (10 !x)         # store 10 in the closure's version of x
-    @               # run the anonymous function
-    ?x .            # this will print 4, because the local hasn't changed.
-;
-\end{lstlisting}
-This is a consequence of Angort's extremely simple syntax.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
