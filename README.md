@@ -409,15 +409,6 @@ Now, if we run
     
 a few times, we'll get an incrementing count - the value in the closure persists and is being incremented. We can call mkcounter several times and each time we'll get a new closure.
 
-It's important to note that closures are copy closures - the anonymous function makes a copy of the local, and all changes inside the anonymous function happen to that copy, not the local in the parent:
-
-    :foo |:x| 4!x       # store 4 in the local x
-        (10 !x)         # store 10 in the closure's version of x
-        @               # run the anonymous function
-        ?x .            # this will print 4, because the local hasn't changed.
-        ;
-        
-This is slightly annoying behaviour, but rather difficult to change given Angort's simple syntax.
 
 ##Lists
 A list is defined by enclosing Angort expressions in square brackets separated by commas. The result is a list on the stack. Lists can be iterated:
