@@ -22,7 +22,7 @@ void setArgumentList(int argc,char *argv[]){
     v->copy(&argList);
 }
 
-%word getenv (name -- string/none)
+%word getenv (name -- string/none) get environment variable
 {
     Value *p;
     a->popParams(&p,"s");
@@ -34,4 +34,12 @@ void setArgumentList(int argc,char *argv[]){
         Types::tString->set(p,s);
     else
         p->setNone();
+}
+
+
+%word setenv (value name --) set environment variable
+{
+    Value *p[2];
+    a->popParams(p,"ss");
+    setenv(p[1]->toString().get(),p[0]->toString().get(),1);
 }
