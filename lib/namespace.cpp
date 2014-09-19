@@ -93,4 +93,43 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
     }
 }
 
+
+const char *NamespaceManager::getNameByValue(Value *v,char *out,int len){
+    // first we need to iterate the namespaces
+    
+    for(int nsidx=0;nsidx<spaces.count();nsidx++){
+        const char *nsName = spaces.getName(nsidx);
+        Namespace *ns = spaces.getEnt(nsidx);
+        
+        // now we need to do a "find by value" in each space
+        for(int i=0;i<ns->count();i++){
+            const char *name = ns->getName(i);
+            NamespaceEnt *ent = ns->getEnt(i);
+            
+            // we're going to use some special cases here.
+            Value *c = &ent->v;
+            bool cmp=false;
+            if(v->t == c->t){
+                if(v->t == Types::tNative)
+                    cmp = v->v.native == c->v.native;
+                else if(v->t == Types::tProp)
+                    cmp = v->v.property == c->v.property;
+                else if(v->t == Types::tList)
+                    cmp = v->v.list == c->v.list;
+                else if(v->t == Types::tHash)
+                    cmp = v->v.hash == c->v.hash;
+                else cmp = v->equalForHashTable(c);
+            }
+            if(cmp){
+                snprintf(out,len,"%s$%s",nsName,name);
+                return out;
+            }
+        }
+    }
+    strcpy(out,"??");
+    return out;
+    
+}
+
+
 }

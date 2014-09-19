@@ -105,6 +105,8 @@ void Angort::shutdown(){
 }
 
 void Angort::showop(const Instruction *ip,const Instruction *base){
+    char buf[128];
+    Value tmp;
     printf("%8p [%s:%d] : %04d : %s (%d) ",
            base,
 #if SOURCEDATA
@@ -117,7 +119,8 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
            ip->opcode);
     switch(ip->opcode){
     case OP_FUNC:
-        printf(" (TODO)");
+        Types::tNative->set(&tmp,ip->d.func);
+        printf(" (%s)",names.getNameByValue(&tmp,buf,128));
         break;
     case OP_JUMP:
     case OP_LEAVE:
@@ -137,7 +140,8 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         printf("(%d)",ip->d.i);break;
     case OP_PROPSET:
     case OP_PROPGET:
-        printf("(TODO)");
+        Types::tProp->set(&tmp,ip->d.prop);
+        printf(" (%s)",names.getNameByValue(&tmp,buf,128));
         break;
     case OP_LITERALSTRING:
         printf("(%s)",ip->d.s);
@@ -150,6 +154,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
         break;
     default:break;
     }
+    tmp.clr();
     
 }
 
@@ -619,6 +624,7 @@ void Angort::run(const Instruction *ip){
         }
         // and the locals stack too
         locals.clear();
+        trace();
         rstack.clear();
         throw e;
     }
@@ -1454,6 +1460,17 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     
     return sp->idx;
     
+}
+
+void Angort::trace(){
+    for(int i=0;i<rstack.ct;i++){
+        char buf[1024];
+        Frame *p = rstack.peekptr(i);
+        if(p->ip)
+            printf("  from %s\n",p->ip->getDetails(buf,1024));
+        else
+            printf("  from unknown\n");
+    }
 }
 
 

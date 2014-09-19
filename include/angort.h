@@ -652,6 +652,9 @@ public:
         return ipException;
     }
     
+    /// show a stack trace
+    void trace();
+    
     /// handle binary operations (public; used in comparators)
     void binop(Value *a,Value *b,int opcode);
     

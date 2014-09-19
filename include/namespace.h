@@ -332,6 +332,10 @@ public:
         return spaces.getEnt(nsidx)->getName(idx);
     }
     
+    /// given a value, try to find it in the namespaces! Slow.
+    const char *getNameByValue(Value *v,char *out,int len);
+        
+    
     /// get a namespace
     Namespace *getSpaceByIdx(int i){
         return spaces.getEnt(i);

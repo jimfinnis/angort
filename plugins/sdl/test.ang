@@ -52,7 +52,8 @@ PI 2 * const TWOPI
     flip
 ) ondraw
 
--1 -1 fullscreenopen
+#-1 -1 fullscreenopen
+"SDLTest" 600 600 open
 scrsize 10 - !Width 10 - !Height
 
 [] 0 300 range each {mkthingy,} !Thingies

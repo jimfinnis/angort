@@ -121,7 +121,7 @@ static void openwindow(const char *title, int w,int h,int flags){
     openwindow("",w,h,SDL_WINDOW_FULLSCREEN|SDL_WINDOW_SHOWN);
 }
 
-%word open (w h -- ) init SDL and open a window
+%word open (title w h -- ) init SDL and open a window
 {
     Value *p[3];
     a->popParams(p,"snn");
