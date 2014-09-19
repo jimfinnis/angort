@@ -406,18 +406,20 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->endPackageInScript();
 }
 
-%word dumpframe () debugging - dump the frame variables
+/*
+%commentedoutword dumpframe () debugging - dump the frame variables
 {
     a->dumpFrame();
     CycleDetector::getInstance()->dump();
 }
 
-%word showclosure (cl --)
+%commentedoutword showclosure (cl --)
 {
     Value *v = a->popval();
     if(v->t == Types::tClosure)
         v->v.closure->show("Show command");
 }
+*/
 
 %shared
 %init

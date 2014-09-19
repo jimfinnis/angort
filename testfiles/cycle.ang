@@ -35,7 +35,6 @@ gccount.
 
 # hashes appear to be OK, let's check lists.
 
-1 debug
 [10,20,30] !A
 [1,2,3,?A,4] !B
 ?B ?A push
@@ -67,7 +66,6 @@ gccount.
 0!A
 gc
 gccount.
-dumpframe
 
 0 gccount  = "closurecyc2" assert
 

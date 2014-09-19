@@ -10,19 +10,18 @@
 
 namespace angort {
 
-
 Closure::Closure(Closure *p) : GarbageCollected() {
     parent = p;
     if(p)p->incRefCt();
-    printf("allocating closure %p, parent %p\n",this,parent);
+    //printf("allocating closure %p, parent %p\n",this,parent);
 }
 
 void Closure::init(const CodeBlock *c){
-    printf("creating closure %p, parent %p\n",this,parent);
+    //printf("creating closure %p, parent %p\n",this,parent);
     
-    printf("Chain:\n");
-    for(Closure *qq=parent;qq;qq=qq->parent)
-        printf("  - %p\n",qq);
+    //printf("Chain:\n");
+    //for(Closure *qq=parent;qq;qq=qq->parent)
+        //printf("  - %p\n",qq);
     
     cb = c;
     
@@ -54,19 +53,18 @@ void Closure::init(const CodeBlock *c){
         // number of levels up the parent chain
         // to find it.
         
-        printf("Building map for %p. Looking for lev %d, idx %d\n",this,
-               lev,idx);
+        //printf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
         
         Closure *reffed=this;
         for(int j=0;j<lev;j++){
             reffed=reffed->parent;
-            printf("  Ref jump %p\n",reffed);
+            //printf("  Ref jump %p\n",reffed);
         }
         
         if(!reffed->block)throw WTF;
         map[i] = reffed->block+idx;
         
-        printf("  Value currently %s\n",map[i]->toString().get());
+        //printf("  Value currently %s\n",map[i]->toString().get());
         
         // and we increment the refcount on the block
         // if the block is in a different closure
@@ -79,7 +77,7 @@ void Closure::init(const CodeBlock *c){
 
 
 Closure::~Closure(){
-    printf("deleting closure %p\n",this);
+    //printf("deleting closure %p\n",this);
     if(block)delete [] block;
     if(!CycleDetector::getInstance()->isInDeleteCycle()){
         // we do not do recursive deletion if we're deleting
@@ -92,11 +90,11 @@ Closure::~Closure(){
         
         // dereference the blocks we have access to
         for(int i=0;i<cb->closureTableSize;i++){
-            printf("decrementing referenced closure\n  ");
+            //printf("decrementing referenced closure\n  ");
             // self-ref doesn't count (see above)
             if(blocksUsed[i] && blocksUsed[i]->decRefCt())
                 delete blocksUsed[i];
-            printf("done decrementing referenced closure\n");
+            //printf("done decrementing referenced closure\n");
         }
     }
     
@@ -175,11 +173,11 @@ void Closure::decReferentsCycleRefCounts(){
     // the closure blocks referred to, and the parent
     
     for(int i=0;i<cb->closureTableSize;i++){
-        printf("Decrementing %p\n",blocksUsed[i]);
+        //printf("Decrementing %p\n",blocksUsed[i]);
         if(blocksUsed[i]){
             blocksUsed[i]->gc_refs--;
-            printf("decrementing cycle count for block use on %p, now %d\n",blocksUsed[i],
-                   blocksUsed[i]->gc_refs);
+            //printf("decrementing cycle count for block use on %p, now %d\n",blocksUsed[i],
+            //       blocksUsed[i]->gc_refs);
         }
     }
     if(parent)
@@ -210,7 +208,7 @@ void Closure::traceAndMove(class CycleDetector *cycle){
     
 }
 
-
+/*
 void Closure::show(const char *s){
     printf("Closure %s at %p: block %s\n",s,this,block?"Y":"N");
     printf("Block:\n");
@@ -227,6 +225,7 @@ void Closure::show(const char *s){
         parent->show("Parent of previous");
     
 }
+ */
 
 Iterator<class Value *> *Closure::makeValueIterator(){
     return new ClosureIterator(this);

@@ -177,6 +177,7 @@ void GarbageCollected::gc(){
     CycleDetector::getInstance()->detect();
 }
 
+/*
 void CycleDetector::dump(){
     GarbageCollected *p;
     printf("GC List:\n");
@@ -184,6 +185,6 @@ void CycleDetector::dump(){
         dprintf("  %p, refs %d\n",p,p->refct);
     }
 }
-    
+ */  
     
 }

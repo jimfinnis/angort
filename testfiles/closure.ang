@@ -85,7 +85,6 @@ gccount 0 = "closuregc0" assert # GC count should be zero here
 ;
 
 
-"mkcounter" disasm
 global a
 global b
 

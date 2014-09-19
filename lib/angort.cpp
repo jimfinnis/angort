@@ -330,13 +330,13 @@ void Angort::run(const Instruction *ip){
             case OP_CLOSUREGET:
                 if(currClosure.t != Types::tClosure)throw WTF;
                 a = currClosure.v.closure->map[ip->d.i];
-                currClosure.v.closure->show("VarGet");
+//                currClosure.v.closure->show("VarGet");
                 stack.pushptr()->copy(a);
                 ip++;
                 break;
             case OP_CLOSURESET:
                 if(currClosure.t != Types::tClosure)throw WTF;
-                currClosure.v.closure->show("VarSet");
+//                currClosure.v.closure->show("VarSet");
                 a = currClosure.v.closure->map[ip->d.i];
                 a->copy(stack.popptr());
                 ip++;
@@ -784,7 +784,7 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
         if(!cc)throw WTF; // didn't find it, and it should be there!
         t->levelsUp = level;
         t->idx = p->i;
-        printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,t-table,level,t->idx);
+//        printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,t-table,level,t->idx);
         t++;
     }
     return table;
@@ -816,7 +816,7 @@ void CompileContext::convertToClosure(const char *name){
         }
         if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSURESET;
-            printf("Rehashing to %d\n",localIndices[previdx]);
+//            printf("Rehashing to %d\n",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
     }
@@ -843,16 +843,16 @@ int CompileContext::findOrCreateClosure(const char *name){
     int localIndexInParent=-1;
     CompileContext *parentContainingVariable;
     
-    printf("Making closure list. Looking for %s\n",name);
+//    printf("Making closure list. Looking for %s\n",name);
     for(parentContainingVariable=parent;parentContainingVariable;
         parentContainingVariable=parentContainingVariable->parent){
-        printf("   Looking in %p\n",parentContainingVariable);
+//        printf("   Looking in %p\n",parentContainingVariable);
         if((localIndexInParent = parentContainingVariable->getLocalToken(name))>=0){
             // got it. If not already, turn it into a closure (which will add it to
             // the closure table of that function)
-            printf("     Got it.\n");
+//            printf("     Got it.\n");
             if(!parentContainingVariable->isClosed(localIndexInParent)){
-                printf("     Got it, not closed, closing.\n");
+//                printf("     Got it, not closed, closing.\n");
                 parentContainingVariable->convertToClosure(name);
             }
             break;
@@ -1349,7 +1349,7 @@ void Angort::feed(const char *buf){
 }
 
 void Angort::clearAtEndOfFeed(){
-    printf("Clearing at end of feed\n");
+//    printf("Clearing at end of feed\n");
     // make sure we tidy up any state
     contextStack.clear(); // clear the context stack
     context = contextStack.pushptr();
@@ -1408,7 +1408,7 @@ const char *Angort::getSpec(const char *s){
 void Angort::list(){
     names.list();
 }
-
+/*
 void Angort::dumpFrame(){
     printf("Frame data:\n");
     printf("  Curclosure: %s\n",currClosure.toString().get());
@@ -1421,7 +1421,7 @@ void Angort::dumpFrame(){
     }
     
 }
-
+*/
 
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
     Namespace *sp = names.getSpaceByName(ns?ns:"std",true);

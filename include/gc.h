@@ -13,8 +13,8 @@ namespace angort {
 
 struct Value;
 
-#define dprintf printf
-//#define dprintf if(0)printf
+//#define dprintf printf
+#define dprintf if(0)printf
 
 typedef uint16_t refct_t; //!< reference count - make sure it's unsigned
 

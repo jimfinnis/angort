@@ -201,7 +201,7 @@ public:
     }
     
     /// show reference counts of all objects
-    void dump();
+//    void dump();
         
     /// decrements the reference counts of all objects referred to in the iterable
     void decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool iskey);
