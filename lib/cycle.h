@@ -143,6 +143,7 @@ protected:
 class CycleDetector {
     /// initialise the cycle detector, clearing the list.
     CycleDetector(){
+        inDeleteCycle=false;
         mainlist.reset();
     }
     static CycleDetector *instance;
@@ -211,6 +212,11 @@ public:
     
     /// deletion prepwork - clears all references to objects marked - see detect()
     void clearZombieReferencesIterator(GarbageCollected *gc,bool iskey);
+    
+    /// check this to see if we should recursively delete in closures
+    bool isInDeleteCycle(){
+        return inDeleteCycle;
+    }
 
 private:
     /// the list of items
@@ -218,7 +224,9 @@ private:
     /// the list of items we build in the process of GC - becomes the new main list
     GCList newlist;
     
-    
+    /// we set this when we're doing the final delete; it's used to stop closure
+    /// deletion recursion being a problem. Hopefully.
+    bool inDeleteCycle;
 };
     
 }

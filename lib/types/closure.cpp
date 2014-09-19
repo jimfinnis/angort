@@ -81,18 +81,26 @@ void Closure::init(const CodeBlock *c){
 Closure::~Closure(){
     printf("deleting closure %p\n",this);
     if(block)delete [] block;
-    if(parent && parent->decRefCt())
-        delete parent;
-    
-    // dereference the blocks we have access to
-    for(int i=0;i<cb->closureTableSize;i++){
-        printf("decrementing referenced closure\n  ");
-        // self-ref doesn't count (see above)
-        if(blocksUsed[i] && blocksUsed[i]->decRefCt())
+    if(!CycleDetector::getInstance()->isInDeleteCycle()){
+        // we do not do recursive deletion if we're deleting
+        // stuff in a left-over cycle. Deletions which need
+        // to be done will be done by the code in the cycle
+        // detector.
+        
+        if(parent && parent->decRefCt())
+            delete parent;
+        
+        // dereference the blocks we have access to
+        for(int i=0;i<cb->closureTableSize;i++){
+            printf("decrementing referenced closure\n  ");
+            // self-ref doesn't count (see above)
+            if(blocksUsed[i] && blocksUsed[i]->decRefCt())
                 delete blocksUsed[i];
-        printf("done decrementing referenced closure\n");
+            printf("done decrementing referenced closure\n");
+        }
     }
     
+    delete [] blocksUsed;
     delete[] map;
 }
 
@@ -199,7 +207,7 @@ void Closure::traceAndMove(class CycleDetector *cycle){
             g->traceAndMove(cycle);
         }
     }
-            
+    
 }
 
 
@@ -217,7 +225,7 @@ void Closure::show(const char *s){
     
     if(parent)
         parent->show("Parent of previous");
-          
+    
 }
 
 Iterator<class Value *> *Closure::makeValueIterator(){

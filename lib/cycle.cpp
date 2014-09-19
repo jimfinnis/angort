@@ -104,11 +104,13 @@ void CycleDetector::detect(){
         p->clearZombieReferences();
     }
     
+    inDeleteCycle=true;
     for(p=mainlist.head();p;p=q){
         q=mainlist.next(p);
         dprintf("%p is in a cycle  - deleting\n",p);
         delete p;
     }
+    inDeleteCycle=false;
     
     // and we set the main list to the new list
     
