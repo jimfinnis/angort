@@ -40,7 +40,7 @@ public:
     virtual ~Closure();
     Iterator<class Value *> *makeValueIterator();
     
-    // void show(const char *s);
+    void show(const char *s);
     
     virtual void clearZombieReferences();
     virtual void decReferentsCycleRefCounts();

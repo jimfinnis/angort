@@ -815,7 +815,11 @@ void CompileContext::convertToClosure(const char *name){
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
+//    printf("Beginning scan to convert local %d into closure %d\n",
+//           localIndex,localIndices[previdx]);
     for(int i=0;i<compileCt;i++,inst++){
+//        char buf[1024];
+//        printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
         if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSUREGET;
             inst->d.i = localIndices[previdx];
@@ -826,20 +830,31 @@ void CompileContext::convertToClosure(const char *name){
             inst->d.i = localIndices[previdx];
         }
     }
+//    printf("Ending scan\n");
     
     // now decrement all indices of locals greater than this.
     // Firstly do this in the table.
+    
+//    printf("Now decrementing subsequent tokens\n");
     for(int i=0;i<localTokenCt;i++){
+//        printf("Token %d : %s\n",i,localTokens[i]);
         if(!isClosed(i) && localIndices[i]>localIndex){
             localIndices[i]--;
+//            printf("  decremented to %d\n",localIndices[i]);
         }
     }
     
     // Then do it in the code generated thus far.
-    for(int i=0;i<compileCt;i++){
+    
+    inst = compileBuf;
+//    printf("Now decrementing local accesses in generated code\n");
+    for(int i=0;i<compileCt;i++,inst++){
+//        char buf[1024];
+//        printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
         if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
            inst->d.i > localIndex){
             inst->d.i--;
+//            printf("  decremented to %d\n",inst->d.i);
         }
     }
 }
