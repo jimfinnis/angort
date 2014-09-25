@@ -1429,7 +1429,6 @@ const char *Angort::getSpec(const char *s){
 void Angort::list(){
     names.list();
 }
-/*
 void Angort::dumpFrame(){
     printf("Frame data:\n");
     printf("  Curclosure: %s\n",currClosure.toString().get());
@@ -1442,7 +1441,6 @@ void Angort::dumpFrame(){
     }
     
 }
-*/
 
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
     Namespace *sp = names.getSpaceByName(ns?ns:"std",true);

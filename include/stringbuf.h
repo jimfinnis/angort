@@ -4,8 +4,8 @@
  *
  */
 
-#ifndef __STRINGBUF_H
-#define __STRINGBUF_H
+#ifndef __ANGORTSTRINGBUF_H
+#define __ANGORTSTRINGBUF_H
 
 #include <wchar.h>
 

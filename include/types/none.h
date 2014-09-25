@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __NONE_H
-#define __NONE_H
+#ifndef __ANGORTNONE_H
+#define __ANGORTNONE_H
 
 namespace angort {
 

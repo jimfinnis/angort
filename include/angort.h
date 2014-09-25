@@ -703,7 +703,7 @@ public:
     void dumpStack(const char *s);
     
     /// dump the frame data
-//    void dumpFrame();
+    void dumpFrame();
     
     
     /// get the top iterator on the iterator stack (or the nth)

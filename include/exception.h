@@ -7,8 +7,8 @@
  */
 
 
-#ifndef __EXCEPTION_H
-#define __EXCEPTION_H
+#ifndef __ANGORTEXCEPTION_H
+#define __ANGORTEXCEPTION_H
 
 #include <string.h>
 #include <stdio.h>

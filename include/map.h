@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __MAP_H
-#define __MAP_H
+#ifndef __ANGORTMAP_H
+#define __ANGORTMAP_H
 
 #include "iterator.h"
 

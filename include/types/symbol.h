@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __SYMBOL_H
-#define __SYMBOL_H
+#ifndef __ANGORTSYMBOL_H
+#define __ANGORTSYMBOL_H
 
 namespace angort {
 

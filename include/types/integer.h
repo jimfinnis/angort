@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __INT_H
-#define __INT_H
+#ifndef __ANGORTINT_H
+#define __ANGORTINT_H
 
 namespace angort {
 

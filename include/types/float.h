@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __FLOAT_H
-#define __FLOAT_H
+#ifndef __ANGORTFLOAT_H
+#define __ANGORTFLOAT_H
 
 #include "../types.h"
 

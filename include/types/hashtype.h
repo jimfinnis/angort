@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __HASHTYPE_H
-#define __HASHTYPE_H
+#ifndef __ANGORTHASHTYPE_H
+#define __ANGORTHASHTYPE_H
 
 namespace angort {
 

@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __ITER_H
-#define __ITER_H
+#ifndef __ANGORTITER_H
+#define __ANGORTITER_H
 
 namespace angort {
 
