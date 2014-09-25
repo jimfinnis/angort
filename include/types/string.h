@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __STRING_H
-#define __STRING_H
+#ifndef __ANGORTSTRING_H
+#define __ANGORTSTRING_H
 
 namespace angort {
 

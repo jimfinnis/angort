@@ -4,8 +4,8 @@
  *
  */
 
-#ifndef __NAMESPACE_H
-#define __NAMESPACE_H
+#ifndef __ANGORTNAMESPACE_H
+#define __ANGORTNAMESPACE_H
 
 namespace angort {
 

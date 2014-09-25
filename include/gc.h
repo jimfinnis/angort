@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __GC_H
-#define __GC_H
+#ifndef __ANGORTGC_H
+#define __ANGORTGC_H
 
 namespace angort {
 

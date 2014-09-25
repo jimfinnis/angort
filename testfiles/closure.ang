@@ -4,7 +4,6 @@
 
 #stack 5, make a function to add 4, run it on 5.
 5 4 makeadder @ 
-"Closure made above is not being deleted.".
 9 = "closure1" assert
 # 4 way string concat, the first 2 strings are stored in the closure
 
@@ -27,7 +26,9 @@ global t
 "zig" "foo" ?t@ "boz1zigfoo" = "closure3" assert
 "step 7" p nl
 1 !t # overwrite 
-gccount 0 = "closuregc0" assert # GC count should be zero here
+gccount.
+dumpframe
+gccount 1 = "closuregc0" assert # GC count should be one here, for arg list
 
 
 # OK, nested closure. This is a function which takes two arguments,
@@ -61,7 +62,7 @@ gccount 0 = "closuregc0" assert # GC count should be zero here
 1 !t # clear the "t" variable to drop the reference
 
 # if you write a closure over a closure, the total gc count should not increment
-0 gccount = "closure over closure gc" assert
+1 gccount = "closure over closure gc" assert
 
 
 # in this case, there was a problem when a closure which was only referred to
@@ -93,7 +94,7 @@ mkcounter !b
 
 "GCCOUNT=" p gccount p nl
 
-4 gccount = "stacked closure GC count" assert
+5 gccount = "stacked closure GC count" assert
 
 ?a@ 1 = "mutclosa1" assert
 ?a@ 2 = "mutclosa2" assert
@@ -116,6 +117,6 @@ mkcounter !b
 0 !b
 0 !t
 "GCCOUNT=" p gccount p nl
-0 gccount = "GC count zero at end of closure tests" assert
+1 gccount = "GC count zero at end of closure tests" assert
 
 quit

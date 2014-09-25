@@ -7,8 +7,8 @@
  */
 
 
-#ifndef __STACK_H
-#define __STACK_H
+#ifndef __ANGORTSTACK_H
+#define __ANGORTSTACK_H
 
 #include "exception.h"
 

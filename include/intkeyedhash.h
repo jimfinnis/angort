@@ -1,5 +1,5 @@
-#ifndef __INTKEYEDHASH_H
-#define __INTKEYEDHASH_H
+#ifndef __ANGORTINTKEYEDHASH_H
+#define __ANGORTINTKEYEDHASH_H
 
 /**
  * @file

@@ -406,13 +406,13 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->endPackageInScript();
 }
 
-/*
-%commentedoutword dumpframe () debugging - dump the frame variables
+
+%word dumpframe () debugging - dump the frame variables
 {
     a->dumpFrame();
     CycleDetector::getInstance()->dump();
 }
-*/
+
 
 %word showclosure (cl --)
 {

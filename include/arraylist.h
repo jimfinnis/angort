@@ -2,8 +2,8 @@
  * ArrayList, An array list implementation
  */
 
-#ifndef __ARRAYLIST_H
-#define __ARRAYLIST_H
+#ifndef __ANGORTARRAYLIST_H
+#define __ANGORTARRAYLIST_H
 
 // we need placement new, sadly.
 #include <new> 

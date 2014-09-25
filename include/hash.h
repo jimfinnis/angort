@@ -1,5 +1,5 @@
-#ifndef __MYHASH_H
-#define __MYHASH_H
+#ifndef __ANGORTMYHASH_H
+#define __ANGORTMYHASH_H
 
 /**
  * @file

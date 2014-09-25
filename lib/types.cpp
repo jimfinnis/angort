@@ -8,6 +8,9 @@ static bool createTypesDone=false;
 
 int  GarbageCollected::globalCount=0;
 
+//#define tdprintf printf
+#define tdprintf if(0)printf
+
 const char *Type::toString(bool *allocated,const Value *v) const{
     char buf[128];
     snprintf(buf,128,"<TYPE %s:%p>",name,v->v.s);
@@ -106,14 +109,14 @@ void BlockAllocType::decRef(Value *v){
 
 void GCType::incRef(Value *v){
     v->v.gc->incRefCt();
-//    printf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
+    tdprintf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
 }
 
 void GCType::decRef(Value *v){
     bool b = v->v.gc->decRefCt();
-//    printf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
+    tdprintf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
-//        printf("  AND DELETING %s:%p\n",name,v->v.gc);
+        tdprintf("  AND DELETING %s:%p\n",name,v->v.gc);
         delete v->v.gc;
     }
 }

@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __RANGE_H
-#define __RANGE_H
+#ifndef __ANGORTRANGE_H
+#define __ANGORTRANGE_H
 
 namespace angort {
 

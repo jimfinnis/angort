@@ -1,5 +1,5 @@
-#ifndef __TOKENISER_H
-#define __TOKENISER_H
+#ifndef __ANGORTTOKENISER_H
+#define __ANGORTTOKENISER_H
 
 #include <stdio.h>
 #include <string.h>

@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __CODE_H
-#define __CODE_H
+#ifndef __ANGORTCODE_H
+#define __ANGORTCODE_H
 
 namespace angort {
 

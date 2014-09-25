@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __CLOSURE_H
-#define __CLOSURE_H
+#ifndef __ANGORTCLOSURE_H
+#define __ANGORTCLOSURE_H
 
 namespace angort {
 

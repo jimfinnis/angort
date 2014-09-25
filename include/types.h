@@ -1,5 +1,5 @@
-#ifndef __TYPES_H
-#define __TYPES_H
+#ifndef __ANGORTTYPES_H
+#define __ANGORTTYPES_H
 
 #include "iterator.h"
 #include "gc.h"

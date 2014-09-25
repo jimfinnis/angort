@@ -6,8 +6,8 @@
  * 
  */
 
-#ifndef __VALUE_H
-#define __VALUE_H
+#ifndef __ANGORTVALUE_H
+#define __ANGORTVALUE_H
 
 #include "types.h"
 

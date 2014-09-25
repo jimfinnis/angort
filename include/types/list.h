@@ -4,8 +4,8 @@
  *
  */
 
-#ifndef __LIST_H
-#define __LIST_H
+#ifndef __ANGORTLIST_H
+#define __ANGORTLIST_H
 
 namespace angort {
 

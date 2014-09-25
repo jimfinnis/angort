@@ -4,8 +4,8 @@
  *
  */
 
-#ifndef __NATIVE_H
-#define __NATIVE_H
+#ifndef __ANGORTNATIVE_H
+#define __ANGORTNATIVE_H
 
 namespace angort {
 

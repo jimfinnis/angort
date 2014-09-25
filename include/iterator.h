@@ -1,5 +1,5 @@
-#ifndef __ITERATOR_H
-#define __ITERATOR_H
+#ifndef __ANGORTITERATOR_H
+#define __ANGORTITERATOR_H
 
 namespace angort {
 /// the base iterator interface, providing the type-invariant first(), next() and isDone() method definitions -
