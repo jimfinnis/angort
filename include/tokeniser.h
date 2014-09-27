@@ -14,6 +14,8 @@
 
 namespace angort {
 
+class Tokeniser;
+
 struct TokenRegistry
 {
     const char *word;

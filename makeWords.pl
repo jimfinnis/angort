@@ -86,7 +86,7 @@ foreach $v (@list) {
     $t = $descs{$v};
     print "    {\"$v\",\"$t\",_word__$v},\n";
 }
-print "    {NULL,NULL} };\n";
+print "    {NULL,NULL,NULL} };\n";
 print "} // end namespace $nsname \n\n"; # close the namespace
 
 if($hasinit){

@@ -318,7 +318,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->list();
 }
 
-%word help (s --) get help on a word or native function (not plugins)
+%word help (s --) get help on a word or native function
 {
     const StringBuffer &name = a->popString();
     const char *s = a->getSpec(name.get());

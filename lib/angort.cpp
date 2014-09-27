@@ -188,8 +188,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     if(!cb->ip)
         throw RUNT("call to a word with a deferred definition");
     
+//    printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
+//    printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
     // allocate true locals (stack locals)
-    locals.alloc(cb->locals - cb->closureTableSize);
+    locals.alloc(cb->locals - cb->closureBlockSize);
     
     // now pop parameters, in reverse order, by
     // peeking them and then dropping the whole
@@ -390,6 +392,9 @@ void Angort::run(const Instruction *ip){
                     }
                     // we call this value.
                     ip = call(a,ip+1);
+                } else if(a->t == Types::tNone) {
+                    // if it's NONE we drop it
+                    ip++;
                 } else {
                     // if not callable we just stack it.
                     b = stack.pushptr();
@@ -933,9 +938,9 @@ void Angort::include(const char *filename,bool isreq){
     fileFeed(file);
     tok.restoreContext(&c);
     
-    // pop the namespace stack
-    int idx=names.pop();
     if(isreq){
+        // pop the namespace stack
+        int idx=names.pop();
         // push the idx of the package which was defined. 
         // A bit dodgy since this isn't taking place in
         // a code block..
