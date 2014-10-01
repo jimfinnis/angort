@@ -88,6 +88,18 @@ Angort::~Angort(){
     if(running)
         shutdown();
 }
+/*
+void CompileContext::dump(){
+    printf("CompileContext final setup\nLocals\n");
+    printf("Closure count %d, Param count %d\n",closureCt,paramCt);
+    for(int i=0;i<localTokenCt;i++){
+        printf("   %20s %s %4d\n",
+               localTokens[i],
+               (localsClosed&(1<<i))?"C":" ",
+               localIndices[i]);
+    }
+}
+*/
 
 void Angort::shutdown(){
     ArrayListIterator<LibraryDef *>iter(libs);
@@ -197,16 +209,15 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     // peeking them and then dropping the whole
     // lot in one go.
     
-    int clCount=0;
-    int locCount=0;
-    for(int i=0;i<cb->params;i++){
+    uint8_t *pidx = cb->paramIndices;
+    for(int i=0;i<cb->params;i++,pidx++){
         Value *paramval = stack.peekptr((cb->params-1)-i);
         if(cb->localsClosed & (1<<i)){
-//            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),clCount);
-            clos->map[clCount++]->copy(paramval);
+//            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
+            clos->map[*pidx]->copy(paramval);
         } else {
-//            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),locCount);
-            locals.store(locCount++,paramval);
+//            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
+            locals.store(*pidx,paramval);
         }
     }
     stack.drop(cb->params);
@@ -228,6 +239,23 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     
     debugwordbase = cb->ip;
     return cb->ip;
+}
+
+void CodeBlock::setFromContext(CompileContext *con){
+    ip = con->copyInstructions();
+    locals = con->getLocalCount();
+    params = con->getParamCount();
+    size = con->getCodeSize();
+    closureTable = con->makeClosureTable(&closureTableSize);
+    closureBlockSize = con->closureCt;
+    localsClosed = con->localsClosed;
+    
+    paramIndices = new uint8_t[params];
+    for(int i=0;i<params;i++){
+        paramIndices[i] = con->getLocalIndex(i);
+    }
+    
+    used=true;
 }
 
 void Angort::runValue(const Value *v){
@@ -654,6 +682,7 @@ void Angort::endDefine(CompileContext *c){
     
     // get the codeblock out of the context and set it up.
     CodeBlock *cb = c->cb;
+//    c->dump();
     cb->setFromContext(c);
     Value *wordVal = names.getVal(wordValIdx);
     
@@ -827,6 +856,7 @@ void CompileContext::convertToClosure(const char *name){
 //        printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
         if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSUREGET;
+//            printf("Rehashing to %d\n",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
         if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
@@ -1322,6 +1352,7 @@ void Angort::feed(const char *buf){
                     
                     // set the codeblock up
                     lambdaContext->cb->setFromContext(lambdaContext);
+//                    lambdaContext->dump();
                     
                     // here, we compile LITERALCODE word with a codeblock created
                     // from the context.

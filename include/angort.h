@@ -212,6 +212,8 @@ public:
         reset(NULL,NULL);
     }
     
+//    void dump();
+    
     /// reset a new compile context and set the containing context.
     void reset(CompileContext *p,Tokeniser *tok);
     
@@ -385,16 +387,7 @@ struct CodeBlock {
         used=false;
     }
     
-    void setFromContext(CompileContext *con){
-        ip = con->copyInstructions();
-        locals = con->getLocalCount();
-        params = con->getParamCount();
-        size = con->getCodeSize();
-        closureTable = con->makeClosureTable(&closureTableSize);
-        closureBlockSize = con->closureCt;
-        localsClosed = con->localsClosed;
-        used=true;
-    }
+    void setFromContext(CompileContext *con);
     
     /// the number of instructions in the codeblock
     int size;
@@ -416,6 +409,9 @@ struct CodeBlock {
     /// the first N of the locals/closures should be popped from the
     /// stack when this CB is called
     int params;
+    
+    /// the indices of the parameters in the local or closure map.
+    uint8_t *paramIndices;
     
     /// indicates which locals are closed, and therefore
     /// indexed into the closuretable
