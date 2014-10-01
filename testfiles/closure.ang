@@ -119,4 +119,24 @@ mkcounter !b
 "GCCOUNT=" p gccount p nl
 1 gccount = "GC count zero at end of closure tests" assert
 
+
+# ordering of parameters
+
+#!/usr/local/bin/angort
+
+:f |a:b|
+    `b !b
+    ?a `a = "closord1" assert
+    ?b `b = "closord2" assert
+    (
+        ?a `a = "closord3" assert
+        ?b `b = "closord4" assert
+    )
+;
+
+`a f@
+quit
+
+
+
 quit
