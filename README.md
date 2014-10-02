@@ -256,7 +256,7 @@ In a nested loop, it's possible to access the current variables of the outer loo
         }
     ;
 
-### More on iterators
+### Explicit iterators
 It's sometimes necessary to use iterators manually instead of creating
 them automatically with "each" and getting the values using "i" in an
 iterator loop.
@@ -275,7 +275,7 @@ two collections in parallel, for example in implementing the "zipWith"
 function. This function takes two collections, and runs a binary function on
 pairs of items, each from one of the collections, returning a list:
 
-    ["foo","bar"] ["fish","zing"] zip each{i.}
+    ["foo","bar"] ["fish","zing"] (+) zipWith each{i.}
     
 would print
 
