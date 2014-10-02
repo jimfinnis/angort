@@ -4,7 +4,7 @@ include:
 * local variables and parameters in words
 * garbage collected lists, ranges and iterators
 * anonymous functions
-* mutable copy closures
+* closures by reference
 
 ##Some examples
 Functions in Angort are called "words", borrowing the Forth terminology. Here are
@@ -444,7 +444,8 @@ and here's how it could be used to show the squares of the numbers:
             
 ### Closures
 
-Anonymous functions can refer to variables in their enclosing function or word, in which case a closure is created to store the value when the enclosing function exits. This closure is mutable - its value can be changed by the anonymous function. For example:
+Anonymous functions can refer to variables in their enclosing function or word, in which case a closure is created to store the value when the enclosing function exits. This closure is by mutable - its value can be changed by the anonymous function.
+For example:
 
     :mkcounter |:x|     # declare a local variable x
         0!x             # set it to zero
@@ -459,6 +460,10 @@ Now, if we run
     ?F @
     
 a few times, we'll get an incrementing count - the value in the closure persists and is being incremented. We can call mkcounter several times and each time we'll get a new closure.
+
+Closures are by reference, meaning that the variable is created by 
+the outer function, and is shared by all functions created therein
+which use it.
 
 
 ##Lists
