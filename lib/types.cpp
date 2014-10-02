@@ -39,6 +39,9 @@ void Type::clone(Value *out,const Value *in,bool deep){
 }
 
 void Type::add(const char *_name,const char *_id){
+    if(getByName(_name))
+        throw Exception().set("type already exists: %s",name);
+    
     const unsigned char *n = (const unsigned char *)_id;
     id = n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24);
     name = _name;
@@ -46,13 +49,12 @@ void Type::add(const char *_name,const char *_id){
     head = this;
     
     // normally symbols are generated after the static initialisation
-    // but before anything else in createTypes(). If this chance has
-    // been missed, perhaps because this type is being added by a plugin,
-    // add the symbol.
+    // but before anything else, in createTypes(). This is to make sure
+    // the symbol system has been initialised.
+    // If this type is being added later, say by a plugin, we need to
+    // do it here.
     
     if(createTypesDone){
-        if(SymbolType::exists(name))
-            throw Exception().set("type already exists: %s",name);
         nameSymb = SymbolType::getSymbol(name);
     }
 }
@@ -213,9 +215,6 @@ void Types::createTypes(){
     // this.
     
     for(Type *p = Type::head;p;p=p->next){
-        if(SymbolType::exists(p->name))
-            throw Exception().set("type already exists: %s",p->name);
-           
         p->nameSymb = SymbolType::getSymbol(p->name);
     }
     createTypesDone = true;

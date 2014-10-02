@@ -1489,7 +1489,10 @@ void Angort::registerProperty(const char *name, Property *p, const char *ns,cons
 int Angort::registerLibrary(LibraryDef *lib,bool import){
     // make the namespace. Multiple imports into the same one
     // are permitted.
+    
+    
     Namespace *sp = names.getSpaceByName(lib->name,true);
+
     for(int i=0;;i++){
         if(!lib->wordList[i].name)break;
         int id = sp->addConst(lib->wordList[i].name,false);

@@ -65,6 +65,13 @@ public:
         head = NULL;
     }
     
+    static Type *getByName(const char *n){
+        for(Type *p=head;p;p=p->next)
+            if(!strcmp(n,p->name))
+                return p;
+        return NULL;
+    }
+    
     /// dereference a reference value, returning the value to which
     /// it returns or NULL if it's not a reference.
     virtual Value *deref(Value *v) const {
