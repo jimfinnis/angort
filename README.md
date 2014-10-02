@@ -256,7 +256,56 @@ In a nested loop, it's possible to access the current variables of the outer loo
         }
     ;
 
+### More on iterators
+It's sometimes necessary to use iterators manually instead of creating
+them automatically with "each" and getting the values using "i" in an
+iterator loop.
 
+To do this, we have the following words:
+
+word | action|notes
+-----|----|-----
+mkiter | (iterable -- iterator) | create an iterator
+icur | (iterable -- item) | get the current item
+inext | (iterable --) | advance the iterator
+idone | (iterable -- bool) | return 1 if the iterator is on the last item
+ifirst | (iterable --) | reset the iterator to the start
+You might need this when you want to iterate over
+two collections in parallel, for example in implementing the "zipWith"
+function. This function takes two collections, and runs a binary function on
+pairs of items, each from one of the collections, returning a list:
+
+    ["foo","bar"] ["fish","zing"] zip each{i.}
+    
+would print
+
+    foofish
+    barzing
+    
+This could be implemented by using an index to go over both lists:
+
+    :zipWith |a,b,f:|
+        []
+        0 ?a len ?b len min range each {
+            i ?a get 
+            i ?b get ?f call ,
+        }
+;
+
+but a more elegant solution might be:
+
+    :zipWith |a,b,f:iter|
+        ?b mkiter !iter
+        []
+        ?a each {
+            ?iter idone ifleave
+            i ?iter icur ?f@,
+            ?iter inext 
+        }
+    ;
+        
+Here, we use an each loop to iterate over list a, and an explicit
+iterator to iterate over list b.
 
 ## Globals and constants
 Global variables are defined in two ways. The "polite" way is to use the
@@ -283,6 +332,8 @@ Here's an example:
 
      3.1415927 const pi
      :degs2rads pi 180.0 / * ;
+     
+
      
 ###Words, globals and constants: the truth
 Globals, constants and words all

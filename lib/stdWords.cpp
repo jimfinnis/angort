@@ -294,6 +294,43 @@ static NamespaceEnt *getNSEnt(Angort *a){
     IteratorObject *iterator = a->getTopIterator();
     p->copy(iterator->iterable);
 }
+
+%word mkiter (iterable -- iterator) make an iterator object
+{
+    Value *p = a->stack.peekptr();
+    p->t->createIterator(p,p);
+}
+
+%word icur (iterator -- item) get current item in iterator made with mkiter
+{
+    Value *p = a->stack.peekptr();
+    Iterator<Value *>* i = Types::tIter->get(p);
+    if(i->isDone())
+        p->clr();
+    else
+        p->copy(i->current());
+}
+
+%word inext (iterator --) advance the iterator
+{
+    Value *p = a->stack.popptr();
+    Iterator<Value *>* i = Types::tIter->get(p);
+    i->next();
+}
+
+%word ifirst (iterator --) reset the iterator to the start
+{
+    Value *p = a->stack.popptr();
+    Iterator<Value *>* i = Types::tIter->get(p);
+    i->first();
+}
+
+%word idone (iterator -- boolean) true if iterator is done
+{
+    Value *p = a->stack.peekptr();
+    Iterator<Value *>* i = Types::tIter->get(p);
+    Types::tInteger->set(p,i->isDone()?1:0);
+}
     
 
 %word reset (--) Clear everything
