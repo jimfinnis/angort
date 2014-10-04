@@ -95,7 +95,7 @@ int Angort::plugin(const char *name){
     if(!path)
         throw RUNT("").set("cannot find library '%s'",name);
     
-    void *lib = dlopen(path,RTLD_LAZY);
+    void *lib = dlopen(path,RTLD_LAZY|RTLD_GLOBAL);
     if((err=dlerror())){
         throw RUNT(err);
     }

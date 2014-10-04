@@ -430,11 +430,11 @@ Value onDraw;
 
 %init
 {
-    printf("Initialising SDL plugin, %s %s\n",__DATE__,__TIME__);
+    fprintf(stderr,"Initialising SDL plugin, %s %s\n",__DATE__,__TIME__);
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG);
     TTF_Init();
-    printf("SDL initialised\n");
+    fprintf(stderr,"SDL initialised\n");
     inited=true;
     
     a->registerProperty("col",&forecol);
@@ -446,7 +446,7 @@ Value onDraw;
 
 %shutdown
 {
-    printf("Closing down SDL\n");
+    fprintf(stderr,"Closing down SDL\n");
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(screen);
     inited=false;

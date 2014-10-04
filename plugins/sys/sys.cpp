@@ -24,6 +24,6 @@ using namespace angort;
 
 %init
 {
-    printf("Initialising SYS plugin, %s %s\n",__DATE__,__TIME__);
+    fprintf(stderr,"Initialising SYS plugin, %s %s\n",__DATE__,__TIME__);
 }
 

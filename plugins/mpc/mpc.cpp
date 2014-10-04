@@ -499,7 +499,7 @@ int levenshtein(const char *s1, const char *s2) {
 
 %init
 {
-    printf("Initialising MPD client plugin, %s %s\n",__DATE__,__TIME__);
+    fprintf(stderr,"Initialising MPD client plugin, %s %s\n",__DATE__,__TIME__);
 }
 
 %shutdown

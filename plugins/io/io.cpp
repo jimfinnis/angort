@@ -457,5 +457,5 @@ inline void setIntInHash(Hash *h, const char *key,uint32_t value){
 
 %init
 {
-    printf("Initialising IO plugin, %s %s\n",__DATE__,__TIME__);
+    fprintf(stderr,"Initialising IO plugin, %s %s\n",__DATE__,__TIME__);
 }

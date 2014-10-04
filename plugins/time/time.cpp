@@ -56,6 +56,6 @@ inline double time_diff(timespec start, timespec end)
 %init
 {
     clock_gettime(CLOCK_MONOTONIC,&progstart);
-    printf("Initialising Time plugin, %s %s\n",__DATE__,__TIME__);
+    fprintf(stderr,"Initialising Time plugin, %s %s\n",__DATE__,__TIME__);
 }
 

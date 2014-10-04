@@ -130,7 +130,7 @@ static int process(jack_nframes_t nframes, void *arg){
 }
 
 static void jack_shutdown(void *arg){
-    printf("Jack terminated the program\n");
+    fprintf(stderr,"Jack terminated the program\n");
     exit(1);
 }
     
@@ -236,14 +236,14 @@ static void jack_shutdown(void *arg){
 
 %init
 {
-    printf("Initialising Midi plugin, %s %s\n",__DATE__,__TIME__);
+    fprintf(stderr,"Initialising Midi plugin, %s %s\n",__DATE__,__TIME__);
     
 }
           
 %shutdown
 {
     if(jack){
-        printf("closing Jack client.\n");
+        fprintf(stderr,"closing Jack client.\n");
         jack_client_close(jack);
         jack=NULL;
     }
