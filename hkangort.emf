@@ -61,6 +61,9 @@ hilight   .hilight.angort 1 "for" .scheme.keyword
 hilight   .hilight.angort 1 "if" .scheme.keyword
 hilight   .hilight.angort 1 "then" .scheme.keyword
 hilight   .hilight.angort 1 "else" .scheme.keyword
+hilight   .hilight.angort 1 "case" .scheme.keyword
+hilight   .hilight.angort 1 "cases" .scheme.keyword
+hilight   .hilight.angort 1 "otherwise" .scheme.keyword
 hilight   .hilight.angort 1 "leave" .scheme.keyword
 hilight   .hilight.angort 1 "dup" .scheme.keyword
 hilight   .hilight.angort 1 "call" .scheme.keyword
@@ -115,9 +118,12 @@ hilight   .hilight.angort 1 "library" .scheme.prepro
     indent .hilight.angort o ")" -t
     indent .hilight.angort e "\"" "\"" "\\"
     indent .hilight.angort b "\\[" "\\]"
+    indent .hilight.angort n "[^[:alnum:]]cases[^[:alnum:]]" t
     indent .hilight.angort n "[^[:alnum:]]if[^[:alnum:]]" t
     indent .hilight.angort s "[^[:alnum:]]else[^[:alnum:]]" -t
     indent .hilight.angort o "[^[:alnum:]]then[^[:alnum:]]" -t
+    indent .hilight.angort o "[^[:alnum:]]case[^[:alnum:]]" -t
+    indent .hilight.angort o "[^[:alnum:]]otherwise[^[:alnum:]]" -t
     
 !endif
 

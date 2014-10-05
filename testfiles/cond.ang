@@ -24,4 +24,18 @@ global t
 1 0 foo 32 = "elseif3" assert
 1 1 foo 23 = "elseif4" assert
 
+
+:test |x:|
+    cases
+        ?x 10 < if "LT10" case
+        ?x 20 > if "GT20" case
+        "??" otherwise
+;
+
+1 test "LT10" = "case1" assert
+10 test "??" = "case2" assert
+11 test "??" = "case3" assert
+20 test "??" = "case4" assert
+21 test "GT20" = "case5" assert
+
 quit
