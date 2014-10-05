@@ -28,22 +28,24 @@ with open(sys.argv[1]) as f:
             cppout.write("namespace angort {\n");
             cppout.write("TokenRegistry %s[] = {\n" % outfile)
             
-            with open("hkwords","w") as hkout:
-                content = f.readlines()
+            with open("wordslist","w") as wordsout:
+                with open("hkwords","w") as hkout:  
+                    content = f.readlines() 
 
-                ct=0
-                for x in content:
-                    print("--> "+x.strip())
-                    if ':' in x:
-                        val,name = x.rsplit(':',1)
-                        val = val.strip()
-                        name = name.strip()
-                        cppout.write("\t{\"%s\", %s},\n" % (val,name))
-                        hout.write("#define\t%s\t%d\n" % (name,ct))
-                        if val[0]!='*':
-                            hkout.write(gethkline(val))
-                        ct+=1
-                cppout.write("{NULL,-10}\n");
-                cppout.write("};\n\n")
-                cppout.write("} // end namespace\n")
-        hout.write("}\n");
+                    ct=0
+                    for x in content:
+                        print("--> "+x.strip())
+                        if ':' in x:
+                            val,name = x.rsplit(':',1)
+                            val = val.strip()
+                            name = name.strip()
+                            cppout.write("\t{\"%s\", %s},\n" % (val,name))
+                            hout.write("#define\t%s\t%d\n" % (name,ct))
+                            if val[0]!='*':
+                                hkout.write(gethkline(val))
+                                wordsout.write(val+",")
+                            ct+=1
+                    cppout.write("{NULL,-10}\n");
+                    cppout.write("};\n\n")
+                    cppout.write("} // end namespace\n")
+            hout.write("}\n");

@@ -337,7 +337,39 @@ number is even
 number is odd
 \end{v}
 Conditions can be nested.
+\section{Case blocks}
+In order to avoid testing if..else..then constructions where a number of
+different, mutually exclusive cases need to be tested, the ``case block''
+structure is provided, which emulates the ``elsif'' construction in other
+languages.
 
+Case blocks begin with \texttt{cases}, and each case consists
+of 
+\begin{v}
+    <condition> if <action> case
+\end{v}
+The case block must end, after the final case, with
+\begin{v}
+    <default action> otherwise
+\end{v}
+An example:
+\begin{lstlisting}
+:test |a:|
+    cases
+        ?a 0 = if "It's Zero". case
+        ?a 1 = if "It's One". case
+        ?a 2 = if "It's Two". case
+        ?a 3 = if "It's Three". case
+        ?a 4 = if "It's Four". case
+        ?a 5 = if "It's Five". case
+        ?a 6 = if "It's Six". case
+        ?a 7 = if "It's Seven". case
+        "It's something else".   otherwise
+    
+;
+\end{lstlisting}
+This function will print an appropriate message for integers from 0 to 7,
+and ``It's something else'' for any other value.
 
 \section{Loops}
 There are two kinds of loops in Angort --- infinite loops,
@@ -476,6 +508,63 @@ frange & (x y s -- range) &  create an float range over the interval $[x,y)$ wit
 \end{center}
 See Section~\ref{stackpic} for how stack pictures define the parameters
 and return values for a word.
+
+\subsection{Explicit iterators}
+It's sometimes necessary to use iterators manually instead of creating
+them automatically with "each" and getting the values using "i" in an
+iterator loop.
+To do this, we have the following words:
+\begin{center}
+\begin{tabular}{|l|l|p{4in}|}\hline
+\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
+mkiter & (iterable -- iterator) & create an iterator\\
+icur & (iterable -- item) & get the current item\\
+inext & (iterable --) & advance the iterator\\
+idone & (iterable -- bool) & return 1 if the iterator is on the last item\\
+ifirst & (iterable --) & reset the iterator to the start\\
+\hline
+\end{tabular}
+\end{center}
+
+
+You might need this when you want to iterate over
+two collections in parallel, for example in implementing the "zipWith"
+function. This function takes two collections, and runs a binary function on
+pairs of items, each from one of the collections, returning a list:
+
+\begin{v}
+    ["foo","bar"] ["fish","zing"] (+) zipWith each{i.}
+\end{v}
+\noindent would print
+\begin{v}
+    foofish
+    barzing
+\end{v}
+This could be implemented by using an index to go over both lists:
+
+\begin{lstlisting}
+    :zipWith |a,b,f:|
+        []
+        0 ?a len ?b len min range each {
+            i ?a get 
+            i ?b get ?f call ,
+        }
+;
+\end{lstlisting}
+but a more elegant solution might be:
+\begin{lstlisting}
+    :zipWith |a,b,f:iter|
+        ?b mkiter !iter
+        []
+        ?a each {
+            ?iter idone ifleave
+            i ?iter icur ?f@,
+            ?iter inext 
+        }
+    ;
+\end{lstlisting}
+Here, we use an each loop to iterate over list a, and an explicit
+iterator to iterate over list b.
 
 
 \section{Globals}
@@ -848,10 +937,77 @@ a few times, we will see an incrementing count - the value in the closure
 persists and is being incremented. We can call mkcounter several times and
 each time we will get a new closure.
 
+\subsubsection{Closures are by reference}
+However, all closures are \emph{by reference} --- the child functions
+get references to variables closed in the parent function, so a function
+which returns several functions will all share the same closure, and
+any changes to variables in the closure will be reflected in all the 
+other functions. For example:
+\begin{lstlisting}
+:mklistoffunctions |:x|
+    []
+    0 10 range each {
+        i !x (?x),
+    }
+;
+\end{lstlisting}
+looks like it should produce a list of functions, each of which
+returns the numbers from 0 to 9. However, all the functions will
+return 9 because they all share the same copy of \texttt{x}.
+We can get around this by using a \emph{closure factory} function to hold
+private copies:
+\begin{lstlisting}
+:factory |x:| (?x);
+
+:mklistoffunctions |:x|
+    []
+    0 10 range each {
+        i factory,
+    }
+;
+
+\end{lstlisting}
+
+\subsubsection{Objects with delegates using hashes and closures}
+Languages like C\# have a ``delegate'' type, which consists of
+the pointer to an object and a method to be called inside that
+object, as a single entity. 
+
+We can emulate the same thing in Angort by creating objects as
+hashes, with methods as functions closing over the local variables
+in the creating function:
+
+\begin{lstlisting}
+# create a rectangle object as a hash, with delegates to draw it
+:mkrectangle |x,y,w,h:this|
+    [%
+        # a delegate to draw the rectangle - this
+        # will create a closure over x,y,w,h.
+        
+        `draw (?x ?y ?w ?h graphics$drawrect),
+        
+        # another to move it by some amount
+        
+        `move (|dx,dy:| 
+            ?x ?dx + !x
+            ?y ?dy + !y
+        )
+    ]
+;   
+
+# create it
+100 100 10 10 mkrectangle !R
+# draw it
+?R?`draw@
+# move it and redraw
+20 20 ?R?`move@
+?R?`draw@
+\end{lstlisting}
 
 
 
-\section{Built-in words}
+
+\section{More built-in words}
 
 \subsection{Stack manipulation}
 There exist a number of words whose sole purpose is to manipulate
