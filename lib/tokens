@@ -68,3 +68,7 @@ defconst : T_DEFCONST
 recurse : T_RECURSE
 self : T_SELF
 library :   T_LIBRARY
+
+cases : T_CASES
+case : T_CASE
+otherwise : T_OTHERWISE

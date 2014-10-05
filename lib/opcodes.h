@@ -26,7 +26,8 @@ const char *opcodenames[]=
     "litsymb","over","closureget","closureset","dot",
     "iterlvifdone","iterstart","cmp","library",
     "newlist","appendlist", "closelist","loopstart","stop",
-    "hashgetsymb","hashsetsymb","import","def","recurse","self"
+    "hashgetsymb","hashsetsymb","import","def","recurse",
+    "self","dummycase"
 };
 
 }
@@ -101,6 +102,8 @@ const char *opcodenames[]=
 #define OP_IMPORT 54
 #define OP_DEF 55
 #define OP_RECURSE 56
+
 #define OP_SELF 57
+#define OP_DUMMYCASE 58
 
 #endif /* __OPCODES_H */

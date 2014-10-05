@@ -339,6 +339,11 @@ public:
         cstack.push(compileCt);
     }
     
+    /// push a marker
+    void pushmarker(){
+        cstack.push(-1);
+    }
+    
     void pushleave(){
         leaveListStack.push(leaveListHead); // push the current leave list onto the stack.
         leaveListHead = -1; // and start a new one
@@ -363,6 +368,10 @@ public:
     /// to the instruction N instructions (default 0) past the current one
     void resolveJumpForwards(int idx, int offset=0){
         compileBuf[idx].d.i = (compileCt-idx)+offset;
+    }
+    
+    Instruction *getInst(int idx){
+        return compileBuf+idx;
     }
     
     /// copy a specification string in

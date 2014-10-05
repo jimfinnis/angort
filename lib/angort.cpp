@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 233
+#define ANGORT_VERSION 234
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -1122,6 +1122,33 @@ void Angort::feed(const char *buf){
                 //                printf("defined %s - %d ops\n",defineName,context->getCodeSize());
                 context->reset(NULL,&tok);
                 break;
+            
+            case T_CASES:
+                context->pushmarker();
+                break;
+            case T_CASE:
+                t = context->pop();
+                // write jump of here+1 to location t
+                context->resolveJumpForwards(t,1);
+                t = context->pop();
+                // write t to current location with dummy opcode,
+                // and stack that.
+                context->pushhere();
+                compile(OP_DUMMYCASE)->d.i = t;
+                break;
+            case T_OTHERWISE:
+                t = context->pop();
+                while(t>=0){
+                    Instruction *i = context->getInst(t);
+                    if(i->opcode!=OP_DUMMYCASE)
+                        throw SyntaxException("error in cases");
+                    int nextaddr = i->d.i;
+                    i->opcode=OP_JUMP;
+                    context->resolveJumpForwards(t);
+                    t = nextaddr;
+                }
+                break;
+                
             case T_IF:
                 // at compile time, push this compiler location onto the compiler
                 // stack, and then output a dummy instruction
