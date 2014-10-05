@@ -56,6 +56,7 @@ void Tokeniser::init()
         chartable[i]=-100;
     tokens = NULL;
     handler = NULL;
+    digraphct = 0;
     trace=0;
 }
 
@@ -151,6 +152,13 @@ loop:
             p=skipspace(p);
             goto loop;
         }
+    }
+    
+    /// is it possibly a digraph?
+    
+    for(int i=0;i<digraphct;i++){
+        if(p[0] == digraphtable[i].c1 && p[1] == digraphtable[i].c2)
+            return digraphtable[i].token;
     }
     
     /// is it a special char?
@@ -318,10 +326,8 @@ void Tokeniser::settokens(TokenRegistry *k)
     
     // and set the specials
     
-    for(k=tokens;k->word;k++)
-    {
-        if(*(k->word) == '*')
-        {
+    for(k=tokens;k->word;k++) {
+        if(*(k->word) == '*') {
             switch(k->word[1])
             {
             case 'i': identtoken = k->token; break;
@@ -336,6 +342,10 @@ void Tokeniser::settokens(TokenRegistry *k)
                     chartable[c&0x7f]=k->token;
                 }
                 break;
+            case 'd':
+                digraphtable[digraphct].c1 = k->word[2];
+                digraphtable[digraphct].c2 = k->word[3];
+                digraphtable[digraphct++].token = k->token;
             default: // ignore badly formed entries
                 break;
             }
