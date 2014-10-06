@@ -84,9 +84,11 @@ bool Type::isIn(Value *v,Value *item){
     
     for(iter->first();!iter->isDone();iter->next()){
         if(iter->current()->equalForHashTable(item)){
+            delete iter;
             return true;
         }
     }
+    delete iter;
     return false;
 }
 
