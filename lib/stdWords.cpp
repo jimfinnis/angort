@@ -438,6 +438,16 @@ static NamespaceEnt *getNSEnt(Angort *a){
     
 }
 
+%word tosymbol (string -- symbol) convert string to symbol
+{
+    const StringBuffer& name = a->popString();
+    int symb = SymbolType::getSymbol(name.get());
+    
+    Types::tSymbol->set(a->pushval(),symb);
+    
+}
+
+
 %word endpackage () mark end of package, only when used within a single script
 {
     a->endPackageInScript();
