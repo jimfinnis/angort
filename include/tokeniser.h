@@ -277,6 +277,12 @@ private:
     bool trace;
     
     int chartable[128];
+    struct {
+        char c1,c2;
+        int token;
+    } digraphtable[64];
+    int digraphct;
+                     
     const char *commentlinesequence;
     int commentlinesequencelen;
     
