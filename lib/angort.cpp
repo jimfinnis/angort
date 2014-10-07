@@ -331,6 +331,7 @@ void Angort::run(const Instruction *ip){
             case OP_DIV:         case OP_SUB:            case OP_NEQUALS:
             case OP_AND:         case OP_OR:             case OP_GT:
             case OP_LT:          case OP_MOD:            case OP_CMP:
+            case OP_LE:          case OP_GE:
                 b = popval();
                 a = popval();
                 binop(a,b,opcode);
@@ -1238,6 +1239,8 @@ void Angort::feed(const char *buf){
             case T_OR:compile(OP_OR);break;
             case T_LT:compile(OP_LT);break;
             case T_GT:compile(OP_GT);break;
+            case T_LE:compile(OP_LE);break;
+            case T_GE:compile(OP_GE);break;
             case T_IDENT:
                 {
                     char *s = tok.getstring();
@@ -1266,21 +1269,19 @@ void Angort::feed(const char *buf){
                     compile(OP_LITERALSTRING)->d.s = s;
                     break;
                 }
+            case T_HASHGETSYMB:{
+                char buf[256];
+                if(!tok.getnextident(buf))
+                    throw SyntaxException("expected a symbol after backtick");
+                compile(OP_HASHGETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
+                break;
+                
+            }
             case T_QUESTION:
                 {
-                    if(tok.getnext()!=T_IDENT){
-                        // if it's not an ident, see if it's a hash symbol get
-                        char buf[256];
-                        switch(tok.getcurrent()){
-                        case T_BACKTICK:
-                            if(!tok.getnextident(buf))
-                                throw SyntaxException("expected a symbol after backtick");
-                            compile(OP_HASHGETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
-                            break;
-                        default:
-                            throw SyntaxException("expected an identifier");
-                        }
-                    } else if((t = context->getLocalToken(tok.getstring()))>=0){
+                    if(tok.getnext()!=T_IDENT)
+                        throw SyntaxException("expected identifier after !");
+                    if((t = context->getLocalToken(tok.getstring()))>=0){
                         // it's a local variable
                         compile(context->isClosed(t) ? OP_CLOSUREGET : OP_LOCALGET)->d.i=
                               context->getLocalIndex(t);
@@ -1307,24 +1308,20 @@ void Angort::feed(const char *buf){
                     }
                     break;
                 }
-            case T_PLING:
-                {
-                    if(tok.getnext()!=T_IDENT){
-                        // if it's not an ident, see if it's a hash symbol set
-                        char buf[256];
-                        switch(tok.getcurrent()){
-                        case T_BACKTICK:
-                            if(!tok.getnextident(buf))
-                                throw SyntaxException("expected a symbol after backtick");
-                            compile(OP_HASHSETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
-                            break;
-                        case T_EQUALS:
-                            compile(OP_NEQUALS);
-                            break;
-                        default:
-                            throw SyntaxException("expected an identifier");
-                        }
-                    }else if((t = context->getLocalToken(tok.getstring()))>=0){
+            case T_NOTEQUAL:
+                compile(OP_NEQUALS);
+                break;
+            case T_HASHSETSYMB:{
+                char buf[256];
+                if(!tok.getnextident(buf))
+                    throw SyntaxException("expected a symbol after backtick");
+                compile(OP_HASHSETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
+                break;
+            }
+            case T_PLING: {
+                    if(tok.getnext()!=T_IDENT)
+                        throw SyntaxException("expected identifier after !");
+                    if((t = context->getLocalToken(tok.getstring()))>=0){
                         // it's a local variable
                         compile(context->isClosed(t) ? OP_CLOSURESET : OP_LOCALSET)->d.i=
                               context->getLocalIndex(t);

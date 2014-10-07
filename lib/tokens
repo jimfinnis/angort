@@ -6,6 +6,15 @@
 *n      :   T_INT
 *f      :   T_FLOAT
 
+# digraphs, which take precedence over characters but also
+# do not require trailing spaces
+
+*d!=    :   T_NOTEQUAL
+*d<=    :   T_LE
+*d>=    :   T_GE
+*d?`    :   T_HASHGETSYMB
+*d!`    :   T_HASHSETSYMB
+
 # characters, which return the token immediately and do not
 # require trailing space
 

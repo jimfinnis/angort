@@ -109,6 +109,12 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_LT:
             pushInt(strcmp(p.get(),q.get())<0);
             break;
+        case OP_GE:
+            pushInt(strcmp(p.get(),q.get())>=0);
+            break;
+        case OP_LE:
+            pushInt(strcmp(p.get(),q.get())<=0);
+            break;
         case OP_CMP:
             pushInt(strcmp(p.get(),q.get()));
             break;
@@ -155,6 +161,12 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_LT:
             cmp=true;
             pushInt(p<q);break;
+        case OP_GE:
+            cmp=true;
+            pushInt(p>=q);break;
+        case OP_LE:
+            cmp=true;
+            pushInt(p<=q);break;
         case OP_CMP:
             cmp=true;
             pushInt(((p-q)>0)?1:(((p-q)<0)?-1:0));
@@ -186,6 +198,18 @@ void Angort::binop(Value *a,Value *b,int opcode){
             const StringBuffer& p = a->toString();
             const StringBuffer& q = b->toString();
             pushInt(strcmp(p.get(),q.get())<0);
+            break;
+        }
+        case OP_GE:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())>=0);
+            break;
+        }
+        case OP_LE:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())<=0);
             break;
         }
         case OP_CMP:{
@@ -241,6 +265,14 @@ void Angort::binop(Value *a,Value *b,int opcode){
             p = a->toInt();
             q = b->toInt();
             r = (p<q);break;
+        case OP_GE:
+            p = a->toInt();
+            q = b->toInt();
+            r = (p>=q);break;
+        case OP_LE:
+            p = a->toInt();
+            q = b->toInt();
+            r = (p<=q);break;
         case OP_CMP:
             p = a->toInt();
             q = b->toInt();

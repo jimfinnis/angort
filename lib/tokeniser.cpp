@@ -157,8 +157,10 @@ loop:
     /// is it possibly a digraph?
     
     for(int i=0;i<digraphct;i++){
-        if(p[0] == digraphtable[i].c1 && p[1] == digraphtable[i].c2)
+        if(p[0] == digraphtable[i].c1 && p[1] == digraphtable[i].c2){
+            current=p+2;
             return digraphtable[i].token;
+        }
     }
     
     /// is it a special char?
