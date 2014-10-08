@@ -9,7 +9,7 @@
 0 = "rangenone" assert
 
 # nested ranges
-
+#1 debug
 :mkrange 1 11 range ;
 0 mkrange each { mkrange each {i j * + }}
 3025 = "range2"  assert

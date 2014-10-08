@@ -33,7 +33,6 @@ int Angort::getVersion(){
 
 Angort *Angort::callingInstance=NULL;
 
-
 Angort::Angort() {
     running = true;
     Types::createTypes();
@@ -78,6 +77,7 @@ Angort::Angort() {
     wordValIdx=-1;
     barewords=false;
     autoCycleCount = autoCycleInterval = AUTOGCINTERVAL;
+    loopIterCt=0;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
@@ -229,13 +229,14 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     // This might be null, and in that case we ignore it when we pop it.
     f->ip = returnip;
     f->rec.copy(a); // and also stack the value itself
-    
     // stack the current level's closure
     f->clos.copy(&currClosure);
     if(clos)
         Types::tClosure->set(&currClosure,clos);
     else
         currClosure.clr();
+    f->loopIterCt=loopIterCt;
+    loopIterCt=0;
     
     debugwordbase = cb->ip;
     return cb->ip;
@@ -278,6 +279,18 @@ void Angort::dumpStack(const char *s){
 
 const Instruction *Angort::ret()
 {
+    // pop the appropriate number of iterator frames
+    try{
+        for(int i=0;i<loopIterCt;i++){
+            loopIterStack.popptr()->clr();
+        }
+        loopIterCt=0;
+    }catch(StackUnderflowException e){
+        throw RUNT("loop iterator mismatch\n");
+    }
+    
+        
+    
     // TODO sanity check and pop of closure stack
     if(rstack.isempty()){
         return NULL;
@@ -288,9 +301,11 @@ const Instruction *Angort::ret()
         // copy the current closure back in
         currClosure.copy(&f->clos);
         f->clos.clr();
+        loopIterCt = f->loopIterCt;
         
         debugwordbase = ip;
         locals.pop();
+        
         return ip;
     }
 }
@@ -478,6 +493,7 @@ void Angort::run(const Instruction *ip){
                 break;
             case OP_LEAVE:
                 loopIterStack.popptr()->clr();
+                loopIterCt--;
                 // fall through
             case OP_JUMP:
                 ip+=ip->d.i;
@@ -485,6 +501,7 @@ void Angort::run(const Instruction *ip){
             case OP_IFLEAVE:
                 if(popInt()){
                     loopIterStack.popptr()->clr();
+                    loopIterCt--;
                     ip+=ip->d.i;
                 } else
                     ip++;
@@ -492,6 +509,7 @@ void Angort::run(const Instruction *ip){
             case OP_LOOPSTART:
                 // start of an infinite loop, so push a None iterator
                 a = loopIterStack.pushptr();
+                loopIterCt++;
                 a->clr();
                 ip++;
                 break;
@@ -499,6 +517,7 @@ void Angort::run(const Instruction *ip){
                 a = stack.popptr(); // the iterable object
                 // we make an iterator and push it onto the iterator stack
                 b = loopIterStack.pushptr();
+                loopIterCt++;
                 a->t->createIterator(b,a);
                 ip++;
                 break;
@@ -509,6 +528,7 @@ void Angort::run(const Instruction *ip){
                 if(iter->isDone()){
                     // and pop the iterator off and clear it, for GC.
                     loopIterStack.popptr()->clr();
+                    loopIterCt--;
                     // and jump out
                     ip += ip->d.i;
                 } else {
@@ -656,6 +676,7 @@ void Angort::run(const Instruction *ip){
         while(!loopIterStack.isempty()){
             loopIterStack.popptr()->clr();
         }
+        loopIterCt=0;
         // and the locals stack too
         locals.clear();
         trace();
@@ -1280,7 +1301,7 @@ void Angort::feed(const char *buf){
             case T_QUESTION:
                 {
                     if(tok.getnext()!=T_IDENT)
-                        throw SyntaxException("expected identifier after !");
+                        throw SyntaxException("expected identifier after ?");
                     if((t = context->getLocalToken(tok.getstring()))>=0){
                         // it's a local variable
                         compile(context->isClosed(t) ? OP_CLOSUREGET : OP_LOCALGET)->d.i=
@@ -1444,8 +1465,10 @@ void Angort::clearAtEndOfFeed(){
         rstack.popptr()->clear();
     }
     // destroy any iterators left lying around
-    while(!loopIterStack.isempty())
+    while(!loopIterStack.isempty()){
         loopIterStack.popptr()->clr();
+    }
+    loopIterCt=0;
     locals.clear();
     currClosure.clr();
 }    

@@ -27,8 +27,26 @@ global t 0!t
 foo 200 = "loop2" assert
 
 
-# this can crash
+# defining this can crash
 :infiniteloop { } ;
 
+
+0!Total
+:stopinloop |:i|
+    0!i
+    {
+        ?i 100 = if  stop then
+        ?i 1+ !i
+        ?Total 1+ !Total
+    }
+;
+
+(
+    0 10 range each {
+        stopinloop
+    }
+)@
+    
+?Total 1000 = "stopinloop" assert 
     
 quit

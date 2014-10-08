@@ -509,10 +509,14 @@ struct Frame {
     const Instruction *ip; //!< the return address
     Value rec; //!< the recursion data (i.e. "this function")
     Value clos; //!< stores any closure created at this level
+    /// how many loop iterators are stacked for loops in this
+    /// frame. This number is popped off if the function runs OP_STOP.
+    int loopIterCt; 
     
     void clear(){
         rec.clr();
         clos.clr();
+        loopIterCt=0;
     }
 };
 
@@ -530,6 +534,9 @@ private:
     bool running; //!< used by shutdown()
     Stack<Frame,32> rstack; //!< the return stack
     Value currClosure; //!< the closure block of the current level
+    /// how many loop iterators are stacked for loops in this
+    /// frame. This number is popped off if the function runs OP_STOP.
+    int loopIterCt; 
     
     Stack<Value,8> loopIterStack; // stack of loop iterators
     
