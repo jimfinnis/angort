@@ -13,7 +13,8 @@ namespace angort {
 
 void StringType::set(Value *v,const char *s){
     int len = strlen(s);
-    strcpy(allocate(v,len+1,this),s);
+    char *dest = allocate(v,len+1,this);
+    strcpy(dest,s);
 }
 
 int StringType::getCount(Value *v){

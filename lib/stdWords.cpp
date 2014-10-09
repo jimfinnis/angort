@@ -438,7 +438,22 @@ static NamespaceEnt *getNSEnt(Angort *a){
     
 }
 
-%word tosymbol (string -- symbol) convert string to symbol
+%word tostr (val -- string) convert value to string
+{
+    const StringBuffer& str = a->popString();
+    
+    // we'll get a problems if we try to do this is
+    // one move, because we may be writing a string back
+    // to itself. This will deallocate the string before
+    // it can be copied over onto itself.
+    Value tmp;
+    Types::tString->set(&tmp,str.get());
+    a->pushval()->copy(&tmp);
+    
+}
+    
+
+%word tosymbol (val -- symbol) convert value to symbol
 {
     const StringBuffer& name = a->popString();
     int symb = SymbolType::getSymbol(name.get());
