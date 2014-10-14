@@ -210,10 +210,13 @@ static FILE *getf(Value *p,bool out){
     int8_t i;
     a->popParams(&p,"A",&tFile);
     
-    if(fread(&i,sizeof(i),1,getf(p,false))>0)
+    if(fread(&i,sizeof(i),1,getf(p,false))>0){
+//        printf("PUSHING INT %d\n",i);
         a->pushInt((int)i);
-    else
+    }else{
+//        printf("PUSHING NONE\n");
         a->pushNone();
+    }
 }
 %word read16 (fileobj/none -- int/none) read 16-bit signed int
 {

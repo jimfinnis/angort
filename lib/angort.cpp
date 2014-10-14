@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 234
+#define ANGORT_VERSION 235
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -664,6 +664,10 @@ void Angort::run(const Instruction *ip){
                 ip++;
                 break;
             }
+            case OP_CONSTEXPR:
+                pushval()->copy(ip->d.constexprval);
+                ip++;
+                break;
             default:
                 throw RUNT("unknown opcode");
             }
@@ -1382,6 +1386,7 @@ void Angort::feed(const char *buf){
                     throw AlreadyDefinedException(tok.getstring());
                 names.add(tok.getstring());
                 break;
+            case T_DOUBLEANGLEOPEN:
             case T_OPREN:// open lambda
                 //                printf("Pushing: context is %p, ",context);
                 pushCompileContext();
@@ -1404,6 +1409,35 @@ void Angort::feed(const char *buf){
                     
                     compile(OP_LITERALCODE)->d.cb = lambdaContext->cb;
                     lambdaContext->reset(NULL,&tok);
+                }
+                break;
+            case T_DOUBLEANGLECLOSE:
+                {
+                    if(!inSubContext())
+                        throw SyntaxException("')' not inside a code literal");
+                    
+                    compile(OP_END); // finish the compile
+                    CompileContext *lambdaContext = popCompileContext();
+                    
+                    // set the codeblock up
+                    lambdaContext->cb->setFromContext(lambdaContext);
+//                    lambdaContext->dump();
+                    
+                    // here, we compile LITERALCODE word with a codeblock created
+                    // from the context.
+                    
+                    // now we actually run that codeblock
+                    Value *vv = new Value();
+                    Types::tCode->set(vv,lambdaContext->cb);
+                    runValue(vv);
+                    
+                    // we don't need the codeblock any more (note,
+                    // if we ever GC codeblocks this will free twice)
+                    delete lambdaContext->cb;
+                    lambdaContext->reset(NULL,&tok);
+                    // get the value that codeblock had
+                    vv->copy(popval());
+                    compile(OP_CONSTEXPR)->d.constexprval=vv;
                 }
                 break;
             case T_END:

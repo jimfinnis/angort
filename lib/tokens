@@ -14,6 +14,8 @@
 *d>=    :   T_GE
 *d?`    :   T_HASHGETSYMB
 *d!`    :   T_HASHSETSYMB
+*d<<    :   T_DOUBLEANGLEOPEN
+*d>>    :   T_DOUBLEANGLECLOSE
 
 # characters, which return the token immediately and do not
 # require trailing space

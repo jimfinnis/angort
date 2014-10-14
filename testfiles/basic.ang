@@ -18,6 +18,17 @@
 6 5 > ">" assert
 6 6 > not ">not" assert
 
+5 6 <= "<=1" assert
+5 5 <= "<=2" assert
+6 5 <= not "<=3" assert
+
+6 5 >= ">=1" assert
+5 5 >= ">=2" assert
+5 6 >= not ">=3" assert
+
+6 5 > ">" assert
+6 6 > not ">not" assert
+
 12 dup + 24 = "dup" assert
 4 2.0 swap / 0.5 = "swap" assert
 

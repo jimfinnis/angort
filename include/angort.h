@@ -98,6 +98,7 @@ struct Instruction {
         NativeFunc func;
         const CodeBlock *cb;
         Property *prop;
+        class Value *constexprval;
         struct {
             int l; //!< how many locals in total
             int p; //!< how many of those are params to pop
