@@ -44,7 +44,6 @@ Angort::Angort() {
     
     names.push(stdNamespace);
     lineNumber=1;
-    definingPackage=false;
     
     searchPath=NULL;
     
@@ -1001,7 +1000,6 @@ void Angort::include(const char *filename,bool isreq){
         // A bit dodgy since this isn't taking place in
         // a code block..
         pushInt(idx);
-        definingPackage=false; // and we're no longer in a package
     }
     
     names.setPrivate(false); // and clear the private flag
@@ -1072,9 +1070,6 @@ void Angort::feed(const char *buf){
                 char buf[256];
                 if(!tok.getnextident(buf))
                     throw SyntaxException("expected a package name");
-                if(definingPackage)
-                    throw SyntaxException("already in a package");
-                definingPackage=true;
                 int idx = names.create(buf);
                 // stack it, we're now defining things in
                 // this package and will be until fileFeed() returns

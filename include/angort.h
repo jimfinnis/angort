@@ -555,8 +555,6 @@ private:
     /// the last instruction.
     const Instruction *ipException;
     
-   /// have we already done "package" in this file?
-    bool definingPackage;
     /// the current compile context
     CompileContext *context;
     

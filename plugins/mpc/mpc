@@ -209,9 +209,9 @@ global list # force a new definition in this namespace
         "              " std$p ?`artist.
         ?stat?`elapsed "/" ?stat?`total + + .
     then
-    
-    
 ;
+
+:v mpc$setvol;
 
 :clr :"(--) clear the playlist"
     mpc$clr;
