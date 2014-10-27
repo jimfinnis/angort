@@ -2,17 +2,19 @@ Not yet documented:
     barewords
     recurse
     def defconst
-    closure iterators - WTF?
+    constant << >> expressions
 
+closure iterators - WTF?
+    
 Need to show func names in debugging
 
 multiple requires/library loads need to work
 
 
 Given that there are quite a few singletons (e.g type objects)
-there's no real point in Angort not being a singleton.
+there's no real point in Angort not being a singleton(?)
 
-Closures:
+Closures (done):
     There's a better way of doing closures. Instead of each ")" operation
     creating a closure in the child which refers to the parent, we
     create a closure as soon as the first ?xx is created. This belongs
