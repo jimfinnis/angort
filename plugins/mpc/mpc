@@ -4,7 +4,8 @@ package mpcc
 
 [`mpc,`id3,`io] each { i library drop}
 
-none 0 mpc$connect
+:connect
+    none 0 mpc$connect;
 
 #number of songs to list in a listing
 
@@ -329,4 +330,4 @@ global list # force a new definition in this namespace
 
 endpackage import
 
-
+connect

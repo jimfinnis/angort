@@ -3,6 +3,7 @@ Not yet documented:
     recurse
     def defconst
     constant << >> expressions
+    sourceline
 
 closure iterators - WTF?
     

@@ -302,7 +302,7 @@ static const char *readstr(FILE *f,bool endAtEOL=false){
     a->popParams(&p,"A",&tFile);
     
     FILE *f = getf(p,false);
-    const char *s = readstr(f);
+    const char *s = readstr(f,true);
     a->pushString(s);
     free((char *)s);
 }

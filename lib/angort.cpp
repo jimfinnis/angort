@@ -1467,6 +1467,9 @@ void Angort::feed(const char *buf){
             case T_STOP:
                 compile(OP_STOP);
                 break;
+            case T_SOURCELINE:
+                compile(OP_LITERALINT)->d.i = tok.getline();
+                break;
             default:
                 throw SyntaxException(NULL).set("unhandled token: %s",
                                                 tok.getstring());
