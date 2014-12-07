@@ -212,10 +212,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     for(int i=0;i<cb->params;i++,pidx++){
         Value *paramval = stack.peekptr((cb->params-1)-i);
         if(cb->localsClosed & (1<<i)){
-            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
+//            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
             clos->map[*pidx]->copy(paramval);
         } else {
-            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
+//            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
             locals.store(*pidx,paramval);
         }
     }
