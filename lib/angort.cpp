@@ -87,7 +87,7 @@ Angort::~Angort(){
     if(running)
         shutdown();
 }
-/*
+
 void CompileContext::dump(){
     printf("CompileContext final setup\nLocals\n");
     printf("Closure count %d, Param count %d\n",closureCt,paramCt);
@@ -98,7 +98,7 @@ void CompileContext::dump(){
                localIndices[i]);
     }
 }
-*/
+
 
 void Angort::shutdown(){
     ArrayListIterator<LibraryDef *>iter(libs);
@@ -212,10 +212,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     for(int i=0;i<cb->params;i++,pidx++){
         Value *paramval = stack.peekptr((cb->params-1)-i);
         if(cb->localsClosed & (1<<i)){
-//            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
+            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
             clos->map[*pidx]->copy(paramval);
         } else {
-//            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
+            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
             locals.store(*pidx,paramval);
         }
     }
@@ -234,6 +234,9 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         Types::tClosure->set(&currClosure,clos);
     else
         currClosure.clr();
+    
+//    printf("PUSHED closure %s\n",currClosure.toString().get());
+    
     f->loopIterCt=loopIterCt;
     loopIterCt=0;
     
@@ -298,7 +301,16 @@ const Instruction *Angort::ret()
         ip = f->ip;
         f->rec.clr();
         // copy the current closure back in
+        
+//        printf("RETURNING. CurrClosure currently %s\n",
+//               currClosure.toString().get());
+        
         currClosure.copy(&f->clos);
+        
+//        printf("           CurrClosure now       %s\n",
+//               currClosure.toString().get());
+        
+        
         f->clos.clr();
         loopIterCt = f->loopIterCt;
         
@@ -419,6 +431,7 @@ void Angort::run(const Instruction *ip){
                 a = names.getVal(ip->d.i);
                 if(a->t->isCallable()){
                     Closure *clos;
+                    Value vv;
                     // here, we construct a closure block for the global if
                     // required. This results in a new value being created which
                     // goes into the frame.
@@ -426,11 +439,21 @@ void Angort::run(const Instruction *ip){
                         const CodeBlock *cb = a->v.cb;
                         if(cb->closureBlockSize || cb->closureTableSize){
                             clos = new Closure(NULL); // 1st stage of setup
+                            Types::tClosure->set(&vv,clos);
+                            a = &vv;
+                            a->v.closure->init(cb);
+                            
+/* This earlier code inadvertently set currClosure too soon,
+ * before it gets pushed in call(), thus resulting in an incorrect
+ * closure being popped in ret(). The above code should be correct.
+ * JCF 07/12/14
+                            clos = new Closure(NULL); // 1st stage of setup
                             // if a closure was made, we store it in the current
                             // frame.
                             Types::tClosure->set(&currClosure,clos);
                             a = &currClosure; // and this is the value we call.
                             a->v.closure->init(cb); // 2nd stage of setup
+ */
                         }
                     }
                     // we call this value.

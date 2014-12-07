@@ -268,6 +268,21 @@ static void openwindow(const char *title, int w,int h,int flags){
     SDL_RenderFillRect(renderer,&r);
 }
 
+%word line (x1 y1 x2 y2 --) draw a line in current colour
+{
+    Value *p[4];
+    a->popParams(p,"nnnn");
+    
+    chkscr();
+    
+    forecol.set();
+    SDL_RenderDrawLine(renderer,p[0]->toInt(),
+                       p[1]->toInt(),
+                       p[2]->toInt(),
+                       p[3]->toInt());
+}
+    
+
 
 %word openfont (file size -- font) open a TTF font
 {

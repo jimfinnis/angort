@@ -13,15 +13,15 @@ namespace angort {
 Closure::Closure(Closure *p) : GarbageCollected() {
     parent = p;
     if(p)p->incRefCt();
-    //printf("allocating closure %p, parent %p\n",this,parent);
+//    printf("allocating closure %p, parent %p\n",this,parent);
 }
 
 void Closure::init(const CodeBlock *c){
-    //printf("creating closure %p, parent %p\n",this,parent);
+//    printf("creating closure %p, parent %p\n",this,parent);
     
-    //printf("Chain:\n");
-    //for(Closure *qq=parent;qq;qq=qq->parent)
-        //printf("  - %p\n",qq);
+//    printf("Chain:\n");
+//    for(Closure *qq=parent;qq;qq=qq->parent)
+//        printf("  - %p\n",qq);
     
     cb = c;
     
@@ -40,6 +40,8 @@ void Closure::init(const CodeBlock *c){
     map = new Value * [cb->closureTableSize];
     blocksUsed = new Closure * [cb->closureTableSize];
     
+//    printf("Closure %p has %d entries\n",this,cb->closureTableSize);
+    
     for(int i=0;i<cb->closureTableSize;i++){
         // iterate through each item, finding
         // the closure and thus the block in
@@ -53,18 +55,18 @@ void Closure::init(const CodeBlock *c){
         // number of levels up the parent chain
         // to find it.
         
-        //printf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
+//        printf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
         
         Closure *reffed=this;
         for(int j=0;j<lev;j++){
             reffed=reffed->parent;
-            //printf("  Ref jump %p\n",reffed);
+//            printf("  Ref jump %p\n",reffed);
         }
         
         if(!reffed->block)throw WTF;
         map[i] = reffed->block+idx;
         
-        //printf("  Value currently %s\n",map[i]->toString().get());
+//        printf("  Value currently %s\n",map[i]->toString().get());
         
         // and we increment the refcount on the block
         // if the block is in a different closure
@@ -207,9 +209,9 @@ void Closure::traceAndMove(class CycleDetector *cycle){
     }
     
 }
-
+/*
 void Closure::show(const char *s){
-    printf("Closure %s at %p: block %s\n",s,this,block?"Y":"N");
+    printf("%s of Closure %p: block %s\n",s,this,block?"Y":"N");
     printf("Block:\n");
     for(int i=0;i<cb->closureBlockSize;i++){
         printf("  %2d : %p %s\n",i,block+i,block[i].toString().get());
@@ -222,8 +224,8 @@ void Closure::show(const char *s){
     
     if(parent)
         parent->show("Parent of previous");
-    
 }
+ */
 
 Iterator<class Value *> *Closure::makeValueIterator(){
     return new ClosureIterator(this);

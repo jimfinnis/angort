@@ -213,7 +213,7 @@ public:
         reset(NULL,NULL);
     }
     
-//    void dump();
+    void dump();
     
     /// reset a new compile context and set the containing context.
     void reset(CompileContext *p,Tokeniser *tok);
