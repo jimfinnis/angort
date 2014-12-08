@@ -4,11 +4,10 @@ Not yet documented:
     def defconst
     constant << >> expressions
     sourceline
+    in, any, all, slice, zipWith
 
 closure iterators - WTF?
     
-Need to show func names in debugging
-
 multiple requires/library loads need to work
 
 

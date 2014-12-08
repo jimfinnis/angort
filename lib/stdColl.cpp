@@ -299,3 +299,31 @@ struct StdComparator : public ArrayListComparator<Value> {
     a->pushInt(rv);
     delete iter;
 }
+
+%word zipWith (in1 in2 func -- out) apply binary func to pairs of items in list
+{
+    Value *p[3];
+    a->popParams(p,"llc");
+    Iterator<Value *> *iter1 = p[0]->t->makeIterator(p[0]);
+    Iterator<Value *> *iter2 = p[1]->t->makeIterator(p[1]);
+    
+    Value func;
+    func.copy(p[2]); // need a local copy
+    
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
+    for(iter1->first(),iter2->first();
+        !(iter1->isDone() || iter2->isDone());
+        iter1->next(),iter2->next()){
+        
+        a->pushval()->copy(iter1->current());
+        a->pushval()->copy(iter2->current());
+        a->runValue(&func);
+        
+        list->append()->copy(a->popval());
+    }
+    
+    delete iter1;
+    delete iter2;
+    
+}
