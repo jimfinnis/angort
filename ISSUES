@@ -5,6 +5,7 @@ Not yet documented:
     constant << >> expressions
     sourceline
     in, any, all, slice, zipWith
+    ival etc.
 
 closure iterators - WTF?
     

@@ -272,20 +272,44 @@ static NamespaceEnt *getNSEnt(Angort *a){
     Types::tFRange->set(v,start,end,step);
 }
 
-%word i (-- current) get current iterator value
+%word i (-- current) get current iterator value (key if hash)
 {
     Value *p = a->pushval();
     p->copy(a->getTopIterator()->current);
 }
-%word j (-- current) get nested iterator value
+%word j (-- current) get nested iterator value (key if hash)
 {
     Value *p = a->pushval();
     p->copy(a->getTopIterator(1)->current);
 }
-%word k (-- current) get nested iterator value
+%word k (-- current) get nested iterator value (key if hash)
 {
     Value *p = a->pushval();
     p->copy(a->getTopIterator(2)->current);
+}
+
+%word ival (-- current) get current iterator value (value if hash)
+{
+    Value *iterable = a->getTopIterator()->iterable;
+    Value *cur = a->getTopIterator()->current;
+    Value *p = a->pushval();
+    iterable->t->getValue(iterable,cur,p);
+}
+
+%word jval (-- current) get nested iterator value (value if hash)
+{
+    Value *iterable = a->getTopIterator()->iterable;
+    Value *cur = a->getTopIterator()->current;
+    Value *p = a->pushval();
+    iterable->t->getValue(iterable,cur,p);
+}
+
+%word kval (-- current) get nested iterator value (value if hash)
+{
+    Value *iterable = a->getTopIterator()->iterable;
+    Value *cur = a->getTopIterator()->current;
+    Value *p = a->pushval();
+    iterable->t->getValue(iterable,cur,p);
 }
 
 %word iter (-- iterable) get the iterable which is currently being looped over

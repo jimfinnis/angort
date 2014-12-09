@@ -452,10 +452,10 @@ Value onDraw;
     fprintf(stderr,"SDL initialised\n");
     inited=true;
     
-    a->registerProperty("col",&forecol);
-    a->registerProperty("bcol",&backcol);
-    a->registerProperty("tcol",new TextureColProperty(a));
-    a->registerProperty("talpha",new TextureAlphaProperty(a));
+    a->registerProperty("col",&forecol,"sdl");
+    a->registerProperty("bcol",&backcol,"sdl");
+    a->registerProperty("tcol",new TextureColProperty(a),"sdl");
+    a->registerProperty("talpha",new TextureAlphaProperty(a),"sdl");
 }
 
 
