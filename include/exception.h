@@ -82,6 +82,7 @@ public:
         
         snprintf(error,1024,"%s(%d):  %s",fileName,line,
                  e?e:"unknown");
+        fatal=false;
     }
    
     char fileName[1024];

@@ -151,6 +151,7 @@ class CompileContext {
     /// this is a map from local index (i.e. indices into localTokens) to
     /// opcode index - i.e. the index of the closure or local variable.
     char localIndices[MAXLOCALS];
+    Type *localTypes[MAXLOCALS]; //!< types of parameters (could be NULL)
     
     /// the closure list for the current function, from which
     /// the closure table is made
@@ -266,11 +267,13 @@ public:
     }
     
     /// add a new local, initially just a stack variable.
-    int addLocalToken(const char *s){
+    /// Type checking is only for parameters currently.
+    int addLocalToken(const char *s,Type *typ){
         int t = localTokenCt;
         if(localTokenCt==MAXLOCALS)
             throw RUNT("too many local tokens");
         localIndices[localTokenCt]=localTokenCt;
+        localTypes[localTokenCt]=typ;
         strcpy(localTokens[localTokenCt++],s);
         return t;
     }
@@ -309,6 +312,11 @@ public:
     /// given local token index, return index of either local or closure index.
     int getLocalIndex(int t){
         return localIndices[t];
+    }
+    
+    /// get the type of a local (normally a parameter)
+    Type *getLocalType(int t){
+        return localTypes[t];
     }
             
     
@@ -426,6 +434,9 @@ struct CodeBlock {
     /// indicates which locals are closed, and therefore
     /// indexed into the closuretable
     uint32_t localsClosed;
+    
+    /// parameter types (which each may be null for no checking)
+    Type **paramTypes; 
     
     bool used; //!< true if the codeblock ends up being used (so the context mustn't delete it)
 };

@@ -409,6 +409,11 @@ static NamespaceEnt *getNSEnt(Angort *a){
     Types::tSymbol->set(v,v->t->nameSymb);
 }
 
+%word listtypes ( -- ) print the types
+{
+    Type::dumpTypes();
+}
+
 %word srand (i --) set the random number generator seed. If -1, use the timestamp.
 {
     int v = a->popInt();

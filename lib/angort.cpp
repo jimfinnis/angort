@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 237
+#define ANGORT_VERSION 238
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -209,8 +209,31 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     // lot in one go.
     
     uint8_t *pidx = cb->paramIndices;
+    
+    Value tmpval;
     for(int i=0;i<cb->params;i++,pidx++){
         Value *paramval = stack.peekptr((cb->params-1)-i);
+        
+        Type *tp = cb->paramTypes[i];
+        if(tp){
+            // type check
+            if(tp != paramval->t){
+                // mismatch - special cases of coercion
+                if(tp == Types::tFloat && paramval->t==Types::tInteger){
+                    // expecting a float, got an int.
+                    Types::tFloat->set(&tmpval,paramval->v.i);
+                    paramval = &tmpval;
+                } else if(tp == Types::tInteger && paramval->t==Types::tFloat){
+                    Types::tInteger->set(&tmpval,(int)(paramval->v.f));
+                    paramval = &tmpval;
+                } else
+                    throw RUNT("").set("Type mismatch: argument %d is %s, expected %s",
+                                       i,paramval->t->name,tp->name);
+            }
+        }                          
+                    
+                
+        
         if(cb->localsClosed & (1<<i)){
 //            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
             clos->map[*pidx]->copy(paramval);
@@ -253,9 +276,13 @@ void CodeBlock::setFromContext(CompileContext *con){
     closureBlockSize = con->closureCt;
     localsClosed = con->localsClosed;
     
+    
     paramIndices = new uint8_t[params];
+    paramTypes = new Type * [params];
+    
     for(int i=0;i<params;i++){
         paramIndices[i] = con->getLocalIndex(i);
+        paramTypes[i] = con->getLocalType(i);
     }
     
     used=true;
@@ -752,16 +779,34 @@ void Angort::compileParamsAndLocals(){
     // params are popped off the stack
     bool parsingParams = true;
     
+    char namebuf[128];
+    
     for(;;){
         int t = tok.getnext();
+        Type *typ;
         
         switch(t){
         case T_IDENT:
             // add a new local token; and
             // add to the pop count if it's a parameter
-            context->addLocalToken(tok.getstring());
+            strncpy(namebuf,tok.getstring(),128); // have to copy out; it gets overwritten by next tok
+            if(tok.getnext()==T_DIV) { // parameters can be x/type,foo/type..
+                if(tok.getnext()!=T_IDENT)
+                    throw SyntaxException("expected a type in parameter list after /");
+                if(!parsingParams)
+                    throw SyntaxException("types only supported on parameters");
+                typ = Type::getByName(tok.getstring());
+                if(!typ)
+                    throw SyntaxException("").set("unknown type in parameter list: %s",tok.getstring());
+            } else {
+                tok.rewind();
+                typ=NULL;
+            }
+            
+            context->addLocalToken(namebuf,typ);
             if(parsingParams)
                 paramct++;
+            
             break;
         case T_COLON:
             // switch to parsing local variables only

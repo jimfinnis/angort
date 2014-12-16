@@ -6,6 +6,7 @@ Not yet documented:
     sourceline
     in, any, all, slice, zipWith
     ival etc.
+    Parameter type checking
 
 closure iterators - WTF?
     

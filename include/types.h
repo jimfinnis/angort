@@ -72,6 +72,11 @@ public:
         return NULL;
     }
     
+    static void dumpTypes(){
+        for(Type *p=head;p;p=p->next)
+            printf("%s\n",p->name);
+    }
+    
     /// dereference a reference value, returning the value to which
     /// it returns or NULL if it's not a reference.
     virtual Value *deref(Value *v) const {
