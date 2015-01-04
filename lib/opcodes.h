@@ -27,7 +27,7 @@ const char *opcodenames[]=
     "iterlvifdone","iterstart","cmp","library",
     "newlist","appendlist", "closelist","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse",
-    "self","dummycase","le","ge","constexpr"
+    "self","dummycase","le","ge","constexpr","pow"
 };
 
 }

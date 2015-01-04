@@ -548,6 +548,22 @@ static NamespaceEnt *getNSEnt(Angort *a){
     int x = p->toInt();
     a->pushInt(~x);
 }
+%word shiftleft (a b -- a<<b) bitshift left
+{
+    Value *p[2];
+    a->popParams(p,"nn");
+    int x = p[0]->toInt();
+    int y = p[1]->toInt();
+    a->pushInt(x<<y);
+}
+%word shiftright (a b -- a>>b) bitshift right
+{
+    Value *p[2];
+    a->popParams(p,"nn");
+    int x = p[0]->toInt();
+    int y = p[1]->toInt();
+    a->pushInt(x<<y);
+}
     
 
 /*%word showclosure (cl --)
