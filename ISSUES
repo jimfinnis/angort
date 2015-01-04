@@ -6,6 +6,9 @@ Not yet documented:
     sourceline
     in, any, all, slice, zipWith
     ival etc.
+    icurnext
+    bitwise ops (band,bor,bxor,bnot)
+    split (string)
     Parameter type checking
 
 closure iterators - WTF?

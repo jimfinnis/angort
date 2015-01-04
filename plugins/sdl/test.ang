@@ -45,7 +45,7 @@ PI 2 * const TWOPI
 ;
 
 
-("q" asc = if done then) onkeydown
+(dup x nl "q" asc = if done then) onkeydown
 (
     clear
     ?Thingies each { i?`move@ i?`draw@ }
@@ -56,5 +56,5 @@ PI 2 * const TWOPI
 "SDLTest" 600 600 open
 scrsize 10 - !Width 10 - !Height
 
-[] 0 300 range each {mkthingy,} !Thingies
+[] 0 3000 range each {mkthingy,} !Thingies
 loop close quit

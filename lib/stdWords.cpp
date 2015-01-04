@@ -342,6 +342,19 @@ static NamespaceEnt *getNSEnt(Angort *a){
     i->next();
 }
 
+%word icurnext (iterator -- item) combined icur and inext
+{
+    Value *p = a->stack.peekptr();
+    Iterator<Value *>* i = Types::tIter->get(p);
+    if(i->isDone())
+        p->clr();
+    else {
+        p->copy(i->current());
+        i->next();
+    }
+        
+}
+
 %word ifirst (iterator --) reset the iterator to the start
 {
     Value *p = a->stack.popptr();
@@ -503,6 +516,39 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->dumpFrame();
     CycleDetector::getInstance()->dump();
 }
+
+%word bor (a b -- a|b) bitwise or
+{
+    Value *p[2];
+    a->popParams(p,"nn");
+    int x = p[0]->toInt();
+    int y = p[1]->toInt();
+    a->pushInt(x|y);
+}
+%word band (a b -- a&b) bitwise and
+{
+    Value *p[2];
+    a->popParams(p,"nn");
+    int x = p[0]->toInt();
+    int y = p[1]->toInt();
+    a->pushInt(x&y);
+}
+%word bxor (a b -- a^b) bitwise xor
+{
+    Value *p[2];
+    a->popParams(p,"nn");
+    int x = p[0]->toInt();
+    int y = p[1]->toInt();
+    a->pushInt(x^y);
+}
+%word bnot (a -- ~a) bitwise not
+{
+    Value *p;
+    a->popParams(&p,"n");
+    int x = p->toInt();
+    a->pushInt(~x);
+}
+    
 
 /*%word showclosure (cl --)
 {

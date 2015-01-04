@@ -160,3 +160,29 @@ inline int wstrlen(const char *s){
     Types::tString->set(v,sbuf);
 }
 
+%word split (string delim -- list) split a string on delimiter
+{
+    Value *params[2];
+    a->popParams(params,"ss");
+    const StringBuffer& strb=params[0]->toString();
+    const char *s = strdup(strb.get());
+    char delim = params[1]->toString().get()[0];
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
+    char buf[256];
+    const char *p=s;
+    const char *base=s;
+    
+    
+    for(;;){
+        if(*s==delim || !*s){
+            memcpy(buf,p,s-p);
+            buf[s-p]=0;
+            Types::tString->set(list->append(),buf);
+            if(!*s){free((void *)base);return;}
+            s++;
+            p=s;
+        } else
+            s++;
+    }
+}
