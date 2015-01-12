@@ -21,7 +21,7 @@ const char *opcodenames[]=
     "leave","dup","litstring","call",
     "litcode","globget","globset","propget",
     "propset","not","equals","nequals",
-    "swap","drop","and","or","lt","gt",
+    "swap","drop","and","or","gt","lt",
     "ifleave","for","forjump","newhash",
     "litsymb","over","closureget","closureset","dot",
     "iterlvifdone","iterstart","cmp","library",

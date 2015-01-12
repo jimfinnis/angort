@@ -562,7 +562,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->popParams(p,"nn");
     int x = p[0]->toInt();
     int y = p[1]->toInt();
-    a->pushInt(x<<y);
+    a->pushInt(x>>y);
 }
     
 

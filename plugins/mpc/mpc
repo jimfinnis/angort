@@ -65,7 +65,7 @@ private
     # adjust them to fit the screen
     
     {
-        ?titlen ?artlen + 80 > if 
+        ?titlen ?artlen + 70 > if 
             ?titlen 20 > if ?titlen 1- !titlen then
             ?artlen 20 > if ?artlen 1- !artlen then
         else
