@@ -84,3 +84,5 @@ cases : T_CASES
 case : T_CASE
 otherwise : T_OTHERWISE
 sourceline : T_SOURCELINE
+yield : T_YIELD
+

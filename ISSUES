@@ -10,6 +10,7 @@ Not yet documented:
     bitwise ops (band,bor,bxor,bnot)
     split (string)
     Parameter type checking
+    yield and routines! Must be anon
 
 closure iterators - WTF?
     

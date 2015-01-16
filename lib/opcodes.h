@@ -27,7 +27,7 @@ const char *opcodenames[]=
     "iterlvifdone","iterstart","cmp","library",
     "newlist","appendlist", "closelist","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse",
-    "self","dummycase","le","ge","constexpr","pow"
+    "self","dummycase","le","ge","constexpr","yield",
 };
 
 }
@@ -108,5 +108,7 @@ const char *opcodenames[]=
 #define OP_LE 59
 #define OP_GE 60
 #define OP_CONSTEXPR 61
+
+#define OP_YIELD 62
 
 #endif /* __OPCODES_H */

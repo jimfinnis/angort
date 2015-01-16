@@ -257,7 +257,11 @@ public:
     void clearLeaveList(){
         leaveListHead=-1;
     }
-             
+    
+    void closeAllLocals(){
+        for(int i=0;i<localTokenCt;i++)
+            convertToClosure(localTokens[i]);
+    }
     
     /// make a permanent copy of the instruction buffer
     Instruction *copyInstructions(){

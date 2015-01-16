@@ -12,6 +12,7 @@ namespace angort {
 
 Closure::Closure(Closure *p) : GarbageCollected() {
     parent = p;
+    ip = NULL;
     if(p)p->incRefCt();
 //    printf("allocating closure %p, parent %p\n",this,parent);
 }

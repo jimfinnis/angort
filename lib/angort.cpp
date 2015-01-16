@@ -263,8 +263,14 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     f->loopIterCt=loopIterCt;
     loopIterCt=0;
     
-    debugwordbase = cb->ip;
-    return cb->ip;
+    struct Instruction *ip;
+    if(clos && clos->ip)
+        ip=clos->ip;
+    else
+        ip = (Instruction *)cb->ip;
+        
+    debugwordbase = ip;
+    return ip;
 }
 
 void CodeBlock::setFromContext(CompileContext *con){
@@ -521,6 +527,13 @@ void Angort::run(const Instruction *ip){
                 ip=ret();
                 if(!ip)
                     return;
+                break;
+            case OP_YIELD:
+                // it's a closure, so stash the next IP into
+                // the closure.
+                currClosure.v.closure->ip = (Instruction *)ip+1;
+                ip=ret();
+                if(!ip)return;
                 break;
             case OP_IF:
                 if(popInt())
@@ -1537,6 +1550,10 @@ void Angort::feed(const char *buf){
                 break;
             case T_SOURCELINE:
                 compile(OP_LITERALINT)->d.i = tok.getline();
+                break;
+            case T_YIELD:
+                context->closeAllLocals();
+                compile(OP_YIELD);
                 break;
             default:
                 throw SyntaxException(NULL).set("unhandled token: %s",

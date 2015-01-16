@@ -27,6 +27,7 @@ public:
     Value **map; //!< pointers to both the above and other's variables I look at
     Closure **blocksUsed; //!< the blocks the map uses, so I can deref them
     Closure *parent; //!< link to parent closure (which created me)
+    struct Instruction *ip; //!< used when routines yield
     
     /// constructing a closure does almost nothing, because the object may have
     /// to be inserted into various bits of Angort first. Once this is done,
