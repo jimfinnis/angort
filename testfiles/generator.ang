@@ -1,0 +1,30 @@
+:makegen |inc:|
+    (
+        |:a| 0!a
+        {
+            ?a yield
+            ?a ?inc + !a
+        }
+    )
+;
+
+
+1 makegen const foo
+
+(
+    0 10 range each {
+        foo i = "generator1" assert
+    }
+)@
+
+2 makegen !F
+
+
+(
+    0 10 2 srange each {
+        ?F@ i = "generator2" assert
+    }
+)@
+
+
+quit
