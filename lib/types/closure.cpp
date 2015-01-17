@@ -210,7 +210,7 @@ void Closure::traceAndMove(class CycleDetector *cycle){
     }
     
 }
-/*
+
 void Closure::show(const char *s){
     printf("%s of Closure %p: block %s\n",s,this,block?"Y":"N");
     printf("Block:\n");
@@ -226,7 +226,7 @@ void Closure::show(const char *s){
     if(parent)
         parent->show("Parent of previous");
 }
- */
+
 
 Iterator<class Value *> *Closure::makeValueIterator(){
     return new ClosureIterator(this);

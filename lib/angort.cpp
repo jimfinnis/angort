@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 240
+#define ANGORT_VERSION 241
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -752,6 +752,7 @@ void Angort::run(const Instruction *ip){
 }
 
 void Angort::startDefine(const char *name){
+//    printf("---Now defining %s\n",name);
     int idx;
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
@@ -930,12 +931,19 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
         if(!cc)throw WTF; // didn't find it, and it should be there!
         t->levelsUp = level;
         t->idx = p->i;
-//        printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,t-table,level,t->idx);
+//        printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,(int)(t-table),level,t->idx);
         t++;
     }
     return table;
 }
 
+void CompileContext::closeAllLocals(){
+//    printf("YIELD DETECTED: CLOSING ALL LOCALS\n");
+    for(int i=0;i<localTokenCt;i++){
+        convertToClosure(localTokens[i]);
+    }
+}
+    
 void CompileContext::convertToClosure(const char *name){
     // find which local this is
     int previdx;
@@ -943,15 +951,35 @@ void CompileContext::convertToClosure(const char *name){
         if(!strcmp(localTokens[previdx],name))break;
     if(previdx==localTokenCt)throw WTF;
     // got it. Now set this as a closure.
-    if((1<<previdx) & localsClosed)
+//    printf("Converting %s into closure\n",name);
+    if((1<<previdx) & localsClosed){
+//        printf("%s is already closed\n",name);
         return; // it's already converted.
+    }
+    
     
     localsClosed |= 1<<previdx; // set it to be closed
     
     int localIndex = localIndices[previdx];
-    localIndices[previdx] = closureCt++;
+    
+/*  old code, see comment below for an explanation
+   
+   localIndices[previdx] = closureCt++;
     // add an entry to the local closure table
     addClosureListEnt(cb,localIndices[previdx]);
+*/
+    
+    // complication here due to the way we a codeblock can
+    // sometimes close functions itself, rather than have functions
+    // closed in it from another codeblock. This happens when closeAllLocals()
+    // runs because "yield" has been encountered.
+    
+    // create a new entry in the closure table for this codeblock,
+    // whose index is the current closure.
+    addClosureListEnt(cb,closureCt++);
+    // but there may be closures here already, so set the local
+    // index for the closures to the most recent entry in that table.
+    localIndices[previdx] = closureListCt-1;
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
@@ -1464,9 +1492,9 @@ void Angort::feed(const char *buf){
                 break;
             case T_DOUBLEANGLEOPEN:
             case T_OPREN:// open lambda
-                //                printf("Pushing: context is %p, ",context);
+//                printf("---Pushing: context is %p[cb:%p], ",context,context->cb);
                 pushCompileContext();
-                //                printf("lambda context is %p\n",context);
+//                printf("lambda context is %p[cb:%p]\n",context,context->cb);
                 break;
             case T_CPREN: // close lambda and stack a code literal
                 {

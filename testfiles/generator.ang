@@ -7,8 +7,6 @@
         }
     )
 ;
-
-
 1 makegen const foo
 
 (
@@ -16,15 +14,27 @@
         foo i = "generator1" assert
     }
 )@
-
 2 makegen !F
-
-
 (
     0 10 2 srange each {
         ?F@ i = "generator2" assert
     }
 )@
 
+0!Ct
+:mkchangedetector |prev:|
+    (|:val|
+        ?prev !val
+        {
+            yield !val
+            ?prev ?val != if
+                "changed".
+                ?val !prev
+                ?Ct 1+ !Ct
+            then
+        }
+);
+
+0 mkchangedetector const bar
 
 quit

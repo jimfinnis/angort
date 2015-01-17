@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for d in sys "time" mpc sdl midi io
+for d in sys "time" mpc sdl midi io serial
 do
     echo $d
     cd $d

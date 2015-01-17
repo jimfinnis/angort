@@ -215,7 +215,7 @@ static void jack_shutdown(void *arg){
 
 %word off 3 (note chan port --)
 {
-    Value *params[4];
+    Value *params[3];
     a->popParams(params,"nna",&tMidiPort);
                  
     int note = params[0]->toInt();
@@ -232,6 +232,27 @@ static void jack_shutdown(void *arg){
     data[2]=64; // weird, I know.. why does noteoff have velocity?
     p->write(data,3);
 }
+
+%word cc (val ctor chan port --)
+{
+    Value *params[4];
+    a->popParams(params,"nnna",&tMidiPort);
+    int val = params[0]->toInt();
+    int ctor = params[1]->toInt();
+    int chan = params[2]->toInt();
+    MidiPort *p = tMidiPort.get(params[3]);
+    
+    chkjack();
+    if(p->isInput)
+        throw RUNT("attempt to write to input port");
+    
+    uint8_t data[3];
+    data[0]=(0b10110000)+chan;
+    data[1]=ctor;
+    data[2]=val; 
+    p->write(data,3);
+}    
+
 
 
 %init

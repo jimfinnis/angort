@@ -168,6 +168,7 @@ class CompileContext {
     void convertToClosure(const char *name);
     
     int addClosureListEnt(CodeBlock *c,int n){
+//        printf("adding new closure list entry, codeblock %p number %d\n",c,n);
         ClosureListEnt *p = new ClosureListEnt(c,n);
         p->next = NULL;
         
@@ -258,10 +259,7 @@ public:
         leaveListHead=-1;
     }
     
-    void closeAllLocals(){
-        for(int i=0;i<localTokenCt;i++)
-            convertToClosure(localTokens[i]);
-    }
+    void closeAllLocals();
     
     /// make a permanent copy of the instruction buffer
     Instruction *copyInstructions(){
