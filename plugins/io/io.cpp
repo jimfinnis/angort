@@ -232,7 +232,7 @@ static FILE *getf(Value *p,bool out){
 %word read32 (fileobj/none -- int/none) read 32-bit signed int
 {
     Value *p;
-    int16_t i;
+    int32_t i;
     a->popParams(&p,"A",&tFile);
     
     if(fread(&i,sizeof(i),1,getf(p,false))>0)
