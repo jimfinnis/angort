@@ -60,6 +60,18 @@ void Closure::init(const CodeBlock *c){
         
         Closure *reffed=this;
         for(int j=0;j<lev;j++){
+            if(!reffed){
+                if(block){
+                    block = NULL;
+                    delete[]  block;
+                }
+                delete[] map;
+                delete[] blocksUsed;
+                blocksUsed =NULL;
+                map=NULL;
+                // note (a) - can leave a nasty closure which needs destroying carefully at note (b)
+                throw RUNT("Attempt to close over variable in unavailable containing block");
+            }
             reffed=reffed->parent;
 //            printf("  Ref jump %p\n",reffed);
         }
@@ -92,12 +104,14 @@ Closure::~Closure(){
             delete parent;
         
         // dereference the blocks we have access to
-        for(int i=0;i<cb->closureTableSize;i++){
-            //printf("decrementing referenced closure\n  ");
-            // self-ref doesn't count (see above)
-            if(blocksUsed[i] && blocksUsed[i]->decRefCt())
-                delete blocksUsed[i];
-            //printf("done decrementing referenced closure\n");
+        if(blocksUsed){ // (b) could be null for a bad closure (see note (a) above)
+            for(int i=0;i<cb->closureTableSize;i++){
+                //printf("decrementing referenced closure\n  ");
+                // self-ref doesn't count (see above)
+                if(blocksUsed[i] && blocksUsed[i]->decRefCt())
+                    delete blocksUsed[i];
+                //printf("done decrementing referenced closure\n");
+            }
         }
     }
     
