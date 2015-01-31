@@ -173,6 +173,8 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     const CodeBlock *cb;
     Type *t;
     
+    if(a->isNone())return returnip; // NONE does nothing when called
+    
     t=a->getType();
     
     // if it's a native C++ function, just call it
