@@ -327,3 +327,42 @@ struct StdComparator : public ArrayListComparator<Value> {
     delete iter2;
     
 }
+
+%word intercalate (iter string -- string) turn elements of collection into string and intercalate with a separator
+{
+    Value *p[2];
+    a->popParams(p,"vv"); // can be any type
+    
+    Value *v = p[0];
+    Iterator<Value *> *iter = v->t->makeIterator(v);
+    const StringBuffer& s = p[1]->toString();
+    const char *sep = s.get();
+    int seplen = strlen(sep);
+    
+    int count = v->t->getCount(v);
+    
+    // first pass to get the lengths
+    int len=0;
+    int n=0;
+    for(n=0,iter->first();!iter->isDone();iter->next(),n++){
+        len += strlen(iter->current()->toString().get());
+        if(n!=count-1)
+            len += seplen;
+    }
+    
+    // allocate the result in a new string value on the stack
+    char *out = Types::tString->allocate(a->pushval(),len,Types::tString);
+    // second pass to write the value
+    char *snark=out;
+    *out = 0;
+    for(n=0,iter->first();!iter->isDone();iter->next(),n++){
+        const StringBuffer& b = iter->current()->toString();
+        strcpy(out,b.get());
+        out += strlen(b.get());
+        if(n!=count-1){
+            strcpy(out,sep);
+            out+=seplen;
+        }
+    }
+}
+    
