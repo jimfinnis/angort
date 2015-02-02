@@ -25,19 +25,24 @@ using namespace angort;
 
 class File : public GarbageCollected {
 public:
-    File(FILE *_f){
+    explicit File(FILE *_f,bool s=false){
         f = _f;
+        std = s;
     }
     
+    
     void close(){
-        fclose(f);
+        if(!std)
+            fclose(f);
     }
     
     
     ~File(){
-        close();
+        if(!std)
+            close();
     }
     FILE *f;
+    bool std;
 };
 
 class FileType : public GCType {
@@ -52,10 +57,10 @@ public:
         return ((File *)(v->v.gc))->f;
     }
     
-    void set(Value *v,FILE *f){
+    void set(Value *v,FILE *f,bool std=false){
         v->clr();
         v->t=this;
-        v->v.gc = new File(f);
+        v->v.gc = new File(f,std);
         incRef(v);
     }
 };
@@ -71,6 +76,19 @@ static FileType tFile;
         a->pushNone();
     else
         tFile.set(a->pushval(),f);
+}
+
+%word stderr (-- stderr)
+{
+    tFile.set(a->pushval(),stderr,true);
+}
+%word stdout (-- stdout)
+{
+    tFile.set(a->pushval(),stdout,true);
+}
+%word stdin (-- stdin)
+{
+    tFile.set(a->pushval(),stdin,true);
 }
 
 // possibly recursive binary write
@@ -135,6 +153,15 @@ static FILE *getf(Value *p,bool out){
     
     dowrite(getf(p[1],true),p[0]);
 }
+
+%word writestr (value fileobj/none --) write a value as a string
+{
+    Value *p[2];
+    a->popParams(p,"vA",&tFile);
+    
+    fputs(p[0]->toString().get(),getf(p[1],true));
+}
+
 
 %word write8 (value fileobj/none --) write signed byte
 {

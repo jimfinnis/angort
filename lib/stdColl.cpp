@@ -351,7 +351,7 @@ struct StdComparator : public ArrayListComparator<Value> {
     }
     
     // allocate the result in a new string value on the stack
-    char *out = Types::tString->allocate(a->pushval(),len,Types::tString);
+    char *out = Types::tString->allocate(a->pushval(),len+1,Types::tString);
     // second pass to write the value
     *out = 0;
     for(n=0,iter->first();!iter->isDone();iter->next(),n++){
