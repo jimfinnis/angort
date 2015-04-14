@@ -94,6 +94,14 @@ inline int wstrlen(const char *s){
     snprintf(buf,255,"%x",x);
     Types::tString->set(s,buf);
 }
+%word sf (v -- s) convert a float to a string with minimum sig figs
+{
+    Value *s = a->stack.peekptr();
+    float x = s->toFloat();
+    char buf[256];
+    snprintf(buf,255,"%g",x);
+    Types::tString->set(s,buf);
+}
 
 
 %word padleft (string padding -- string) insert spaces at left to pad out string
