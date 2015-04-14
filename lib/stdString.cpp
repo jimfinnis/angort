@@ -86,6 +86,16 @@ inline int wstrlen(const char *s){
     
 }
 
+%word sx (v -- s) convert a value to hex string
+{
+    Value *s = a->stack.peekptr();
+    int x = s->toInt();
+    char buf[256];
+    snprintf(buf,255,"%x",x);
+    Types::tString->set(s,buf);
+}
+
+
 %word padleft (string padding -- string) insert spaces at left to pad out string
 {
     wchar_t buf[1024];
