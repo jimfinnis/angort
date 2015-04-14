@@ -7,6 +7,10 @@ package mpcc
 :connect
     none 0 mpc$connect;
 
+:pi
+    "192.168.2.3" 0 mpc$connect;
+
+
 #number of songs to list in a listing
 
 20 !ListWindow
