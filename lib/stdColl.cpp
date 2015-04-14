@@ -54,6 +54,21 @@ struct FuncComparator : public ArrayListComparator<Value> {
     }
 }
 
+%word last (coll -- item/none) get last item
+{
+    Value *c = a->stack.peekptr();
+    int n = c->t->getCount(c)-1;
+    if(n<0)
+        c->clr();
+    else {
+        Value v,out;
+        Types::tInteger->set(&v,n);
+        c->t->getValue(c,&v,&out);
+        c->copy(&out);
+    }
+}
+    
+
 %word get (key coll --) get an item from a list or hash
 {
     Value *c = a->popval();
