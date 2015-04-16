@@ -79,6 +79,17 @@ inline void getByIndex(Value *c,int idx){
     }
 }
 
+%word explode ([x,y,z] -- z y x) put all items onto stack 
+{
+    Value *iterable = a->popval();
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current());
+    }
+    delete iter;
+}    
+
 %word fst (coll -- item/none) get first item
 {
     getByIndex(a->stack.peekptr(),0);
