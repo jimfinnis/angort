@@ -67,6 +67,35 @@ struct FuncComparator : public ArrayListComparator<Value> {
         c->copy(&out);
     }
 }
+
+inline void getByIndex(Value *c,int idx){
+    if(idx>=c->t->getCount(c))
+        c->clr();
+    else {
+        Value v,out;
+        Types::tInteger->set(&v,idx);
+        c->t->getValue(c,&v,&out);
+        c->copy(&out);
+    }
+}
+
+%word fst (coll -- item/none) get first item
+{
+    getByIndex(a->stack.peekptr(),0);
+}
+
+%word snd (coll -- item/none) get second item
+{
+    getByIndex(a->stack.peekptr(),1);
+}
+%word third (coll -- item/none) get second item
+{
+    getByIndex(a->stack.peekptr(),2);
+}
+%word fourth (coll -- item/none) get second item
+{
+    getByIndex(a->stack.peekptr(),3);
+}
     
 
 %word get (key coll --) get an item from a list or hash
