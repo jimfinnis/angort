@@ -237,6 +237,41 @@ static void openwindow(const char *title, int w,int h,int flags){
     }
 }
 
+%word exflipblit (dx dy dw/none dh/none sx sy sw/none sh/none angle flipbits surf --) blit a texture to the screen, flipped perhaps
+{
+    Value *p[11];
+    a->popParams(p,"nnNNnnNNNNa",&tTexture);
+    
+    chkscr();
+    SDL_Texture *t = tTexture.get(p[10])->t;
+    SDL_Rect src,dst;
+    
+    int w,h;
+    SDL_QueryTexture(t,NULL,NULL,&w,&h);
+    
+    dst.x = p[0]->toInt(); // destination x
+    dst.y = p[1]->toInt(); // destination y
+    dst.w = p[2]->isNone() ? w : p[2]->toInt(); // dest width
+    dst.h = p[3]->isNone() ? h : p[3]->toInt(); // dest height
+    src.x = p[4]->toInt(); // source x
+    src.y = p[5]->toInt(); // source y
+    src.w = p[6]->isNone() ? w : p[6]->toInt(); // source width
+    src.h = p[7]->isNone() ? h : p[7]->toInt(); // source height
+    float angle = p[8]->toInt();
+    int flipbits = p[9]->toInt();
+    
+    int flip = SDL_FLIP_NONE;
+    if(flipbits & 1) flip = SDL_FLIP_HORIZONTAL;
+    if(flipbits & 2) flip = (int)flip|(int)SDL_FLIP_VERTICAL;
+    
+    
+    
+    if(SDL_RenderCopyEx(renderer,t,&src,&dst,angle,NULL,
+                        (SDL_RendererFlip)flip)<0){
+        printf("blit error: %s\n",SDL_GetError());
+    }
+}
+
 %word flip (--) flip front and back buffer
 {
     chkscr();
@@ -384,6 +419,13 @@ Value onDraw;
     onMouseUp.copy(p);
 }
 
+int keyMod = 0;
+
+%word keymod (-- modifier flags for last key event)
+{
+    a->pushInt(keyMod);
+}
+
 %word loop (--) start the main game loop
 {
     chkscr();
@@ -396,6 +438,7 @@ Value onDraw;
             case SDL_KEYDOWN:
                 if(!onKeyDown.isNone()){
                     a->pushInt(e.key.keysym.sym);
+                    keyMod = e.key.keysym.mod;
                     a->runValue(&onKeyDown);
                 }
                 break;
