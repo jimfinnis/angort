@@ -601,3 +601,9 @@ and to get help on an individual word, use
 
 If you're interested in extending Angort, look in the std.*.cpp files in angort/lib and angort/cli for
 word definitions, and note how they're defined in a special variant of C++.
+
+
+## Plugins
+The separate repo **angortplugins** contains plugins for file IO,
+system control, time, serial IO and such esoterica as an SDL layer,
+MIDI via JACK, MPD music player control.

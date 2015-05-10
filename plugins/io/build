@@ -1,9 +1,0 @@
-perl ../../makeWords.pl io.cpp >io_plugin.cpp
-
-
-g++ -fPIC -g -c -Wall io_plugin.cpp 
-
-g++ -shared -Wl,-soname,io.angso \
-    -o ../libs/io.angso \
-    io_plugin.o
-

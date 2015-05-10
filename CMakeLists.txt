@@ -13,13 +13,6 @@ add_subdirectory(cli)
 add_subdirectory(tests)
 add_subdirectory(lib)
 
-install(DIRECTORY
-    ${ANGORT_SOURCE_DIR}/plugins/libs/
-    DESTINATION "share/angort"
-    FILES_MATCHING PATTERN "*.angso"
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-
-
 enable_testing()
 
 # these tests are for C++ linkage stuff; there's a simple
