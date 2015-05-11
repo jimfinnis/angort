@@ -480,6 +480,13 @@ static NamespaceEnt *getNSEnt(Angort *a){
     
 }
 
+%word lookup (handle name -- value) look up the value of a namespace entity
+{
+    NamespaceEnt *ent = getNSEnt(a);
+    a->pushval()->copy(&ent->v);
+}
+    
+
 %word tostr (val -- string) convert value to string
 {
     const StringBuffer& str = a->popString();
