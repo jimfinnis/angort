@@ -5,6 +5,7 @@
  */
 
 #include "angort.h"
+#include "hash.h"
 #include "opcodes.h"
 
 namespace angort {
@@ -22,6 +23,20 @@ static void addListOrValueToList(ArrayList<Value> *list,Value *a){
     } else 
         list->append()->copy(a);
 }    
+
+static void addHashToHash(Hash *h,Hash *h2){
+    HashKeyIterator iter(h2);
+    for(iter.first();!iter.isDone();iter.next()){
+        Value *k = iter.current();
+        Value *v;
+        if(h2->find(k))
+            v = h2->getval();
+        else
+            throw WTF;
+        
+        h->set(k,v);
+    }
+}
 
 /**
  * Take a pair of values a,b and perform the binary operation given.
@@ -60,6 +75,18 @@ void Angort::binop(Value *a,Value *b,int opcode){
             throw RUNT("invalid operation with a list operand");
         }
         Types::tList->set(pushval(),lo);
+    }else if(at == Types::tHash || bt == Types::tHash) {
+        HashObject *ho;
+        switch(opcode){
+            case OP_ADD:
+            ho = new HashObject();
+            addHashToHash(ho->hash,a->v.hash->hash);
+            addHashToHash(ho->hash,b->v.hash->hash);
+            break;
+        default:
+            throw RUNT("invalid operation with a list operand");
+        }
+        Types::tHash->set(pushval(),ho);
     } else if((at == Types::tString || at == Types::tSymbol) &&
               bt == Types::tInteger &&
               opcode == OP_MUL){

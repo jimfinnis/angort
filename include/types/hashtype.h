@@ -39,6 +39,8 @@ public:
         return makeKeyIterator(v);
     }
     
+    /// set a value to an existing hash
+    void set(Value *v,HashObject *lo);
     
     virtual bool isIn(Value *v,Value *item);
     

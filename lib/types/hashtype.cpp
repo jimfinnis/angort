@@ -38,6 +38,14 @@ Hash *HashType::set(Value *v){
     return h->hash;
 }
 
+void HashType::set(Value *v,HashObject *ho){
+    v->clr();
+    v->t = this;
+    v->v.hash = ho;
+    incRef(v);
+}
+
+
 Hash *HashType::get(Value *v){
     if(v->t != this)
         throw RUNT("not a hash");
