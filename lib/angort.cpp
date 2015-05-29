@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 243
+#define ANGORT_VERSION 244
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -459,7 +459,11 @@ void Angort::run(const Instruction *ip){
                 ip++;
                 break;
             case OP_FUNC:
-                (*ip->d.func)(this);
+                try {
+                    (*ip->d.func)(this);
+                } catch(const char *strex){
+                    throw RUNT(strex);
+                }
                 ip++;
                 break;
             case OP_GLOBALDO:

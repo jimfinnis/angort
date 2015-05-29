@@ -383,6 +383,31 @@ struct StdComparator : public ArrayListComparator<Value> {
     
 }
 
+%word reverse (iter -- list) reverse an iterable to return a list
+{
+    Value *p = a->popval();
+    Iterator<Value *> *iter = p->t->makeIterator(p);
+    
+    // new list
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
+    // quickest thing to do is count the items by hand. This
+    // could be optimised if we knew the input iterable was a list.
+    
+    int n=0;
+    for(iter->first();!iter->isDone();iter->next()){n++;}
+    
+    int i=n;
+    for(iter->first();!iter->isDone();iter->next()){
+        Value *v = iter->current();
+        list->set(--i,v);
+    }
+    delete iter;
+    
+}
+
+
+
 %word intercalate (iter string -- string) turn elements of collection into string and intercalate with a separator
 {
     Value *p[2];
