@@ -55,16 +55,26 @@ int main(int argc,char *argv[]){
     // then any file on the command line
     char buf[256];
     if(argc>1){
-        FILE *f = fopen(argv[1],"r");
-        if(!f){
-            printf("cannot open file: %s\n",argv[1]);
-            exit(1);
-        }
-        
-        try{
-            a.fileFeed(argv[1]);
-        }catch(Exception e){
-            showException(e,a);
+        if(!strcmp(argv[1],"-")){
+            // immediately run the next arg as a command
+            try {
+                a.feed(argv[2]);
+            }catch(Exception e){
+                showException(e,a);
+                exit(1);
+            }
+            exit(0);
+        }else{
+            FILE *f = fopen(argv[1],"r");
+            if(!f){
+                printf("cannot open file: %s\n",argv[1]);
+                exit(1);
+            }
+            try{
+                a.fileFeed(argv[1]);
+            }catch(Exception e){
+                showException(e,a);
+            }
         }
     }
     
