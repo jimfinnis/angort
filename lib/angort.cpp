@@ -300,7 +300,7 @@ void Angort::runValue(const Value *v){
     if(!emergencyStop){
         const Instruction *oldbase=debugwordbase;
         const Instruction *ip=call(v,NULL);
-        run(ip);
+        if(ip)run(ip);
         debugwordbase=oldbase;
     }
     //    locals.pop(); 
