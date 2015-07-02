@@ -69,7 +69,7 @@ Build with
     cmake ..
     make
     
-This will build the executable in build/cli/angortcli. You can install by copying this into a binary directory, or just run it from there. You will need to install the GNU readline dev files, but that's the only dependency.
+This will build the executable in build/cli/angort. You can install by copying this into a binary directory, or just run it from there. You will need to install the GNU readline dev files, but that's the only dependency.
 
 
 
@@ -77,7 +77,7 @@ This will build the executable in build/cli/angortcli. You can install by copyin
 
 Start angort with 
 
-    cli/angortcli
+    cli/angort
 
 inside the build directory. You are now in "immediate mode" and can type words at the prompt. The two numbers in the prompt are the number of garbage-collectable objects in the system and the number of items on the stack.
 

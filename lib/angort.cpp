@@ -22,7 +22,7 @@
 #include "opcodes.h"
 #include "tokens.h"
 #include "hash.h"
-
+#include "cycle.h"
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std);
 
 namespace angort {
@@ -1666,14 +1666,14 @@ void Angort::list(){
 void Angort::dumpFrame(){
     printf("Frame data:\n");
     printf("  Curclosure: %s\n",currClosure.toString().get());
-    printf("  Stack:\n");
+    printf("  Ret stack:\n");
     for(int i=0;i<rstack.ct;i++){
         Frame *f = rstack.peekptr(i);
         printf("   Rec:-%30s   Clos:%s\n",
                f->rec.toString().get(),
                f->clos.toString().get());
     }
-    
+    CycleDetector::getInstance()->dump();
 }
 
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){

@@ -240,7 +240,7 @@ loop:
         while((*p && *p!=' ' && *p!='\t' && *p!=0x0a &&
               *p!=0x0d && 
                (chartable[(unsigned char)*p]<-1)) || 
-               (isdigit(p[1]) && (*p=='.'||*p=='-')))p++;
+               (*p && isdigit(p[1]) && (*p=='.'||*p=='-')))p++;
         len = p-b;
         memcpy(val.s,b,len);
         val.s[len]=0;

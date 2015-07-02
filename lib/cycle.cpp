@@ -178,10 +178,15 @@ void GarbageCollected::gc(){
 }
 
 void CycleDetector::dump(){
-    GarbageCollected *p;
+    GarbageCollected *p,*q; // crude loop detection
     printf("GC List:\n");
+    q=NULL;
     for(p=mainlist.head();p;p=mainlist.next(p)){
-        dprintf("  %p, refs %d\n",p,p->refct);
+        printf("  %p, refs %d\n",p,p->refct);
+        if(p==q){
+            printf("Loop occurred, abort\n");break;
+        }
+        q=p;
     }
 }
     

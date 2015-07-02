@@ -25,6 +25,7 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
         
         switch(*p){
         case 'n':
+        case 'i':
             if(v->t != Types::tInteger && v->t != Types::tFloat)
                 throw ParameterTypeException(i,"number");
             break;

@@ -6,8 +6,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 link_directories(${ANGORT_SOURCE_DIR}/lib)
 
-set(CMAKE_CXX_FLAGS_PROFILE -pg)
-set(CMAKE_C_FLAGS_PROFILE -pg)
+#set(CMAKE_CXX_FLAGS_PROFILE -pg)
+#set(CMAKE_C_FLAGS_PROFILE -pg)
 
 add_subdirectory(cli)
 add_subdirectory(tests)

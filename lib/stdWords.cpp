@@ -521,7 +521,6 @@ static NamespaceEnt *getNSEnt(Angort *a){
 %word dumpframe () debugging - dump the frame variables
 {
     a->dumpFrame();
-    CycleDetector::getInstance()->dump();
 }
 
 %word bor (a b -- a|b) bitwise or

@@ -47,7 +47,7 @@ public:
     /// add an item to the start of the list
     void addToHead(GarbageCollected *o)
     {
-#ifdef DEBUG
+#if 0
         if(isInList(o))
             throw Exception("item added twice to GC list");
 #endif
@@ -69,7 +69,7 @@ public:
     /// add an item to the end of the list
     void addToTail(GarbageCollected *o)
     {
-#if 1
+#if 0
         if(isInList(o))
             throw Exception("item added twice to GC list");
 #endif
@@ -161,7 +161,7 @@ public:
     /// be any item which can hold a reference to another item.
     
     void add(GarbageCollected *o){
-//        printf("ADDING %p\n",o);
+        dprintf("ADDING %p\n",o);
         mainlist.addToTail(o);
     }
     
@@ -169,7 +169,7 @@ public:
     /// the item is destroyed.
     
     void remove(GarbageCollected *o){
-//        printf("REMOVING %p\n",o);
+        dprintf("REMOVING %p\n",o);
         mainlist.remove(o);
     }
     
