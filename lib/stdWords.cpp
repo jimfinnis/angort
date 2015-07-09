@@ -570,7 +570,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     int y = p[1]->toInt();
     a->pushInt(x>>y);
 }
-    
+
 
 /*%word showclosure (cl --)
 {

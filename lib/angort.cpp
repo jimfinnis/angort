@@ -53,8 +53,6 @@ Angort::Angort() {
     tok.settokens(tokens);
     tok.setcommentlinesequence("#");
     
-    extern void initStdPackage(Angort *a);
-    
     registerLibrary(&LIBNAME(std)); // already imported by default.
     registerLibrary(&LIBNAME(coll),true);
     registerLibrary(&LIBNAME(string),true);
@@ -1685,12 +1683,12 @@ void Angort::registerProperty(const char *name, Property *p, const char *ns,cons
 }
 
 int Angort::registerLibrary(LibraryDef *lib,bool import){
+    
     // make the namespace. Multiple imports into the same one
     // are permitted.
-    
-    
     Namespace *sp = names.getSpaceByName(lib->name,true);
-
+    
+    // register the words
     for(int i=0;;i++){
         if(!lib->wordList[i].name)break;
         int id = sp->addConst(lib->wordList[i].name,false);
@@ -1699,10 +1697,35 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
         sp->setSpec(id,lib->wordList[i].desc);
     }
     
+        
     *libs->append() = lib;
     
     if(lib->initfunc){
         (*lib->initfunc)(this);
+    }
+    
+    // register the binops AFTER we init the function, so the
+    // types are all sorted. Although that should be done by
+    // static constructors.
+    
+    for(int i=0;;i++){
+        if(!lib->binopList[i].lhs)break;
+        Type *lhs = Type::getByName(lib->binopList[i].lhs);
+        if(!lhs)
+            throw RUNT("").set("unknown type in binop def: %s",lib->binopList[i].lhs);
+        Type *rhs = Type::getByName(lib->binopList[i].rhs);
+        if(!rhs)
+            throw RUNT("").set("unknown type in binop def: %s",lib->binopList[i].rhs);
+        
+        for(int op=0;;op++){
+            if(!opcodenames[op])
+                throw RUNT("").set("unknown opcode in binopdef: %s",
+                                   lib->binopList[i].opcode);
+            if(!strcmp(opcodenames[op],lib->binopList[i].opcode)){
+                lhs->registerBinop(rhs,op,lib->binopList[i].f);
+            }
+        }
+        
     }
     
     if(import)

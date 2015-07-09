@@ -48,6 +48,10 @@ void Type::add(const char *_name,const char *_id){
     next = head;
     head = this;
     
+    // create the binop ID
+    static int binopIDCount=0;
+    binopID = binopIDCount++;
+    
     // normally symbols are generated after the static initialisation
     // but before anything else, in createTypes(). This is to make sure
     // the symbol system has been initialised.
@@ -68,6 +72,13 @@ Type *Type::getByID(const char *_id){
     return NULL;
 }
 
+bool Type::binop(Angort *a,int opcode,Value *lhs,Value *rhs){
+    BinopFunction *f = lhs->t->getBinop(rhs->t,opcode);
+    if(!f)
+        return false;
+    (**f)(a,lhs,rhs);
+    return true;
+}
 
 
 char *BlockAllocType::allocate(Value *v,int len,Type *type){

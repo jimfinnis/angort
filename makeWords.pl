@@ -54,6 +54,13 @@
 # {
 #     ...
 # }
+#
+# Binary operations (binops) can be defined with
+#
+# %binop lhstype operator rhstype
+# {
+#     ... do something with Value *lhs,*rhs
+# }
 # 
 # A structure called will be defined, which can
 # be imported into Angort using the RegisterLibrary() method.
@@ -69,6 +76,7 @@
 #
 
 @list=();
+@binops=();
 %types=();
 %descs=();
 $hasinit=0;
@@ -148,6 +156,13 @@ while(<>){
         $descs{$word}=$text;
         print WORDSFILE "$word,";
         print "static void _word__$word"."(angort::Angort *a)\n";
+    }elsif(/^%binop/){
+        defined($libname) || die "%name is required";
+        ($dummy,$lhs,$opcode,$rhs)=split(/\s/,$_,4);
+        $bname = "$lhs"."_$opcode"."_$rhs";
+        print "//BINOP : $lhs - $opcode - $rhs = $bname\n";
+        push(@binops,$bname);
+        print "static void _binop__$bname(angort::Angort *a,angort::Value *lhs,angort::Value *rhs)\n";
     }elsif(/^%init/){
         print "static void __init__(angort::Angort *a)\n";
         $hasinit = 1;
@@ -165,12 +180,19 @@ while(<>){
 defined($libname) || die "%name is required";
 
 print "static angort::WordDef _wordlist_[]={\n";
-
 foreach $v (@list) {
     $t = $descs{$v};
     print "    {\"$v\",\"$t\",_word__$v},\n";
 }
 print "    {NULL,NULL,NULL} };\n";
+
+print "static angort::BinopDef _binoplist_[]={\n";
+foreach $v (@binops) {
+    ($lhs,$op,$rhs) = split(/_/,$v,3);
+    print "    {\"$lhs\", \"$rhs\", \"$opcode\",_binop__$v},\n";
+}
+print "    {NULL,NULL,NULL} };\n";
+
 print "} // end namespace $nsname \n\n"; # close the namespace
 
 if($hasinit){
@@ -189,6 +211,7 @@ print <<EOT;
 angort::LibraryDef _angortlib_$libname = {
     "$libname",
     $nsname\::_wordlist_,
+    $nsname\::_binoplist_,
     $initname,$shutdownname
 };
 EOT

@@ -56,11 +56,21 @@ struct WordDef {
     NativeFunc f; //!< function pointer
 };
 
+/// a structure for binary operators as produced by makeWords.pl
+
+struct BinopDef {
+    const char *lhs; //!< name of LHS type
+    const char *rhs; //!< name of LHS type
+    const char *opcode; //!< opcode of operator
+    BinopFunction f; //!< function pointer
+};
+
 /// a structure describing a library as produced by makeWords.pl
 
 struct LibraryDef {
     const char *name; //!< library name (i.e. the angort Namespace)
     WordDef *wordList; //!< list of words, terminated with a null name
+    BinopDef *binopList; //!< list of binops, terminated with null lhs
     NativeFunc initfunc; //!< possibly null initialisation function
     NativeFunc shutdownfunc; //!< possibly null shutdown function
 };
