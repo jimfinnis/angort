@@ -24,10 +24,14 @@ GC Types consist of:
     * a type class, which defines how the type works.
 
 Define a datum type for the value data, which should be subclassed
-from GarbageCollected. Then define the type class, which should
-be a subclass of GCType. This should have a constructor which sets
-the type name, and a set() method. The implementation for the set
-method looks like this:
+from GarbageCollected. If this class is widely used already in your code,
+or you create a lot of temporaries on the stack, use a wrapper class - 
+every time an object is created and destroyed it will be added and removed
+from the GC system - this will be slow, and can lead to weird bugs.
+
+Then define the type class, which should be a subclass of GCType. This should
+have a constructor which sets the type name, and a set() method. The
+implementation for the set method looks like this:
 
 void MyType::set(Value *v,<extra params here>){
     v->clr();

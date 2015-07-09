@@ -427,15 +427,15 @@ static NamespaceEnt *getNSEnt(Angort *a){
     Type::dumpTypes();
 }
 
-%word srand (i --) set the random number generator seed. If -1, use the timestamp.
+%word srand (none --) set the random number generator seed. If none, use the timestamp.
 {
-    int v = a->popInt();
-    if(v==-1){
-        long t;
+    Value *v = a->popval();
+    long t;
+    if(v->isNone())
         time(&t);
-        srand(t);
-    } else 
-        srand(v);
+    else
+        t = v->toInt();
+    srand(t);
 }
 
 

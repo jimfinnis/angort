@@ -17,6 +17,22 @@ closure iterators - WTF?
     
 multiple requires/library loads need to work
 
+Binops:
+    1) assign each typeobj a unique integer (which it keeps) when it
+       is constructed
+    2) each typeobj also has an intkeyedhash of function pointers for
+       the binops, where the LHS is the current type and the RHS is
+       stored in the key
+    3) there is a registerBinops function in Angort which for each entry
+        a) builds an int out of the RHS uuid and the binop code
+        b) writes the function pointer to the hash stored in the LHS
+       This is called by Angort for the internal types once the type
+       system has been set up, and also by libraries after they have
+       inited. This can be done using hackery in makeWords.pl
+    4) When a binop is found, look up the binop and RHS id in the LHS hash,
+       then call the function (or error if null).
+       
+
 
 Given that there are quite a few singletons (e.g type objects)
 there's no real point in Angort not being a singleton(?)
