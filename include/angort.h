@@ -838,6 +838,11 @@ public:
     
     int registerLibrary(LibraryDef *lib,bool import=false);
     
+    /// register a binary operation, given the typenames and opcode name.
+    /// This will also accept "number" for a float/integer, and "str"
+    /// for an integer/symbol.
+    void registerBinop(const char *lhsName,const char *rhsName,
+                       const char *opcode,BinopFunction f);
     
     Angort();
     

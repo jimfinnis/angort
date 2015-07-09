@@ -72,6 +72,13 @@ Type *Type::getByID(const char *_id){
     return NULL;
 }
 
+
+void Type::registerBinop(Type *rhs, int opcode, BinopFunction f){
+    uint32_t key = (rhs->binopID << 16) + opcode;
+    BinopFunction *ptr = binops.set(key);
+    *ptr = f;
+}
+
 bool Type::binop(Angort *a,int opcode,Value *lhs,Value *rhs){
     BinopFunction *f = lhs->t->getBinop(rhs->t,opcode);
     if(!f)

@@ -1682,6 +1682,56 @@ void Angort::registerProperty(const char *name, Property *p, const char *ns,cons
     Types::tProp->set(v,p);
 }
 
+
+void Angort::registerBinop(const char *lhsName,const char *rhsName,
+                   const char *opcode,BinopFunction f){
+    bool r = false; // are we recursing?
+    // first, deal with "supertypes": "str" registers for both
+    // string and symbol, "number" registers for both int and float.
+    if(!strcmp(lhsName,"str")){
+        registerBinop("string",rhsName,opcode,f);
+        registerBinop("symbol",rhsName,opcode,f);
+        r=true;
+    }
+    if(!strcmp(rhsName,"str")){
+        registerBinop(lhsName,"string",opcode,f);
+        registerBinop(lhsName,"symbol",opcode,f);
+        r=true;
+    }
+    if(!strcmp(lhsName,"number")){
+        registerBinop("float",rhsName,opcode,f);
+        registerBinop("integer",rhsName,opcode,f);
+        r=true;
+    }
+    if(!strcmp(rhsName,"number")){
+        registerBinop(lhsName,"float",opcode,f);
+        registerBinop(lhsName,"integer",opcode,f);
+        r=true;
+    }
+    if(r)return; // only do something if all types fully resolved
+    
+    // find types
+    
+    Type *lhs = Type::getByName(lhsName);
+    if(!lhs)
+        throw RUNT("").set("unknown type in binop def: %s",lhsName);
+    Type *rhs = Type::getByName(rhsName);
+    if(!rhs)
+        throw RUNT("").set("unknown type in binop def: %s",rhsName);
+    
+    // find opcode and register
+    
+    for(int op=0;;op++){
+        if(!opcodenames[op])
+            throw RUNT("").set("unknown opcode in binopdef: %s",opcode);
+        if(!strcmp(opcodenames[op],opcode)){
+            lhs->registerBinop(rhs,op,f);
+            break;
+        }
+    }
+}
+
+
 int Angort::registerLibrary(LibraryDef *lib,bool import){
     
     // make the namespace. Multiple imports into the same one
@@ -1710,22 +1760,10 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     
     for(int i=0;;i++){
         if(!lib->binopList[i].lhs)break;
-        Type *lhs = Type::getByName(lib->binopList[i].lhs);
-        if(!lhs)
-            throw RUNT("").set("unknown type in binop def: %s",lib->binopList[i].lhs);
-        Type *rhs = Type::getByName(lib->binopList[i].rhs);
-        if(!rhs)
-            throw RUNT("").set("unknown type in binop def: %s",lib->binopList[i].rhs);
-        
-        for(int op=0;;op++){
-            if(!opcodenames[op])
-                throw RUNT("").set("unknown opcode in binopdef: %s",
-                                   lib->binopList[i].opcode);
-            if(!strcmp(opcodenames[op],lib->binopList[i].opcode)){
-                lhs->registerBinop(rhs,op,lib->binopList[i].f);
-            }
-        }
-        
+        registerBinop(lib->binopList[i].lhs,
+                      lib->binopList[i].rhs,
+                      lib->binopList[i].opcode,
+                      lib->binopList[i].f);
     }
     
     if(import)

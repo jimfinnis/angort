@@ -77,12 +77,8 @@ public:
     void add(const char *_name,const char *_id);
     
     /// register a binary operation for this type as the LHS
-    /// and another as the RHS
-    void registerBinop(Type *rhs, int opcode, BinopFunction f){
-        uint32_t key = (rhs->binopID << 16) + opcode;
-        BinopFunction *ptr = binops.set(key);
-        *ptr = f;
-    }
+    /// and another as the RHS. 
+    void registerBinop(Type *rhs, int opcode, BinopFunction f);
     
     /// get the binary operation for this type as the LHS and
     /// another as the LHS, or NULL.
