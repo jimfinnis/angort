@@ -443,5 +443,6 @@ struct StdComparator : public ArrayListComparator<Value> {
             out+=seplen;
         }
     }
+    delete iter;
 }
     
