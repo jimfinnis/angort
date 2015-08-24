@@ -182,6 +182,12 @@ static NamespaceEnt *getNSEnt(Angort *a){
     else
         a->assertNegated=false;
 }
+
+%word asserteq (a b -- ) if a!=b assert
+{
+    if(a->popInt()!=a->popInt())
+        throw RUNT("assertq failure");
+}
     
 
 %word abs (x --) absolute value
@@ -570,6 +576,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     int y = p[1]->toInt();
     a->pushInt(x>>y);
 }
+
 
 
 /*%word showclosure (cl --)

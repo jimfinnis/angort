@@ -189,7 +189,7 @@ print "    {NULL,NULL,NULL} };\n";
 print "static angort::BinopDef _binoplist_[]={\n";
 foreach $v (@binops) {
     ($lhs,$op,$rhs) = split(/\_/,$v,3);
-    print "    {\"$lhs\", \"$rhs\", \"$opcode\",_binop__$v},\n";
+    print "    {\"$lhs\", \"$rhs\", \"$op\",_binop__$v},\n";
 }
 print "    {NULL,NULL,NULL} };\n";
 

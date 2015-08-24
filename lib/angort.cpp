@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 245
+#define ANGORT_VERSION 246
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -718,7 +718,7 @@ void Angort::run(const Instruction *ip){
                     ArrayList<Value> *lst = Types::tList->get(stack.popptr());
                     names.import(popInt(),lst);
                 } else
-                    throw SyntaxException("expected package list or package im import");
+                    throw SyntaxException("expected package list or package in import");
                 ip++;
                 break;
             case OP_DEF:{
@@ -1586,6 +1586,17 @@ void Angort::feed(const char *buf){
             case T_YIELD:
                 context->closeAllLocals();
                 compile(OP_YIELD);
+                break;
+            case T_DOUBLEQUERY:
+                {
+                    if(tok.getnext()!=T_IDENT)
+                        throw SyntaxException(NULL)
+                          .set("expected identifier after ?? - perhaps '%s' is a built in token?",
+                               tok.getstring());
+                    const char *s = getSpec(tok.getstring());
+                    if(!s)s="no help found";
+                    printf("%s: %s\n",tok.getstring(),s);
+                }
                 break;
             default:
                 throw SyntaxException(NULL).set("unhandled token: %s",
