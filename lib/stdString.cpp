@@ -204,3 +204,24 @@ inline int wstrlen(const char *s){
             s++;
     }
 }
+
+%wordargs substr sii (str start count --) get substring, if count -ve go to end
+{
+    int len = wstrlen(p0);
+    if(p1>len || p1<0){
+        a->pushString("");
+    } else {
+        wchar_t *s = (wchar_t *)alloca(len*sizeof(wchar_t));
+        int rv = mbstowcs(s,p0,len);
+        if(rv<0){
+            a->pushNone();
+            return;
+        }
+        s+=p1;
+        if(p2>0)s[p2]=0;
+        char *s2 = (char *)alloca(rv-p1);
+        wcstombs(s2,s,rv-p1);
+        a->pushString(s2);
+    }
+        
+}
