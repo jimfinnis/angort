@@ -104,7 +104,7 @@ interpreter will then be installed in \texttt{cli/angortcli} .
 \section{Getting started: immediate mode}
 Running the interpreter will give a prompt:
 \begin{v}
-0|0>
+1|0>
 \end{v}
 The two numbers are the number of garbage-collectable objects in the
 system and the number of items on the stack, respectively.
@@ -287,9 +287,9 @@ types for iterators and deleted objects in a hash.
 \item Integers and floats are coerced to strings in string contexts.
 \item In binary operations, if one of the operands is a float, both are coerced to floats:
 \begin{v}
-0|0> 1 2 / .
+1|0> 1 2 / .
 0
-0|0> 1.0 2 / .
+1|0> 1.0 2 / .
 0.500000
 \end{v}
 \item In certain binary operations (currently just ``+'') if one of the operands
@@ -331,9 +331,9 @@ Here is a code example, printing whether a number is even or odd:
 \end{lstlisting}
 We can run this with various values:
 \begin{v}
-0|0> 4 evenodd
+1|0> 4 evenodd
 number is even
-0|0> 3 evenodd
+1|0> 3 evenodd
 number is odd
 \end{v}
 Conditions can be nested.
@@ -572,19 +572,19 @@ Global variables are defined in two ways. The ``polite'' way is to use the
 \texttt{global} keyword, which creates a new global of the same following
 it, initially holding the nil value \texttt{none}:
 \begin{v}
-0|0> global foo
-0|0> ?foo.
+1|0> global foo
+1|0> ?foo.
 NONE
-0|0> 5!foo
-0|0> ?foo.
+1|0> 5!foo
+1|0> ?foo.
 5
 \end{v}
 The other way to define globals is simply to access a variable whose
 name begins with a capital letter. If no global or local exists with that
 name, a global is created with the initial \texttt{none} value:
 \begin{v}
-0|0> 5 !Foo
-0|0> ?Foo.
+1|0> 5 !Foo
+1|0> ?Foo.
 5
 \end{v}
 Globals, unlike locals, do not require a \texttt{?} or \texttt{!} sigil.
@@ -663,14 +663,14 @@ As noted above, lists can be iterated over. Lists can also contain lists,
 and can be stored in variables ---  more precisely, references to lists can
 be stored in variables:
 \begin{v}
-0|0> [1,2] !A       # create a list and store it in global A
-0|0> ?A!B           # copy A to B
-0|0> 3 ?A push      # append an item to A
-0|0> ?A each {i.}   # print A
+1|0> [1,2] !A       # create a list and store it in global A
+2|0> ?A!B           # copy A to B
+2|0> 3 ?A push      # append an item to A
+2|0> ?A each {i.}   # print A
 1
 2
 3
-0|0> ?B each {i.}   # print B - it also has the extra item!
+1|0> ?B each {i.}   # print B - it also has the extra item!
 1
 2
 3
@@ -744,8 +744,8 @@ using \texttt{set} which has the picture \texttt{(val key hash --)}:
 \end{v}
 and read values using \texttt{get} which has the picture \texttt{(key hash -- val)}:
 \begin{v}
-1|0> `foo ?H get
-1|1> .
+2|0> `foo ?H get
+2|1> .
 the foo string
 \end{v}
 We can also iterate over the hash's keys:
@@ -761,7 +761,7 @@ We can also iterate over the hash's keys:
 \end{lstlisting}
 If we run this on the hash $H$ defined above, we get
 \begin{v}
-1|0> ?H dumphash
+2|0> ?H dumphash
 foo:   the foo string
 bar:   the bar string
 \end{v}
@@ -810,9 +810,9 @@ By default, printing a hash --- or converting it to a string any other way ---
 will just print the default string. This tells you it's a hash and gives
 its address in memory:
 \begin{v}
-0|0 > [%] .
+1|0 > [%] .
 <TYPE hash:0x16a4840>
-1|0 > 
+2|0 > 
 \end{v}
 However, if we define a hash member called \verb+toString+ (where this
 key is a symbol) which is a function, then that function will be called
@@ -968,7 +968,7 @@ private copies:
 
 \end{lstlisting}
 
-\subsubsection{Objects with delegates using hashes and closures}
+\subsubsection{Objects with delegates and private members using hashes and closures}
 Languages like C\# have a ``delegate'' type, which consists of
 the pointer to an object and a method to be called inside that
 object, as a single entity. 
@@ -1003,7 +1003,10 @@ in the creating function:
 20 20 ?R?`move@
 ?R?`draw@
 \end{lstlisting}
-
+This also provides a ``private member'' mechanism: if a value is defined
+in a closure in the function which creates the hash, rather than in
+the hash itself, that value will only be visible to functions defined
+in the hash.
 
 
 
@@ -1072,10 +1075,20 @@ These can be listed with the \texttt{list} word, and help can
 be obtained on all words with \texttt{??} (except the very low-level words compiled
 directly to bytecode, which are all covered above):
 \begin{v}
-0|0 > ??filter
+1|0 > ??filter
 filter: (iter func -- list) filter an iterable with a boolean function
-0|0 > 
+1|0 > 
 \end{v}
+If you have loaded a library or package and not imported the words
+into the main namespace (see section~\ref{nameslibsmods}below), you
+can use the fully qualified name to get help:
+\begin{v}
+1|0 > `io library drop
+1|0 > ??io$open
+io$open: (path mode -- fileobj) open a file, modes same as fopen()
+1|0 > 
+\end{v}
+
 
 \section{Namespaces and packages}
 Build a package by putting the \texttt{package} directive at the start
@@ -1147,6 +1160,7 @@ The \texttt{endpackage} word does the same as the return from a
 stack the package ID.
 
 \subsection{Namespaces, libraries and modules}
+\label{nameslibsmods}
 Native functions created by using the shared library plugin system
 are loaded into namespaces, just as described above. However, native
 functions defined using Angort's built-in word registration system
@@ -1203,10 +1217,18 @@ to import lists of libraries.
 There are several topics which will be discussed in later versions
 of this document:
 \begin{itemize}
-\item other built-in words;
-\item writing words in C++ and adding them to Angort;
-\item properties (which look like global variables but invoke Angort code);
-\item embedding an Angort interpreter in other systems.
+\item recursion
+\item \texttt{def} and \texttt{defconst}
+\item bitwise operators
+\item parameter type checking
+\item routines (generators) and \texttt{yield}
+\item constant expressions using $<<$ and $>>$
+\item sourceline
+\item explicit iterator values (\texttt{ival} etc)
+\item many more built-in words
+\item writing words and binary operators in C++ and adding them to Angort
+\item properties (which look like global variables but invoke Angort code)
+\item embedding an Angort interpreter in other systems
 \end{itemize}
 
 
