@@ -219,8 +219,8 @@ inline int wstrlen(const char *s){
         }
         s+=p1;
         if(p2>0)s[p2]=0;
-        char *s2 = (char *)alloca(rv-p1);
-        wcstombs(s2,s,rv-p1);
+        char *s2 = (char *)alloca(rv-p1+1);
+        wcstombs(s2,s,rv-p1+1);
         a->pushString(s2);
     }
         
