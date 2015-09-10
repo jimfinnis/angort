@@ -97,17 +97,18 @@ char *BlockAllocType::allocate(Value *v,int len,Type *type){
     return (char *)(h+1);
 }
 
-bool Type::isIn(Value *v,Value *item){
-    Iterator<Value *> *iter = makeIterator(v);
-    
+int Type::getIndexOfContainedItem(Value *v,Value *item){
+    Iterator<Value *> *iter = makeIterator(v); // will throw for non-iterables
+    int i=0;
     for(iter->first();!iter->isDone();iter->next()){
         if(iter->current()->equalForHashTable(item)){
             delete iter;
-            return true;
+            return i;
         }
+        i++;
     }
     delete iter;
-    return false;
+    return -1;
 }
 
 const char *BlockAllocType::getData(const Value *v) const{

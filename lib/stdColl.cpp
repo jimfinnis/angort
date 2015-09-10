@@ -235,7 +235,19 @@ inline void getByIndex(Value *c,int idx){
     Value *iterable = a->popval();
     Value *item = a->popval();
     
-    a->pushInt(iterable->t->isIn(iterable,item)?true:false);
+    bool b = iterable->t->getIndexOfContainedItem(iterable,item)>=0;
+    
+    a->pushInt(b?1:0);
+}
+
+%word index (item iterable -- int) return index of item in iterable, or none
+{
+    Value *iterable = a->popval();
+    Value *item = a->popval();
+    
+    int i = iterable->t->getIndexOfContainedItem(iterable,item);
+    if(i<0)a->pushNone();
+    else a->pushInt(i);
 }
 
 %word slice (start len iterable -- iterable) produce a slice of a string or list

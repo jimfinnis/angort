@@ -211,8 +211,8 @@ inline int wstrlen(const char *s){
     if(p1>len || p1<0){
         a->pushString("");
     } else {
-        wchar_t *s = (wchar_t *)alloca(len*sizeof(wchar_t));
-        int rv = mbstowcs(s,p0,len);
+        wchar_t *s = (wchar_t *)alloca(len*sizeof(wchar_t)+1);
+        int rv = mbstowcs(s,p0,len+1);
         if(rv<0){
             a->pushNone();
             return;

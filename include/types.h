@@ -167,9 +167,9 @@ public:
         throw RUNT("cannot iterate a non-iterable value");
     }
     
-    /// return whether the item is in the collection (uses the same
-    /// equality test as hash keys)
-    virtual bool isIn(Value *v,Value *item);
+    /// return the index of item is in the collection (uses the same
+    /// equality test as hash keys).If not present, returns -1.
+    virtual int getIndexOfContainedItem(Value *v,Value *item);
         
     
     /// set a value in a collection, if this type is one
