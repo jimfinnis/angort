@@ -646,10 +646,6 @@ private:
         return i;
     }
     
-    /// add a plugin (Linux only, uses shared libraries). Returns
-    /// the new namespace ID.
-    int plugin(const char *path);
-    
     
     /// called at the end of a block of code,
     /// or by emergency stop invocation. Returns
@@ -664,6 +660,10 @@ private:
     const char *findFile(const char *name);
     
 public:
+    /// add a plugin (Linux only, uses shared libraries). Returns
+    /// the new namespace ID.
+    int plugin(const char *path);
+    
     /// if non-neg, GC cycle detect is called after this number of instructions
     int autoCycleInterval; 
     

@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 247
+#define ANGORT_VERSION 248
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -1609,6 +1609,8 @@ void Angort::feed(const char *buf){
     }
     lineNumber++;
 }
+
+    
 
 void Angort::clearAtEndOfFeed(){
 //    printf("Clearing at end of feed\n");

@@ -577,6 +577,24 @@ static NamespaceEnt *getNSEnt(Angort *a){
     a->pushInt(x>>y);
 }
 
+%word read (-- s|none) read line from stdin
+{
+    if(!feof(stdin)){
+        char *buf=NULL;
+        size_t size;
+        int rv = getline(&buf,&size,stdin);
+        if(rv<=0)
+            a->pushNone();
+        else{
+            buf[rv-1]=0;
+            a->pushString(buf);
+        }
+        if(buf)free(buf);
+    } else
+        a->pushNone();
+}
+        
+
 
 
 /*%word showclosure (cl --)

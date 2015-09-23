@@ -8,14 +8,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
 #include "angort.h"
 
 using namespace angort;
-
-
 
 static void showException(Exception& e,Angort& a){
     printf("Error: %s\n",e.what());
@@ -31,6 +30,10 @@ static void showException(Exception& e,Angort& a){
     
     a.clearStack();
 }
+
+#define F_CMD 1
+#define F_LOOP 2
+
 
 int main(int argc,char *argv[]){
     Angort a;
@@ -52,31 +55,71 @@ int main(int argc,char *argv[]){
     
     setArgumentList(argc,argv);
     
-    // then any file on the command line
-    char buf[256];
-    if(argc>1){
-        if(!strcmp(argv[1],"-")){
-            // immediately run the next arg as a command
-            try {
-                a.feed(argv[2]);
-            }catch(Exception e){
-                showException(e,a);
-                exit(1);
-            }
-            exit(0);
-        }else{
-            FILE *f = fopen(argv[1],"r");
-            if(!f){
-                printf("cannot open file: %s\n",argv[1]);
-                exit(1);
-            }
-            try{
-                a.fileFeed(argv[1]);
-            }catch(Exception e){
-                showException(e,a);
-            }
+    int flags = 0;
+    char c;
+    while((c=getopt(argc,argv,"endDl:"))!=-1){
+        switch(c){
+        case 'n':flags|=F_LOOP;break;
+        case 'e':flags|=F_CMD;break;
+        case 'd':a.debug|=1;break;
+        case 'D':a.debug|=2;break;
+        case 'l':
+            printf("%p: %s\n",optarg,optarg);
+            a.plugin(optarg);
+            break;
+        default:
+            break;
         }
     }
+    
+    // either the filename to run or a command (depending on opts)
+    if(argc>optind){
+            const char *data = argv[optind];
+        try {
+            if(flags & F_CMD){
+                if(flags & F_LOOP){
+                    // looping is done with an egregious hack. Rather
+                    // than muck around inside Angort, we actually
+                    // fake up a function by feeding a colon definition
+                    // into Angort. Then, for each line, we stack the
+                    // line and then feed a line to run that function.
+                    a.feed(":TMPLOOP");
+                    a.feed(data);
+                    a.feed(";");
+                    // then iterate over the file, executing this
+                    // word for each line
+                    while(!feof(stdin)){
+                        char *buf=NULL;
+                        size_t size;
+                        int rv = getline(&buf,&size,stdin);
+                        if(rv<=0)
+                            break;
+                        else{
+                            buf[rv-1]=0;
+                            a.pushString(buf);
+                            a.feed("TMPLOOP");
+                        }
+                        if(buf)free(buf);
+                    }
+                } else 
+                    a.feed(data);
+                exit(0);
+            } else {
+                FILE *f = fopen(data,"r");
+                if(!f){
+                    printf("cannot open file: %s\n",data);
+                    exit(1);
+                }
+                a.fileFeed(data);
+            }
+        }catch(Exception e){
+            showException(e,a);
+        }
+    }
+    
+    // then read lines from input
+    
+    char buf[256];
     
     a.assertDebug=true;
     int vv = a.getVersion();
