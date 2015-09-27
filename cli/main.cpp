@@ -64,7 +64,6 @@ int main(int argc,char *argv[]){
         case 'd':a.debug|=1;break;
         case 'D':a.debug|=2;break;
         case 'l':
-            printf("%p: %s\n",optarg,optarg);
             a.plugin(optarg);
             break;
         default:
