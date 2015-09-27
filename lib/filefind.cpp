@@ -16,7 +16,8 @@ namespace angort {
 
 const char *Angort::findFile(const char *name){
     char path[2048];
-    const char *p = searchPath?searchPath:DEFAULTSEARCHPATH;
+    
+    const char *p = searchPath;
     const char *q;
     
     // don't do searches if the name starts with a path element. Will require

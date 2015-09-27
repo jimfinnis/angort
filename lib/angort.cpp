@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 248
+#define ANGORT_VERSION 249
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -45,7 +45,10 @@ Angort::Angort() {
     names.push(stdNamespace);
     lineNumber=1;
     
-    searchPath=NULL;
+    // initialise the search path to the environment variable ANGORTPATH
+    // if it exists, otherwise to the default.
+    const char *spenv = getenv("ANGORTPATH");
+    searchPath=strdup(spenv?spenv:DEFAULTSEARCHPATH);
     
     libs = new ArrayList<LibraryDef*>(8);
     tok.init();
