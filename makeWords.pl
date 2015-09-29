@@ -132,8 +132,8 @@ while(<>){
                 print "float p$i = _parms[$i]->toFloat();\n"
             }elsif($c eq 'i'){
                 print "int p$i = _parms[$i]->toInt();\n"
-            }elsif($c eq 'c'){
-                print "Value * p$i = _parms[$i];\n"  # any value, really, but will be checked on call
+            }elsif($c eq 'c' || $c eq 'v'){
+                print "Value * p$i = _parms[$i];\n"  # any value or callable
             } elsif($c eq 's' || $c eq 'S'){
                 print "const StringBuffer &_sb$i = _parms[$i]->toString();;\n";
                 print "const char *p$i = _sb$i.get();\n";
