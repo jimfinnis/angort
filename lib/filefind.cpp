@@ -30,6 +30,19 @@ const char *Angort::findFile(const char *name){
         
     }
     
+    // try a shell expansion of the name
+    wordexp_t exp;
+    if(!wordexp(name,&exp,0)){
+        for(unsigned int i=0;i<exp.we_wordc;i++){
+            strncpy(path,exp.we_wordv[i],2047);
+            if(!access(path,R_OK)){
+                wordfree(&exp);
+                return strdup(path);
+            }
+        }
+    }
+    path[0]=0;
+    
     for(;*p;p=q+1){
         q=p;
         while(*q && *q!=':')q++;
@@ -38,9 +51,7 @@ const char *Angort::findFile(const char *name){
             path[q-p]=0;
             
 #ifdef LINUX
-            // now get a shell expansion
-            
-            wordexp_t exp;
+            // now get a shell expansion of the path
             if(!wordexp(path,&exp,0)){
                 // check all the possible results
                 for(unsigned int i=0;i<exp.we_wordc;i++){
