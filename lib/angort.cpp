@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 244
+#define ANGORT_VERSION 249
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -45,15 +45,16 @@ Angort::Angort() {
     names.push(stdNamespace);
     lineNumber=1;
     
-    searchPath=NULL;
+    // initialise the search path to the environment variable ANGORTPATH
+    // if it exists, otherwise to the default.
+    const char *spenv = getenv("ANGORTPATH");
+    searchPath=strdup(spenv?spenv:DEFAULTSEARCHPATH);
     
     libs = new ArrayList<LibraryDef*>(8);
     tok.init();
     tok.setname("<stdin>");
     tok.settokens(tokens);
     tok.setcommentlinesequence("#");
-    
-    extern void initStdPackage(Angort *a);
     
     registerLibrary(&LIBNAME(std)); // already imported by default.
     registerLibrary(&LIBNAME(coll),true);
@@ -720,7 +721,7 @@ void Angort::run(const Instruction *ip){
                     ArrayList<Value> *lst = Types::tList->get(stack.popptr());
                     names.import(popInt(),lst);
                 } else
-                    throw SyntaxException("expected package list or package im import");
+                    throw SyntaxException("expected package list or package in import");
                 ip++;
                 break;
             case OP_DEF:{
@@ -1589,6 +1590,17 @@ void Angort::feed(const char *buf){
                 context->closeAllLocals();
                 compile(OP_YIELD);
                 break;
+            case T_DOUBLEQUERY:
+                {
+                    if(tok.getnext()!=T_IDENT)
+                        throw SyntaxException(NULL)
+                          .set("expected identifier after ?? - perhaps '%s' is a built in token?",
+                               tok.getstring());
+                    const char *s = getSpec(tok.getstring());
+                    if(!s)s="no help found";
+                    printf("%s: %s\n",tok.getstring(),s);
+                }
+                break;
             default:
                 throw SyntaxException(NULL).set("unhandled token: %s",
                                                 tok.getstring());
@@ -1600,6 +1612,8 @@ void Angort::feed(const char *buf){
     }
     lineNumber++;
 }
+
+    
 
 void Angort::clearAtEndOfFeed(){
 //    printf("Clearing at end of feed\n");
@@ -1684,13 +1698,63 @@ void Angort::registerProperty(const char *name, Property *p, const char *ns,cons
     Types::tProp->set(v,p);
 }
 
+
+void Angort::registerBinop(const char *lhsName,const char *rhsName,
+                   const char *opcode,BinopFunction f){
+    bool r = false; // are we recursing?
+    // first, deal with "supertypes": "str" registers for both
+    // string and symbol, "number" registers for both int and float.
+    if(!strcmp(lhsName,"str")){
+        registerBinop("string",rhsName,opcode,f);
+        registerBinop("symbol",rhsName,opcode,f);
+        r=true;
+    }
+    if(!strcmp(rhsName,"str")){
+        registerBinop(lhsName,"string",opcode,f);
+        registerBinop(lhsName,"symbol",opcode,f);
+        r=true;
+    }
+    if(!strcmp(lhsName,"number")){
+        registerBinop("float",rhsName,opcode,f);
+        registerBinop("integer",rhsName,opcode,f);
+        r=true;
+    }
+    if(!strcmp(rhsName,"number")){
+        registerBinop(lhsName,"float",opcode,f);
+        registerBinop(lhsName,"integer",opcode,f);
+        r=true;
+    }
+    if(r)return; // only do something if all types fully resolved
+    
+    // find types
+    
+    Type *lhs = Type::getByName(lhsName);
+    if(!lhs)
+        throw RUNT("").set("unknown type in binop def: %s",lhsName);
+    Type *rhs = Type::getByName(rhsName);
+    if(!rhs)
+        throw RUNT("").set("unknown type in binop def: %s",rhsName);
+    
+    // find opcode and register
+    
+    for(int op=0;;op++){
+        if(!opcodenames[op])
+            throw RUNT("").set("unknown opcode in binopdef: %s",opcode);
+        if(!strcmp(opcodenames[op],opcode)){
+            lhs->registerBinop(rhs,op,f);
+            break;
+        }
+    }
+}
+
+
 int Angort::registerLibrary(LibraryDef *lib,bool import){
+    
     // make the namespace. Multiple imports into the same one
     // are permitted.
-    
-    
     Namespace *sp = names.getSpaceByName(lib->name,true);
-
+    
+    // register the words
     for(int i=0;;i++){
         if(!lib->wordList[i].name)break;
         int id = sp->addConst(lib->wordList[i].name,false);
@@ -1699,10 +1763,23 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
         sp->setSpec(id,lib->wordList[i].desc);
     }
     
+        
     *libs->append() = lib;
     
     if(lib->initfunc){
         (*lib->initfunc)(this);
+    }
+    
+    // register the binops AFTER we init the function, so the
+    // types are all sorted. Although that should be done by
+    // static constructors.
+    
+    for(int i=0;;i++){
+        if(!lib->binopList[i].lhs)break;
+        registerBinop(lib->binopList[i].lhs,
+                      lib->binopList[i].rhs,
+                      lib->binopList[i].opcode,
+                      lib->binopList[i].f);
     }
     
     if(import)

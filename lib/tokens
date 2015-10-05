@@ -16,6 +16,7 @@
 *d!`    :   T_HASHSETSYMB
 *d<<    :   T_DOUBLEANGLEOPEN
 *d>>    :   T_DOUBLEANGLECLOSE
+*d??    :   T_DOUBLEQUERY
 
 # characters, which return the token immediately and do not
 # require trailing space

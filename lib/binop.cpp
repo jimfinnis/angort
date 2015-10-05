@@ -49,6 +49,14 @@ void Angort::binop(Value *a,Value *b,int opcode){
     Type *at = a->getType();
     Type *bt = b->getType();
     
+    // first look to see if it's a registered binop. If
+    // so, run it. Otherwise fall through to a set of if
+    // statements.
+    
+    if(at->binop(this,opcode,a,b))
+        return;
+    
+    
     if(at == Types::tNone ||  bt == Types::tNone){
         /**
          * 

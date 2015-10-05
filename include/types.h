@@ -4,10 +4,17 @@
 #include "iterator.h"
 #include "gc.h"
 #include "arraylist.h"
+#include "intkeyedhash.h"
 
 namespace angort {
 
 struct Value;
+
+/// this is a function for a binary operator. These are stored in a
+/// hash owned by the LHS types, indexed by the ID of the RHS types
+/// combined somehow with the binop type.
+
+typedef void (*BinopFunction)(Angort *a,Value *lhs, Value *rhs);
 
 
 /// Each Value has a pointer to one of these, which exist as a set of
@@ -18,11 +25,21 @@ class Type {
     
     static Type *head; //!< head of list of types
     Type *next; //!< linking field of type list
+    
+    /// binary operators for which this is a left-hand side, keyed
+    /// by right-hand side binopID and opcode.
+    IntKeyedHash<BinopFunction> binops;
+    
 public:
     /// a constant name
     const char *name;
     /// a 32 bit unique ID (used in serialisation, etc.)
     uint32_t id;
+    /// an internal ID used for binop hashing. We can't use the above,
+    /// because it's a full 32 bits wide; we need spare bits in this
+    /// one for the binop ID. Memory wasteful, but we don't have a vast
+    /// number of type objects.
+    uint32_t binopID;
     
     /// a symbol for the above string - this is what angort stacks
     /// when the "type" word is called on a value.
@@ -58,6 +75,21 @@ public:
     /// set name of type, add to global type list
     /// ID is a 4-byte identifier.
     void add(const char *_name,const char *_id);
+    
+    /// register a binary operation for this type as the LHS
+    /// and another as the RHS. 
+    void registerBinop(Type *rhs, int opcode, BinopFunction f);
+    
+    /// get the binary operation for this type as the LHS and
+    /// another as the LHS, or NULL.
+    inline BinopFunction *getBinop(Type *rhs,int opcode){
+        uint32_t key = (rhs->binopID << 16) + opcode;
+        return binops.ffind(key);
+    }
+    
+    /// look up and perform a registered binary operation, returning
+    /// true if one was found.
+    static bool binop(Angort *a,int opcode,Value *lhs,Value *rhs);
     
     /// reset the type list, does not delete anything because
     /// the type objects are static
@@ -135,9 +167,9 @@ public:
         throw RUNT("cannot iterate a non-iterable value");
     }
     
-    /// return whether the item is in the collection (uses the same
-    /// equality test as hash keys)
-    virtual bool isIn(Value *v,Value *item);
+    /// return the index of item is in the collection (uses the same
+    /// equality test as hash keys).If not present, returns -1.
+    virtual int getIndexOfContainedItem(Value *v,Value *item);
         
     
     /// set a value in a collection, if this type is one
@@ -165,6 +197,7 @@ public:
     /// need to do more. Note that in and out may point to
     /// the same Value.
     virtual void clone(Value *out,const Value *in,bool deep=false);
+    
 protected:
     
 };

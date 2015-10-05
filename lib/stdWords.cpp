@@ -182,6 +182,12 @@ static NamespaceEnt *getNSEnt(Angort *a){
     else
         a->assertNegated=false;
 }
+
+%word asserteq (a b -- ) if a!=b assert
+{
+    if(a->popInt()!=a->popInt())
+        throw RUNT("assertq failure");
+}
     
 
 %word abs (x --) absolute value
@@ -427,15 +433,15 @@ static NamespaceEnt *getNSEnt(Angort *a){
     Type::dumpTypes();
 }
 
-%word srand (i --) set the random number generator seed. If -1, use the timestamp.
+%word srand (none --) set the random number generator seed. If none, use the timestamp.
 {
-    int v = a->popInt();
-    if(v==-1){
-        long t;
+    Value *v = a->popval();
+    long t;
+    if(v->isNone())
         time(&t);
-        srand(t);
-    } else 
-        srand(v);
+    else
+        t = v->toInt();
+    srand(t);
 }
 
 
@@ -570,7 +576,26 @@ static NamespaceEnt *getNSEnt(Angort *a){
     int y = p[1]->toInt();
     a->pushInt(x>>y);
 }
-    
+
+%word read (-- s|none) read line from stdin
+{
+    if(!feof(stdin)){
+        char *buf=NULL;
+        size_t size;
+        int rv = getline(&buf,&size,stdin);
+        if(rv<=0)
+            a->pushNone();
+        else{
+            buf[rv-1]=0;
+            a->pushString(buf);
+        }
+        if(buf)free(buf);
+    } else
+        a->pushNone();
+}
+        
+
+
 
 /*%word showclosure (cl --)
 {

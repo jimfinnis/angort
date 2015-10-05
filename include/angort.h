@@ -56,11 +56,21 @@ struct WordDef {
     NativeFunc f; //!< function pointer
 };
 
+/// a structure for binary operators as produced by makeWords.pl
+
+struct BinopDef {
+    const char *lhs; //!< name of LHS type
+    const char *rhs; //!< name of LHS type
+    const char *opcode; //!< opcode of operator
+    BinopFunction f; //!< function pointer
+};
+
 /// a structure describing a library as produced by makeWords.pl
 
 struct LibraryDef {
     const char *name; //!< library name (i.e. the angort Namespace)
     WordDef *wordList; //!< list of words, terminated with a null name
+    BinopDef *binopList; //!< list of binops, terminated with null lhs
     NativeFunc initfunc; //!< possibly null initialisation function
     NativeFunc shutdownfunc; //!< possibly null shutdown function
 };
@@ -636,10 +646,6 @@ private:
         return i;
     }
     
-    /// add a plugin (Linux only, uses shared libraries). Returns
-    /// the new namespace ID.
-    int plugin(const char *path);
-    
     
     /// called at the end of a block of code,
     /// or by emergency stop invocation. Returns
@@ -654,6 +660,10 @@ private:
     const char *findFile(const char *name);
     
 public:
+    /// add a plugin (Linux only, uses shared libraries). Returns
+    /// the new namespace ID.
+    int plugin(const char *path);
+    
     /// if non-neg, GC cycle detect is called after this number of instructions
     int autoCycleInterval; 
     
@@ -828,6 +838,11 @@ public:
     
     int registerLibrary(LibraryDef *lib,bool import=false);
     
+    /// register a binary operation, given the typenames and opcode name.
+    /// This will also accept "number" for a float/integer, and "str"
+    /// for an integer/symbol.
+    void registerBinop(const char *lhsName,const char *rhsName,
+                       const char *opcode,BinopFunction f);
     
     Angort();
     

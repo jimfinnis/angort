@@ -48,6 +48,10 @@ void Type::add(const char *_name,const char *_id){
     next = head;
     head = this;
     
+    // create the binop ID
+    static int binopIDCount=0;
+    binopID = binopIDCount++;
+    
     // normally symbols are generated after the static initialisation
     // but before anything else, in createTypes(). This is to make sure
     // the symbol system has been initialised.
@@ -69,6 +73,20 @@ Type *Type::getByID(const char *_id){
 }
 
 
+void Type::registerBinop(Type *rhs, int opcode, BinopFunction f){
+    uint32_t key = (rhs->binopID << 16) + opcode;
+    BinopFunction *ptr = binops.set(key);
+    *ptr = f;
+}
+
+bool Type::binop(Angort *a,int opcode,Value *lhs,Value *rhs){
+    BinopFunction *f = lhs->t->getBinop(rhs->t,opcode);
+    if(!f)
+        return false;
+    (**f)(a,lhs,rhs);
+    return true;
+}
+
 
 char *BlockAllocType::allocate(Value *v,int len,Type *type){
     v->clr();
@@ -79,17 +97,18 @@ char *BlockAllocType::allocate(Value *v,int len,Type *type){
     return (char *)(h+1);
 }
 
-bool Type::isIn(Value *v,Value *item){
-    Iterator<Value *> *iter = makeIterator(v);
-    
+int Type::getIndexOfContainedItem(Value *v,Value *item){
+    Iterator<Value *> *iter = makeIterator(v); // will throw for non-iterables
+    int i=0;
     for(iter->first();!iter->isDone();iter->next()){
         if(iter->current()->equalForHashTable(item)){
             delete iter;
-            return true;
+            return i;
         }
+        i++;
     }
     delete iter;
-    return false;
+    return -1;
 }
 
 const char *BlockAllocType::getData(const Value *v) const{

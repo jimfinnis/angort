@@ -101,9 +101,9 @@ public:
     }
     
     ~IntKeyedHash(){
-        printf("deleting table of %d\n",mask+1);
+//        printf("deleting table of %d\n",mask+1);
         free(table);
-        printf("deleted\n");
+//        printf("deleted\n");
 #ifdef DEBUG
 //        fprintf(stderr,"misses : %d, size %d\n",miss,mask+1);
 #endif
@@ -166,10 +166,22 @@ public:
             return false;
     }
     
-    /// get the last value found by find()
+    /// get the last value found by find(). Doesn't work with ffind().
     T *getval(){
         return v;
     }
+    
+    /// faster find, returns NULL or a pointer to the item. DOES NOT
+    /// set v, so getval() won't work.
+    virtual T *ffind(uint32_t k){
+        IntKeyedHashEnt<T> *ent = look(k);
+        if(ent->s == HSH_USED) {
+            return &ent->v;
+        }
+        else
+            return NULL;
+    }
+        
     
     /// delete an item with a given key, returning true if we did it
     bool del(uint32_t k) {

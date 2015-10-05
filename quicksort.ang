@@ -5,11 +5,10 @@
 
 :qs |l:n|
     ?l len 0= if [] else
-        0 ?l get !n
-        1 -1 ?l slice !l
+        ?l shift !n  # use first item as pivot, drop others
         ?l (?n <) filter qs
-        [?n]
-        ?l (?n < not) filter qs ++
+        [?n] +
+        ?l (?n < not) filter qs +
     then
 ;
 

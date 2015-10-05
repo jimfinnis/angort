@@ -425,7 +425,9 @@ word | action|notes
 /    | (a b -- a/b)|
 %    | (a b -- a%b) | remainder ("mod") operator
 >    | (a b -- a>b)| string comparison works as expected
-<    | (a b -- a<b)| string comparison works as expected
+<=   | (a b -- a<=b)| string comparison works as expected
+>    | (a b -- a>b)| string comparison works as expected
+>=   | (a b -- a>=b)| string comparison works as expected
 =    | (a b -- a=b)| string comparison works as expected
 !=   | (a b -- a!=b)| string comparison works as expected
 
@@ -597,7 +599,10 @@ nl | (--) | print just a newline
 There are quite a few more. To get a list of all the builtin words, use "list";
 and to get help on an individual word, use 
 
-    "word" help
+    ??word
+    
+Some words are actually low-level tokens, such as "if" and "each" - these
+won't appear in the help.
 
 If you're interested in extending Angort, look in the std.*.cpp files in angort/lib and angort/cli for
 word definitions, and note how they're defined in a special variant of C++.

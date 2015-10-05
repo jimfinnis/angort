@@ -66,6 +66,7 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
             break;
                 
         case 'v':
+        case '?':
             break;
         default:
             throw ParameterTypeException(i,"an impossible parameter");
