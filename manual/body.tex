@@ -184,7 +184,7 @@ more than one line:
 \subsection{Word parameters and local variables}
 Until now, all the code has been perfectly valid Forth\footnote{With
 the exception of the factorial function, which uses local variables
-and recursion.} However, the manipulation of
+and recursion.}. However, the manipulation of
 stack required in Forth is a challenge (and modern computers
 have a little more memory), so Angort has a system of named
 parameters and local variables. These can be defined by
@@ -281,7 +281,6 @@ which have no environment; and closures, which consist of a codeblock and
 some stored variables. They appear identical to the user.
 There are some other types used internally, such as the
 types for iterators and deleted objects in a hash.
-\clearpage
 \subsection{Coercions}
 \begin{itemize}
 \item Integers and floats are coerced to strings in string contexts.
@@ -295,8 +294,6 @@ types for iterators and deleted objects in a hash.
 \item In certain binary operations (currently just ``+'') if one of the operands
 is a string, both will be coerced to strings.
 \end{itemize}
-Much of the type system is untidy, and a major reorganisation is being
-planned.
 \clearpage
 
 \section{Conditions}
@@ -426,7 +423,9 @@ loop, the counting example can be rewritten as:
     }                   # end of loop
 ;
 \end{lstlisting}
-Note that the end value of all ranges is the first value \emph{outside} the loop.
+Note that range end value is exclusive --- that is, it is the first value which
+is \emph{not} in the range --- so the above example, specified as
+\texttt{0 99 range}, actually counts from 0 to 99. 
 This looks somewhat odd with integer ranges, but serves to prevent float ranges
 relying on equality tests.
 \begin{lstlisting}
@@ -441,11 +440,12 @@ iterate over the values in a list. For example
 \begin{lstlisting}
 [1,2,3,4,5] each {i.}
 \end{lstlisting}
-will print the numbers from 1 to 5. Similarly, we can iterate over the keys of a hash:
+will print the numbers from 1 to 5. Similarly, we can iterate over the keys 
+of a hash:
 \begin{lstlisting}
 [% "foo" "bar", "baz" "qux"] each {i.}
 \end{lstlisting}
-will print the hash's keys: ``foo'' and ``bar''.
+will print the hash's keys: ``foo'' and ``bar''. 
 
 \subsubsection{Nested iterator loops}
 Each loop has its own iterator, even if they come from the same iterable:
@@ -748,13 +748,13 @@ and read values using \texttt{get} which has the picture \texttt{(key hash -- va
 1|1> .
 the foo string
 \end{v}
-We can also iterate over the hash's keys:
+We can also iterate over the hash's keys and values:
 \begin{lstlisting}
 :dumphash |h:|
     ?h each {                   # iterate over the hash's keys
         i p                     # print key without trailing new line
         ":   " p                # print colon and spaces
-        i ?H get                # get the value of the key in the hash
+        ival                    # get the value of the key in the hash
         .                       # and print it
     }
 ;
