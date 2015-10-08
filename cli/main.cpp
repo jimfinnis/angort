@@ -164,7 +164,7 @@ int main(int argc,char *argv[]){
     
     // set up the autocomplete function
     rl_completion_entry_function = generator;
-    
+    rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
     for(;;){
         char prompt=0;
         if(a.isDefining())
