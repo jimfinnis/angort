@@ -1814,11 +1814,14 @@ void Angort::resetAutoComplete(){
         *acList->append()=strdup(ns->getName(i));
     }
     // and finally add the fully qualified name for all namespaces
+    // (and unqualified name for imported namespaces)
     char buf[1024];
     for(int i=0;i<names.spaces.count();i++){
         Namespace *ns = names.getSpaceByIdx(i);
         const char *prefix = names.spaces.getName(i);
         for(int i=0;i<ns->count();i++){
+            if(ns->getEnt(i)->isImported)
+                *acList->append()=strdup(ns->getName(i));
             strcpy(buf,prefix);
             strcat(buf,"$");
             strcat(buf,ns->getName(i));
