@@ -18,7 +18,7 @@ struct SymbolName {
 /// symbols have their own private namespace
 static StringMap<int> locations;
 static ArrayList<SymbolName> strings(32);
-static int ctr=1;
+int symbolCtr=1;
 
 void SymbolType::deleteAll(){
     locations.clear();
@@ -48,8 +48,8 @@ int SymbolType::getSymbol(const char *s){
     if(locations.find(s)){
         n=locations.found();
     } else {
-        n = ctr;
-        locations.set(s,ctr++);
+        n = symbolCtr;
+        locations.set(s,symbolCtr++);
         SymbolName *ss = strings.set(n);
         strcpy(ss->s,s);
     }

@@ -367,6 +367,7 @@ void Angort::run(const Instruction *ip){
     const CodeBlock *cb;
     try {
         for(;;){
+            extern int symbolCtr;
             if(emergencyStop){
                 ip = ret();
                 if(!ip)
