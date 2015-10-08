@@ -1774,13 +1774,14 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     // register the binops AFTER we init the function, so the
     // types are all sorted. Although that should be done by
     // static constructors.
-    
-    for(int i=0;;i++){
-        if(!lib->binopList[i].lhs)break;
-        registerBinop(lib->binopList[i].lhs,
-                      lib->binopList[i].rhs,
-                      lib->binopList[i].opcode,
-                      lib->binopList[i].f);
+    if(lib->binopList){
+        for(int i=0;;i++){
+            if(!lib->binopList[i].lhs)break;
+            registerBinop(lib->binopList[i].lhs,
+                          lib->binopList[i].rhs,
+                          lib->binopList[i].opcode,
+                          lib->binopList[i].f);
+        }
     }
     
     if(import)
