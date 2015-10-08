@@ -650,6 +650,10 @@ private:
     /// to do shell expansions of the path if it is available.
     const char *findFile(const char *name);
     
+    /// autocomplete state
+    ArrayList<const char *> *acList;
+    int acIndex;
+    
 public:
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.
@@ -897,8 +901,12 @@ public:
     void gc(){
         GarbageCollected::gc();
     }
-        
     
+    /// reset the autocomplete list
+    void resetAutoComplete();
+    
+    /// return the next possible autocomplete candidate
+    const char *getNextAutoComplete();
 };
 
 

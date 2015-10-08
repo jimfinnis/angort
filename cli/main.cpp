@@ -16,7 +16,9 @@
 
 using namespace angort;
 
-static void showException(Exception& e,Angort& a){
+Angort a;
+
+static void showException(Exception& e){
     printf("Error: %s\n",e.what());
     const Instruction *ip = a.getIPException();
     if(ip){
@@ -34,9 +36,43 @@ static void showException(Exception& e,Angort& a){
 #define F_CMD 1
 #define F_LOOP 2
 
+static char *generator(const char *text,int state){
+    static int idx;
+    const char *name;
+    static int len;
+    const char *start = text; // record this for prefixes
+    
+    // skip any the number of ? or ! at the beginning
+    // so ??word and ?/! var will work. I would use
+    // rl_special_prefixes, but it doesn't seem to behave.
+    
+    while(*text && (*text=='!' ||*text=='?'))text++;
+    
+    if(!state){
+        len=strlen(text);
+        a.resetAutoComplete();
+    }
+    
+    // return the next name which partially matches
+    while(name = a.getNextAutoComplete()){
+        idx++;
+        if(!strncmp(name,text,len)){
+            if(start!=text){
+                char *ss = (char *)
+                      malloc(strlen(name)+(text-start)+1);
+                memcpy(ss,start,text-start);
+                strcpy(ss+(text-start),name);
+                free((void *)name);
+                return ss;
+            }
+            return (char *)name;
+        }
+    }
+    return NULL;
+}
+
 
 int main(int argc,char *argv[]){
-    Angort a;
     
     extern void setArgumentList(int argc,char *argv[]);
     extern LibraryDef LIBNAME(stdmath);
@@ -50,7 +86,7 @@ int main(int argc,char *argv[]){
     } catch(FileNotFoundException e){
         // ignore if not there
     } catch(Exception e){
-        showException(e,a);
+        showException(e);
     }
     
     setArgumentList(argc,argv);
@@ -112,7 +148,7 @@ int main(int argc,char *argv[]){
                 a.fileFeed(data);
             }
         }catch(Exception e){
-            showException(e,a);
+            showException(e);
         }
     }
     
@@ -125,6 +161,9 @@ int main(int argc,char *argv[]){
     printf("Angort version %d.%d (c) Jim Finnis 2012-2015\nUse '??word' to get help on a word.\n",
            vv / 100,
            vv % 100);
+    
+    // set up the autocomplete function
+    rl_completion_entry_function = generator;
     
     for(;;){
         char prompt=0;
@@ -145,7 +184,7 @@ int main(int argc,char *argv[]){
             try {
                 a.feed(line);
             } catch(Exception e){
-                showException(e,a);
+                showException(e);
             }
         }
     }
