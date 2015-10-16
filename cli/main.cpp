@@ -16,41 +16,80 @@
 
 using namespace angort;
 
-static void showException(Exception& e,Angort& a){
+Angort *a;
+
+static void showException(Exception& e){
     printf("Error: %s\n",e.what());
-    const Instruction *ip = a.getIPException();
+    const Instruction *ip = a->getIPException();
     if(ip){
         char buf[1024];
         ip->getDetails(buf,1024);
         printf("Error at %s\n",buf);
     }else
-          printf("Last line input: %s\n",a.getLastLine());
+          printf("Last line input: %s\n",a->getLastLine());
     if(e.fatal)
         exit(1);
     
-    a.clearStack();
+    a->clearStack();
 }
 
 #define F_CMD 1
 #define F_LOOP 2
 
+static char *generator(const char *text,int state){
+    static int idx;
+    const char *name;
+    static int len;
+    const char *start = text; // record this for prefixes
+    
+    // skip any the number of ? or ! at the beginning
+    // so ??word and ?/! var will work. I would use
+    // rl_special_prefixes, but it doesn't seem to behave.
+    
+    while(*text && (*text=='!' ||*text=='?'))text++;
+    
+    if(!state){
+        len=strlen(text);
+        a->resetAutoComplete();
+    }
+    
+    // return the next name which partially matches
+    while(name = a->getNextAutoComplete()){
+        idx++;
+        if(!strncmp(name,text,len)){
+            if(start!=text){
+                char *ss = (char *)
+                      malloc(strlen(name)+(text-start)+1);
+                memcpy(ss,start,text-start);
+                strcpy(ss+(text-start),name);
+                free((void *)name);
+                return ss;
+            }
+            return (char *)name;
+        }
+    }
+    return NULL;
+}
+
 
 int main(int argc,char *argv[]){
-    Angort a;
     
     extern void setArgumentList(int argc,char *argv[]);
     extern LibraryDef LIBNAME(stdmath);
     extern LibraryDef LIBNAME(stdenv);
     
+    a = new Angort();
+    
+    
     // first, we'll try to include the standard startup
     try {
-        a.registerLibrary(&LIBNAME(stdmath),true);
-        a.registerLibrary(&LIBNAME(stdenv),true);
-        a.include("angortrc",false);
+        a->registerLibrary(&LIBNAME(stdmath),true);
+        a->registerLibrary(&LIBNAME(stdenv),true);
+        a->include("angortrc",false);
     } catch(FileNotFoundException e){
         // ignore if not there
     } catch(Exception e){
-        showException(e,a);
+        showException(e);
     }
     
     setArgumentList(argc,argv);
@@ -61,10 +100,10 @@ int main(int argc,char *argv[]){
         switch(c){
         case 'n':flags|=F_LOOP;break;
         case 'e':flags|=F_CMD;break;
-        case 'd':a.debug|=1;break;
-        case 'D':a.debug|=2;break;
+        case 'd':a->debug|=1;break;
+        case 'D':a->debug|=2;break;
         case 'l':
-            a.plugin(optarg);
+            a->plugin(optarg);
             break;
         default:
             break;
@@ -82,9 +121,9 @@ int main(int argc,char *argv[]){
                     // fake up a function by feeding a colon definition
                     // into Angort. Then, for each line, we stack the
                     // line and then feed a line to run that function.
-                    a.feed(":TMPLOOP");
-                    a.feed(data);
-                    a.feed(";");
+                    a->feed(":TMPLOOP");
+                    a->feed(data);
+                    a->feed(";");
                     // then iterate over the file, executing this
                     // word for each line
                     while(!feof(stdin)){
@@ -95,13 +134,13 @@ int main(int argc,char *argv[]){
                             break;
                         else{
                             buf[rv-1]=0;
-                            a.pushString(buf);
-                            a.feed("TMPLOOP");
+                            a->pushString(buf);
+                            a->feed("TMPLOOP");
                         }
                         if(buf)free(buf);
                     }
                 } else 
-                    a.feed(data);
+                    a->feed(data);
                 exit(0);
             } else {
                 FILE *f = fopen(data,"r");
@@ -109,10 +148,10 @@ int main(int argc,char *argv[]){
                     printf("cannot open file: %s\n",data);
                     exit(1);
                 }
-                a.fileFeed(data);
+                a->fileFeed(data);
             }
         }catch(Exception e){
-            showException(e,a);
+            showException(e);
         }
     }
     
@@ -120,34 +159,38 @@ int main(int argc,char *argv[]){
     
     char buf[256];
     
-    a.assertDebug=true;
-    int vv = a.getVersion();
+    a->assertDebug=true;
+    int vv = a->getVersion();
     printf("Angort version %d.%d (c) Jim Finnis 2012-2015\nUse '??word' to get help on a word.\n",
            vv / 100,
            vv % 100);
     
+    // set up the autocomplete function
+    rl_completion_entry_function = generator;
+    rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
     for(;;){
         char prompt=0;
-        if(a.isDefining())
+        if(a->isDefining())
             prompt = ':';
-        else if(a.inSubContext())
+        else if(a->inSubContext())
             prompt = '*';
         else
             prompt = '>';
         
         sprintf(buf,"%d|%d %c ",
                 GarbageCollected::getGlobalCount(),
-                a.stack.ct,prompt);
+                a->stack.ct,prompt);
         char *line = readline(buf);
         if(!line)break;
         if(*line){
             add_history(line);
             try {
-                a.feed(line);
+                a->feed(line);
             } catch(Exception e){
-                showException(e,a);
+                showException(e);
             }
         }
     }
+    delete a;
     return 0;
 }

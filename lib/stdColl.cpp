@@ -159,10 +159,13 @@ inline void getByIndex(Value *c,int idx){
 
 %word pop (list -- item) pop an item from the end of the list
 {
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    Value *v = a->pushval();
+    Value v;
+    v.copy(a->popval());
+    ArrayList<Value> *list = Types::tList->get(&v);
+    
+    Value *p = a->pushval();
     Value *src = list->get(list->count()-1);
-    v->copy(src);
+    p->copy(src);
     list->remove(list->count()-1);
 }
 

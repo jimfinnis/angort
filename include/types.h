@@ -31,6 +31,7 @@ class Type {
     IntKeyedHash<BinopFunction> binops;
     
 public:
+    
     /// a constant name
     const char *name;
     /// a 32 bit unique ID (used in serialisation, etc.)

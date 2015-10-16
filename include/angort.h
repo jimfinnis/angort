@@ -637,15 +637,6 @@ private:
     /// (which could be NULL for top level).
     const Instruction *call(const Value *v, const Instruction *returnip);
     
-    /// find a global or create one if it doesn't exist;
-    /// used for autoglobals.
-    int findOrCreateGlobal(const char *name){
-        int i = names.get(name);
-        if(i<0)
-            i = names.add(name);
-        return i;
-    }
-    
     
     /// called at the end of a block of code,
     /// or by emergency stop invocation. Returns
@@ -659,7 +650,20 @@ private:
     /// to do shell expansions of the path if it is available.
     const char *findFile(const char *name);
     
+    /// autocomplete state
+    ArrayList<const char *> *acList;
+    int acIndex;
+    
 public:
+    /// find a global or create one if it doesn't exist;
+    /// used for autoglobals.
+    int findOrCreateGlobal(const char *name){
+        int i = names.get(name);
+        if(i<0)
+            i = names.add(name);
+        return i;
+    }
+    
     /// add a plugin (Linux only, uses shared libraries). Returns
     /// the new namespace ID.
     int plugin(const char *path);
@@ -897,8 +901,12 @@ public:
     void gc(){
         GarbageCollected::gc();
     }
-        
     
+    /// reset the autocomplete list
+    void resetAutoComplete();
+    
+    /// return the next possible autocomplete candidate
+    const char *getNextAutoComplete();
 };
 
 

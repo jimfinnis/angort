@@ -7,8 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 249
-
+#define ANGORT_VERSION 251
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -82,6 +81,8 @@ Angort::Angort() {
     /// create the default, root compilation context
     context = contextStack.pushptr();
     context->reset(NULL,&tok);
+    
+    acList = new ArrayList<const char *>(128);
 }
 
 Angort::~Angort(){
@@ -366,6 +367,7 @@ void Angort::run(const Instruction *ip){
     const CodeBlock *cb;
     try {
         for(;;){
+            extern int symbolCtr;
             if(emergencyStop){
                 ip = ret();
                 if(!ip)
@@ -1773,13 +1775,14 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     // register the binops AFTER we init the function, so the
     // types are all sorted. Although that should be done by
     // static constructors.
-    
-    for(int i=0;;i++){
-        if(!lib->binopList[i].lhs)break;
-        registerBinop(lib->binopList[i].lhs,
-                      lib->binopList[i].rhs,
-                      lib->binopList[i].opcode,
-                      lib->binopList[i].f);
+    if(lib->binopList){
+        for(int i=0;;i++){
+            if(!lib->binopList[i].lhs)break;
+            registerBinop(lib->binopList[i].lhs,
+                          lib->binopList[i].rhs,
+                          lib->binopList[i].opcode,
+                          lib->binopList[i].f);
+        }
     }
     
     if(import)
@@ -1800,8 +1803,49 @@ void Angort::trace(){
     }
 }
 
+void Angort::resetAutoComplete(){
+    // build the new autocomplete list
+    acList->clear();
+    // first, add the tokens
+    for(int i=0;tokens[i].word;i++){
+        *acList->append()=strdup(tokens[i].word);
+    }
+    // then add the default namespace
+    Namespace *ns = names.getSpaceByIdx(stdNamespace);
+    for(int i=0;i<ns->count();i++){
+        *acList->append()=strdup(ns->getName(i));
+    }
+    // and finally add the fully qualified name for all namespaces
+    // (and unqualified name for imported namespaces)
+    char buf[1024];
+    for(int i=0;i<names.spaces.count();i++){
+        Namespace *ns = names.getSpaceByIdx(i);
+        const char *prefix = names.spaces.getName(i);
+        for(int i=0;i<ns->count();i++){
+            if(ns->getEnt(i)->isImported)
+                *acList->append()=strdup(ns->getName(i));
+            strcpy(buf,prefix);
+            strcat(buf,"$");
+            strcat(buf,ns->getName(i));
+            *acList->append()=strdup(buf);
+        }
+    }
+    acIndex=0;
+}
 
-/// comparator for ArrayList sorting
+const char *Angort::getNextAutoComplete(){
+    for(;;){
+        if(acIndex>=acList->count())return NULL;
+        const char *s = *acList->get(acIndex);
+        acIndex++;
+        if(*s != '*')return s;
+    }
+}
+
+
+
+/// comparator for ArrayList sorting of values with a comparator
+/// object
 
 // all very ugly, but I can't seem to avoid the static here, which sort
 // of throws the templating out of the window (as far as I can see).

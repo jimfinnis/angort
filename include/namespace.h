@@ -201,8 +201,6 @@ public:
 
 class NamespaceManager {
 private:
-    NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
-    
     int currentIdx; //!< the index of the current namespace
     
     Stack<int,8> stack; //!< we maintain a stack of namespaces for when packages include others
@@ -236,9 +234,11 @@ private:
     ArrayList<int> importedNamespaces;
     
 public:
+    NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
+    
     
     // the namespace system has room for 4 namespaces initially, but can grow.
-    NamespaceManager() : spaces(4),importedNamespaces(4) {
+    NamespaceManager() : importedNamespaces(4),spaces(4) {
         currentIdx=-1; // initially no namespace
         privNames=false;
     }
