@@ -6,6 +6,7 @@
 
 #include "angort.h"
 #include <wchar.h>
+#include <wctype.h>
 
 using namespace angort;
 
@@ -73,6 +74,42 @@ inline int wstrlen(const char *s){
     Value *s = a->stack.peekptr();
     const StringBuffer& str = s->toString();
     Types::tInteger->set(s,*str.get());
+}
+
+%word lowercase (string -- string) lowercase a string 
+{
+    Value *v = a->stack.peekptr();
+    const StringBuffer &s = v->toString();
+    int len = wstrlen(s.get());
+    wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    mbstowcs(buf,s.get(),len+1);
+    
+    for(int i=0;i<len;i++){
+        buf[i]=towlower(buf[i]);
+    }
+    buf[len]=0;
+    int reqd = wcstombs(NULL,buf,0);
+    char *s2 = (char *)alloca(sizeof(char)*(reqd+1));
+    wcstombs(s2,buf,reqd+1);
+    Types::tString->set(v,s2);
+}
+
+%word uppercase (string -- string) uppercase a string 
+{
+    Value *v = a->stack.peekptr();
+    const StringBuffer &s = v->toString();
+    int len = wstrlen(s.get());
+    wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    mbstowcs(buf,s.get(),len+1);
+    
+    for(int i=0;i<len;i++){
+        buf[i]=towupper(buf[i]);
+    }
+    buf[len]=0;
+    int reqd = wcstombs(NULL,buf,0);
+    char *s2 = (char *)alloca(sizeof(char)*(reqd+1));
+    wcstombs(s2,buf,reqd+1);
+    Types::tString->set(v,s2);
 }
 
 %word format (list string -- string) string formatting
@@ -211,7 +248,7 @@ inline int wstrlen(const char *s){
     if(p1>len || p1<0){
         a->pushString("");
     } else {
-        wchar_t *s = (wchar_t *)alloca(len*sizeof(wchar_t)+1);
+        wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
         int rv = mbstowcs(s,p0,len+1);
         if(rv<0){
             a->pushNone();

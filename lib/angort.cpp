@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 251
+#define ANGORT_VERSION 252
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -367,7 +367,6 @@ void Angort::run(const Instruction *ip){
     const CodeBlock *cb;
     try {
         for(;;){
-            extern int symbolCtr;
             if(emergencyStop){
                 ip = ret();
                 if(!ip)
