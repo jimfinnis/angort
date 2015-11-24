@@ -17,6 +17,8 @@
 *d<<    :   T_DOUBLEANGLEOPEN
 *d>>    :   T_DOUBLEANGLECLOSE
 *d??    :   T_DOUBLEQUERY
+*d<:    :   T_OPENEXPR
+*d:>    :   T_CLOSEEXPR
 
 # characters, which return the token immediately and do not
 # require trailing space

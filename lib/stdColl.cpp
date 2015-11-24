@@ -460,4 +460,3 @@ struct StdComparator : public ArrayListComparator<Value> {
     }
     delete iter;
 }
-    

@@ -76,6 +76,20 @@ public:
     /// below! This is the values iterator.
     virtual Iterator<class Value *> *makeValueIterator(){return NULL;}
     
+    /// this is the default function for making an iterator for use for cycle detection - override
+    /// this to return NULL if the type is NOT iterating over true values inside, and bad things would
+    /// happen if we were to try to cycle detect in here (such is where iterating over a file type fakes up string objects)
+    virtual Iterator<class Value *> *makeGCKeyIterator(){
+        return makeKeyIterator();
+    }
+    
+    /// this is the default function for making an iterator for use for cycle detection - override
+    /// this to return NULL if the type is NOT iterating over true values inside, and bad things would
+    /// happen if we were to try to cycle detect in here (such is where iterating over a file type fakes up string objects)
+    virtual Iterator<class Value *> *makeGCValueIterator(){
+        return makeValueIterator();
+    }
+    
     /// deletion prepwork - see CycleDetector::detect(). This should go through any GC objects,
     /// and if the gc_refs field is 0xffff, should clear them (i.e. any objects which were not traced)
     /// Extend for C++ properties which are garbage-collectable.

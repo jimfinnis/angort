@@ -40,6 +40,15 @@ static void formatFloat(char *s,float f,int width,int precision, bool zeropad, b
     sprintf(s,format,f);
 }
 
+static void formatFloat2(char *s,float f,int width,int precision, bool zeropad, bool negpad){
+    char format[32];
+    if(precision!=-9999)
+        sprintf(format,"%%%s%d.%dg",zeropad?"0":"",negpad?-width:width,precision);
+    else
+        sprintf(format,"%%%s%dg",zeropad?"0":"",negpad?-width:width);
+    sprintf(s,format,f);
+}
+
 static void formatString(char *s,const char *in,int width,int precision, bool negpad){
     char format[32];
     snprintf(format,20,"%%%ds",negpad?-width:width);
@@ -94,6 +103,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 size+=max(20,width);
                 break;
             case 'f':
+            case 'g':
                 iter.next();
                 size+=20; // got to draw the line somewhere.
                 break;
@@ -169,6 +179,11 @@ expand:
                 break;
             case 'f':
                 formatFloat(s,iter.current()->toFloat(),width,precision,zeropad,negpad);
+                s+=strlen(s);
+                iter.next();
+                break;
+            case 'g':
+                formatFloat2(s,iter.current()->toFloat(),width,precision,zeropad,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;

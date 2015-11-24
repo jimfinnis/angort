@@ -594,6 +594,7 @@ private:
     /// the start of a word definition,
     void startDefine(const char *name);
     
+    
     /// define a word from a context - startDefine() must have been called
     void endDefine(class CompileContext *cb);
     

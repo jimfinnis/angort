@@ -12,7 +12,7 @@
 
 namespace angort {
 
-HashObject::HashObject(){
+HashObject::HashObject() : GarbageCollected() {
     hash = new Hash();
 }
 

@@ -174,6 +174,21 @@ static NamespaceEnt *getNSEnt(Angort *a){
         printf("Assertion passed: %s\n",desc.get());
 }
 
+static int stackcheck=-1;
+%word chkstart (--) start stack check block (save stack ct)
+{
+    stackcheck = a->stack.ct;
+}
+%word chkend (--) end stack check block (check stack count agrees with saved)
+{
+    if(a->stack.ct!=stackcheck)
+        throw AssertException("stack check failed",a->getLineNumber());
+    
+}
+
+
+
+
 %word assertmode (mode --) set to `negated or `normal, if negated assertion conditions are negated
 {
     const StringBuffer& sb = a->popString();

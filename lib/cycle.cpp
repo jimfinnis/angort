@@ -7,7 +7,6 @@
 #include "angort.h"
 #include "cycle.h"
 
-
 namespace angort {
 CycleDetector *CycleDetector::instance = NULL;
 
@@ -20,9 +19,7 @@ CycleDetector *CycleDetector::instance = NULL;
  */
 void CycleDetector::detect(){
     GarbageCollected *p,*q;
-    
     newlist.reset(); // clean the new list
-    
     for(p=mainlist.head();p;p=mainlist.next(p)){
         dprintf("List ent : %p (next %p), refs %d\n",p,mainlist.next(p),
                  p->refct);
@@ -39,7 +36,7 @@ void CycleDetector::detect(){
         dprintf("three phase decrement of refs from %p\n",p);
         dprintf("Phase 1 : keys\n");
         decIteratorReferentsCycleRefCounts(p,true);
-        dprintf("Phase 1 : values\n");
+        dprintf("Phase 2 : values\n");
         decIteratorReferentsCycleRefCounts(p,false);
         dprintf("Phase 3 : extension\n");
         p->decReferentsCycleRefCounts();
@@ -125,7 +122,7 @@ void CycleDetector::detect(){
 
 void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool iskey) {
     
-    Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
+    Iterator<Value *>* iterator = iskey?gc->makeGCKeyIterator():gc->makeGCValueIterator();
     if(!iterator)return;
     dprintf("doing deciterref on %p\n",gc);
     for(iterator->first();!iterator->isDone();iterator->next()){
@@ -142,7 +139,7 @@ void CycleDetector::decIteratorReferentsCycleRefCounts(GarbageCollected *gc,bool
 
 void CycleDetector::traceAndMoveIterator(GarbageCollected *gc,bool iskey) {
     
-    Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
+    Iterator<Value *>* iterator = iskey?gc->makeGCKeyIterator():gc->makeGCValueIterator();
     if(!iterator)return;
     
     for(iterator->first();!iterator->isDone();iterator->next()){
@@ -159,7 +156,7 @@ void CycleDetector::traceAndMoveIterator(GarbageCollected *gc,bool iskey) {
 }
 
 void CycleDetector::clearZombieReferencesIterator(GarbageCollected *gc,bool iskey) {
-    Iterator<Value *>* iterator = iskey?gc->makeKeyIterator():gc->makeValueIterator();
+    Iterator<Value *>* iterator = iskey?gc->makeGCKeyIterator():gc->makeGCValueIterator();
     if(!iterator)return;
     
     for(iterator->first();!iterator->isDone();iterator->next()){

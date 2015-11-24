@@ -12,10 +12,10 @@
 
 namespace angort {
 
-template<> RangeType<int>::RangeType(){
+template<> RangeType<int>::RangeType()  {
     add("range","RANI");
 }
-template<> RangeType<float>::RangeType(){
+template<> RangeType<float>::RangeType() {
     add("frange","RANF");
 }
 

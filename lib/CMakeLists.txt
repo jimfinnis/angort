@@ -47,7 +47,8 @@ add_definitions(-Wall)
 add_words_files(stdWords.cpp stdColl.cpp stdString.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
-    cycle.cpp binop.cpp plugins.cpp format.cpp stringbuf.cpp filefind.cpp
+    cycle.cpp   binop.cpp   plugins.cpp    format.cpp    stringbuf.cpp
+    filefind.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
     types/hashtype.cpp   types/symbol.cpp types/native.cpp
