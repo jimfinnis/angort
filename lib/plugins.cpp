@@ -53,6 +53,10 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
             if(v->t != Types::tHash )
                 throw ParameterTypeException(i,"hash");
             break;
+        case 'I':
+            if(!(v->t->flags & TF_ITERABLE))
+                throw ParameterTypeException(i,"iterable");
+            break;
         case 'a':
         case 'b':
         case 'A':

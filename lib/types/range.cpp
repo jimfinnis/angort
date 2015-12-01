@@ -13,9 +13,11 @@
 namespace angort {
 
 template<> RangeType<int>::RangeType()  {
+    flags |= TF_ITERABLE;
     add("range","RANI");
 }
 template<> RangeType<float>::RangeType() {
+    flags |= TF_ITERABLE;
     add("frange","RANF");
 }
 

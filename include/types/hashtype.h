@@ -25,6 +25,7 @@ struct HashObject: public GarbageCollected {
 class HashType: public GCType {
 public:
     HashType(){
+        flags |= TF_ITERABLE;
         add("hash","HASH");
     }
     

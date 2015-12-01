@@ -22,6 +22,7 @@ class ListType : public GCType {
 public:
     ListType(){
         add("list","LIST");
+        flags |= TF_ITERABLE;
     }
     
     /// get this value's arraylist, throwing if it's not a list

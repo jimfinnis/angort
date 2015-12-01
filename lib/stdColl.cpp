@@ -373,7 +373,7 @@ struct StdComparator : public ArrayListComparator<Value> {
 %word zipWith (in1 in2 func -- out) apply binary func to pairs of items in list
 {
     Value *p[3];
-    a->popParams(p,"llc");
+    a->popParams(p,"IIc");
     Iterator<Value *> *iter1 = p[0]->t->makeIterator(p[0]);
     Iterator<Value *> *iter2 = p[1]->t->makeIterator(p[1]);
     
