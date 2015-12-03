@@ -5,8 +5,18 @@ using namespace angort;
 
 static Value argList;
 
+// we store this because in certain plugins the arglist is useful.
+
+namespace angort {
+char **sysArgv;
+int sysArgc;
+};
+
 void setArgumentList(int argc,char *argv[]){
     ArrayList<Value>*list = Types::tList->set(&argList);
+    
+    sysArgc=argc;
+    sysArgv=argv;
     
     for(int i=0;i<argc;i++){
         Value *v = list->append();

@@ -31,10 +31,13 @@ public:
     }
     
     virtual int add(const char *name){
-        if(get(name)>=0)
-            throw Exception().set("name already exists in namespace: '%s'",name);
+        int idx = get(name);
+        if(idx>=0){
+            // throw Exception().set("name already exists in namespace: '%s'",name);
+            return idx;
+        }
         T *e = entries.append();
-        int idx = entries.getIndexOf(e);
+        idx = entries.getIndexOf(e);
         locations.set(name,idx);
         return idx;
     }

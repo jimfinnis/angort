@@ -36,7 +36,11 @@ int NamespaceManager::get(const char *name, bool scanImports){
         Namespace *sp = spaces.getEnt(spaceidx);
         int subidx = sp->get(dollar+1);
         if(subidx<0)return -1; // no such entry
-        return makeIndex(spaceidx,sp->get(dollar+1));
+        if(!sp->getEnt(subidx)->isPriv)
+            return makeIndex(spaceidx,sp->get(dollar+1));
+        else
+            return -1;
+        
     }
     
     // and this is for names in an unspecified space - 

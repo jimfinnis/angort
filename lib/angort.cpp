@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 253
+#define ANGORT_VERSION 254
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1821,12 +1821,16 @@ void Angort::resetAutoComplete(){
         Namespace *ns = names.getSpaceByIdx(i);
         const char *prefix = names.spaces.getName(i);
         for(int i=0;i<ns->count();i++){
-            if(ns->getEnt(i)->isImported)
+            NamespaceEnt *ent = ns->getEnt(i);
+            
+            if(ent->isImported)
                 *acList->append()=strdup(ns->getName(i));
-            strcpy(buf,prefix);
-            strcat(buf,"$");
-            strcat(buf,ns->getName(i));
-            *acList->append()=strdup(buf);
+            if(!ent->isPriv){
+                strcpy(buf,prefix);
+                strcat(buf,"$");
+                strcat(buf,ns->getName(i));
+                *acList->append()=strdup(buf);
+            }
         }
     }
     acIndex=0;
