@@ -19,6 +19,7 @@ public:
     virtual bool isReference(){
         return true;
     }
+    
     /// set the value to the given string, copying
     void set(Value *v,const char *s);
     void setPreAllocated(Value *v,BlockAllocHeader *b);
@@ -40,11 +41,11 @@ public:
         throw RUNT("cannot remove from string");
     }
     
+    virtual Iterator<Value *> *makeValueIterator(Value *v);
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b);
     virtual void slice(Value *out,Value *coll,int start,int len);
-    
     virtual void clone(Value *out,const Value *in,bool deep=false);
 
 protected:

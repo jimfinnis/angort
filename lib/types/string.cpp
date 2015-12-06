@@ -11,6 +11,44 @@
 
 namespace angort {
 
+class StringIterator : public Iterator<Value *> {
+private:
+    Value v;
+    char tmp[2];
+public:
+    const char *p,*str;
+    StringIterator(const char *s);
+    virtual ~StringIterator(){}
+    virtual void first();
+    virtual void next();
+    virtual bool isDone() const;
+    virtual Value *current();
+};
+
+
+StringIterator::StringIterator(const char *s){
+    str=p=s;
+    tmp[1]=0;
+}
+void StringIterator::first(){
+    p=str;
+}
+void StringIterator::next(){
+    p++;
+}
+bool StringIterator::isDone() const {
+    return *p==0;
+}
+Value *StringIterator::current(){
+    tmp[0]=*p;
+    Types::tString->set(&v,tmp);
+    return &v;
+}
+
+
+
+
+
 void StringType::set(Value *v,const char *s){
     int len = strlen(s);
     char *dest = allocate(v,len+1,this);
@@ -92,12 +130,12 @@ void StringType::slice(Value *out,Value *coll,int start,int len){
         {
             wchar_t *outbuf = s+start;
             outbuf[len]=0;
-        
+            
             // and convert back.
-        
+            
             mbstate_t state;
             memset(&state,0,sizeof(state));
-        
+            
             const wchar_t *p = outbuf;
             int mblen = wcsrtombs(NULL,&p,0,&state);
             char *smb = allocate(out,mblen+1,this);
@@ -122,8 +160,11 @@ void StringType::clone(Value *out,const Value *in,bool deep){
     
     out->v.block = h;
     out->t = this;
-    
 }
 
+
+Iterator<Value *> *StringType::makeValueIterator(Value *v){
+    return new StringIterator(getData(v));
+}
 
 }
