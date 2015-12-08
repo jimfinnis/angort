@@ -43,6 +43,7 @@ const char *Angort::findFile(const char *name){
     }
     path[0]=0;
     
+    
     for(;*p;p=q+1){
         q=p;
         while(*q && *q!=':')q++;

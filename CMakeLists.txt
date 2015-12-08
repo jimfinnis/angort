@@ -38,3 +38,7 @@ add_test(generator cli/angort ${ANGORT_SOURCE_DIR}/testfiles/generator.ang)
 
 # this only works in the testfiles directory.
 #add_test(pkg cli/angort ${ANGORT_SOURCE_DIR}/testfiles/pkg.ang)
+
+file(GLOB anglibfiles "${CMAKE_SOURCE_DIR}/anglibs/*.ang")
+install(FILES ${anglibfiles} DESTINATION share/angort)
+

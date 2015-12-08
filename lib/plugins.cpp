@@ -7,6 +7,7 @@
 #include "angort.h"
 #include "hash.h"
 
+#include <unistd.h>
 
 namespace angort {
 void Angort::popParams(Value **out,const char *spec,const Type *type0,
@@ -84,6 +85,7 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
 }
 #ifdef LINUX
 #include <dlfcn.h>
+#include <limits.h>
 
 namespace angort {
 
@@ -101,7 +103,15 @@ int Angort::plugin(const char *name){
     if(!path)
         throw RUNT("").set("cannot find library '%s'",name);
     
-    void *lib = dlopen(path,RTLD_LAZY|RTLD_GLOBAL);
+    // ugly hackage; dlopen() doesn't seem to like plain filenames
+    // (e.g. "io.angso")
+    char apath[PATH_MAX];
+    char *pp = realpath(path,apath);
+    if(!pp)
+        throw RUNT("").set("couldn't resolve path: %s",path);
+    
+    
+    void *lib = dlopen(apath,RTLD_LAZY|RTLD_GLOBAL);
     if((err=dlerror())){
         throw RUNT(err);
     }

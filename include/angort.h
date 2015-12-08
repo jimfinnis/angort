@@ -562,7 +562,7 @@ private:
     /// frame. This number is popped off if the function runs OP_STOP.
     int loopIterCt; 
     
-    Stack<Value,8> loopIterStack; // stack of loop iterators
+    Stack<Value,32> loopIterStack; // stack of loop iterators
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;
