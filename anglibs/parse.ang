@@ -1,0 +1,273 @@
+[`io,`regex] each {i library drop}
+package parse
+
+
+# Parsers - these take the remaining tokens, and either consume an item
+# or not. They return a hash containing `toks, the new token list;
+# and `item, which is none if the parser did not match. Otherwise
+# it is a hash of `label and `content. The new token
+# list will have all relevant items consumed if a match happened.
+# To summarise, successful parser output is 
+#    [% `item [% `label foo, `content bar], `toks list]
+# and failed parser output is
+#    [% `item none, `toks list]
+
+:parser |f/closure,label/symbol:|
+    (|toks:tnew,t|
+        # put a copy of the tokens into the parsing func and get
+        # the output
+        ?toks clone !tnew
+        ?tnew ?f@ !t
+        ?t isnone if
+            [%`toks ?toks, `item none]
+        else
+            [%`toks ?tnew, `item [% `label ?label, `content ?t] ]
+        then
+    )
+;
+
+# useful debugging routine for dumping parser output
+
+:id |h/hash:tabs|
+    0!tabs
+    ?h?`item
+    (|item:|
+        0 ?tabs range each {" "p}
+        ?item isnone if
+            "ERROR". 
+        else
+            ?item?`label isnone if "??" else ?item?`label then p
+            " : " p
+            ?item?`content type `list = if
+                nl
+                ?tabs 1+ !tabs
+                ?item?`content each {i recurse}
+                ?tabs 1- !tabs
+            else
+                ?item?`content .
+            then
+        then
+    ) @
+;
+
+:dumphash |h:tabs,sht|
+    0!tabs
+    (0 ?tabs range each {" "p})!sht
+    ?h (|v:|
+        ?tabs 1+ !tabs
+        cases
+            ?v type `list = if
+                nl
+                ?v each { ?sht@ "--" p i recurse }
+            case
+            ?v type `hash = if
+                nl
+                ?v each { ?sht@ i p " -> " p ival recurse }
+            case
+            ?v .
+        otherwise
+        ?tabs 1- !tabs
+    )@
+;
+
+:dumphasha |h:tabs,sht|
+    ?h (|v:|
+        ""
+        cases
+            ?v type `list = if
+                "[ " +
+                [] ?v each {  i recurse, } "," intercalate +
+                " ]" +
+            case
+            ?v type `hash = if
+                "[% " +
+                [] ?v each { "`" i + " " + ival recurse + ,} "," intercalate +
+                " ]" +
+            case
+            ?v type `string = if
+                "\"" + ?v + "\"" +
+            case
+            ?v type `symbol = if
+                "`" + ?v + 
+            case
+            ?v tostr +
+        otherwise
+    )@
+;
+
+private
+:dodehash |i:|
+    cases
+        ?i type `list = if
+            ?i (dodehash) map
+        case
+        ?i type `hash = if
+            [% ?i?`label
+             ?i?`content dodehash]
+        case
+        ?i otherwise
+;
+             
+    
+# takes a result set and converts it to a simpler hash
+public
+:dehash |t:|
+    ?t?`item?`content dodehash
+;        
+                        
+            
+
+# parser generator for choices - this returns a parser which
+# will attempt to use one of a list of parsers.
+
+:choice |lst/list:|
+    (|toks:t|
+        ?lst each {
+            ?toks i @ !t
+            ?t?`item isnone not if ?t stop then
+        } [% `item none, `toks ?toks]
+);
+
+# parser generator for sequences - this returns a parser which will
+# use a list of parsers in sequence. If it worked, the `item field
+# in the result will be a list of the tokens successfully parsed.
+
+:seq |lst/list:|
+    (|toks:t,alltoks,res|
+        []!res
+        ?toks clone !alltoks
+        ?lst each {
+            ?toks i @ !t
+            ?t?`item isnone if
+                [% `item none, `toks ?alltoks] stop
+            then
+            ?t?`item ?res push 
+            ?t?`toks !toks
+        }
+        [% `item [% `content ?res], `toks ?toks]
+    )
+;
+
+# generate a parser which takes another parser, and which runs
+# an action on the parser's result if it is successful
+:action |parser/closure,action:|
+    (|toks:t|
+        ?toks ?parser @ !t
+        ?t?`item isnone not if
+            ?t?`item ?action@ 
+        then
+        ?t
+    )
+;
+
+# add a debugging print message to a parser
+:message |parser/closure,s:|
+    ?parser (|item:| [?s,?item] "%s:%s" format.) action;
+
+# add a label tag to the output, if non-null
+:label |parser/closure,s:|
+    ?parser (|item:| ?s `label ?item set) action;
+
+
+# one or more items, making a list of the items. If none found,
+# `items is none. If some found, `items is a list of the items.
+
+:many |parser/closure:|
+    (|toks:t,items|
+        []!items
+        {
+            ?toks ?parser @ !t
+            ?t?`item isnone ifleave
+            ?t?`item ?items push
+            ?t?`toks !toks
+        }
+        [% `item ?items len if [% `content ?items] else none then,
+         `toks ?toks]
+    )
+;
+
+# create a parser which takes the results of the given parser
+# (assumed to be a list result, like seq or many) and makes
+# the result of element N the result, rather than the whole
+# list.
+
+:return |parser/closure,n:|
+    (|toks:t,r|
+        ?toks ?parser @ !t
+        ?t?`item isnone not if
+            ?n ?t?`item?`content get ?t!`item
+        then
+        ?t
+    )
+;
+            
+            
+
+
+# generate a parser which modifies the item produced by another
+# parser (if it did produce one). The function provided takes
+# and item and returns something to replace it with.
+
+:moditem |parser/closure,action:|
+    (|toks:t|
+        ?toks ?parser @ !t
+        ?t?`item isnone not if
+            ?t?`item ?action@ ?t!`item
+        then
+        ?t
+    )
+;
+
+# generate an error action parser - this takes a parser, and if
+# the parser does not match, fails fatally with a message. Don't
+# use this if you are relying on the parser to terminate a sequence
+# when an parser fails.    
+
+:error |parser/closure,error:|
+    (|toks:t|
+        ?toks ?parser @ !t
+        ?t?`item isnone if
+            ?error. 
+            " at: "p 0 10 ?toks slice "," intercalate.
+            quit
+        then
+        ?t
+    )
+;
+
+# this parser catches anything, and is used as the last part of
+# a choice. It takes an action and consumes all remaining input,
+# but returns a null item.
+
+:anything |action:|
+    (|toks:|
+        ?action@
+        [%`item none, `toks []]
+    )
+;
+        
+# parser generator for strings - this returns a function which
+# will parse this string (or not, if it wasn't there)
+    
+:strparser |s/string:|
+    (|toks:t|
+        ?toks len 0 = if none stop then
+        ?toks shift ?s = if ?s else none then) `string parser
+;
+    
+# create a parser for parsing regexes
+:regexparser |s/string:r|
+    ?s regex$compile !r
+    (|toks:t|
+        ?toks len 0 = if none stop then
+        ?toks shift dup !t ?r regex$match len 1 = if
+            ?t else none then) `regex parser
+;
+    
+# parse the end of data, giving `end as the item
+(|toks:t|
+    [% `item 
+      ?toks len 0 = if [% `label `end, `content `end] else none then,
+     `toks ?toks ]
+) !EndOfData
+
