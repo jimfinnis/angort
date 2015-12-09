@@ -460,3 +460,30 @@ struct StdComparator : public ArrayListComparator<Value> {
     }
     delete iter;
 }
+
+
+%word listintercalate (iter item -- list) intercalate items in a list with another item
+{
+    Value *p[2];
+    a->popParams(p,"vv"); // can be any type
+    
+    Value *v = p[0];
+    Iterator<Value *> *iter = v->t->makeIterator(v);
+    
+    Value sep,output;
+    sep.copy(p[1]);
+    ArrayList<Value> *list = Types::tList->set(&output);
+    
+    int count = v->t->getCount(v);
+    int n=0;
+    for(iter->first();!iter->isDone();iter->next(),n++){
+        list->append()->copy(iter->current());
+        if(n!=count-1){
+            list->append()->copy(&sep);
+        }
+    }
+    delete iter;
+    
+    a->pushval()->copy(&output);
+    output.clr();
+}

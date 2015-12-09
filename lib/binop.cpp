@@ -74,27 +74,35 @@ void Angort::binop(Value *a,Value *b,int opcode){
     }else if(at == Types::tList || bt == Types::tList) {
         ListObject *lo;
         switch(opcode){
-            case OP_ADD:
+        case OP_EQUALS: 
+            pushInt(0);break;
+        case OP_NEQUALS:
+            pushInt(1);break;
+        case OP_ADD:
             lo = new ListObject();
             addListOrValueToList(&lo->list,a);
             addListOrValueToList(&lo->list,b);
+            Types::tList->set(pushval(),lo);
             break;
         default:
             throw RUNT("invalid operation with a list operand");
         }
-        Types::tList->set(pushval(),lo);
     }else if(at == Types::tHash || bt == Types::tHash) {
         HashObject *ho;
         switch(opcode){
-            case OP_ADD:
+        case OP_EQUALS: 
+            pushInt(0);break;
+        case OP_NEQUALS:
+            pushInt(1);break;
+        case OP_ADD:
             ho = new HashObject();
             addHashToHash(ho->hash,a->v.hash->hash);
             addHashToHash(ho->hash,b->v.hash->hash);
+            Types::tHash->set(pushval(),ho);
             break;
         default:
             throw RUNT("invalid operation with a list operand");
         }
-        Types::tHash->set(pushval(),ho);
     } else if((at == Types::tString || at == Types::tSymbol) &&
               bt == Types::tInteger &&
               opcode == OP_MUL){
