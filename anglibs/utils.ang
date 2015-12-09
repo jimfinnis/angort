@@ -1,0 +1,30 @@
+# Useful utilities, which may get split into other files and namespaces
+# as they get bigger
+
+package util
+
+:show |h:tabs,sht|
+    :"(val -- str) generate a string representation of a value"
+    ?h (|v:|
+        ""
+        cases
+            ?v type `list = if
+                "[ " +
+                [] ?v each {  i recurse, } "," intercalate +
+                " ]" +
+            case
+            ?v type `hash = if
+                "[% " +
+                [] ?v each { "`" i + " " + ival recurse + ,} "," intercalate +
+                " ]" +
+            case
+            ?v type `string = if
+                "\"" + ?v + "\"" +
+            case
+            ?v type `symbol = if
+                "`" + ?v + 
+            case
+            ?v tostr +
+        otherwise
+    )@
+;
