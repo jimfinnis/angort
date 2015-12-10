@@ -253,14 +253,15 @@ inline void getByIndex(Value *c,int idx){
     else a->pushInt(i);
 }
 
-%word slice (start len iterable -- iterable) produce a slice of a string or list
+%word slice (iterable start len -- iterable) produce a slice of a string or list
 {
-    Value *iterable = a->popval();
     int len = a->popInt();
     int start = a->popInt();
+    Value iterable;
+    iterable.copy(a->popval());
     
     Value *res = a->pushval();
-    iterable->t->slice(res,iterable,start,len);
+    iterable.t->slice(res,&iterable,start,len);
 }
 
 %word clone (in -- out) construct a shallow copy of a collection

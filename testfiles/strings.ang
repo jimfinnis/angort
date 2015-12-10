@@ -19,16 +19,16 @@ global b
 :qq dup "**"p p "**".;
 
 "abcdefg" !a
--1 4 ?a slice "abcd" =   "slice1" assert
+?a -1 4 slice "abcd" =   "slice1" assert
 
-0 4 ?a slice "abcd" =   "slice1" assert
--1 4 ?a slice "abcd" =   "slice1a" assert
-2 4 ?a slice "cdef" =   "slice2" assert
-4 4 ?a slice "efg" =   "slice3" assert
-6 4 ?a slice "g" =   "slice4" assert
-3 -1 ?a slice "defg" = "slice5" assert
-7 1 ?a slice "" = "slice6" assert
-8 1 ?a slice "" = "slice7" assert
+?a 0 4 slice "abcd" =   "slice1" assert
+?a -1 4 slice "abcd" =   "slice1a" assert
+?a 2 4 slice "cdef" =   "slice2" assert
+?a 4 4 slice "efg" =   "slice3" assert
+?a 6 4 slice "g" =   "slice4" assert
+?a 3 -1 slice "defg" = "slice5" assert
+?a 7 1 slice "" = "slice6" assert
+?a 8 1 slice "" = "slice7" assert
 
 "foo" !A
 ?A clone !B

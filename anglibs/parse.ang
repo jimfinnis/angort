@@ -375,7 +375,7 @@ package parse
         ?toks ?parser @ !t
         ?t?`item isnone if
             ?error. 
-            " at: "p 0 10 ?toks slice "," intercalate.
+            " at: "p ?toks 0 10 slice "," intercalate.
             quit
         then
         ?t
