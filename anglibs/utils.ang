@@ -3,6 +3,22 @@
 
 package util
 
+## Argument check : take a list of argument names, pop that many items
+## from the argument list and explode them into the stack:
+:argcheck |list:|
+    :"(namelist -- .. arg2 arg1) given a list of args, produces them on stack in reverse order"
+    args len 3 < if 
+        "Usage: angort "p 1 args get p " "p
+        ?list each {[i] "<%s> " format p}nl quit
+    then
+    # remove last N arguments from args, reverse and explode.
+    args
+    args len ?list len -
+    ?list len
+    slice reverse explode
+;
+
+
 :show |h:tabs,sht|
     :"(val -- str) generate a string representation of a value"
     ?h (|v:|
