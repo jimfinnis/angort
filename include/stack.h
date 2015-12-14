@@ -23,13 +23,18 @@ public:
 /// not enough items on the stack to pop()
 class StackUnderflowException : public StackException {
 public:
-    StackUnderflowException() : StackException("stack underflow") {}
+    StackUnderflowException(const char *s) : StackException("") {
+        set("stack underflow in stack '%s'",s);
+    }
 };
 
 /// too many items on the stack to push()
 class StackOverflowException : public StackException {
 public:
-    StackOverflowException() : StackException("stack overflow") {}
+    StackOverflowException(const char *s) : StackException("") {
+        set("stack overflow in stack '%s'",s);
+        
+    }
 };
 
 
@@ -39,16 +44,21 @@ public:
 /// of pointers.
 
 template <class T,int N> class Stack {
+    const char *name;
 public:
-    
     Stack(){
+        name="unnamed";
         ct=0;
+    }
+    
+    void setName(const char *s){
+        name = s;
     }
     
     /// get an item from the top of the stack, discarding n items first.
     T pop(int n=0) {
         if(ct<=n)
-            throw StackUnderflowException();
+            throw StackUnderflowException(name);
         ct -= n+1;
         return stack[ct];
     }
@@ -56,7 +66,7 @@ public:
     /// just throw away N items
     void drop(int n){
         if(ct<n)
-            throw StackUnderflowException();
+            throw StackUnderflowException(name);
         ct-=n;
     }
         
@@ -64,14 +74,14 @@ public:
     /// get the nth item from the top of the stack
     T peek(int n=0) {
         if(ct<=n)
-            throw StackUnderflowException();
+            throw StackUnderflowException(name);
         return stack[ct-(n+1)];
     }
     
     /// get a pointer to the nth item from the top of the stack
     T *peekptr(int n=0) {
         if(ct<=n)
-            throw StackUnderflowException();
+            throw StackUnderflowException(name);
         return stack+(ct-(n+1));
     }
     
@@ -87,7 +97,7 @@ public:
     /// get a pointer to an item from the top of the stack, discarding n items first
     T *popptr(int n=0) {
         if(ct<=n)
-            throw StackUnderflowException();
+            throw StackUnderflowException(name);
         ct -= n+1;
         return stack+ct;
     }
@@ -96,7 +106,7 @@ public:
     /// to be written into.
     T* pushptr() {
         if(ct==N)
-            throw StackOverflowException();
+            throw StackOverflowException(name);
         return stack+(ct++);
     }
     
@@ -104,14 +114,14 @@ public:
     /// using pushptr(), it might be quicker.
     void push(T o){
         if(ct==N)
-            throw StackOverflowException();
+            throw StackOverflowException(name);
         stack[ct++]=o;
     }
     
     /// swap the top two items on the stack
     void swap(){
         if(ct<2)
-            throw StackUnderflowException();
+            throw StackUnderflowException(name);
         T x;
         x=stack[ct-1];
         stack[ct-1]=stack[ct-2];

@@ -244,6 +244,7 @@ public:
     NamespaceManager() : importedNamespaces(4),spaces(4) {
         currentIdx=-1; // initially no namespace
         privNames=false;
+        stack.setName("names");
     }
     
     //////////////////// manipulating namespaces /////////////////////

@@ -219,18 +219,64 @@ void Angort::binop(Value *a,Value *b,int opcode){
         }
         if(!cmp)
             pushFloat(r);
-    }else if(at == Types::tSymbol || bt == Types::tSymbol){
+    }else if(at == Types::tSymbol && bt == Types::tSymbol){
         /*
-         * One of the values is a symbol; equality tests on the integers or
-         * string comparisons are valid. Note that < and > work as expected,
-         * and equality with strings will work because that will be dealt with
-         * by the string test above
+         * Both are symbols
          */
         switch(opcode){
         case OP_EQUALS:
             pushInt((a->v.i == b->v.i)?1:0);break;
         case OP_NEQUALS:
             pushInt((a->v.i != b->v.i)?1:0);break;
+        case OP_GT:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())>0);
+            break;
+        }
+        case OP_LT:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())<0);
+            break;
+        }
+        case OP_GE:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())>=0);
+            break;
+        }
+        case OP_LE:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())<=0);
+            break;
+        }
+        case OP_CMP:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get()));
+            break;
+        }
+        default:
+            throw RUNT("bad operation for symbols");
+        }
+    }else if(at == Types::tSymbol || bt == Types::tSymbol){
+        /*
+         * One of the values is a symbol; tests are done as with
+         * strings
+         */
+        switch(opcode){
+        case OP_EQUALS:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())==0);
+            break;}
+        case OP_NEQUALS:{
+            const StringBuffer& p = a->toString();
+            const StringBuffer& q = b->toString();
+            pushInt(strcmp(p.get(),q.get())!=0);
+            break;}
         case OP_GT:{
             const StringBuffer& p = a->toString();
             const StringBuffer& q = b->toString();

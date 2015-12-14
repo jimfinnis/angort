@@ -30,6 +30,11 @@ namespace angort {
 /// true to compile debugging data into opcodes
 #define SOURCEDATA 1
 
+/// total number of local variables
+#define VBLOCKSIZE 4096
+/// depth of return stack
+#define RSTACKSIZE 256
+
 extern TokenRegistry tokens[];
 
 struct CodeBlock;
@@ -218,6 +223,9 @@ public:
     int closureCt;
     
     CompileContext(){
+        cstack.setName("compile");
+        leaveListStack.setName("leavelist");
+    
         closureListCt=0;
         spec=NULL;
         closureList=NULL;closureListTail=NULL;
@@ -454,8 +462,6 @@ struct CodeBlock {
 };
 
 
-#define VSTACKSIZE 256
-
 /// this class handles the stack of local variables used by
 /// the system. It has a base pointer, pointing at the first
 /// variable allocated by the currently running code;
@@ -474,11 +480,12 @@ class VarStack {
     };
     
 private:
-    Value vars[VSTACKSIZE];
-    Stack<Tuple,32> baseStack;
+    Value vars[VBLOCKSIZE];
+    Stack<Tuple,RSTACKSIZE> baseStack;
     int base,next;
 public:
     VarStack(){
+        baseStack.setName("variable");
         base=0;
         next=0;
     }
@@ -486,7 +493,7 @@ public:
     void clear(){
         base=0;
         next=0;
-        for(int i=0;i<VSTACKSIZE;i++){
+        for(int i=0;i<VBLOCKSIZE;i++){
             vars[i].clr();
         }
         baseStack.clear();
@@ -500,14 +507,14 @@ public:
         p->base = base;
         p->next = next;
         base=next;
-        //        printf("state now %d/%d\n",base,next);
+//                printf("state now %d - %d/%d\n",baseStack.ct,base,next);
     }
     
     void pop(){
         Tuple *p=baseStack.popptr();
         base = p->base;
         next = p->next;
-        //        printf("popping state: state now %d/%d\n",base,next);
+//                printf("popping state: state now %d - %d/%d\n",baseStack.ct,base,next);
     }
     
     /// allocate space after push()
@@ -556,13 +563,13 @@ class Angort {
     static Angort *callingInstance; ///!< set when feed() is called.
 private:
     bool running; //!< used by shutdown()
-    Stack<Frame,32> rstack; //!< the return stack
+    Stack<Frame,RSTACKSIZE> rstack; //!< the return stack
     Value currClosure; //!< the closure block of the current level
     /// how many loop iterators are stacked for loops in this
     /// frame. This number is popped off if the function runs OP_STOP.
     int loopIterCt; 
     
-    Stack<Value,32> loopIterStack; // stack of loop iterators
+    Stack<Value,RSTACKSIZE> loopIterStack; // stack of loop iterators
     
     Stack<CompileContext,4> contextStack;
     VarStack locals;

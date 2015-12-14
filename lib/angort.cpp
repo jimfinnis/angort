@@ -40,9 +40,13 @@ Angort::Angort() {
     // import everything from it
     names.import(stdNamespace,NULL);
     // and that's the namespace we're working in
-    
     names.push(stdNamespace);
     lineNumber=1;
+    
+    rstack.setName("return");
+    loopIterStack.setName("loop iterator");
+    contextStack.setName("context");
+    stack.setName("main");
     
     // initialise the search path to the environment variable ANGORTPATH
     // if it exists, otherwise to the default.
