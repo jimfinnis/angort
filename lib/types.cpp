@@ -25,6 +25,9 @@ float Type::toFloat(const Value *v) const{
 int Type::toInt(const Value *v) const {
     throw BadConversionException(v->t->name,Types::tInteger->name);
 }
+long Type::toLong(const Value *v) const {
+    throw BadConversionException(v->t->name,Types::tLong->name);
+}
 
 void Type::createIterator(Value *dest,Value *src){
     Iterator<Value *> *i = makeIterator(src);
@@ -217,6 +220,9 @@ NativeType *Types::tNative = &_Native;
 
 static PropType _Prop;
 PropType *Types::tProp = &_Prop;
+
+static LongType _Long;
+LongType *Types::tLong = &_Long;
 
 
 

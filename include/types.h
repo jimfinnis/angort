@@ -133,6 +133,8 @@ public:
     virtual float toFloat(const Value *v) const;
     /// convert to an int - exception by default
     virtual int toInt(const Value *v) const;
+    /// convert to a long - exception by default
+    virtual long toLong(const Value *v) const;
     
     /// create a low-level iterator and then wrap it in an iterator value
     void createIterator(Value *dest,Value *src);
@@ -285,6 +287,7 @@ public:
 #include "types/symbol.h"
 #include "types/none.h"
 #include "types/native.h"
+#include "types/long.h"
 
 
 namespace angort {
@@ -326,6 +329,9 @@ struct Types {
     static NativeType *tNative;
     /// v.property is a property
     static PropType *tProp;
+    /// v.l is a long
+    static LongType *tLong;
+    
     
     /// v.gc is some unspecified garbage-collected type
     static GCType *tGC;

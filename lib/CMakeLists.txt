@@ -51,7 +51,8 @@ set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     filefind.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
-    types/hashtype.cpp   types/symbol.cpp types/native.cpp
+    types/hashtype.cpp         types/symbol.cpp       types/native.cpp
+    types/long.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})

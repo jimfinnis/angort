@@ -40,6 +40,10 @@ float IntegerType::toFloat(const Value *v) const {
     return (float)v->v.i;
 }
 
+long IntegerType::toLong(const Value *v) const {
+    return (long)v->v.i;
+}
+
 const char *IntegerType::toString(bool *allocated,const Value *v) const {
     char buf[128];
     snprintf(buf,128,"%d",v->v.i);

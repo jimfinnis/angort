@@ -28,6 +28,7 @@ struct Value {
     union {
         float f;
         int i;
+        long l;
         char *s;
         struct BlockAllocHeader *block;
         const struct CodeBlock *cb;
@@ -91,6 +92,9 @@ struct Value {
     }
     int toInt(){
         return t->toInt(this);
+    }
+    int toLong(){
+        return t->toLong(this);
     }
     
     void *getRaw(){

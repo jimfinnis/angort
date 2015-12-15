@@ -30,6 +30,7 @@ public:
     
     
     virtual int toInt(const Value *v) const;
+    virtual long toLong(const Value *v) const;
     virtual float toFloat(const Value *v) const;
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;

@@ -310,11 +310,78 @@ void Angort::binop(Value *a,Value *b,int opcode){
         default:
             throw RUNT("bad operation for symbols");
         }
+    }else if(at == Types::tLong || bt == Types::tLong){
+        /**
+         * One is a long, these are similar to int ops
+         */
+        
+        long p,q,r;
+        switch(opcode){
+        case OP_MOD:
+            p = a->toLong();
+            q = b->toLong();
+            r = p%q;break;
+        case OP_ADD:
+            p = a->toLong();
+            q = b->toLong();
+            r = p+q;break;
+        case OP_SUB:
+            p = a->toLong();
+            q = b->toLong();
+            r = p-q;break;
+        case OP_DIV:
+            p = a->toLong();
+            q = b->toLong();
+            if(!q)throw DivZeroException();
+            r = p/q;break;
+        case OP_MUL:
+            p = a->toLong();
+            q = b->toLong();
+            r = p*q;break;
+        case OP_AND:
+            p = a->toLong();
+            q = b->toLong();
+            r = (p&&q);break;
+        case OP_OR:
+            p = a->toLong();
+            q = b->toLong();
+            r = (p||q);break;
+        case OP_GT:
+            p = a->toLong();
+            q = b->toLong();
+            r = (p>q);break;
+        case OP_LT:
+            p = a->toLong();
+            q = b->toLong();
+            r = (p<q);break;
+        case OP_GE:
+            p = a->toLong();
+            q = b->toLong();
+            r = (p>=q);break;
+        case OP_LE:
+            p = a->toLong();
+            q = b->toLong();
+            r = (p<=q);break;
+        case OP_CMP:
+            p = a->toLong();
+            q = b->toLong();
+            r = ((p-q)>0)?1:(((p-q)<0)?-1:0);
+            break;
+        case OP_EQUALS:
+            r = a->toLong() == b->toLong();
+            break;
+        case OP_NEQUALS:
+            r = a->toLong() != b->toLong();
+            break;
+        default:
+            throw WTF;
+            
+        }
+        Types::tLong->set(pushval(),r);
     } else {
         /**
          * Otherwise assume we're dealing with ints
          */
-        
         int p,q,r;
         switch(opcode){
         case OP_MOD:

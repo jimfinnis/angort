@@ -232,6 +232,10 @@ static int stackcheck=-1;
         float f;
         f = v->toFloat();
         a->pushFloat(-f);
+    } else if(v->t == Types::tLong){
+        long l;
+        l = v->toLong();
+        Types::tLong->set(a->pushval(),l);
     } else {
         throw RUNT("bad type for 'neg'");
     }
@@ -542,6 +546,11 @@ static int stackcheck=-1;
     
     Types::tSymbol->set(a->pushval(),symb);
     
+}
+
+%word tolong (val -- long) -- convert value to long int
+{
+    Types::tLong->set(a->pushval(),a->popval()->toLong());
 }
 
 

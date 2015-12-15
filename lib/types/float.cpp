@@ -36,6 +36,10 @@ float FloatType::toFloat(const Value *v) const {
     return v->v.f;
 }
 
+long FloatType::toLong(const Value *v) const {
+    return (long)v->v.f;
+}
+
 const char *FloatType::toString(bool *allocated,const Value *v) const {
     char buf[128];
     snprintf(buf,128,"%f",v->v.f);
