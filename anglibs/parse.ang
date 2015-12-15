@@ -1,14 +1,26 @@
 [`io,`regex] each {i library drop}
 package parse
 
+private
+
+0!StaticSymbolCount
+:gensymbol
+    "PSM" ?StaticSymbolCount + tosymbol
+    ?StaticSymbolCount 1+ !StaticSymbolCount
+;
+gensymbol !Missing
+
+
+public
+
 
 # Parsers - these take the remaining tokens, and either consume an item
 # or not. They return a hash containing `toks, the new token list;
 # and `item, which is none if the parser did not match. Otherwise
-# it is a hash of `label and `content. The new token
+# it contains the parser resultst. The new token
 # list will have all relevant items consumed if a match happened.
 # To summarise, successful parser output is 
-#    [% `item [% `label foo, `content bar], `toks list]
+#    [% `item X, `toks list]
 # and failed parser output is
 #    [% `item none, `toks list]
 
@@ -18,11 +30,8 @@ package parse
         # the output
         ?toks clone !tnew
         ?tnew ?f@ !t
-        ?t isnone if
-            [%`toks ?toks, `item none]
-        else
-            [%`toks ?tnew, `item [% `label ?label, `content ?t] ]
-        then
+        [% `toks ?t isnone if ?toks else ?tnew then, 
+         `item ?t]
     )
 ;
 
@@ -49,55 +58,17 @@ package parse
         ?item isnone if
             "ERROR". 
         else
-            ?item?`label isnone if "??" else ?item?`label then p
-            " : " p
-            ?item?`content type `list = if
+            ?item type `list = if
                 nl
                 ?tabs 1+ !tabs
-                ?item?`content each {i recurse}
+                ?item each {i recurse}
                 ?tabs 1- !tabs
             else
-                ?item?`content .
+                ?item .
             then
         then
     ) @
 ;
-
-0!StaticSymbolCount
-:gensymbol
-    "GEN" ?StaticSymbolCount + tosymbol
-    ?StaticSymbolCount 1+ !StaticSymbolCount
-;
-
-# takes a content block and converts it to a simpler hash.
-# Used by dehash, but also in actions as 
-#  (|lst:| ?lst?`content condehash..)
-# Often followed by dehashlist on list items
-:condehash |i:|
-    cases
-        ?i type `list = if
-            ?i (condehash) map
-        case
-        ?i type `hash = if
-            [% ?i?`label isnone if gensymbol else ?i?`label then
-             ?i?`content condehash]
-        case
-        ?i otherwise
-;
-
-# dehashes the content block of an item, converting it
-# to a simpler hash
-:itemdehash |t/hash:|
-    ?t?`content condehash;
-    
-    
-# takes a result set and converts it to a simpler hash
-# Often followed by dehashlist on list items
-:dehash |t/hash:|
-    ?t?`item isnone if
-        "Cannot dehash a failed parse". quit
-    then
-    ?t?`item?`content condehash;
 
 # takes a list of the form 
 #   [ [% k1 v1], [% k2,v2]... ]
@@ -171,12 +142,12 @@ package parse
             ?t?`item isnone if
                 [% `item none, `toks ?alltoks] stop
             then
-            ?t?`item `missing != if
+            ?t?`item ?Missing != if
                 ?t?`item ?res push 
             then
             ?t?`toks !toks
         }
-        [% `item [% `content ?res, `label `seq], `toks ?toks]
+        [% `item ?res, `toks ?toks]
     )
 ;
 
@@ -188,7 +159,7 @@ package parse
         ?t?`item isnone if
             [% `item none, `toks ?alltoks] stop
         then
-        ?t?`item `missing != if
+        ?t?`item ?Missing != if
             ?t?`item ?res push 
         then
         ?t?`toks !toks
@@ -202,12 +173,12 @@ package parse
             ?t?`item isnone if
                 [% `item none, `toks ?alltoks] stop
             then
-            ?t?`item `missing != if
+            ?t?`item ?Missing != if
                 ?t?`item ?res push 
             then
             ?t?`toks !toks
         }
-        [% `item [% `content ?res, `label `sepby], `toks ?toks]
+        [% `item ?res, `toks ?toks]
     )
 ;
 
@@ -222,7 +193,7 @@ package parse
     (|toks:t|
         ?toks ?parser @ !t
         ?t?`item isnone if
-            [% `item `missing, `toks ?toks]
+            [% `item ?Missing, `toks ?toks]
         else
             ?t
         then
@@ -239,19 +210,14 @@ package parse
         ?t?`item isnone if
             ?t
         else
-            [% `item `missing, `toks ?t?`toks]
+            [% `item ?Missing, `toks ?t?`toks]
         then
     )
 ;
 
 
 # generate a parser which takes another parser, and which runs
-# an action on the parser's result if it is successful. The result
-# is an item, and it's often useful to do something like
-#   (|t:| ?t itemdehash ...)
-# or
-#   (|t:| ?t?`itemdehash dehashlist...) [for sequences]
-# on this item, for ease of handling.
+# an action on the parser's result if it is successful.
 
 
 :action |parser/closure,action:|
@@ -273,14 +239,6 @@ package parse
     )
 ;
 
-# add a label tag to the output, if non-null and not missing
-:label |parser/closure,s:|
-    ?parser (|item:| 
-        ?item type `hash = if
-            ?s `label ?item set
-    then) action;
-
-
 # one or more items, making a list of the items. If none found,
 # `items is none. If some found, `items is a list of the items.
 
@@ -290,12 +248,12 @@ package parse
         {
             ?toks ?parser @ !t
             ?t?`item isnone ifleave
-            ?t?`item `missing != if
+            ?t?`item ?Missing != if
                 ?t?`item ?items push
             then
             ?t?`toks !toks
         }
-        [% `item ?items len if [% `content ?items] else none then,
+        [% `item ?items len if ?items else none then,
          `toks ?toks]
     )
 ;
@@ -309,32 +267,13 @@ package parse
     (|toks:t,r|
         ?toks ?parser @ !t
         ?t?`item isnone not if
-            ?n ?t?`item?`content get ?t!`item
+            ?n ?t?`item get ?t!`item
         then
         ?t
     )
 ;
 
     
-# like return, but searches for a labelled item within the content
-# (again assumed to be a list)
-
-:retlab |parser/closure,l:|
-    "UNTESTED".
-    (|toks:t,r|
-        ?toks ?parser @ !t
-        `missing !r
-        ?t?`item isnone not if
-            ?t?`item?`content each {
-                i?`label ?l = if
-                    i !r leave
-                then
-            }
-            ?r ?t!`item
-        then
-        ?t
-    )
-;
 
 # generate a parser which modifies the item produced by another
 # parser (if it did produce one). The function provided takes
@@ -344,21 +283,21 @@ package parse
     (|toks:t|
         ?toks ?parser @ !t
         ?t?`item isnone not if
-            ?t?`item?`content ?action@ ?t?`item!`content
+            ?t?`item ?action@ ?t!`item
         then
         ?t
     )
 ;
 
-# parser which filters the results of a sequential parser by label
+# parser which filters the results of a sequential parser
 
 :filterparser |p/closure,f:|
     (|toks:t|
         ?toks ?p @ !t
         ?t?`item isnone not if
-            ?t?`item?`content type `list = if
-                ?t?`item?`content (?`label ?f@) 
-                filter ?t?`item!`content
+            ?t?`item type `list = if
+                ?t?`item (?f@) 
+                filter ?t!`item
             then
         then
         ?t
@@ -389,7 +328,7 @@ package parse
 
 :seqsepby |lst/list,sep/closure:s|
     gensymbol!s
-    ?lst ?sep ?s label listintercalate seq
+    ?lst ?sep (drop ?s) listintercalate seq
     (?s !=) filterparser
 ;
 
@@ -427,7 +366,7 @@ package parse
 # parse the end of data, giving `end as the item
 (|toks:t|
     [% `item 
-      ?toks len 0 = if [% `label `end, `content `end] else none then,
+      ?toks len 0 = if `end else none then,
      `toks ?toks ]
 ) !EndOfData
 
@@ -446,5 +385,5 @@ package parse
 # strings from sequences of character parsers.
 
 :concatcons |parser/closure:|
-    ?parser (|c:|"" ?c condehash dehashlist each {i+}) moditem;
+    ?parser (|c:|"" ?c  each {i+}) moditem;
 
