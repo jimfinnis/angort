@@ -1,0 +1,39 @@
+/**
+ * @file
+ * brief description, full stop.
+ *
+ * long description, many sentences.
+ * 
+ */
+
+#ifndef __ANGORTLONG_H
+#define __ANGORTLONG_H
+
+namespace angort {
+
+/// long integer type
+class LongType : public Type {
+public:
+    LongType(){
+        add("long","INTL");
+    }
+    /// get the value of v as a int
+    long get(Value *v);
+    /// set the value to the given int
+    void set(Value *v,long f);
+    
+    /// get a hash key
+    virtual uint32_t getHash(Value *v);
+    
+    /// are these two equal
+    virtual bool equalForHashTable(Value *a,Value *b);
+    
+    virtual int toInt(const Value *v) const;
+    virtual long toLong(const Value *v) const;
+    virtual float toFloat(const Value *v) const;
+protected:
+    virtual const char *toString(bool *allocated,const Value *v) const ;
+};
+
+}
+#endif /* __INT_H */
