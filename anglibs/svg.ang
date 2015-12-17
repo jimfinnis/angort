@@ -1,0 +1,307 @@
+package svg
+
+# generate a tag. If the contents list is null or empty, 
+# generate <tag/> otherwise generate <tag>cons</tag>
+
+:tag |name,attrhash,contents:hascons|
+    "<" ?name + 
+    ?attrhash each {" " + i + "=\"" + ival  + "\"" +}
+    ?contents type `list = if ?contents 
+        len 0 > !hascons
+    else 
+        0 !hascons 
+    then
+    ?hascons if
+        ">\n" +
+        ?contents each {i+} "\n" +
+        "</" + ?name + ">\n" +
+    else
+        "/>\n" +
+    then
+;
+
+# functions keyed by the name of the style. Each takes some
+# argument or other and generates an SVG style from it.
+# If a style doesn't have a function, then the "function" effectively
+# just duplicates the argument, so [%`foo 1] would give the style foo:1.
+
+[%
+ `fill (|n:|
+     "fill:"
+     ?n type `list = if
+         ?n len 4 = if
+             "rgba(" + ?n "," intercalate + ")" +
+         else
+             "rgb(" + ?n "," intercalate + ")" +
+         then
+     else
+         ?n +
+     then),
+ `stroke (|n:|
+     "stroke:"
+     ?n type `list = if
+         "rgb(" + ?n "," intercalate + ")" +
+     else
+         ?n +
+     then),
+ `width (|w:|
+     "stroke-width:" ?w +)
+] !StyleFuncs
+
+# generate a style attribute from a style hash
+:stylestring |h:t|
+    [] # initial empty list
+    ?h each {
+        # look up the hash key in the hash of style funcs
+        i ?StyleFuncs get !t
+        # and if there is one, append to the list otherwise
+        # append the actual value
+        ?t isnone if
+            ival type <<[`string,`integer,`float,`symbol]>> in not if
+                "invalid style argument for " p i p ": " p ival. quit
+            then
+            i ":" + ival +,
+        else
+            ival ?t@ ,
+        then
+    }
+    ";" intercalate # convert to string
+;
+
+# generate an SVG container tag
+:svg |w,h,contents:|
+    "svg" [%`width ?w, `height ?h] ?contents tag
+;
+
+none "txtoattr" def # forward declare
+
+# given a style hash, append a style string to a hash. Also append
+# the current transform if one is present.
+:appendst |s:|
+    ?s len 0 > if
+        `style ?s stylestring,
+    then
+    # append CurTX if there is none
+    ?CurTX isnone not if
+        `transform ?CurTX txtoattr,
+    then
+;
+
+# there are two versions of generators - the basic version
+# which returns a string, and the higher level version
+# which adds the string to the current group, and stacks
+# the style on top of the style stack. This will
+# make both from a codeblock.
+# The low-level function is preceded with "str_" to indicate
+# it creates a string.
+
+:conv |f:| 
+    (?StyleStack last ?f@ ?ShapeList push);
+
+:mkgen |n,f:|
+    ?f "str_" ?n + defconst
+    ?f conv ?n defconst;
+
+# generators, which generate strings. 
+# Each of these is turned into two functions, one of which takes
+# a style, and one which doesn't.
+# e.g. the rect generator builds
+#   :rect |x,y,w,h:|
+# and
+#   :str_rect |x,y,w,h,s:|
+# In the case of the plain function, the style is automatically
+# taken from the style stack.
+
+`rect (|x,y,w,h,s:|
+    "rect" [%`x ?x,
+            `y ?y,
+            `width ?w,
+            `height ?h
+            ]
+    ?s appendst
+    [] tag) mkgen
+
+`circle (|x,y,r,s:|
+    "circle" [% `cx ?x,
+              `cy ?y,
+              `r ?r
+              ]
+    ?s appendst
+    [] tag) mkgen
+
+`line (|x1,y1,x2,y2,s:|
+    "line" [% `x1 ?x1,
+            `y1 ?y1,
+            `x2 ?x2,
+            `y2 ?y2]
+    ?s appendst
+    [] tag) mkgen
+
+`text (|x,y,h,a,str,s:| # a=middle,start,end
+    "text" [% `x ?x,
+            `y ?y,
+            "font-size" ?h,
+            "text-anchor" ?a
+            ] ?s appendst
+    [?str] tag) mkgen
+
+`path (|d,s:|
+    "path" [% `d ?d,
+            "fill-opacity" 0] 
+    ?s appendst [] tag) mkgen
+
+`solidpath (|d,s:|
+    "path" [% `d ?d,
+            "fill-opacity" 1] 
+    ?s appendst [] tag) mkgen
+
+
+# assembling paths
+
+:pmodechange
+    asc ?PathAbs if 32- then chr;
+
+:pabs 1!PathAbs;
+:prel 0!PathAbs;
+
+:newpath "" !Path;
+:pac ?Path swap pmodechange + !Path ; # path command
+:pacn ?Path swap + !Path ; # path command, no case switch (simple append)
+:pa ?Path swap + " "+ !Path ; # path param
+:pmove |x,y:| "m" pac ?x pa ?y pa;
+:pline |x,y:| "l" pac ?x pa ?y pa;
+:pvert |y:| "v" pac ?y pa;
+:phorz |x:| "x" pac ?x pa;
+:pclose "Z" pacn;
+:pquad |x,y,p,q:| "q" pac ?p pa ?q pacn ", " pacn ?x pa ?y pa;
+:pquad2 |x,y,p,q:| "t" pac ?p pa ?q pacn ", " pacn ?x pa ?y pa;
+:parc |rx,ry,xrot,large,sweep,x,y:|
+    "a" pac ?rx pa ?ry pa ?xrot pa ?large pa ?sweep pa
+    ?x pa ?y pa;
+
+:pget ?Path;
+
+########################################################################
+
+# style stack, consisting initially of an empty item
+
+[ [%] ] !StyleStack
+
+# this will push a style hash, combining it with the style already there
+:pushstyle  |h:|
+    # order is important; in A B +, B overrides A
+    ?StyleStack last ?h +
+    ?StyleStack push;
+
+# discard the stack style
+:popstyle ?StyleStack pop drop
+    ?StyleStack len 0 = if
+        "Too many styles popped.". quit
+    then
+;
+
+#########################################################################
+
+# word to define a marker
+:marker |id,w,h,refx,refy,contents:|
+    "marker" [% `id ?id,
+              `markerWidth ?w,
+              `markerHeight ?h,
+              `orient `auto,
+              `refX ?refx,
+              `refY ?refy]
+    ?contents tag
+;
+
+
+
+# and here we generate a list of markers, which gets rendered
+# as part of the svg tag. If you don't want these, just remove
+# things from or clear the MarkerDefs list.
+
+"defs" [%] 
+[
+ `markerArrowL 13 13 2 6 
+ ["M2,2 L2,11 L10,6 L2,2" [%] str_solidpath] marker,
+ `markerArrowS 7 7 1 3 
+ ["M1,1 L1,5 L5,3 L1,1" [%] str_solidpath] marker
+]
+tag !MarkerDefs
+
+:mkhandleurl |handle:| "url(#" ?handle + ")"+;
+:markerstyle |name:| [%"marker-end" ?name mkhandleurl ];
+
+# this will merge the marker style into the style argument
+# for line.
+
+:arrow 
+    `markerArrowS markerstyle pushstyle
+    line
+    popstyle
+;
+
+# used for building transform attributes. A list is made,
+# which is turned into a transform with tx.
+#  [10 10 scaletx, 30 rottx] txtoattr
+# will produce "scale(10 10) rotate(30)"
+
+
+:rottx |r:|         "rotate(" ?r + ")" +;
+:scaletx |s:|       "scale(" ?s + " " + ?s + ")" +;
+:scale2tx |x,y:|    "scale(" ?x + " " + ?y + ")" +;
+:transtx |x,y:|     "translate(" ?x + " " + ?y + ")" +;
+:txtoattr " " intercalate;
+# this transform to be appended to all subsequent items
+:settx !CurTX;
+# and clear it.
+:clrtx none !CurTX;
+
+
+#########################################################################
+
+# shapelist stuff, the next level of abstraction.
+
+:new
+    []!ShapeList;
+
+new
+[]!Groups
+
+# print the whole shebang to stdout, i.e. the entire shapelist
+
+:out |w,h:|
+    ?w ?h ?MarkerDefs ?ShapeList + svg.
+;
+
+# start a new group, setting its style. The group elements
+# will not be added to the shape list.
+
+:pushgroup |s:|
+    ?s !GroupStyle
+    ?ShapeList ?Groups push
+    [] !ShapeList
+;
+
+# finish the group - elements will once again be added to
+# the shape list.
+
+:popgroup |:g|
+    [?ShapeList,?GroupStyle] # return value
+    ?Groups pop !ShapeList
+;
+
+# add a group to the shape list (or current group).
+# takes a transform list, which can be built with
+# the tx commands.
+:group |tlist,g:|
+    "g" [%
+         "transform" ?tlist txtoattr
+         ] ?g snd ?StyleStack last + appendst 
+    ?g fst
+    tag ?ShapeList push;
+
+
+# shorthand for popping and immediately drawing
+:popdrawgroup
+    0 0 popgroup group;
+
