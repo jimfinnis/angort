@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 257
+#define ANGORT_VERSION 258
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -81,6 +81,7 @@ Angort::Angort() {
     barewords=false;
     autoCycleCount = autoCycleInterval = AUTOGCINTERVAL;
     loopIterCt=0;
+    hereDocString = hereDocEndString = NULL;
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
@@ -1133,6 +1134,32 @@ void Angort::include(const char *filename,bool isreq){
 }
 
 void Angort::feed(const char *buf){
+    
+    if(hereDocEndString!=NULL){
+        if(!strcmp(buf,hereDocEndString)){
+            hereDocEndString = NULL;
+            pushString(hereDocString);
+            free(hereDocString);
+        }
+        else {
+            if(!hereDocString){
+                hereDocString = strdup(buf);
+            } else {
+                int len = strlen(hereDocString)+strlen(buf)+1;
+                hereDocString = (char *)realloc(hereDocString,len);
+                strcpy(hereDocString+strlen(hereDocString),buf);
+            }
+        }
+        return;
+    }
+    
+    // heredocs start the line with -- 
+    if(buf[0] == '-' && buf[1] == '-'){
+        hereDocEndString=strdup(buf);
+        return;
+    }
+    
+    
     ipException = NULL;
     resetStop();
     callingInstance=this;

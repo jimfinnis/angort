@@ -662,6 +662,11 @@ private:
     ArrayList<const char *> *acList;
     int acIndex;
     
+    /// heredoc end string or null
+    char *hereDocEndString;
+    /// heredoc string being build
+    char *hereDocString;
+    
 public:
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.
