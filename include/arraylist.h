@@ -39,6 +39,7 @@ public:
         baseCapacity = n;
         ct = 0;
         data = (T*)malloc(sizeof(T)*n);
+        locks=0;
         // don't run constructors until there are items there!
     }
     
@@ -113,6 +114,8 @@ public:
     
     /// set a value in the list
     void set(int n,T *v){
+        if(locks)
+            throw ArrayListException("cannot modify list while it is being iterated");
         if(n<0)
             throw ArrayListException("set out of range");
         if(n>=ct){
@@ -152,6 +155,8 @@ public:
     /// sort in place - requires specialisation
     void sort(ArrayListComparator<T> *cmp);
 
+    /// number of locks held - these are added by iterators
+    int locks;
 
 private:
     
@@ -189,7 +194,6 @@ private:
     int capacity;
     /// the initial capacity of the list, lower than which we never go
     int baseCapacity;
-    
 };
 
 template <class T> class ArrayListIterator : Iterator<T *> {
@@ -197,6 +201,11 @@ public:
     ArrayListIterator(ArrayList<T> *a){
         idx=-1;
         list = a;
+        list->locks++;
+    }
+    
+    virtual ~ArrayListIterator(){
+        list->locks--;
     }
     
     virtual void first(){
