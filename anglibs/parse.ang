@@ -24,7 +24,7 @@ public
 # and failed parser output is
 #    [% `item none, `toks list]
 
-:parser |f/closure,label/symbol:|
+:parser |f/closure:|
     (|toks:tnew,t|
         # put a copy of the tokens into the parsing func and get
         # the output
@@ -46,7 +46,7 @@ public
         else 
             none then
     )
-    `match parser;
+    parser;
 
 # useful debugging routine for dumping parser output
 
@@ -351,7 +351,7 @@ public
 :strparser |s/string:|
     (|toks:t|
         ?toks len 0 = if none stop then
-        ?toks shift ?s = if ?s else none then) `string parser
+        ?toks shift ?s = if ?s else none then) parser
 ;
     
 # create a parser for parsing regexes
@@ -360,7 +360,7 @@ public
     (|toks:t|
         ?toks len 0 = if none stop then
         ?toks shift dup !t ?r regex$match len 1 = if
-            ?t else none then) `regex parser
+            ?t else none then) parser
 ;
     
 # parse the end of data, giving `end as the item
