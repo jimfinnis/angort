@@ -75,6 +75,7 @@ public:
         table = new HashEnt[mask+1];
         used=0;
         fill=0;
+        locks=0;
     }
     
     int count(){
@@ -91,6 +92,8 @@ public:
     /// set a value in the table
     
     virtual void set(Value *k,Value *val){
+        if(locks)
+            throw RUNT("hash cannot be modified while it is being iterated");
         
         uint32_t hash = k->getHash();
         HashEnt *ent = look(k,hash);
@@ -178,7 +181,7 @@ public:
     unsigned int used; //!< number of slots occupied by keys
     unsigned int fill; //!< number of slots occupied by keys or dummies (used only if we implement deletion)
     unsigned int mask; //!< hashtable contains mask+1 slots
-    
+    int locks; //!< used to lock the hash if it is being iterated
     
     void resize(unsigned int minused){
         unsigned int oldsize = mask+1;
@@ -299,6 +302,11 @@ public:
     HashValueIterator(Hash *h){
         hash = h;
         ent = NULL;
+        hash->locks++;
+    }
+    
+    virtual ~HashValueIterator(){
+        hash->locks--;
     }
     
     virtual void first(){
@@ -334,6 +342,11 @@ public:
     HashKeyIterator(Hash *h){
         hash = h;
         ent = NULL;
+        hash->locks++;
+    }
+    
+    virtual ~HashKeyIterator(){
+        hash->locks--;
     }
     
     virtual void first(){

@@ -224,7 +224,8 @@ inline int wstrlen(const char *s){
     char delim = params[1]->toString().get()[0];
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
-    char buf[256];
+    // must be the size of the longest string
+    char *buf = (char *)alloca(strlen(s)+1);
     const char *p=s;
     const char *base=s;
     
@@ -245,7 +246,7 @@ inline int wstrlen(const char *s){
 %wordargs substr sii (str start count --) get substring, if count -ve go to end
 {
     int len = wstrlen(p0);
-    if(p1>len || p1<0){
+    if(p1>len || p1<0 || p2==0){
         a->pushString("");
     } else {
         wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
