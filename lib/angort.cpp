@@ -1135,11 +1135,34 @@ void Angort::include(const char *filename,bool isreq){
 
 void Angort::feed(const char *buf){
     
+    ipException = NULL;
+    resetStop();
+    callingInstance=this;
+    
+    if(printLines)
+        printf("%d >>> %s\n",lineNumber,buf);
+    
+    if(!isDefining() && context && !inSubContext()) // make sure we're reset unless we're compiling or subcontexting
+        context->reset(NULL,&tok);
+    
+    strcpy(lastLine,buf);
+    tok.settrace((debug&2)?true:false);
+    tok.reset(buf);
+    // the tokeniser will reset its idea of the line number,
+    // because we reset it at the start of all input.
+    tok.setline(lineNumber);
+    
     if(hereDocEndString!=NULL){
         if(!strcmp(buf,hereDocEndString)){
             hereDocEndString = NULL;
-            pushString(hereDocString);
+            
+            // compile and if necessary run the code to stack the string
+            compile(OP_LITERALSTRING)->d.s = strdup(hereDocString);
             free(hereDocString);
+            if(!isDefining() && !inSubContext()){
+                compile(OP_END);run(context->getCode());
+                clearAtEndOfFeed();
+            }
         }
         else {
             if(!hereDocString){
@@ -1158,24 +1181,6 @@ void Angort::feed(const char *buf){
         hereDocEndString=strdup(buf);
         return;
     }
-    
-    
-    ipException = NULL;
-    resetStop();
-    callingInstance=this;
-    
-    if(printLines)
-        printf("%d >>> %s\n",lineNumber,buf);
-    
-    if(!isDefining() && context && !inSubContext()) // make sure we're reset unless we're compiling or subcontexting
-        context->reset(NULL,&tok);
-    
-    strcpy(lastLine,buf);
-    tok.settrace((debug&2)?true:false);
-    tok.reset(buf);
-    // the tokeniser will reset its idea of the line number,
-    // because we reset it at the start of all input.
-    tok.setline(lineNumber);
     
     int here;
     try {

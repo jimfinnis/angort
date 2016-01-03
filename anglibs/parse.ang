@@ -10,7 +10,16 @@ private
 ;
 gensymbol !Missing
 
-
+:assertparserlist |l/list:|
+    ?l each {
+        i type `closure != if
+            "Not a list of parsers.".
+            ?l "," intercalate.
+            0 "assertparserlist" assert
+        then
+            
+    }
+;
 public
 
 
@@ -134,6 +143,7 @@ public
 # in the result will be a list of the tokens successfully parsed.
 
 :seq |lst/list:|
+    ?lst assertparserlist
     (|toks:t,alltoks,res|
         []!res
         ?toks clone !alltoks
@@ -321,15 +331,18 @@ public
     )
 ;
 
-# somewhat hacky code for running a known sequence of parsers,
-# intercalated with another parser. Generates a new sequence
-# of parsers intercalated with the separator parser with a special label,
-# then filters those out.
+# somewhat hacky code for running a known sequence of parsers.
 
 :seqsepby |lst/list,sep/closure:s|
-    gensymbol!s
-    ?lst ?sep (drop ?s) listintercalate seq
-    (?s !=) filterparser
+    ?lst ?sep listintercalate seq
+    (|l:i| 1!i
+        []
+        # get every other item
+        ?l each {
+            ?i 1 band if i, then
+            ?i 1+ !i
+            }
+    ) moditem
 ;
 
 
@@ -380,10 +393,39 @@ public
 
 :charparser |c:| (?c = )matchparser;
 
+
+
 # generate a parser which takes the result of a sequence parser
 # and concatenates them all together - often used to generate
 # strings from sequences of character parsers.
 
 :concatcons |parser/closure:|
     ?parser (|c:|"" ?c  each {i+}) moditem;
+
+
+# letter parsers
+(|c:| ?c "a" >= ?c "z" <= and
+    ?c "A" >= ?c "Z" <= and or) matchparser !Letter
+(|c:| ?c "a" >= ?c "z" <= and) matchparser !LetterLower
+(|c:| ?c "A" >= ?c "Z" <= and) matchparser !LetterUpper
+(|c:| ?c "0" >= ?c "9" <= and) matchparser !Digit
+
+# parses an identifier 
+
+[
+ ?Letter,
+ [?Letter,?Digit] choice many concatcons
+ ] seq concatcons !Ident
+
+# parses a keyword
+
+:keywordparser |s:|
+    ?s strtolist (charparser) map seq concatcons;
+
+    
+
+# parses a bunch of spaces
+
+("\n\t \r" in) matchparser many !Spaces
+
 
