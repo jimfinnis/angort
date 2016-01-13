@@ -48,11 +48,13 @@ void HashType::set(Value *v,HashObject *ho){
 
 Hash *HashType::get(Value *v){
     if(v->t != this)
-        throw RUNT("not a hash");
+        throw RUNT("").set("not a hash, is a %s",v->t->name);
     return v->v.hash->hash;
 }
 
 void HashType::setValue(Value *coll,Value *k,Value *v){
+    if(coll->t != this)
+        throw RUNT("").set("not a hash, is a %s",coll->t->name);
     Hash *h = coll->v.hash->hash;
     h->set(k,v);
 }
