@@ -123,6 +123,7 @@ void Angort::shutdown(){
 }
 
 void Angort::showop(const Instruction *ip,const Instruction *base){
+    if(!base)base=debugwordbase;
     char buf[128];
     Value tmp;
     printf("%8p [%s:%d] : %04d : %s (%d) ",

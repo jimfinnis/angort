@@ -636,9 +636,6 @@ private:
     /// Only works in defining mode!
     void compileParamsAndLocals();
     
-    /// show an instruction
-    void showop(const Instruction *ip,const Instruction *base);
-    
     /// this will push the locals stack
     /// and push the rstack. The new IP
     /// is returned, and the old one is passed in
@@ -668,6 +665,9 @@ private:
     char *hereDocString;
     
 public:
+    /// show an instruction
+    void showop(const Instruction *ip,const Instruction *base=NULL);
+    
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.
     int findOrCreateGlobal(const char *name){

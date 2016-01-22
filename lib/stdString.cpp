@@ -114,13 +114,11 @@ inline int wstrlen(const char *s){
 
 %word format (list string -- string) string formatting
 {
+    Value f,l;
+    f.copy(a->popval());
+    l.copy(a->popval());
     
-    Value *f = a->popval();
-    Value *l = a->popval();
-    
-    format(a->pushval(),f,Types::tList->get(l));
-          
-    
+    format(a->pushval(),&f,Types::tList->get(&l));
 }
 
 %word sx (v -- s) convert a value to hex string

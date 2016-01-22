@@ -22,9 +22,9 @@ static void showException(Exception& e){
     printf("Error: %s\n",e.what());
     const Instruction *ip = a->getIPException();
     if(ip){
-        char buf[1024];
-        ip->getDetails(buf,1024);
-        printf("Error at %s\n",buf);
+        printf("Error at:");
+        a->showop(ip);
+        printf("\n");
     }else
           printf("Last line input: %s\n",a->getLastLine());
     if(e.fatal)
