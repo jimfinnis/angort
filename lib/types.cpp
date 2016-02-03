@@ -121,13 +121,16 @@ const char *BlockAllocType::getData(const Value *v) const{
 void BlockAllocType::incRef(Value *v){
     BlockAllocHeader *h = v->v.block;
     h->refct++;
+    tdprintf("INCREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
     if(!h->refct)
-        throw RUNT("reference count too large");
+        h->refct=0xffff; // MAX REFCOUNT is never freed!
+//        throw RUNT("reference count too large");
 }
     
 void BlockAllocType::decRef(Value *v){
     BlockAllocHeader *h = v->v.block;
-    h->refct--;
+    if(h->refct!=0xffff)h->refct--; // MAX REFCOUNT is never freed!
+    tdprintf("DECREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
     if(h->refct==0){
         free(h);
     }
