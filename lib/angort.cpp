@@ -847,6 +847,8 @@ void Angort::compileParamsAndLocals(){
             /// and finish, setting the number of params in the context
             context->setParamCount(paramct);
             return; // and exit
+        case T_END:
+            throw SyntaxException("parameter/local specs must be on a single line");
         }
     }
 }
