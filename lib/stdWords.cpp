@@ -262,12 +262,28 @@ static int stackcheck=-1;
 %wordargs getglobal s (string -- val) get a global by name
 {
     int id = a->findOrCreateGlobal(p0);
-    a->pushval()->copy(a->names.getVal(id));
+    Value *v = a->names.getVal(id);
+    // have to deal with properties too. Ugly.
+    if(v->t == Types::tProp){
+        v->v.property->preGet();
+        a->pushval()->copy(&v->v.property->v);
+        v->v.property->postGet();
+    }
+    else
+        a->pushval()->copy(a->names.getVal(id));
 }
 %wordargs setglobal vs (val string -- val) set a global by name
 {
     int id = a->findOrCreateGlobal(p1);
-    a->names.getVal(id)->copy(p0);
+    Value *v = a->names.getVal(id);
+    // have to deal with properties too. Ugly.
+    if(v->t == Types::tProp){
+        v->v.property->preSet();
+        v->v.property->v.copy(p0);
+        v->v.property->postSet();
+    }
+    else
+        a->names.getVal(id)->copy(p0);
 }
 
 
