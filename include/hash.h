@@ -97,7 +97,7 @@ public:
         
         uint32_t hash = k->getHash();
         HashEnt *ent = look(k,hash);
-        unsigned int n_used = used;
+        int n_used = used;
         
         // we use the type directly, it's a bit quicker than isUsed() et. al.
         Type *tp = ent->k.t;
@@ -178,16 +178,18 @@ public:
     HashEnt *table;
     Value *storedVal; //!< last value fetched
     
-    unsigned int used; //!< number of slots occupied by keys
-    unsigned int fill; //!< number of slots occupied by keys or dummies (used only if we implement deletion)
-    unsigned int mask; //!< hashtable contains mask+1 slots
+    // these are ints, because the resize code relies on them being
+    // signed. Py_ssize_t is what the original python code used.
+    int used; //!< number of slots occupied by keys
+    int fill; //!< number of slots occupied by keys or dummies (used only if we implement deletion)
+    int mask; //!< hashtable contains mask+1 slots
     int locks; //!< used to lock the hash if it is being iterated
     
-    void resize(unsigned int minused){
-        unsigned int oldsize = mask+1;
+    void resize(int minused){
         HashEnt *oldtable = table;
+        int oldsize = mask+1;
         
-        unsigned int newsize;
+        int newsize;
         for(newsize = oldsize; newsize<=minused && newsize>0;newsize<<=1){}
 //        printf("resizing to %d\n",newsize);
         
@@ -198,7 +200,7 @@ public:
         // iterate values, reinserting into new table
         HashEnt *ent=oldtable;
         
-        for(unsigned int i=0;i<oldsize;i++,ent++){
+        for(int i=0;i<oldsize;i++,ent++){
             if(ent->isUsed()){
                 HashEnt *newent = look(&ent->k,ent->k.getHash());
                 if(newent->k.t==Types::tNone){

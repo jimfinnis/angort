@@ -203,10 +203,12 @@ public:
     IntKeyedHashEnt<T> *table;
     T *v;
     
-    unsigned int used; //!< number of slots occupied by keys
-    unsigned int fill; //!< number of slots occupied by keys or dummies (used only if we implement deletion)
-    unsigned int mask; //!< hashtable contains mask+1 slots
-    unsigned int resizethreshold;
+    // these are ints, because the resize code relies on them being
+    // signed. Py_ssize_t is what the original python code used.
+    int used; //!< number of slots occupied by keys
+    int fill; //!< number of slots occupied by keys or dummies (used only if we implement deletion)
+    int mask; //!< hashtable contains mask+1 slots
+    int resizethreshold;
     
     void recalcresizethreshold(){
         resizethreshold = (mask+1)*RESIZE_THRESHOLD_NUMERATOR;
@@ -214,10 +216,10 @@ public:
     }
     
     void resize(){
-        unsigned int oldsize = mask+1;
         IntKeyedHashEnt<T> *oldtable = table;
-        unsigned int minused = used*RESIZE_FACTOR;
-              
+        int oldsize = mask+1;
+        int minused = used*RESIZE_FACTOR;
+        
         int newsize;
         for(newsize = oldsize; newsize<=minused && newsize>0;newsize<<=1){}
         //printf("resizing to %d\n",newsize);
