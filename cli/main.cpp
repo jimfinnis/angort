@@ -95,7 +95,7 @@ int main(int argc,char *argv[]){
     setArgumentList(argc,argv);
     
     int flags = 0;
-    char c;
+    int c;
     opterr=0; // suppress invalid option errors
     while((c=getopt(argc,argv,"endDl:"))!=-1){
         switch(c){

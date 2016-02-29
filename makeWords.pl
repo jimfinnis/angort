@@ -137,6 +137,10 @@ while(<>){
             } elsif($c eq 's' || $c eq 'S'){
                 print "const StringBuffer &_sb$i = _parms[$i]->toString();;\n";
                 print "const char *p$i = _sb$i.get();\n";
+            } elsif($c eq 'y'){
+                print "const char *p$i=NULL;\n";
+                print "if(!_parms[$i]->isNone()) {\n";
+                print "const StringBuffer &_sb$i = _parms[$i]->toString();p$i=_sb$i.get();\n}";
             } elsif($c eq 'l'){
                 print "ArrayList<Value> *p$i = Types::tList->get(_parms[$i]);\n";
             } elsif($c eq 'h'){

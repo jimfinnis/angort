@@ -649,6 +649,17 @@ In general all words can be redefined, but a word defined thus:
 \end{lstlisting}
 cannot be. This can be useful in package development.
 
+\subsection{Forward declarations (deferred declarations)}
+It's also possible to use this mechanism to define global variables,
+use them as function names, and change their values later. This lets
+us defer function definitions:
+\begin{v}
+global foo      # define a global called ``foo'' (null-valued)
+:bar foo;       # a function which uses it
+
+:foo...;        # actually define foo
+\end{v}
+
 \section{Lists}
 Angort lists are actually array based, with the array resizing automatically
 once certain thresholds are passed (similar to a Java ArrayList).
