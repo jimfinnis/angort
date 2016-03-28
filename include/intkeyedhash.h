@@ -231,7 +231,7 @@ public:
         // iterate values, reinserting into new table
         IntKeyedHashEnt<T> *ent=oldtable;
         T *p;
-        for(unsigned int i=0;i<oldsize;i++,ent++){
+        for(int i=0;i<oldsize;i++,ent++){
             if(ent->s == HSH_USED){
                 //printf("RESIZE SET\n");
                 p = set(ent->k);

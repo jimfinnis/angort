@@ -470,6 +470,7 @@ void Angort::run(const Instruction *ip){
                 try {
                     (*ip->d.func)(this);
                 } catch(const char *strex){
+                    strex=strdup(strex);// buh???
                     throw RUNT(strex);
                 }
                 ip++;
@@ -1185,7 +1186,7 @@ void Angort::feed(const char *buf){
         return;
     }
     
-    int here;
+    int here; // instruction index variable used in different ways
     try {
         for(;;){
             

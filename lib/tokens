@@ -76,7 +76,6 @@ require :   T_REQUIRE
 import  :   T_IMPORT
 private :   T_PRIVATE
 public  :   T_PUBLIC
-importall   :   T_IMPORTALL
 def : T_DEF
 defconst : T_DEFCONST
 recurse : T_RECURSE
