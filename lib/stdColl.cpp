@@ -404,15 +404,21 @@ struct StdComparator : public ArrayListComparator<Value> {
     Value *p = a->popval();
     Iterator<Value *> *iter = p->t->makeIterator(p);
     
+    // quickest thing to do is count the items by hand. This
+    // is optimised if we know the input iterable is a list.
+    
+    int n;
+    if(p->t == Types::tList){
+        n = Types::tList->get(p)->count();
+    } else {
+        n=0;
+        for(iter->first();!iter->isDone();iter->next())n++;
+    }
+    
     // new list
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
-    // quickest thing to do is count the items by hand. This
-    // could be optimised if we knew the input iterable was a list.
-    
-    int n=0;
-    for(iter->first();!iter->isDone();iter->next()){n++;}
-    
+    printf("** %d **\n",n);
     int i=n;
     for(iter->first();!iter->isDone();iter->next()){
         Value *v = iter->current();
