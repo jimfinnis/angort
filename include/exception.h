@@ -18,9 +18,12 @@
 
 namespace angort {
 
+extern int getSymbolID(const char *);
+
 class Exception : public std::exception {
 public:
-    Exception(const char *e){
+    Exception(const char *xid,const char *e){
+        id = getSymbolID(xid);
         if(e)
             strncpy(error,e,1024);
         else
@@ -39,7 +42,9 @@ public:
     }
     
     /// default ctor
-    Exception(){
+    Exception(const char *xid){
+        fatal=false;
+        id = getSymbolID(xid);
         strcpy(error,"???");
     }
     
@@ -47,7 +52,9 @@ public:
     /// space is allocated here, which is deleted
     /// by the destructor. This version considers e to be
     /// a format string, and arg a string argument.
-    Exception(const char *e,const char *arg){
+    Exception(const char *xid,const char *e,const char *arg){
+        fatal=false;
+        id = getSymbolID(xid);
         snprintf(error,1024,e,arg);
     }
     
@@ -59,16 +66,20 @@ public:
     /// a copy of the error string
     char error[1024];
     bool fatal;
+    int id; // ID of symbol
 };
 
-#define RUNT(x) RuntimeException(x,__FILE__,__LINE__)
-#define WTF RuntimeException("What a Terrible Failure",__FILE__,__LINE__)
+#define RUNT(xid,x) RuntimeException(xid,x,__FILE__,__LINE__)
+#define WTF RuntimeException("ex$wtf","What a Terrible Failure",__FILE__,__LINE__)
 
-/// this exception is thrown when a generic runtime error occurs
+/// this exception is thrown when a generic runtime error occurs.
+/// It can be caught by Angort exception handling.
 
 class RuntimeException : public Exception {
 public:
-    RuntimeException(const char *e,const char *fn,int l){
+    RuntimeException(const char *xid,const char *e,const char *fn,int l) :
+    Exception(xid)
+    {
         char tmp[512];
         if(e){
             strcpy(tmp,e);e=tmp;  // to stop bloody exp-ptrcheck complaining.
@@ -86,10 +97,8 @@ public:
     }
    
     char fileName[1024];
-    /// the current Lana line or -1
+    /// the current Angort line or -1
     int line;
-    
-    
 };
 
 /*
@@ -106,24 +115,24 @@ public:
 class BadConversionException : public Exception {
 public:
     BadConversionException(const char *from, const char *to)
-                : Exception() {
+                : Exception("ex$badconv") {
                     sprintf(error,"cannot convert types: '%s' to '%s'",from,to);
                 }
 };
 
 class DivZeroException : public Exception {
 public:
-    DivZeroException() : Exception("division by zero") {}
+    DivZeroException() : Exception("ex$divzero","division by zero") {}
 };
 
 class SyntaxException : public Exception {
 public:
-    SyntaxException(const char *s) : Exception(s) {}
+    SyntaxException(const char *s) : Exception("ex$syntax",s) {}
 };
 
 class AlreadyDefinedException : public Exception {
 public:
-    AlreadyDefinedException(const char *name) : Exception(NULL){
+    AlreadyDefinedException(const char *name) : Exception("ex$defined",NULL){
         set("'%s' is already defined in this namespace");
     }
 };
@@ -138,7 +147,7 @@ class FileNotFoundException : public Exception {
 public:
     char fname[1024];
     
-    FileNotFoundException(const char *name) :  Exception() {
+    FileNotFoundException(const char *name) :  Exception("ex$nofile") {
         snprintf(error,1023,"cannot find file : %s",name);
         strncpy(fname,name,1023);
         
@@ -148,7 +157,7 @@ public:
 
 class AssertException : public Exception {
 public:
-    AssertException(const char *desc,int line){
+    AssertException(const char *desc,int line) : Exception("ex$assert"){
         snprintf(error,1024,"Assertion failed at line %d:  %s",line,desc);
         fatal=true;
     }
@@ -156,7 +165,7 @@ public:
 
 class ParameterTypeException : public Exception {
 public:
-    ParameterTypeException(int paramNo, const char *expected){
+    ParameterTypeException(int paramNo, const char *expected) : Exception("ex$badparam"){
         snprintf(error,1024,"Bad parameter %d, expected %s",paramNo,expected);
     }
 };

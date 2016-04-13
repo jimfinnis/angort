@@ -126,7 +126,7 @@ public:
     
     /// store a value into a reference value of this type
     virtual void store(Value *ref,Value *v) const{
-        throw RUNT("trying to store a value in a non-reference value");
+        throw RUNT("ex$nonrefstore","trying to store a value in a non-reference value");
     }
     
     /// convert to a float - exception by default
@@ -140,12 +140,12 @@ public:
     void createIterator(Value *dest,Value *src);
     
     virtual uint32_t getHash(Value *v){
-        throw RUNT("type is not hashable");
+        throw RUNT("ex$nohash","type is not hashable");
         return 0;
     }
     
     virtual bool equalForHashTable(Value *a,Value *b){
-        throw RUNT("type is not hashable");
+        throw RUNT("ex$nohash","type is not hashable");
         return false;
     }
         
@@ -169,13 +169,13 @@ public:
     /// create the low-level iterator if possible. GCType does this by calling
     /// makeValueIterator on the underlying GarbageCollected object in the value.
     virtual Iterator<Value *> *makeValueIterator(Value *v){
-        throw RUNT("cannot iterate a non-iterable value");
+        throw RUNT("ex$noiter","cannot iterate a non-iterable value");
     }
     
     /// create the low-level key iterator if possible. GCType does this by calling
     /// makeValueIterator on the underlying GarbageCollected object in the value.
     virtual Iterator<Value *> *makeKeyIterator(Value *v){
-        throw RUNT("cannot iterate a non-iterable value");
+        throw RUNT("ex$noiter","cannot iterate a non-iterable value");
     }
     
     /// return the index of item is in the collection (uses the same
@@ -185,22 +185,22 @@ public:
     
     /// set a value in a collection, if this type is one
     virtual void setValue(Value *coll,Value *k,Value *v){
-        throw RUNT("cannot set value of item inside a non-collection");
+        throw RUNT("ex$nocol","cannot set value of item inside a non-collection");
     }
     /// get a value from a collection, if this type is one
     virtual void getValue(Value *coll,Value *k,Value *result){
-        throw RUNT("cannot get value of item inside a non-collection");
+        throw RUNT("ex$nocol","cannot get value of item inside a non-collection");
     }
     /// get number of items in a collection if this is one
     virtual int getCount(Value *coll){
-        throw RUNT("cannot get count of non-collection");
+        throw RUNT("ex$nocol","cannot get count of non-collection");
     }
     virtual void removeAndReturn(Value *coll,Value *k,Value *result){
-        throw RUNT("cannot remove from non-collection");
+        throw RUNT("ex$nocol","cannot remove from non-collection");
     }
     
     virtual void slice(Value *out,Value *coll,int start,int len){
-        throw RUNT("cannot get slice of non-collection");
+        throw RUNT("ex$nocol","cannot get slice of non-collection");
     }
     
     /// generate a shallow or deep copy of the object:

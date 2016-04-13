@@ -33,7 +33,7 @@ void IteratorType::set(Value *v,Value *src,Iterator<Value *> *iter){
 
 Iterator<Value *> *IteratorType::get(Value *v){
     if(v->t!=this)
-        throw RUNT("not an iterator");
+        throw RUNT("ex$noiter","not an iterator");
     IteratorObject *i = (IteratorObject *)v->v.gc;
     return i->iterator;
 }

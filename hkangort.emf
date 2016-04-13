@@ -84,8 +84,16 @@ hilight   .hilight.angort 1 "require" .scheme.prepro
 hilight   .hilight.angort 1 "import" .scheme.prepro
 hilight   .hilight.angort 1 "private" .scheme.prepro
 hilight   .hilight.angort 1 "public" .scheme.prepro
-hilight   .hilight.angort 1 "importall" .scheme.prepro
+hilight   .hilight.angort 1 "def" .scheme.prepro
+hilight   .hilight.angort 1 "defconst" .scheme.prepro
+hilight   .hilight.angort 1 "recurse" .scheme.prepro
+hilight   .hilight.angort 1 "self" .scheme.prepro
 hilight   .hilight.angort 1 "library" .scheme.prepro
+hilight   .hilight.angort 1 "catch" .scheme.prepro
+hilight   .hilight.angort 1 "endtry" .scheme.prepro
+hilight   .hilight.angort 1 "try" .scheme.prepro
+hilight   .hilight.angort 1 "throw" .scheme.prepro
+
     
     hilight   .hilight.angort 1 "p"         .scheme.keyword
     hilight   .hilight.angort 1 "x"         .scheme.keyword
@@ -124,6 +132,9 @@ hilight   .hilight.angort 1 "library" .scheme.prepro
     indent .hilight.angort o "[^[:alnum:]]then[^[:alnum:]]" -t
     indent .hilight.angort o "[^[:alnum:]]case[^[:alnum:]]" -t
     indent .hilight.angort o "[^[:alnum:]]otherwise[^[:alnum:]]" -t
+    indent .hilight.angort n "[^[:alnum:]]try[^[:alnum:]]" t
+    indent .hilight.angort s "[^[:alnum:]]catch[^[:alnum:]]" -t
+    indent .hilight.angort o "[^[:alnum:]]endtry[^[:alnum:]]" -t
     
 !endif
 

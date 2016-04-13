@@ -23,7 +23,7 @@ long LongType::get(Value *v){
        throw BadConversionException(v->t->name,name);
      */
     if(v->t != this)
-        RUNT("expected a long");
+        RUNT("ex$long","expected a long");
     return v->v.l;
 }
 

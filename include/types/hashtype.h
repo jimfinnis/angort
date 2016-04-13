@@ -51,7 +51,7 @@ public:
     virtual const char *toString(bool *allocated, const Value *v) const;
     virtual void removeAndReturn(Value *coll,Value *k,Value *result);
     virtual void slice(Value *out,Value *coll,int start,int len){
-        throw RUNT("cannot get slice of hash");
+        throw RUNT("ex$nocol","cannot get slice of hash");
     }
     virtual void clone(Value *out,const Value *in,bool deep=false);
 };

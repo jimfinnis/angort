@@ -70,7 +70,7 @@ void Closure::init(const CodeBlock *c){
                 blocksUsed =NULL;
                 map=NULL;
                 // note (a) - can leave a nasty closure which needs destroying carefully at note (b)
-                throw RUNT("Attempt to close over variable in unavailable containing block");
+                throw RUNT("ex$closure","Attempt to close over variable in unavailable containing block");
             }
             reffed=reffed->parent;
 //            printf("  Ref jump %p\n",reffed);

@@ -51,6 +51,10 @@ public:
         ct=0;
     }
     
+    ~Stack(){
+        clear();
+    }
+    
     void setName(const char *s){
         name = s;
     }

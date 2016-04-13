@@ -30,7 +30,7 @@ ArrayList<Value> *ListType::set(Value *v){
 
 ArrayList<Value> *ListType::get(Value *v){
     if(v->t != this)
-        throw RUNT("not a list");
+        throw RUNT("ex$nolist","not a list");
     return &v->v.list->list;
 }
 

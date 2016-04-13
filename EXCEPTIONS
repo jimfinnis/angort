@@ -1,0 +1,82 @@
+Code generated:
+
+The major thing here is the catchstack. This is a stack of
+stacks of symbol->jumpoffset hashes. The outer stack is one-to-one
+with the return stack (but can't be part of it for technical reasons,
+see below). This outer stack is pushed and popped every time we go
+into or out of a function. The inner stack is then the stack of
+nested try-blocks, where the top one is the important one.
+
+When we throw an exception, we keep popping off the inner stack,
+then the outer stack, until we find a hash which contains that symbol.
+As we pop the outer stack, we return (i.e. pop the rstack). Once we
+have the symbol we jump to the offset in that frame.
+
+This is big and inefficient.
+
+(the reason referred to above is that Frames are only pushed when
+we call - the top level is not kept in a frame structure, so we 
+would have to copy the entire stack into the frame.)
+
+OP_TRY (catchset: hash of symbols->integer offsets)
+    pushes catchset onto runtime exception stack, which is
+...
+OP_JUMP endcatch
+catch1:
+...
+OP_JUMP endcatch
+catch2:
+...
+OP_JUMP endcatch
+catch3:
+...
+OP_JUMP endcatch
+endcatch:
+OP_ENDTRY (pops exception)
+...
+
+OP_THROW (data symbol --)
+    pops the exception symbol and data, and repeatedly returns
+    until we have a frame with a catchset.
+
+
+
+Compile time code:
+
+The data structures here are:
+    stack of catch lists (catchsets)
+    catch is (list of symbols, start end).
+    
+try 
+    push new catchlist onto compiletime catchset stack
+    compile OP_TRY and push to cstack
+catch|s1
+    is first catch so
+        compile OP_JUMP and push to cstack
+    curcatch = new catch, appended to current catchlist
+    curcatch->start = ip
+    while there are symbols after the pipe (comma separated),
+        append to curcatch symbol list
+catch|s2
+    is not first catch, so
+        compile OP_JUMP, set curcatch->end to it
+        (i.e. terminate previous catch)
+    curcatch = new catchpair
+    curcatch->start = ip
+    while there are symbols after the pipe (comma separated),
+        append to curcatch symbol list
+
+endtry
+    if no catches throw error
+    compile OP_JUMP, set curcatch->end to it
+    (i.e. terminate previous catch)
+    pop cstack and make OP_JUMP jump to IP
+    resolve all OP_JUMPS (in "end" for all catches) to jump here
+    make an exception hash (symbols->integer), and..
+    for each catch in the catch list
+     for each symbol in the catch
+      exceptionhash[symbol]=catch start
+    pop OP_TRY off the stack
+    set the exception hash (d.catches) in OP_TRY to the exceptionhash.
+    compile OP_ENDTRY
+    pop the catch set off the catchset stack

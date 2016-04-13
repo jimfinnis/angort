@@ -69,7 +69,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_NEQUALS:// and not equal to everything
             pushInt(1);break;
         default:
-            throw RUNT("invalid operation with a 'none' operand");
+            throw RUNT("ex$binop","invalid operation with a 'none' operand");
         }
     }else if(at == Types::tList || bt == Types::tList) {
         ListObject *lo;
@@ -85,7 +85,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             Types::tList->set(pushval(),lo);
             break;
         default:
-            throw RUNT("invalid operation with a list operand");
+            throw RUNT("ex$binop","invalid operation with a list operand");
         }
     }else if(at == Types::tHash || bt == Types::tHash) {
         HashObject *ho;
@@ -101,7 +101,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             Types::tHash->set(pushval(),ho);
             break;
         default:
-            throw RUNT("invalid operation with a list operand");
+            throw RUNT("ex$binop","invalid operation with a list operand");
         }
     } else if((at == Types::tString || at == Types::tSymbol) &&
               bt == Types::tInteger &&
@@ -161,7 +161,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_CMP:
             pushInt(strcmp(p.get(),q.get()));
             break;
-        default:throw RUNT("bad operation for strings");
+        default:throw RUNT("ex$binop","bad operation for strings");
         }
         
     }else if(at == Types::tFloat || bt == Types::tFloat){
@@ -215,7 +215,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             pushInt(((p-q)>0)?1:(((p-q)<0)?-1:0));
             break;
         default:
-            throw RUNT("invalid operator for floats");
+            throw RUNT("ex$binop","invalid operator for floats");
         }
         if(!cmp)
             pushFloat(r);
@@ -259,7 +259,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             break;
         }
         default:
-            throw RUNT("bad operation for symbols");
+            throw RUNT("ex$binop","bad operation for symbols");
         }
     }else if(at == Types::tSymbol || bt == Types::tSymbol){
         /*
@@ -308,7 +308,7 @@ void Angort::binop(Value *a,Value *b,int opcode){
             break;
         }
         default:
-            throw RUNT("bad operation for symbols");
+            throw RUNT("ex$binop","bad operation for symbols");
         }
     }else if(at == Types::tLong || bt == Types::tLong){
         /**

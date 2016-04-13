@@ -88,3 +88,7 @@ otherwise : T_OTHERWISE
 sourceline : T_SOURCELINE
 yield : T_YIELD
 
+try : T_TRY
+catch : T_CATCH
+endtry : T_ENDTRY
+throw : T_THROW

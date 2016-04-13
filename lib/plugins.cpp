@@ -68,7 +68,7 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
         case 'B':
             tt = (*p=='a' || *p=='A')?type0:type1;
             if(!tt)
-                throw RUNT("unsupplied special type specified in parameter check");
+                throw RUNT("ex$plugin","unsupplied special type specified in parameter check");
             // if the parameter is T, we don't allow NONE through.
             if(v->t != tt && (!v->isNone() || *p=='a' || *p=='a'))
                 throw ParameterTypeException(i,tt->name);
@@ -105,24 +105,24 @@ int Angort::plugin(const char *name){
     path = findFile(buf);
     
     if(!path)
-        throw RUNT("").set("cannot find library '%s'",name);
+        throw RUNT("ex$plugin","").set("cannot find library '%s'",name);
     
     // ugly hackage; dlopen() doesn't seem to like plain filenames
     // (e.g. "io.angso")
     char apath[PATH_MAX];
     char *pp = realpath(path,apath);
     if(!pp)
-        throw RUNT("").set("couldn't resolve path: %s",path);
+        throw RUNT("ex$plugin","").set("couldn't resolve path: %s",path);
     
     
     void *lib = dlopen(apath,RTLD_LAZY|RTLD_GLOBAL);
     if((err=dlerror())){
-        throw RUNT(err);
+        throw RUNT("ex$plugin",err);
     }
     
     PluginInitFunc init = (PluginInitFunc)dlsym(lib,"init");
     if((err=dlerror())){
-        throw RUNT(err);
+        throw RUNT("ex$plugin",err);
     }
     
     // init the plugin and get the data, and register it.
@@ -134,7 +134,7 @@ int Angort::plugin(const char *name){
 #else
 
 void Angort::plugin(const char *path){
-    throw RUNT("Plugins not supported on this platform.");
+    throw RUNT("ex$plugin","Plugins not supported on this platform.");
 }
 
 #endif

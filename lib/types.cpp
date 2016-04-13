@@ -43,7 +43,7 @@ void Type::clone(Value *out,const Value *in,bool deep){
 
 void Type::add(const char *_name,const char *_id){
     if(getByName(_name))
-        throw Exception().set("type already exists: %s",name);
+        throw Exception("ex$badtype").set("type already exists: %s",name);
     
     const unsigned char *n = (const unsigned char *)_id;
     id = n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24);
@@ -124,7 +124,7 @@ void BlockAllocType::incRef(Value *v){
     tdprintf("INCREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
     if(!h->refct)
         h->refct=0xffff; // MAX REFCOUNT is never freed!
-//        throw RUNT("reference count too large");
+    //        throw RUNT("reference count too large");
 }
     
 void BlockAllocType::decRef(Value *v){

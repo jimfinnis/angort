@@ -38,7 +38,7 @@ public:
     virtual void getValue(Value *coll,Value *k,Value *result);
     
     virtual void removeAndReturn(Value *coll,Value *k,Value *result){
-        throw RUNT("cannot remove from string");
+        throw RUNT("ex$string","cannot remove from string");
     }
     
     virtual Iterator<Value *> *makeValueIterator(Value *v);

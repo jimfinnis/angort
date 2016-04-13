@@ -51,7 +51,6 @@ struct CodeBlock;
 #define LIBNAME(x) _angortlib_ ## x
 
 
-
 /// this is a structure of word names / pointers as produced
 /// by makeWords.pl. 
 
@@ -114,12 +113,29 @@ struct Instruction {
         const CodeBlock *cb;
         Property *prop;
         class Value *constexprval;
+        IntKeyedHash<int> *catches; // for OP_TRY
         struct {
             int l; //!< how many locals in total
             int p; //!< how many of those are params to pop
         } locals;
     }d;
 };
+
+/// structure used in compiling exceptions, generated
+/// for each "catch" clause. Consists of the symbols caught,
+/// and the start and end offsets of the catch clause.
+
+struct Catch {
+    /// list of symbols which this catch pair catches
+    ArrayList<int> symbols;
+    int start,end; //!< start and end of exception
+    
+    void clear(){
+        symbols.clear();
+    }
+};
+
+
 
 
 /// MUST be <32, since we use a 32-bit int as a set of booleans
@@ -222,6 +238,9 @@ public:
     /// this should be the number of bits set in localsClosed
     int closureCt;
     
+    Stack<ArrayList<Catch>,4> catchSetStack; //!< stack for exception compiling
+    Catch *curcatch; //!< the catch we're currently working with
+    
     CompileContext(){
         cstack.setName("compile");
         leaveListStack.setName("leavelist");
@@ -291,7 +310,7 @@ public:
     int addLocalToken(const char *s,Type *typ){
         int t = localTokenCt;
         if(localTokenCt==MAXLOCALS)
-            throw RUNT("too many local tokens");
+            throw RUNT("ex$toomanylocals","too many local tokens");
         localIndices[localTokenCt]=localTokenCt;
         localTypes[localTokenCt]=typ;
         strcpy(localTokens[localTokenCt++],s);
@@ -538,11 +557,13 @@ public:
 /// a function and pop every time we return.
 struct Frame {
     const Instruction *ip; //!< the return address
+    const Instruction *base; //!< the address of the start of the function
     Value rec; //!< the recursion data (i.e. "this function")
     Value clos; //!< stores any closure created at this level
     /// how many loop iterators are stacked for loops in this
     /// frame. This number is popped off if the function runs OP_STOP.
     int loopIterCt; 
+    
     
     void clear(){
         rec.clr();
@@ -568,6 +589,12 @@ private:
     /// how many loop iterators are stacked for loops in this
     /// frame. This number is popped off if the function runs OP_STOP.
     int loopIterCt; 
+    /// stack of stacks of exception handlers. The outer stack
+    /// matches the rstack (annoyingly I can't put it in there without
+    /// lots of copy operations), while the inner one is the stack
+    /// for within the function. This is big and inefficient,
+    /// as it contains loads of empty hashes!
+    Stack<Stack<IntKeyedHash<int>*,4>,RSTACKSIZE+1> catchstack;
     
     Stack<Value,RSTACKSIZE> loopIterStack; // stack of loop iterators
     
@@ -589,7 +616,7 @@ private:
     CompileContext *context;
     
     Tokeniser tok;
-    const Instruction *ip,*debugwordbase;
+    const Instruction *ip,*wordbase;
     
     /// the index of the word currently being defined
     /// within the current namespace, whose value is set
@@ -644,9 +671,8 @@ private:
     
     
     /// called at the end of a block of code,
-    /// or by emergency stop invocation. Returns
-    /// the new IP or NULL.
-    const Instruction *ret();
+    /// or by emergency stop invocation. May set the IP to NULL.
+    void ret();
     
     /// clear all stacks etc.
     void clearAtEndOfFeed();
@@ -761,7 +787,7 @@ public:
     IteratorObject *getTopIterator(int i=0){
         Value *v = loopIterStack.peekptr(i);
         if(v->t != Types::tIter)
-            throw RUNT("attempt to get i,j,k or iter when not in an iterable loop");
+            throw RUNT("ex$noiterloop","attempt to get i,j,k or iter when not in an iterable loop");
         return v->v.iter;
     }
     
@@ -887,7 +913,7 @@ public:
     
     
     /// run until OP_END received and no return stack
-    void run(const Instruction *ip);
+    void run(const Instruction *startip);
     
     /// disassemble a named word
     void disasm(const char *name);
@@ -920,6 +946,10 @@ public:
     
     /// return the next possible autocomplete candidate
     const char *getNextAutoComplete();
+    
+    /// throw an exception, setting the IP of the handler or NULL
+    /// if no handler was found.
+    void throwAngortException(int symbol, Value *data);
 };
 
 

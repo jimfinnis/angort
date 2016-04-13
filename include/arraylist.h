@@ -32,15 +32,23 @@ template <class T> struct ArrayListComparator {
 /// when the list is created or destroyed, however.
 
 template <class T> class ArrayList {
-public:
-    /// create a list, with initially enough room for n elements
-    ArrayList(int n){
+    // because I don't want to rely on c++11 delegated ctors
+    void init(int n){ 
         capacity = n;
         baseCapacity = n;
         ct = 0;
         data = (T*)malloc(sizeof(T)*n);
         locks=0;
         // don't run constructors until there are items there!
+    }
+public:
+    /// create a list, with initially enough room for n elements
+    ArrayList(int n){
+        init(n);
+    }
+    
+    ArrayList() {
+        init(4);
     }
     
     /// destroy a list

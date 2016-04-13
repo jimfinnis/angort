@@ -161,7 +161,7 @@ template <> Iterator<Value *> *Range<float>::makeValueIterator(){
 }
 
 template<> bool RangeType<float>::isIn(Value *v,Value *item){
-    throw RUNT("cannot determine membership of float range");
+    throw RUNT("ex$range","cannot determine membership of float range");
 }
 
 }

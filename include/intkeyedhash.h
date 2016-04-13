@@ -56,6 +56,20 @@ template <class T>struct IntKeyedHashEnt {
             v.~T(); // actually destruct the item
         s = HSH_DELETED;
     }
+    /// return whether this slot is actively used - i.e.
+    /// is not deleted or unused.
+    inline bool isUsed(){
+        return s==HSH_USED;
+    }
+    /// return whether this slot is, and never has been, used.
+    inline bool isFree(){
+        return s==HSH_FREE;
+    }
+    
+    /// return whether this slot has been deleted.
+    inline bool isDeleted(){
+        return s==HSH_DELETED;
+    }
         
 };
 
@@ -272,6 +286,47 @@ public:
         }
     }
 };
+
+template <class T> class IKHIterator  {
+public:
+    IKHIterator(IntKeyedHash<T> *h){
+        hash = h;
+        ent = NULL;
+    }
+    
+    virtual ~IKHIterator(){
+    }
+    
+    virtual void first(){
+        size=hash->mask+1;
+        ent=hash->table;
+        idx=0;
+        while(idx<size && !ent->isUsed()) {idx++;ent++;}
+    }
+    virtual void next(){
+        ent++;idx++;
+        while(idx<size && !ent->isUsed()) {idx++;ent++;}
+    }
+    virtual bool isDone() const {
+        return idx>=size;
+    }
+    virtual int current() {
+        if(!ent)
+            throw Exception("first() not called on iterator");
+        return ent->k;
+    }
+    T *curval(){
+        if(!ent)
+            throw Exception("first() not called on iterator");
+        return &ent->v;
+    }
+        
+private:
+    IntKeyedHash<T> *hash;
+    int idx,size;
+    IntKeyedHashEnt<T> *ent;
+};
+
 
 }    
 #endif /* __INTKEYEDHASH_H */

@@ -42,7 +42,7 @@ bool SymbolType::exists(const char *s){
 
 int SymbolType::getSymbol(const char *s){
     if(strlen(s)>MAXSYMBOLLEN)
-        throw RUNT("").set("symbol too long: %s",s);
+        throw RUNT("ex$symbol","").set("symbol too long: %s",s);
     
     int n;
     if(locations.find(s)){
@@ -90,6 +90,10 @@ bool SymbolType::equalForHashTable(Value *a,Value *b){
     //This does mean that the key "foo" will
     //not match the key `foo, but that's OK.
     return a->v.i == b->v.i;
+}
+
+int getSymbolID(const char *s){
+    return Types::tSymbol->getSymbol(s);
 }
 
 }
