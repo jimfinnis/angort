@@ -27,7 +27,7 @@ int NamespaceManager::get(const char *name, bool scanImports){
     if((dollar=strchr(name,'$'))){
         char buf[32];
         if(dollar-name > 32){
-            throw RUNT("ex$toolong","namespace name too long");
+            throw RUNT(EX_LONGNAME,"namespace name too long");
         }
         strncpy(buf,name,dollar-name);
         buf[dollar-name]=0;

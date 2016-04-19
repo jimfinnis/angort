@@ -65,7 +65,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     
     int idx = ns->get(s.get());
     if(idx<0)
-        throw RUNT("ex$noname","ispriv: cannot find name in namespace");
+        throw RUNT(EX_NOTFOUND,"ispriv: cannot find name in namespace");
     return ns->getEnt(idx);
 }
 }// end namespace
@@ -201,7 +201,7 @@ static int stackcheck=-1;
 %word asserteq (a b -- ) if a!=b assert
 {
     if(a->popInt()!=a->popInt())
-        throw RUNT("ex$assert","assertq failure");
+        throw RUNT(EX_ASSERT,"assertq failure");
 }
     
 
@@ -217,7 +217,7 @@ static int stackcheck=-1;
         f = v->toFloat();
         a->pushFloat(f<0?-f:f);
     } else {
-        throw RUNT("ex$badtype","bad type for 'abs'");
+        throw RUNT(EX_TYPE,"bad type for 'abs'");
     }
 }
 
@@ -237,7 +237,7 @@ static int stackcheck=-1;
         l = v->toLong();
         Types::tLong->set(a->pushval(),l);
     } else {
-        throw RUNT("ex$badtype","bad type for 'neg'");
+        throw RUNT(EX_TYPE,"bad type for 'neg'");
     }
 }
     

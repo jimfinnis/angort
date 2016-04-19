@@ -93,7 +93,7 @@ public:
     
     virtual void set(Value *k,Value *val){
         if(locks)
-            throw RUNT("ex$modhash","hash cannot be modified while it is being iterated");
+            throw RUNT(EX_HASHMOD,"hash cannot be modified while it is being iterated");
         
         uint32_t hash = k->getHash();
         HashEnt *ent = look(k,hash);

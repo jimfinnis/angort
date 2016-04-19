@@ -90,6 +90,7 @@ hilight   .hilight.angort 1 "recurse" .scheme.prepro
 hilight   .hilight.angort 1 "self" .scheme.prepro
 hilight   .hilight.angort 1 "library" .scheme.prepro
 hilight   .hilight.angort 1 "catch" .scheme.prepro
+hilight   .hilight.angort 1 "catchall" .scheme.prepro
 hilight   .hilight.angort 1 "endtry" .scheme.prepro
 hilight   .hilight.angort 1 "try" .scheme.prepro
 hilight   .hilight.angort 1 "throw" .scheme.prepro
@@ -134,6 +135,7 @@ hilight   .hilight.angort 1 "throw" .scheme.prepro
     indent .hilight.angort o "[^[:alnum:]]otherwise[^[:alnum:]]" -t
     indent .hilight.angort n "[^[:alnum:]]try[^[:alnum:]]" t
     indent .hilight.angort s "[^[:alnum:]]catch[^[:alnum:]]" -t
+    indent .hilight.angort s "[^[:alnum:]]catchall[^[:alnum:]]" -t
     indent .hilight.angort o "[^[:alnum:]]endtry[^[:alnum:]]" -t
     
 !endif

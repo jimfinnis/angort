@@ -22,6 +22,11 @@
 #include "tokens.h"
 #include "hash.h"
 #include "cycle.h"
+
+/// this special hash key is a "symbol" used for catch blocks
+/// that catch all exceptions.
+#define CATCHALLKEY 0xdeadbeef
+
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std);
 
 namespace angort {
@@ -204,11 +209,11 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         clos = a->v.closure;
         cb = clos->cb;
     } else {
-        throw RUNT("ex$badcall","").set("attempt to 'call' something that isn't code, it's a %s",t->name);
+        throw RUNT(EX_NOTFUNC,"").set("attempt to 'call' something that isn't code, it's a %s",t->name);
     }
     
     if(!cb->ip)
-        throw RUNT("ex$deferredcall","call to a word with a deferred definition");
+        throw RUNT(EX_DEFCALL,"call to a word with a deferred definition");
     
     //    printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
     //    printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
@@ -238,7 +243,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
                     Types::tInteger->set(&tmpval,(int)(paramval->v.f));
                     paramval = &tmpval;
                 } else
-                    throw RUNT("ex$badparam","").set("Type mismatch: argument %d is %s, expected %s",
+                    throw RUNT(EX_BADPARAM,"").set("Type mismatch: argument %d is %s, expected %s",
                                                      i,paramval->t->name,tp->name);
             }
         }                          
@@ -336,7 +341,7 @@ void Angort::ret()
         }
         loopIterCt=0;
     }catch(StackUnderflowException e){
-        throw RUNT("ex$itermismatch","loop iterator mismatch\n");
+        throw SyntaxException("loop iterator mismatch\n");
     }
     
     // TODO sanity check and pop of closure stack
@@ -370,6 +375,8 @@ void Angort::throwAngortException(int symbol, Value *data){
     // first - if that doesn't find a handler, we pop the outer
     // stack by performing a return.
     
+    storeTrace(); // store a trace to print if we need to
+    
     while(!rstack.isempty()){
         // get the current intrafunction catch stack
         Stack<IntKeyedHash<int>*,4> *cs = catchstack.peekptr();
@@ -385,6 +392,17 @@ void Angort::throwAngortException(int symbol, Value *data){
                 ip = wordbase+*offset;
                 return;
             }
+            // failing that, look for a catch-all.
+            offset = h->ffind(CATCHALLKEY);
+            if(offset){
+                // FOUND IT - deal with it and return, stacking
+                // the value and the exception ID.
+                pushval()->copy(data);
+                Types::tSymbol->set(pushval(),symbol);
+                ip = wordbase+*offset;
+                return;
+            }
+            // failing THAT, pop another try-catch set off.
         }
         // didn't find it in the intrafunction stack, need
         // to return from this function and try again.
@@ -504,7 +522,7 @@ void Angort::run(const Instruction *startip){
                         (*ip->d.func)(this);
                     } catch(const char *strex){
                         strex=strdup(strex);// buh???
-                        throw RUNT("ex$native",strex);
+                        throw RUNT(EX_NATIVE,strex);
                     }
                     ip++;
                     break;
@@ -736,7 +754,7 @@ void Angort::run(const Instruction *startip){
                             Types::tHash->get(c)->set(b,a);
                             stack.popptr(); // discard the key
                         } else 
-                            throw RUNT("ex$nocol","attempt to set value in non-hash or list");
+                            throw RUNT(EX_NOTCOLL,"attempt to set value in non-hash or list");
                     } else {
                         b = Types::tList->get(b)->append();
                         b->copy(a);
@@ -791,16 +809,16 @@ void Angort::run(const Instruction *startip){
                 case OP_THROW:
                     a = popval();
                     if(a->t != Types::tSymbol)
-                        throw RUNT("ex$badthrow","throw should throw a symbol");
+                        throw RUNT(EX_BADTHROW,"throw should throw a symbol");
                     b = popval();
                     throwAngortException(a->v.i,b);
                     if(!ip){
-                        throw RUNT("ex$unhandled","").set("Angort exception: %s\n",
+                        throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s\n",
                                                           Types::tSymbol->getString(a->v.i));
                     }
                     break;
                 default:
-                    throw RUNT("ex$badop","unknown opcode");
+                    throw RUNT(EX_BADOP,"unknown opcode");
                 }
             } catch(Exception e){
                 Value vvv;
@@ -815,7 +833,6 @@ void Angort::run(const Instruction *startip){
         // this is called when the outer handler throws
         // an error, i.e. the error was not handled by an
         // Angort try-catch block.
-        
         // store the exception details
         ipException = ip;
         catchstack.clear();
@@ -826,7 +843,7 @@ void Angort::run(const Instruction *startip){
         loopIterCt=0;
         // and the locals stack too
         locals.clear();
-        trace();
+        printAndDeleteStoredTrace();
         rstack.clear();
         throw e;
     }
@@ -936,7 +953,7 @@ bool Angort::fileFeed(const char *name,bool rethrow){
     try{
         char buf[1024];
         if(!ff)
-            throw Exception("ex$nofile").set("cannot open %s",name);
+            throw Exception(EX_NOTFOUND).set("cannot open %s",name);
         while(fgets(buf,1024,ff)!=NULL){
             feed(buf);
         }
@@ -955,7 +972,7 @@ bool Angort::fileFeed(const char *name,bool rethrow){
 }
 
 const Instruction *Angort::compile(const char *s){
-    RUNT("ex$nonsup","no longer supported");
+    RUNT(EX_NOTSUP,"no longer supported");
     /*
        // trick the system into thinking we're defining a colon
        // word for one line only
@@ -1173,7 +1190,7 @@ void Angort::include(const char *filename,bool isreq){
     free((void *)fh); // and free the buffer
     
     if(!path)
-        throw Exception("ex$nofile").set("cannot open file : %s",fh);
+        throw Exception(EX_NOTFOUND).set("cannot open file : %s",fh);
     
     // now get the directory separator
     char *file = strrchr(path,'/');
@@ -1181,7 +1198,7 @@ void Angort::include(const char *filename,bool isreq){
     
     // change to that directory, so all future reads are relative to there
     if(chdir(path))
-        throw RUNT("ex$badinc","unable to switch directory in 'include'");
+        throw RUNT(EX_BADINC,"unable to switch directory in 'include'");
     
     TokeniserContext c;
     tok.saveContext(&c);
@@ -1202,7 +1219,7 @@ void Angort::include(const char *filename,bool isreq){
     
     free(path);
     if(fchdir(oldDir))
-        throw RUNT("ex$badinc","unable to reset directory in 'include'");
+        throw RUNT(EX_BADINC,"unable to reset directory in 'include'");
     close(oldDir);
 }
 
@@ -1232,6 +1249,7 @@ void Angort::feed(const char *buf){
             // compile and if necessary run the code to stack the string
             compile(OP_LITERALSTRING)->d.s = strdup(hereDocString);
             free(hereDocString);
+            hereDocString=NULL;
             if(!isDefining() && !inSubContext()){
                 compile(OP_END);run(context->getCode());
                 clearAtEndOfFeed();
@@ -1582,7 +1600,7 @@ void Angort::feed(const char *buf){
                         compile(OP_PROPSET)->d.prop = v->v.property;
                     } else {
                         if(names.getEnt(t)->isConst)
-                            throw RUNT("ex$setconst","").set("attempt to set constant %s",tok.getstring());
+                            throw RUNT(EX_SETCONST,"").set("attempt to set constant %s",tok.getstring());
                         // it's a global; use it
                         compile(OP_GLOBALSET)->d.i = t;
                     }
@@ -1714,10 +1732,10 @@ void Angort::feed(const char *buf){
                     if(context->catchSetStack.isempty())
                         throw SyntaxException("catch must be inside a try-endtry block");
                     ArrayList<Catch> *cp = context->catchSetStack.peekptr();
-                    if(tok.getnext()!=T_PIPE)
-                        throw SyntaxException("Expected |symbol after catch");
+                    if(tok.getnext()!=T_COLON)
+                        throw SyntaxException("Expected :symbol after catch");
                     if(tok.getnext()!=T_IDENT)
-                        throw SyntaxException("Expected |symbol after catch");
+                        throw SyntaxException("Expected :symbol after catch");
                     
                     if(cp->count()==0){
                         // first catch - compile OP_JUMP and add to stack
@@ -1748,6 +1766,28 @@ void Angort::feed(const char *buf){
                             break;
                         }
                     }
+                }
+                break;
+            case T_CATCHALL:
+                {
+                    // see above for all this. Yes, duplicated.
+                    if(context->catchSetStack.isempty())
+                        throw SyntaxException("catch must be inside a try-endtry block");
+                    ArrayList<Catch> *cp = context->catchSetStack.peekptr();
+                    if(cp->count()==0){
+                        // first catch - compile OP_JUMP and add to stack
+                        context->pushhere();
+                        compile(OP_JUMP);
+                    } else {
+                        // subsequent catches - compile OP_JUMP and set curcatch->end,
+                        // to terminate the previous catch
+                        context->curcatch->end = context->getCodeSize();
+                        compile(OP_JUMP);
+                    }
+                    Catch *cat = cp->append();
+                    cat->start = context->getCodeSize();
+                    context->curcatch = cat;
+                    *cat->symbols.append() = CATCHALLKEY; //ALL marker
                 }
                 break;
             case T_ENDTRY:
@@ -1857,10 +1897,10 @@ void Angort::clearAtEndOfFeed(){
 void Angort::disasm(const char *name){
     int idx = names.get(name);
     if(idx<0)
-        throw RUNT("ex$nofunc","unknown function");
+        throw RUNT(EX_NOTFOUND,"unknown function");
     Value *v = names.getVal(idx);
     if(v->t != Types::tCode)
-        throw RUNT("ex$badfunc","not a function");
+        throw RUNT(EX_NOTFUNC,"not a function");
     
     const CodeBlock *cb = v->v.cb;
     const Instruction *ip = cb->ip;
@@ -1946,16 +1986,16 @@ void Angort::registerBinop(const char *lhsName,const char *rhsName,
     
     Type *lhs = Type::getByName(lhsName);
     if(!lhs)
-        throw RUNT("ex$binop","").set("unknown type in binop def: %s",lhsName);
+        throw RUNT(EX_NOTFOUND,"").set("unknown type in binop def: %s",lhsName);
     Type *rhs = Type::getByName(rhsName);
     if(!rhs)
-        throw RUNT("ex$binop","").set("unknown type in binop def: %s",rhsName);
+        throw RUNT(EX_NOTFOUND,"").set("unknown type in binop def: %s",rhsName);
     
     // find opcode and register
     
     for(int op=0;;op++){
         if(!opcodenames[op])
-            throw RUNT("ex$binop","").set("unknown opcode in binopdef: %s",opcode);
+            throw RUNT(EX_BADOP,"").set("unknown opcode in binopdef: %s",opcode);
         if(!strcmp(opcodenames[op],opcode)){
             lhs->registerBinop(rhs,op,f);
             break;
@@ -2006,15 +2046,45 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     
 }
 
-void Angort::trace(){
+void Angort::storeTrace(){
+    char buf[1024]; // buffer to write instruction details
+    char **ptr; // pointer to list item, itself a pointer
+    
+    if(storedTrace.count()){
+        printf("Previous stored trace:\n");
+        printAndDeleteStoredTrace();
+    }
+    // first put the current frame on
+    if(ip)
+        ip->getDetails(buf,1024);
+    else
+        strcpy(buf,"unknown");
+    ptr = storedTrace.append();
+    *ptr = strdup(buf);
+    
+    
     for(int i=0;i<rstack.ct;i++){
-        char buf[1024];
         Frame *p = rstack.peekptr(i);
         if(p->ip)
-            printf("  from %s\n",p->ip->getDetails(buf,1024));
+            p->ip->getDetails(buf,1024);
         else
-            printf("  from unknown\n");
+            strcpy(buf,"unknown");
+        ptr = storedTrace.append();
+        *ptr = strdup(buf);
     }
+}
+
+void Angort::printAndDeleteStoredTrace(){
+    if(!storedTrace.count()){
+        printf("No stored trace to print\n");
+    } else {
+        ArrayListIterator<char *> iter(&storedTrace);
+        for(iter.first();!iter.isDone();iter.next()){
+            printf("  from %s\n",*iter.current());
+            free(*iter.current());
+        }
+    }
+    storedTrace.clear();
 }
 
 void Angort::resetAutoComplete(){

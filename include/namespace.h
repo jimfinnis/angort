@@ -352,7 +352,7 @@ public:
             if(createIfNotFound)
                 idx = create(s);
             else
-                throw RUNT("ex$nonamespace","cannot find namespace");
+                throw RUNT(EX_NOTFOUND,"cannot find namespace");
         }
         return spaces.getEnt(idx);
     }

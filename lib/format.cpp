@@ -61,7 +61,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
     
     // sorry, it actually has to be a string.
     if(formatVal->t != Types::tString)
-        throw RUNT("ex$format","format must be a string");
+        throw RUNT(EX_TYPE,"format must be a string");
     
     const char *format = Types::tString->getData(formatVal);
     

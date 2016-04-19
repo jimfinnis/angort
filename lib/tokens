@@ -90,5 +90,6 @@ yield : T_YIELD
 
 try : T_TRY
 catch : T_CATCH
+catchall : T_CATCHALL
 endtry : T_ENDTRY
 throw : T_THROW

@@ -43,7 +43,7 @@ void Type::clone(Value *out,const Value *in,bool deep){
 
 void Type::add(const char *_name,const char *_id){
     if(getByName(_name))
-        throw Exception("ex$badtype").set("type already exists: %s",name);
+        throw Exception(EX_DEFINED).set("type already exists: %s",name);
     
     const unsigned char *n = (const unsigned char *)_id;
     id = n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24);

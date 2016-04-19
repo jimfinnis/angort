@@ -16,6 +16,8 @@
 #include <stdarg.h>
 #include <exception>
 
+#include "exceptsymbs.h"
+
 namespace angort {
 
 extern int getSymbolID(const char *);
@@ -70,7 +72,7 @@ public:
 };
 
 #define RUNT(xid,x) RuntimeException(xid,x,__FILE__,__LINE__)
-#define WTF RuntimeException("ex$wtf","What a Terrible Failure",__FILE__,__LINE__)
+#define WTF RuntimeException(EX_WTF,"What a Terrible Failure",__FILE__,__LINE__)
 
 /// this exception is thrown when a generic runtime error occurs.
 /// It can be caught by Angort exception handling.
@@ -115,24 +117,24 @@ public:
 class BadConversionException : public Exception {
 public:
     BadConversionException(const char *from, const char *to)
-                : Exception("ex$badconv") {
+                : Exception(EX_BADCONV) {
                     sprintf(error,"cannot convert types: '%s' to '%s'",from,to);
                 }
 };
 
 class DivZeroException : public Exception {
 public:
-    DivZeroException() : Exception("ex$divzero","division by zero") {}
+    DivZeroException() : Exception(EX_DIVZERO,"division by zero") {}
 };
 
 class SyntaxException : public Exception {
 public:
-    SyntaxException(const char *s) : Exception("ex$syntax",s) {}
+    SyntaxException(const char *s) : Exception(EX_SYNTAX,s) {}
 };
 
 class AlreadyDefinedException : public Exception {
 public:
-    AlreadyDefinedException(const char *name) : Exception("ex$defined",NULL){
+    AlreadyDefinedException(const char *name) : Exception(EX_DEFINED,NULL){
         set("'%s' is already defined in this namespace");
     }
 };
@@ -147,7 +149,7 @@ class FileNotFoundException : public Exception {
 public:
     char fname[1024];
     
-    FileNotFoundException(const char *name) :  Exception("ex$nofile") {
+    FileNotFoundException(const char *name) :  Exception(EX_NOTFOUND) {
         snprintf(error,1023,"cannot find file : %s",name);
         strncpy(fname,name,1023);
         
@@ -157,7 +159,7 @@ public:
 
 class AssertException : public Exception {
 public:
-    AssertException(const char *desc,int line) : Exception("ex$assert"){
+    AssertException(const char *desc,int line) : Exception(EX_ASSERT){
         snprintf(error,1024,"Assertion failed at line %d:  %s",line,desc);
         fatal=true;
     }
@@ -165,7 +167,7 @@ public:
 
 class ParameterTypeException : public Exception {
 public:
-    ParameterTypeException(int paramNo, const char *expected) : Exception("ex$badparam"){
+    ParameterTypeException(int paramNo, const char *expected) : Exception(EX_BADPARAM){
         snprintf(error,1024,"Bad parameter %d, expected %s",paramNo,expected);
     }
 };

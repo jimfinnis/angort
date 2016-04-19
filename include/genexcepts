@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+print <<EOT;
+/**
+ * \@file exceptsymbs.h
+ * \@brief  Defines of exception symbols - use or add to these,
+ * don't just create new exceptions.
+ * This file is created by genexcepts from excepts,
+ *
+ * DO NOT EDIT MANUALLY
+ *
+ * (although this file must be created using genexcepts manually,
+ * it's not part of the build process.)
+ */
+
+#ifndef __EXCEPTSYMBS_H
+#define __EXCEPTSYMBS_H
+EOT
+
+while(<>){
+    chop;
+    ($e,$desc)=split(/\s+/,$_,2);
+    $def = "EX_".uc($e);
+    $ex = "ex\$".lc($e);
+    if(length($e)>1){
+        print "// $desc\n";
+        print sprintf("#define %-30s \"%s\"\n",$def,$ex);
+    }
+}
+
+print <<EOT;
+#endif /* __EXCEPTSYMBS_H */
+EOT

@@ -310,7 +310,7 @@ public:
     int addLocalToken(const char *s,Type *typ){
         int t = localTokenCt;
         if(localTokenCt==MAXLOCALS)
-            throw RUNT("ex$toomanylocals","too many local tokens");
+            throw RUNT(EX_TOOMANYLOCALS,"too many local tokens");
         localIndices[localTokenCt]=localTokenCt;
         localTypes[localTokenCt]=typ;
         strcpy(localTokens[localTokenCt++],s);
@@ -403,7 +403,7 @@ public:
           
     void checkStacksAtEnd(){
         if(!cstack.isempty())
-            throw SyntaxException("'if' or iterator left unclosed?");
+            throw SyntaxException("structure left unclosed?");
     }
         
     
@@ -729,8 +729,15 @@ public:
         return ipException;
     }
     
-    /// show a stack trace
-    void trace();
+    /// store a stack trace into an arraylist of allocated strings,
+    /// which should be deleted. We do this to stash the trace before
+    /// we start unwinding the stack as part of exception handling.
+    void storeTrace();
+    
+    /// used with storeTrace(), this prints and deletes any stored trace.
+    void printAndDeleteStoredTrace();
+    
+    ArrayList<char *> storedTrace; //!< the stored trace
     
     /// handle binary operations (public; used in comparators)
     void binop(Value *a,Value *b,int opcode);
@@ -787,7 +794,7 @@ public:
     IteratorObject *getTopIterator(int i=0){
         Value *v = loopIterStack.peekptr(i);
         if(v->t != Types::tIter)
-            throw RUNT("ex$noiterloop","attempt to get i,j,k or iter when not in an iterable loop");
+            throw RUNT(EX_NOITERLOOP,"attempt to get i,j,k or iter when not in an iterable loop");
         return v->v.iter;
     }
     

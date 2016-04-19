@@ -54,13 +54,13 @@ public:
         refct++;
         dprintf("++ incrementing count for %p, now %d\n",this,refct);
         if(refct==0)
-            throw RUNT("ex$refs","ref count too large");
+            throw RUNT(EX_REFS,"ref count too large");
     }
 
     /// decrement the reference count returning true if it became zero
     bool decRefCt(){
         if(refct<=0)
-            throw RUNT("ex$refs","").set("ERROR - already deleted: %p!",this);
+            throw RUNT(EX_REFS,"").set("ERROR - already deleted: %p!",this);
         --refct;
         dprintf("-- decrementing count for %p, now %d\n",this,refct);
         return refct==0;

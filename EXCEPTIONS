@@ -1,3 +1,47 @@
+The exceptions are listed in exceptsymbs.h, and are symbols
+prefixed with ex$. The exceptsymbs.h file is generated from
+the excepts file (also in the include dir) by genexcepts, which
+must be run manually. It's generally a good idea to try not to
+add new exceptions.
+
+Syntax:
+
+    try
+        ..
+    catch:ex$except1
+        ..
+    catch:ex$except1,ex$except2..
+        ..
+    catchall
+    endtry
+    
+Catches are tested in order, so
+
+    try
+        1 0 /
+    catch:ex$divzero
+        "Div zero".
+    catchall
+        "Something else".
+    endtry
+    
+will work as expected.
+
+Inside a catch, the exception and another value (typically
+a detailed string, but if you throw your own exceptions it
+can be anything) will be stacked. Often we drop them.
+
+Here is a "safe" (rather silly) divide, which replaces division
+by zero with a really big number
+
+:safediv
+    try
+        /
+    catch:ex$divzero
+        drop drop 100000.0
+    endtry;
+    
+
 Code generated:
 
 The major thing here is the catchstack. This is a stack of
@@ -50,21 +94,26 @@ The data structures here are:
 try 
     push new catchlist onto compiletime catchset stack
     compile OP_TRY and push to cstack
-catch|s1
-    is first catch so
+catch:s1
+    if first catch
         compile OP_JUMP and push to cstack
-    curcatch = new catch, appended to current catchlist
-    curcatch->start = ip
-    while there are symbols after the pipe (comma separated),
-        append to curcatch symbol list
-catch|s2
-    is not first catch, so
+    else
         compile OP_JUMP, set curcatch->end to it
         (i.e. terminate previous catch)
-    curcatch = new catchpair
+    curcatch = new catch, appended to current catchlist
     curcatch->start = ip
-    while there are symbols after the pipe (comma separated),
+    while there are symbols after the colon (comma separated),
         append to curcatch symbol list
+catchall
+    if first catch
+        compile OP_JUMP and push to cstack
+    else
+        compile OP_JUMP, set curcatch->end to it
+        (i.e. terminate previous catch)
+    curcatch = new catch, appended to current catchlist
+    curcatch->start = ip
+    append a special key (id 0xdeadbeef) to the curcatch symbol list    
+
 
 endtry
     if no catches throw error

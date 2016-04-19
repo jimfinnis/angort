@@ -1,5 +1,6 @@
 Not yet documented:
     barewords
+    heredocs
     exceptions
     recurse
     def defconst
