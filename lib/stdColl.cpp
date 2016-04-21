@@ -418,7 +418,6 @@ struct StdComparator : public ArrayListComparator<Value> {
     // new list
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
-    printf("** %d **\n",n);
     int i=n;
     for(iter->first();!iter->isDone();iter->next()){
         Value *v = iter->current();
