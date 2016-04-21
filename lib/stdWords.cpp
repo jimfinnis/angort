@@ -9,10 +9,17 @@
 #include "angort.h"
 #include "cycle.h"
 
+#include <signal.h>
 #include <time.h>
 
 using namespace angort;
 
+void sighandler(int sig){
+    signal(sig,NULL);
+    char buf[32];
+    sprintf(buf,"ex$sig%d",sig);
+    throw RUNT(buf,"").set("Caught signal %d (%s)",sig,strsignal(sig));
+}
 
 namespace angort {
 
@@ -68,9 +75,69 @@ static NamespaceEnt *getNSEnt(Angort *a){
         throw RUNT(EX_NOTFOUND,"ispriv: cannot find name in namespace");
     return ns->getEnt(idx);
 }
+
 }// end namespace
 
+
+
+
 %name std
+
+static void trapsig(int sig){
+    struct sigaction act;
+    
+    act.sa_handler = sighandler;
+    sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask,SIGABRT);
+    act.sa_flags = 0;
+    sigaction(sig,&act,NULL);
+}
+
+%wordargs signal i (sig --) install a signal handler for signal number sig
+{
+    trapsig(p0);
+}
+
+%word signals (--) install a handler for all a good subset of signals
+{
+    trapsig(SIGHUP);
+    trapsig(SIGINT);
+    trapsig(SIGQUIT);
+    trapsig(SIGILL);
+    trapsig(SIGTRAP);
+    trapsig(SIGIOT);
+    trapsig(SIGBUS);
+    trapsig(SIGFPE);
+    trapsig(SIGUSR1);
+    trapsig(SIGSEGV);
+    trapsig(SIGUSR2);
+    trapsig(SIGPIPE);
+    trapsig(SIGALRM);
+    trapsig(SIGTERM);
+    trapsig(SIGALRM);
+    trapsig(SIGSTKFLT);
+    trapsig(SIGCHLD);
+    trapsig(SIGCONT);
+    trapsig(SIGTSTP);
+    trapsig(SIGTTIN);
+    trapsig(SIGTTOU);
+    trapsig(SIGURG);
+    trapsig(SIGXCPU);
+    trapsig(SIGXFSZ);
+    trapsig(SIGVTALRM);
+    trapsig(SIGPROF);
+    trapsig(SIGWINCH);
+    trapsig(SIGIO);
+    trapsig(SIGPWR);
+    trapsig(SIGSYS);
+}
+
+
+%wordargs strsignal i (sig -- name) get signal name for signal number
+{
+    a->pushString(strsignal(p0));
+}
+
 
 
 %word version ( -- version ) version number

@@ -1,0 +1,38 @@
+package xmlgen
+
+private
+:closetag |name:| "</" ?name + ">" +;
+
+public
+:mktag |name,attrhash,contents:|
+    [%
+     `output (
+         "<" ?name +
+         ?attrhash isnone not if
+             ?attrhash each {" " + i + "=\"" + ival  + "\"" +}
+         then
+         cases
+             ?contents isnone if "/>\n" + case
+             ?contents type `list = if
+                 ">\n" +
+             ?contents each {
+                 i type `hash = if
+                     i?`output@ +
+                 else
+                     i+ 
+                 then " " +
+             } ?name closetag + "\n" + case
+         ">" +
+         ?contents + ?name closetag + "\n" + otherwise
+     )
+     ]
+;
+     
+:tst
+    `foo 
+    [%`box 0,`fish 1] 
+    [
+     "hello nose"
+     ]
+    mktag?`output@
+;

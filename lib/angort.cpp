@@ -1264,6 +1264,7 @@ void Angort::feed(const char *buf){
                 strcpy(hereDocString+strlen(hereDocString),buf);
             }
         }
+        lineNumber++;
         return;
     }
     
