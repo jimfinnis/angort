@@ -27,6 +27,7 @@
 /// that catch all exceptions.
 #define CATCHALLKEY 0xdeadbeef
 
+
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std);
 
 namespace angort {
@@ -350,7 +351,7 @@ void Angort::ret()
         ip=NULL;
     } else {
         Frame *f = rstack.popptr();
-        catchstack.popptr()->clear();
+        catchstack.pop();
         ip = f->ip;
         wordbase = f->base;
         f->rec.clr();
@@ -836,7 +837,9 @@ void Angort::run(const Instruction *startip){
         // Angort try-catch block.
         // store the exception details
         ipException = ip;
+        // clear the catchstack, but push another empty entry on there
         catchstack.clear();
+        catchstack.pushptr()->clear();
         // destroy any iterators left lying around
         while(!loopIterStack.isempty()){
             loopIterStack.popptr()->clr();
@@ -847,7 +850,7 @@ void Angort::run(const Instruction *startip){
         // before we delete the rstack, print it
         printAndDeleteStoredTrace();
         rstack.clear();
-//        throw e; // and rethrow upstairs.
+        throw e; // and rethrow upstairs.
     }
     
 leaverun:
@@ -1876,7 +1879,7 @@ void Angort::clearAtEndOfFeed(){
     
     while(!rstack.isempty()){
         rstack.popptr()->clear();
-        catchstack.popptr()->clear();
+        catchstack.pop();
     }
     // destroy any iterators left lying around
     while(!loopIterStack.isempty()){

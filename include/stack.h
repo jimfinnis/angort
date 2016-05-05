@@ -142,6 +142,12 @@ public:
         ct=0;
     }
     
+    /// clear the stack and run in-place destructors
+    void cleardestroy(){
+        while(ct)
+            popptr()->~T();
+    }
+    
     /// left public for debugging handiness and stuff
     T stack[N];
     int ct;

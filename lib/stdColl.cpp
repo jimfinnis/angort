@@ -54,6 +54,43 @@ struct FuncComparator : public ArrayListComparator<Value> {
     }
 }
 
+%wordargs head li (coll n -- list) get the first n items of a list
+{
+    Value r;
+    ArrayList<Value> *list = Types::tList->set(&r);
+    for(int i=0;i<p1;i++){
+        if(i==p0->count())break;
+        list->append()->copy(p0->get(i));
+    }
+    a->pushval()->copy(&r);
+}
+
+%wordargs tail li (coll n -- list) get the last n items of a list
+{
+    Value r;
+    ArrayList<Value> *list = Types::tList->set(&r);
+    int start = p0->count()-p1;
+    if(start<0)start=0;
+    for(int i=start;i<p0->count();i++){
+        list->append()->copy(p0->get(i));
+    }
+    a->pushval()->copy(&r);
+}
+
+%wordargs splitlist li (coll n -- [list,list]) split list into two lists of [n,count-n] items
+{
+    Value r;
+    ArrayList<Value> *list = Types::tList->set(&r);
+    ArrayList<Value> *list1 = Types::tList->set(list->append());
+    ArrayList<Value> *list2 = Types::tList->set(list->append());
+    
+    for(int i=0;i<p0->count();i++){
+        (i<p1 ? list1 : list2)->append()->copy(p0->get(i));
+    }
+    a->pushval()->copy(&r);
+}
+    
+
 %word last (coll -- item/none) get last item
 {
     Value *c = a->stack.peekptr();
