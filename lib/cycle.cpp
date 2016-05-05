@@ -15,7 +15,7 @@ CycleDetector *CycleDetector::instance = NULL;
  * - For each container object, find which container objects it references and decrement the referenced container's gc_refs field.
  * - All container objects that now have a gc_refs field greater than one are referenced from outside the set of container objects. We cannot free these objects so we move them to a different set.
  * - Any objects referenced from the objects moved also cannot be freed. We move them and all the objects reachable from them too.
- * - Objects left in our original set are referenced only by objects within that set (ie. they are inaccessible from Python and are garbage). We can now go about freeing these objects.
+ * - Objects left in our original set are referenced only by objects within that set (ie. they are inaccessible and are garbage). We can now go about freeing these objects.
  */
 void CycleDetector::detect(){
     GarbageCollected *p,*q;
@@ -29,7 +29,7 @@ void CycleDetector::detect(){
     // for each item, decrement the gc_refs of any items I point to.
     // You'll notice three calls doing the work - two are general purpose, assuming
     // the item can create value and key iterators. The other is for each object to extend,
-    // and is used when a user subclass of GarbageCollected has non-Lana properties
+    // and is used when a user subclass of GarbageCollected has non-Angortian properties
     // which refer to GCable entities.
     
     for(p=mainlist.head();p;p=mainlist.next(p)) {

@@ -165,7 +165,7 @@ struct Value {
         printf("%s: %s\n",prefix,s);
     }
     
-private:    
+//private:    
     
     /// make sure the string gets copied on assignment
     Value &operator=(const Value &src){

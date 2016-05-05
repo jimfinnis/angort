@@ -38,6 +38,7 @@ int Angort::getVersion(){
 Angort *Angort::callingInstance=NULL;
 
 Angort::Angort() {
+    traceOnException=true;
     running = true;
     Types::createTypes();
     // create and set default namespace
@@ -244,7 +245,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
                     paramval = &tmpval;
                 } else
                     throw RUNT(EX_BADPARAM,"").set("Type mismatch: argument %d is %s, expected %s",
-                                                     i,paramval->t->name,tp->name);
+                                                   i,paramval->t->name,tp->name);
             }
         }                          
         
@@ -814,7 +815,7 @@ void Angort::run(const Instruction *startip){
                     throwAngortException(a->v.i,b);
                     if(!ip){
                         throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s\n",
-                                                          Types::tSymbol->getString(a->v.i));
+                                                        Types::tSymbol->getString(a->v.i));
                     }
                     break;
                 default:
@@ -843,9 +844,10 @@ void Angort::run(const Instruction *startip){
         loopIterCt=0;
         // and the locals stack too
         locals.clear();
+        // before we delete the rstack, print it
         printAndDeleteStoredTrace();
         rstack.clear();
-        throw e;
+//        throw e; // and rethrow upstairs.
     }
     
 leaverun:
@@ -971,27 +973,19 @@ bool Angort::fileFeed(const char *name,bool rethrow){
     return true;
 }
 
-const Instruction *Angort::compile(const char *s){
-    RUNT(EX_NOTSUP,"no longer supported");
-    /*
-       // trick the system into thinking we're defining a colon
-       // word for one line only
-       defining = true'
-       feed(s);
-       compile(OP_END); // make sure it's terminated
-       
-       // get the code, copy it, reset the context and return.
-       int ct = context->getCodeSize();
-       Instruction *ip = context->getCode();
-       
-       Instruction *buf = new Instruction[ct];
-       memcpy(buf,ip,ct*sizeof(Instruction));
-       
-       context->reset(NULL);
-       defining=false; // must turn it off!
-       return buf;
-     */    
-    return NULL;
+void Angort::compile(const char *s,Value *out){
+    //    RUNT(EX_NOTSUP,"no longer supported");
+    // trick the system into thinking we're defining a colon
+    // word for one line only
+    
+    pushCompileContext();
+    feed(s);
+    compile(OP_END); // make sure it's terminated
+    CompileContext *c = popCompileContext();
+    c->cb->setFromContext(c);
+    
+    Types::tCode->set(out,c->cb);
+    
 }
 
 void CompileContext::reset(CompileContext *p,Tokeniser *tok){
@@ -2076,14 +2070,19 @@ void Angort::storeTrace(){
 }
 
 void Angort::printAndDeleteStoredTrace(){
-    if(!storedTrace.count()){
-        printf("No stored trace to print\n");
-    } else {
-        ArrayListIterator<char *> iter(&storedTrace);
-        for(iter.first();!iter.isDone();iter.next()){
-            printf("  from %s\n",*iter.current());
-            free(*iter.current());
+    if(traceOnException){
+        if(!storedTrace.count()){
+            printf("No stored trace to print\n");
+        } else {
+            ArrayListIterator<char *> iter(&storedTrace);
+            for(iter.first();!iter.isDone();iter.next()){
+                printf("  from %s\n",*iter.current());
+            }
         }
+    }
+    ArrayListIterator<char *> iter(&storedTrace);
+    for(iter.first();!iter.isDone();iter.next()){
+        free(*iter.current());
     }
     storedTrace.clear();
 }

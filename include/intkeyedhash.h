@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <new>
+#include "exception.h"
 
 namespace angort {
 
@@ -312,12 +313,12 @@ public:
     }
     virtual int current() {
         if(!ent)
-            throw Exception("first() not called on iterator");
+            throw Exception(EX_NOITERLOOP,"first() not called on iterator");
         return ent->k;
     }
     T *curval(){
         if(!ent)
-            throw Exception("first() not called on iterator");
+            throw Exception(EX_NOITERLOOP,"first() not called on iterator");
         return &ent->v;
     }
         

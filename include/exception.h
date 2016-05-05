@@ -82,25 +82,21 @@ public:
     RuntimeException(const char *xid,const char *e,const char *fn,int l) :
     Exception(xid)
     {
-        char tmp[512];
-        if(e){
-            strcpy(tmp,e);e=tmp;  // to stop bloody exp-ptrcheck complaining.
-        }
-    
+        strcpy(brief,e?e:"unknown");
         if(fn)
             strncpy(fileName,fn,1024);
         else
             strcpy(fileName,"???");
         line = l;
         
-        snprintf(error,1024,"%s(%d):  %s",fileName,line,
-                 e?e:"unknown");
+        snprintf(error,1024,"%s(%d):  %s",fileName,line,brief);
         fatal=false;
     }
    
     char fileName[1024];
     /// the current Angort line or -1
     int line;
+    char brief[1024]; // error without leading filename and line
 };
 
 /*

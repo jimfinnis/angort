@@ -735,6 +735,7 @@ public:
     void storeTrace();
     
     /// used with storeTrace(), this prints and deletes any stored trace.
+    /// Only does the printing if traceOnException is set.
     void printAndDeleteStoredTrace();
     
     ArrayList<char *> storedTrace; //!< the stored trace
@@ -765,6 +766,8 @@ public:
     /// print each line we parse
     bool printLines;
     NamespaceManager names; //!< the namespaces are all handled by the namespace manager
+    /// print trace on exception in run()
+    bool traceOnException;
     
     
     /// called at the end of a script which contains a package, where that
@@ -904,7 +907,7 @@ public:
     void shutdown();
     
     /// just compile a string into a set of instructions
-    const Instruction *compile(const char *s);
+    void compile(const char *s,Value *out);
     
     /// feed a string into the interpreter
     void feed(const char *s);
