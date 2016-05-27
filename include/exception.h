@@ -29,7 +29,7 @@ public:
         if(e)
             strncpy(error,e,1024);
         else
-            strcpy(error,"???");
+            strcpy(error,xid);
         fatal=false;
     }
     
@@ -47,7 +47,7 @@ public:
     Exception(const char *xid){
         fatal=false;
         id = getSymbolID(xid);
-        strcpy(error,"???");
+        strcpy(error,xid);
     }
     
     /// construct the exception. Note that
@@ -86,7 +86,7 @@ public:
         if(fn)
             strncpy(fileName,fn,1024);
         else
-            strcpy(fileName,"???");
+            strcpy(fileName,"<unknown>");
         line = l;
         
         snprintf(error,1024,"%s(%d):  %s",fileName,line,brief);

@@ -1,5 +1,28 @@
 package svg
 
+# this is a coordinate transformer chain - it's a list
+# of functions which take a x,y pair and return an x,y pair.
+# You can set it with settransformchain, rather than mucking
+# around with SVG transforms. Coordinates transformed this
+# way are added to the SVG directly.
+#
+# It doesn't work on paths or text size, but rects and circles
+# try to recalculate their sizes.
+    
+private
+[] !TXChain
+    
+:runchain |x,y:|
+    ?TXChain each {
+        ?x ?y i@ !x !y
+    }
+    ?x ?y
+;
+
+public
+:setchain !TXChain;
+
+
 # generate a tag. If the contents list is null or empty, 
 # generate <tag/> otherwise generate <tag>cons</tag>
 
@@ -112,7 +135,12 @@ none "txtoattr" def # forward declare
 # In the case of the plain function, the style is automatically
 # taken from the style stack.
 
-`rect (|x,y,w,h,s:|
+`rect (|x,y,w,h,s:p,q|
+    ?x ?w + ?y ?h + runchain !p !q
+    ?x ?y runchain !x !y
+    ?p ?x - !w
+    ?q ?y - !h
+    
     "rect" [%`x ?x,
             `y ?y,
             `width ?w,
@@ -121,7 +149,11 @@ none "txtoattr" def # forward declare
     ?s appendst
     [] tag) mkgen
 
-`circle (|x,y,r,s:|
+`circle (|x,y,r,s:p,q|
+    ?x ?r + ?y ?r + runchain !p !q
+    ?x ?y runchain !x !y
+    ?p ?x - dup* ?q ?y - dup * sqrt !r
+    
     "circle" [% `cx ?x,
               `cy ?y,
               `r ?r
@@ -130,6 +162,8 @@ none "txtoattr" def # forward declare
     [] tag) mkgen
 
 `line (|x1,y1,x2,y2,s:|
+    ?x1 ?y1 runchain !x1 !y1
+    ?x2 ?y2 runchain !x2 !y2
     "line" [% `x1 ?x1,
             `y1 ?y1,
             `x2 ?x2,
@@ -138,6 +172,7 @@ none "txtoattr" def # forward declare
     [] tag) mkgen
 
 `text (|x,y,h,a,str,s:| # a=middle,start,end
+    ?x ?y runchain !x !y
     "text" [% `x ?x,
             `y ?y,
             "font-size" ?h,
@@ -252,7 +287,7 @@ tag !MarkerDefs
 :transtx |x,y:|     "translate(" ?x + " " + ?y + ")" +;
 :txtoattr " " intercalate;
 # this transform to be appended to all subsequent items
-:settx !CurTX;
+:settx |t/list:| ?t !CurTX;
 # and clear it.
 :clrtx none !CurTX;
 

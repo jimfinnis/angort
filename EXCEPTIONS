@@ -64,6 +64,11 @@ would have to copy the entire stack into the frame.)
 
 OP_TRY (catchset: hash of symbols->integer offsets)
     pushes catchset onto runtime exception stack, which is
+    the "inner stack" mentioned above. The "outer stack" can
+    be considered part of the return stack, because it really
+    should be.
+    The catchset consists of 
+    [symbol->catch1, symbol->catch2] etc.
 ...
 OP_JUMP endcatch
 catch1:
@@ -80,8 +85,11 @@ OP_ENDTRY (pops exception)
 ...
 
 OP_THROW (data symbol --)
-    pops the exception symbol and data, and repeatedly returns
-    until we have a frame with a catchset.
+    pops the exception symbol and data, and repeatedly 
+    pops the catchstack until we find a catchstack with
+    the symbol. If the catchstack becomes empty, we return
+    (i.e. pop the "outer stack" and return stack)
+    until we have a frame with a catchset and try again.
 
 
 
