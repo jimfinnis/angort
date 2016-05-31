@@ -45,7 +45,7 @@ struct CodeBlock;
 /// autogc property (or stopped with a value of -1)
 #define AUTOGCINTERVAL 100000
 /// the default search path for plugins
-#define DEFAULTSEARCHPATH ".:~/.angort:/usr/local/share/angort"
+#define DEFAULTSEARCHPATH ".:~/.angort:/usr/local/share/angort:~/share/angort"
 
 /// make the name of a library structure as created by makeWords.pl
 #define LIBNAME(x) _angortlib_ ## x
