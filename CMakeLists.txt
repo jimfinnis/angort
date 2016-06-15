@@ -40,5 +40,11 @@ add_test(generator cli/angort ${ANGORT_SOURCE_DIR}/testfiles/generator.ang)
 #add_test(pkg cli/angort ${ANGORT_SOURCE_DIR}/testfiles/pkg.ang)
 
 file(GLOB anglibfiles "${CMAKE_SOURCE_DIR}/anglibs/*.ang")
+foreach(item ${anglibfiles})
+    if(${item} MATCHES "${CMAKE_SOURCE_DIR}/anglibs/test*")
+        list(REMOVE_ITEM anglibfiles ${item})
+    endif(${item} MATCHES "${CMAKE_SOURCE_DIR}/anglibs/test*")
+endforeach(item)
+
 install(FILES ${anglibfiles} DESTINATION share/angort)
 

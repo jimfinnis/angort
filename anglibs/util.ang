@@ -5,11 +5,27 @@ package util
 
 ## Argument check : take a list of argument names, pop that many items
 ## from the argument list and explode them into the stack:
+
+private
+:usage |lst:|
+    "Arguments should be: "p
+    ?lst (|a:| "<" ?a + ">" +) map " " intercalate.
+;
+
+
+public
+
 :argcheck |list:|
     :"(namelist -- .. arg2 arg1) given a list of args, produces them on stack in reverse order"
-    args len 3 < if 
-        "Usage: angort "p 1 args get p " "p
-        ?list each {[i] "<%s> " format p}nl quit
+    # args is the entire command line, including the script name etc.
+    # so let's remove the script name and the executable name
+    args 0 = if ?list usage quit then
+    args shift "angort" = if
+        args shift drop
+    then
+    
+    args len ?list len != if 
+        ?list usage quit
     then
     # remove last N arguments from args, reverse and explode.
     args
