@@ -256,21 +256,31 @@ none "txtoattr" def # forward declare
 
 "defs" [%] 
 [
- `markerArrowL 13 13 2 6 
+ `markerArrowLEnd 13 13 2 6 
  ["M2,2 L2,11 L10,6 L2,2" [%] str_solidpath] marker,
- `markerArrowS 7 7 1 3 
+ `markerArrowSStart 7 7 5 3 
+ ["M5,1 L5,5 L1,3 L5,1" [%] str_solidpath] marker,
+ `markerArrowSEnd 7 7 1 3 
  ["M1,1 L1,5 L5,3 L1,1" [%] str_solidpath] marker
 ]
 tag !MarkerDefs
 
 :mkhandleurl |handle:| "url(#" ?handle + ")"+;
-:markerstyle |name:| [%"marker-end" ?name mkhandleurl ];
+:markerstyleEnd |name:| [%"marker-end" ?name mkhandleurl ];
+:markerstyleStart |name:| [%"marker-start" ?name mkhandleurl ];
 
 # this will merge the marker style into the style argument
 # for line.
 
-:arrow 
-    `markerArrowS markerstyle pushstyle
+:arrow :"(x1 y1 x2 y2 --) single ended arrow"
+    `markerArrowSEnd markerstyleEnd pushstyle
+    line
+    popstyle
+;
+
+:arrow2 :"(x1 y1 x2 y2 --) double ended arrow"
+    `markerArrowSStart markerstyleStart
+    `markerArrowSEnd markerstyleEnd  + pushstyle
     line
     popstyle
 ;
