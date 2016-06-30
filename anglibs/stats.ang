@@ -1,0 +1,19 @@
+package stats
+
+:mean |list:| 0 ?list (+) reduce ?list len tofloat/;
+
+:popvariance |list:m|
+    ?list mean !m
+    0 ?list (?m - dup*) map (+) reduce
+    ?list len tofloat /
+;
+
+:sampvariance |list:m|
+    ?list mean !m
+    0 ?list (?m - dup*) map (+) reduce
+    ?list len 1- tofloat /
+;
+
+:popsd popvariance sqrt;
+:sampsd sampvariance sqrt;
+
