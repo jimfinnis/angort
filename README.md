@@ -608,7 +608,7 @@ An example:
             /
         catch:ex$divzero
             drop drop 100000.0
-        endtry;
+        endtry
 
 ##Some other builtin words
 
