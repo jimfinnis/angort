@@ -45,7 +45,7 @@ public:
     T *getEnt(int idx){
         try{
             return entries.get(idx);
-        }catch(ArrayListException e){
+        }catch(Exception e){
             return NULL;
         }
     }

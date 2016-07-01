@@ -14,6 +14,12 @@ Not yet documented:
     Parameter type checking
     yield and routines! Must be anon
     various new words: fst snd etc, explode..
+    
+Exceptions:
+    Odd stack frames can result because of the peekPtr optimisation
+        in things like std::get
+    Spurious stack traces
+    
 
 closure iterators - WTF?
 

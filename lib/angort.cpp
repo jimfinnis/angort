@@ -373,11 +373,11 @@ void Angort::ret()
 }
 
 void Angort::throwAngortException(int symbol, Value *data){
+    storeTrace(); // store a trace to print if we need to
+    
     // we go up the exception stack, inner (intrafunction) stack
     // first - if that doesn't find a handler, we pop the outer
     // stack by performing a return.
-    
-    storeTrace(); // store a trace to print if we need to
     
     while(!rstack.isempty()){
         // get the current intrafunction catch stack

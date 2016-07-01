@@ -10,12 +10,6 @@
 
 namespace angort {
 
-/// array list exception - typically get out of range or pop on empty list
-class ArrayListException : public Exception {
-public:
-    ArrayListException(const char *e) : Exception(e) {}
-};
-
 /// comparator object for sorting
 template <class T> struct ArrayListComparator {
     virtual int compare(const T *a, const T *b) = 0;
@@ -100,7 +94,7 @@ public:
     /// will return the last item.
     T *get(int n){
         if(n<0||n>=ct)
-            throw ArrayListException("get out of range");
+            throw RUNT(EX_OUTOFRANGE,"list get out of range");
         return data+n;
     }
     
@@ -123,9 +117,9 @@ public:
     /// set a value in the list
     void set(int n,T *v){
         if(locks)
-            throw ArrayListException("cannot modify list while it is being iterated");
+            throw RUNT(EX_MODITER,"cannot modify list as it is iterated");
         if(n<0)
-            throw ArrayListException("set out of range");
+            throw RUNT(EX_OUTOFRANGE,"list set index out of range");
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
             // initialise the new values!
@@ -140,7 +134,7 @@ public:
     /// get a slot to copy a value into
     T *set(int n){
         if(n<0)
-            throw ArrayListException("set out of range");
+            throw RUNT(EX_OUTOFRANGE,"list set index out of range");
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
             // initialise the new values!
@@ -156,7 +150,7 @@ public:
     int getIndexOf(T *v){
         int n = v-data;
         if(n<0 || n>=ct)
-            throw ArrayListException("getIndexOf() out of range");
+            throw RUNT(EX_OUTOFRANGE,"get index of item returns out of range");
         return n;
     }
     

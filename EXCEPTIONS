@@ -39,7 +39,7 @@ by zero with a really big number
         /
     catch:ex$divzero
         drop drop 100000.0
-    endtry;
+    endtry
     
 
 Code generated:

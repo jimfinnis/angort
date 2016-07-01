@@ -78,4 +78,6 @@
 #define EX_FAILED                      "ex$failed"
 // out of memory
 #define EX_NOMEM                       "ex$nomem"
+// cannot modify iterated list
+#define EX_MODITER                     "ex$moditer"
 #endif /* __EXCEPTSYMBS_H */

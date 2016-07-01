@@ -576,7 +576,41 @@ garbage collector occasionally. This is done manually by the word
 
     gc
     
- 
+##Exceptions
+These are an experimental feature with a few problems, notably
+certain operations leave the stack in an odd state which the 
+handlers have to deal with, and the "print stored trace" mechanism
+(producing tracebacks during exception handling) produces spurious output.
+
+    try
+        ..
+    catch:ex$except1
+        ..
+    catch:ex$except1,ex$except2..
+        ..
+    catchall
+        ..
+    endtry
+
+Exceptions are tested in the order they appear, so in the example
+above ex$except1 will always trigger the first block.
+
+Inside the catch block, the exception and another value (often a string)
+will be stacked, with the exception value on top. Often we drop these.
+Throw an exception with
+
+    <value> <symbol> throw
+
+An example:
+
+:safediv
+    try
+        /
+    catch:ex$divzero
+        drop drop 100000.0
+    endtry;
+    
+     
         
 ##Some other builtin words
 
