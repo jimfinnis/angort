@@ -94,7 +94,7 @@ const char *opcodenames[]=
 
 #define OP_NEWLIST 47
 #define OP_APPENDLIST 48
-#define OP_CLOSELIST 49
+#define OP_xxxxxxxx 49
 #define OP_LOOPSTART 50
 #define OP_STOP 51
 

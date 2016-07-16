@@ -740,7 +740,6 @@ void Angort::run(const Instruction *startip){
                     Types::tSymbol->set(pushval(),ip->d.i);
                     ip++;
                     break;
-                case OP_CLOSELIST:
                 case OP_APPENDLIST:
                     a = popval(); // the value
                     
