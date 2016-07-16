@@ -603,15 +603,13 @@ Throw an exception with
 
 An example:
 
-:safediv
-    try
-        /
-    catch:ex$divzero
-        drop drop 100000.0
-    endtry;
-    
-     
-        
+    :safediv
+        try
+            /
+        catch:ex$divzero
+            drop drop 100000.0
+        endtry
+
 ##Some other builtin words
 
 name | stack action | side-effects and notes
