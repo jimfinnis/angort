@@ -75,16 +75,12 @@ static char *generator(const char *text,int state){
 int main(int argc,char *argv[]){
     
     extern void setArgumentList(int argc,char *argv[]);
-    extern LibraryDef LIBNAME(stdmath);
-    extern LibraryDef LIBNAME(stdenv);
     
     a = new Angort();
     
     
     // first, we'll try to include the standard startup
     try {
-        a->registerLibrary(&LIBNAME(stdmath),true);
-        a->registerLibrary(&LIBNAME(stdenv),true);
         a->include("angortrc",false);
     } catch(FileNotFoundException e){
         // ignore if not there

@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 259
+#define ANGORT_VERSION 260
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,7 +28,8 @@
 #define CATCHALLKEY 0xdeadbeef
 
 
-extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std);
+extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std),
+LIBNAME(stdmath),LIBNAME(stdenv);
 
 namespace angort {
 
@@ -70,6 +71,8 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(std)); // already imported by default.
     registerLibrary(&LIBNAME(coll),true);
     registerLibrary(&LIBNAME(string),true);
+    registerLibrary(&LIBNAME(stdmath),true);
+    registerLibrary(&LIBNAME(stdenv),true);
     
     
     

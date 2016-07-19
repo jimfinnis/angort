@@ -576,14 +576,21 @@ static int stackcheck=-1;
     a->pushInt(ns->idx);
 }
 
+%word nspaces (-- list) return a list of all namespaces in index order
+{
+    ArrayList<Value> *list=Types::tList->set(a->pushval());
+    a->names.spaces.appendNamesToList(list);
+}
+
 %word names (handle --) get a list of names from a namespace
 {
     int idx = a->popInt();
     Namespace *ns = a->names.getSpaceByIdx(idx);
-    
-    ArrayList<Value> *list=Types::tList->set(a->pushval());
-    ns->appendNamesToList(list);
-    
+    if(!ns)a->pushNone();
+    else {
+        ArrayList<Value> *list=Types::tList->set(a->pushval());
+        ns->appendNamesToList(list);
+    }
 }
 
 

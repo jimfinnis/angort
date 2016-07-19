@@ -703,6 +703,15 @@ public:
         return i;
     }
     
+    /// this is used by external programs which use angort as a 
+    /// library to find/create a global and set it to a string
+    /// value.
+    void setGlobal(const char *name,const char *val){
+        int g = findOrCreateGlobal(name);
+        printf("Global: %d\n",g);
+        Types::tString->set(names.getVal(g),val);
+    }
+    
     /// add a plugin (Linux only, uses shared libraries). Returns
     /// the new namespace ID.
     int plugin(const char *path);
