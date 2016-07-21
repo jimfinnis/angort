@@ -817,8 +817,11 @@ void Angort::run(const Instruction *startip){
                     b = popval();
                     throwAngortException(a->v.i,b);
                     if(!ip){
-                        throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s\n",
-                                                        Types::tSymbol->getString(a->v.i));
+                        // IP has returned NULL, which means we couldn't find an Angort
+                        // handler (to which IP would point otherwise)
+                        const StringBuffer &sbuf = b->toString();
+                        throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s (%s)\n",
+                                                        Types::tSymbol->getString(a->v.i),sbuf.get());
                     }
                     break;
                 default:

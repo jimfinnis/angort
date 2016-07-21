@@ -210,6 +210,13 @@ static void trapsig(int sig){
     exit(0);
 }
 
+%word abort ( s -- ) exit with return code 1 and an error message to stderr
+{
+    a->shutdown();
+    fprintf(stderr,a->popString().get());
+    exit(1);
+}
+
 %word debug ( v -- ) turn debugging on or off (value is 0 or 1)
 {
     a->debug = a->popInt();
