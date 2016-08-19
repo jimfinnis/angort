@@ -1,0 +1,94 @@
+Notes for this, because it has to be done fairly carefully.
+
+Defining options: done with a list of hashes. It's a list because sometimes
+we fetch by name and sometimes by char.
+
+Each opt hash:
+    `description        :   prints in usage strings (required)
+    `name               :   for long opts and results keys (like --help)
+                            (required)
+    `char               :   for short opts (like -x) (optional)
+    `required           :   is option required? int (as bool) (opt, default 0)
+    `type               :   `integer, `float, `string, `list, `bool 
+                            If list, the args are separated with `sepchar
+                            and have the type `listtype. Non-boolean
+                            implies that the option has an argument.
+                            (Optional, default is `bool).
+                            (opt, default `string)
+    `sepchar            :   separator for lists (opt, default ",")
+    `listtype           :   type of list items (required if type is list)
+    `default            :   the default value if `required is false
+    
+Other arguments: done with another list of hashes
+Each argument:
+    `description        :   prints in usage strings (required)
+    `name               :   for results key (required)
+    `required           :   is arg required? int, (opt, default 1)
+    `type               :   `integer, `float, `string, `list 
+                            If list, the args are separated with `sepchar
+                            and have the type `listtype (required)
+    `sepchar            :   separator for lists (opt, default ",")
+    `listtype           :   type of list items (required if type is list)
+    `default            :   the default value if `required is false
+Note: optional args must follow all the required args.    
+
+Parsing:
+
+    parse (strings optlist arglist -- results remnants)
+    
+Takes a list of strings (such as that produced by "args shift drop args"
+to get the args without the command name)
+
+Results is a hash containing the value of each option and
+argument keyed by name. Any unprocessed args are in remnants.
+
+
+
+
+require "./opts.ang" drop
+
+# need to drop angort specific args ("angort foo.ang") and other stuff,
+# but that should be done in the library!
+
+args shift drop
+args shift drop args 
+
+[
+ [%
+  `description "blah",
+  `char "x",
+  `name "foo"
+ ],
+ [%
+  `description "blah2",
+  `name "bar",
+  `char "y",
+  `type `string,
+  `default "wob"
+  ],
+ [%
+  `description "z",
+  `name "z",
+  `char "z",
+  `type `integer,
+  `default 3,
+  `required 1
+  ]
+]
+
+[
+ [%
+  `description "the wibble",
+  `name "wibble"
+  ]
+ ]
+opts$parse
+
+
+swap
+"Results:".
+util$show.
+"Remnants:".
+util$show.
+quit
+

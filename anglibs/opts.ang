@@ -1,0 +1,351 @@
+`regex library drop
+require "util.ang" drop
+package opts
+
+# get an option from a list by its name. We do this because options
+# can be keyed on name and char.
+
+:getoptbyname |optlist,str:|
+    ?optlist each {
+        i?`name ?str = if i stop then
+    }
+    ?str `opts$notfound throw
+;
+
+# ditto getting by character
+
+:getoptbychar |optlist,c:|
+    ?optlist each {
+        i?`char ?c = if i stop then
+    }
+    ?c `opts$notfound throw
+;
+
+
+# lax type checking (allows int to be matched for float)
+:typeequal |wanted,got:|
+    cases
+        ?wanted ?got = if 1 case
+        ?wanted `float = ?got `integer = and if 1 case
+        ?wanted `bool = ?got `integer = and if 1 case
+        0 otherwise    
+;
+
+# assert that the option hash has a field of the given type
+
+:asserthas |hash,key,type:v|
+    ?key ?hash in not if
+        ?key `opts$requiredindefs throw
+    then
+    ?key ?hash get !v
+    ?type ?v type typeequal not if
+        [?key,?v type,?type,?v]
+        "key: %s, got %s, wanted %s, value %s" format
+        `opts$wrongtypeindefs throw
+    then
+;
+
+# assert that the option has a field of a given name containing
+# the symbol of a type
+
+:asserttype |hash,key:|
+    ?key ?hash get <<[`bool,`string,`integer,`list,`float]>> in not if
+        ?key `opts$notatypeindefs throw
+    then
+;
+
+
+
+# set a default value in a hash if the value is not present,
+# and if the value is present check it is of the same type as
+# the default        
+
+:procdef |h/hash,key,deflt:val|
+    ?key ?h get !val
+    ?val isnone if 
+        ?deflt ?key ?h set stop then
+    
+    ?deflt type ?val type typeequal not if
+        [?key,?val type,?deflt type,?val]
+        "key: %s, got %s, wanted %s, value %s" format
+        `opts$badtype throw
+    then
+;
+
+:isinteger
+    <<"^[+-]?[0-9]+$" regex$compile>> regex$match len
+;
+
+:isfloat
+    <<"^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$" regex$compile>>
+    regex$match len
+;
+
+:isnumberornumberlist
+    <<"^([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?,*)+$" regex$compile>>
+    regex$match len
+;
+
+:assertnumber |s:|
+    ?s isinteger if
+        1
+    else
+        ?s isfloat
+    then
+    not if ?s `opts$notanumber throw then
+;
+
+:assertint |s:|
+    ?s isinteger not if
+        ?s `opts$notaninteger throw then
+;
+
+# convert string to given type (NOT a list)
+:converttotype |v,t:|
+    cases
+        ?t `float = if 
+            ?v dup assertnumber tofloat
+            case
+        ?t `integer = if 
+            ?v dup assertint toint
+            case
+        ?t `string = if ?v tostr case
+        ?t `bool = if 
+            ?v dup assertint toint
+            case
+        ?t `opts$badvaltype otherwise
+;
+    
+
+
+# create a parser object, we do this to avoid globals,
+# nothing more.
+
+:genp |strings,optlist,arglist:this,opt|
+    [%
+     dup!this
+     `gotopts [],
+     `gotargs [],
+     
+     # parse an argument, forcing into the appropriate type
+     `parsearg (|v,t:|
+         ?t `list = if
+             ?v ?opt`listsep split
+             (?opt?`listtype converttotype) map
+         else
+             ?v ?t converttotype 
+         then
+     ),
+         
+     
+     `parse (|:optstrings,argstrings,curidx,str,type,val,results,stringusedup|
+         [%] !results
+         # first, separate the strings into option strings which start with
+         # "-", and everything else (arguments). Strings only consisting
+         # of "-" (or numbers/commas) are arguments!
+         
+         ?strings (|a:|
+             ?a 0 swap get "-" = 
+             ?a isnumberornumberlist not and
+         ) filter2 !optstrings !argstrings
+         # remove the leading "-" from the optstrings
+         ?optstrings (1 -1 substr) map !optstrings
+         0!curidx
+         # go through optstrings by index, keep checking the end
+         # hasn't been reached because we'll be modding the lst
+         {
+             ?curidx ?optstrings len = ifleave
+             ?curidx ?optstrings get !str
+             0 ?str get "-" = if
+                 # long opt, drop leading char
+                 ?str 1 -1 substr !str
+                 # and get it
+                 ?optlist ?str getoptbyname !opt
+                 # had it before?
+                 ?opt?`name ?this?`gotopts in if
+                     ?opt?`name `opts$repeatedoption throw
+                 then
+                 # mark as obtained
+                 ?opt?`name ?this?`gotopts push
+                 # what is the required type?
+                 ?opt?`type !type
+                 # if it is not a bool, consume a plain argument
+                 ?type `bool != if
+                     ?argstrings len if
+                         ?argstrings shift !val
+                     else
+                         ?opt?`name `opts$requiresargument throw
+                     then
+                     # parse the argument
+                     ?val ?type ?this?`parsearg@ # parsed val now on stack
+                 else
+                     # otherwise it's just setting the bool
+                     1
+                 then
+                 # set in results
+                 ?opt?`name ?results set
+                 # and that was the EASY choice.
+             else
+                 # list is a set of short options, each one of which
+                 # might have args!
+                 0!stringusedup
+                 0 ?str len range each {
+                     ?optlist i ?str get getoptbychar !opt
+                     # had it before?
+                     ?opt?`name ?this?`gotopts in if
+                         ?opt?`name `opts$repeatedoption throw
+                     then
+                     # mark as obtained
+                     ?opt?`name ?this?`gotopts push
+                     # what is the required type?
+                     ?opt?`type !type
+                     # if it is not a bool, consume a plain argument
+                     ?type `bool != if
+                         # different from the above - if there 
+                         # are chars left in the string, use them,
+                         # or get the next string
+                         i ?str len 1- = if
+                             ?argstrings len if
+                                 ?argstrings shift !val
+                             else
+                                 ?opt?`name `opts$requiresargument throw
+                             then
+                         else
+                             ?str i 1+ -1 substr !val
+                             # used up rest of string!
+                             1!stringusedup
+                         then
+                         # parse the argument
+                         ?val ?type ?this?`parsearg@ # parsed val now on stack
+                     else
+                         # otherwise it's just setting the bool
+                         1
+                     then
+                     # set in results
+                     ?opt?`name ?results set
+                     # and that was the EASY choice. Exit if
+                     # we've used up the string for an arg.
+                     ?stringusedup ifleave
+                 }
+             then
+             
+             ?curidx 1+ !curidx 
+         }
+         
+         # check all required got, and fill in defaults 
+         # for others.
+         
+         ?optlist each {
+             
+             i?`name ?this?`gotopts in not if
+                 i?`required if
+                     i?`name `opts$required throw
+                 else
+                     i?`default isnone i?`type `bool = and if
+                         0
+                     else
+                         i?`default 
+                     then
+                     i?`name ?results set
+                 then
+             then
+         }
+         
+         # Now process the arguments
+         
+         ?arglist each {
+             # if we've run out of args, and the arg we now
+             # want is mandatory, that's an error. Otherwise,
+             # get the default.
+             
+             ?argstrings len 0 = if
+                 i?`required if
+                     i?`name `opts$insufficientargs throw
+                 else
+                     i?`default
+                 then
+             else
+                 # just get the arg from the remaining string
+                 # and parse it
+                 ?argstrings shift !val
+                 ?val i?`type ?this?`parsearg@
+             then
+             # and set it in the results.
+             i?`name ?results set
+         }
+         
+         ?results
+         ?argstrings
+     )
+     ]
+;
+
+
+:checkfordupes |list,x:v|
+    ?list each {
+        ?list each {
+            i j = not if
+                ?x i get ?x j get = if
+                    ?x 
+                    `opts$duplicatekey throw
+                then
+            then
+        }
+    }
+;
+
+public
+
+:parse |strings/list,optlist/list,arglist/list:bothlist|
+    :"(strings optlist arglist -- results remnants) Parse a string list"
+    
+    [`char, `name, `description ] each {
+        ?optlist i checkfordupes
+    }
+    
+    ?arglist ?optlist + !bothlist
+    
+    [`name, `description ] each {
+        ?bothlist i checkfordupes
+    }
+    
+    ?optlist each {
+        # process defaults
+        i `required 0 procdef
+        i `type `bool procdef
+        i `listsep "," procdef
+        
+        # assert that things are there
+        i `name `string asserthas
+        i `description `string asserthas
+        i `type asserttype
+        i?`type `list = if
+            i `listtype 1 asserttype
+        then
+        
+        
+        i?`required not i?`type `bool != and if
+            # if not required AND not bool, check there is a default value
+            # of the appropriate type
+            # TODO make this check elements of default lists for list type
+            i `default i?`type asserthas
+        then
+    }
+    ?arglist each {
+        i `required 1 procdef
+        i `type `integer procdef
+        i `listsep "," procdef
+        i `name `string asserthas
+        i `description `string asserthas
+        i `type asserttype
+        i?`type `list = if
+            i `listtype asserttype
+        then
+        i?`required not if
+            # TODO make this check elements of default lists for list type
+            i `default i?`type asserthas
+        then
+    }
+    ?strings ?optlist ?arglist genp?`parse@
+;
+
