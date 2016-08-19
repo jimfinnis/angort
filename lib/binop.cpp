@@ -72,12 +72,13 @@ void Angort::binop(Value *a,Value *b,int opcode){
             throw RUNT(EX_TYPE,"invalid operation with a 'none' operand");
         }
     }else if(at == Types::tList || bt == Types::tList) {
+        // collection equality checks look for identity
         ListObject *lo;
         switch(opcode){
         case OP_EQUALS: 
-            pushInt(0);break;
+            pushInt(a->v.list == b->v.list);break;
         case OP_NEQUALS:
-            pushInt(1);break;
+            pushInt(a->v.list != b->v.list);break;
         case OP_ADD:
             lo = new ListObject();
             addListOrValueToList(&lo->list,a);
@@ -91,9 +92,9 @@ void Angort::binop(Value *a,Value *b,int opcode){
         HashObject *ho;
         switch(opcode){
         case OP_EQUALS: 
-            pushInt(0);break;
+            pushInt(a->v.hash == b->v.hash);break;
         case OP_NEQUALS:
-            pushInt(1);break;
+            pushInt(a->v.hash != b->v.hash);break;
         case OP_ADD:
             ho = new HashObject();
             addHashToHash(ho->hash,a->v.hash->hash);
