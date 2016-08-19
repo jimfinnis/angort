@@ -270,6 +270,30 @@ inline void getByIndex(Value *c,int idx){
     delete iter;
 }
 
+%word filter2 (iter func -- falselist truelist) filter an iterable with a boolean function into two lists
+{
+    Value func;
+    func.copy(a->popval()); // need a local copy
+    Value *iterable = a->popval();
+    
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    ArrayList<Value> *falselist = Types::tList->set(a->pushval());
+    ArrayList<Value> *truelist = Types::tList->set(a->pushval());
+    
+    for(iter->first();!iter->isDone();iter->next()){
+        a->pushval()->copy(iter->current());
+        a->runValue(&func);
+        Value *v;
+        if(a->popval()->toInt())
+            v = truelist->append();
+       else
+            v = falselist->append();
+        v->copy(iter->current());
+            
+    }
+    delete iter;
+}
+
 %word in (item iterable -- bool) return if item is in list or hash keys
 {
     Value *iterable = a->popval();

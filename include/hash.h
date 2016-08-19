@@ -93,7 +93,7 @@ public:
     
     virtual void set(Value *k,Value *val){
         if(locks)
-            throw RUNT(EX_HASHMOD,"hash cannot be modified while it is being iterated");
+            throw RUNT(EX_HASHMOD,"").set("hash cannot be modified while it is being iterated");
         
         uint32_t hash = k->getHash();
         HashEnt *ent = look(k,hash);
@@ -291,7 +291,24 @@ public:
         } else
             return NULL;
     }
-        
+    
+    /// helper for getting ints with symbolic keys, enforcing
+    /// type
+    int getSymInt(const char *s){
+        Value *v = getSym(s);
+        if(v->t != Types::tInteger)
+            throw RUNT("ex$hashtype","").set("required int in hash for key %s",s);
+        return v->toInt();
+    }
+    
+    /// helper for getting floats with symbolic keys, enforcing
+    /// type
+    float getSymFloat(const char *s){
+        Value *v = getSym(s);
+        if(v->t != Types::tInteger && v->t != Types::tFloat)
+            throw RUNT("ex$hashtype","").set("required number in hash for key %s",s);
+        return v->toFloat();
+    }
     
     
 };
