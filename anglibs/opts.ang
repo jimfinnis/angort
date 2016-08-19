@@ -1,3 +1,8 @@
+#
+# Command line parsing - see OPTSNOTES
+#
+
+
 `regex library drop
 require "util.ang" drop
 package opts
@@ -35,12 +40,14 @@ package opts
 
 :asserthas |hash,key,type:v|
     ?key ?hash in not if
-        ?key `opts$requiredindefs throw
+        [?hash?`name,?key] "Definition %s does not have %s" format
+        `opts$requiredindefs throw
     then
     ?key ?hash get !v
     ?type ?v type typeequal not if
-        [?key,?v type,?type,?v]
-        "key: %s, got %s, wanted %s, value %s" format
+        [?key,?hash?`name,?v type,?type,?v]
+        "%s in definition %s is wrong type:got %s, wanted %s (value %s)"
+        format
         `opts$wrongtypeindefs throw
     then
 ;
@@ -50,6 +57,7 @@ package opts
 
 :asserttype |hash,key:|
     ?key ?hash get <<[`bool,`string,`integer,`list,`float]>> in not if
+        [?key,?hash?`name] "%s in definition %s is not a type" format
         ?key `opts$notatypeindefs throw
     then
 ;
@@ -66,9 +74,10 @@ package opts
         ?deflt ?key ?h set stop then
     
     ?deflt type ?val type typeequal not if
-        [?key,?val type,?deflt type,?val]
-        "key: %s, got %s, wanted %s, value %s" format
-        `opts$badtype throw
+        [?key,?h?`name,?val type,?deflt type,?val]
+        "%s in definition %s is wrong type:got %s, wanted %s (value %s)"
+        format
+        `opts$wrongtypeindefs throw
     then
 ;
 
@@ -86,32 +95,37 @@ package opts
     regex$match len
 ;
 
-:assertnumber |s:|
+:assertnumber |s,opt:|
     ?s isinteger if
         1
     else
         ?s isfloat
     then
-    not if ?s `opts$notanumber throw then
+    not if 
+        [?opt?`name,?s] "%s should be a number: got %s" format
+        `opts$notanumber throw
+    then
 ;
 
-:assertint |s:|
+:assertint |s,opt:|
     ?s isinteger not if
-        ?s `opts$notaninteger throw then
+        [?opt?`name,?s] "%s should be an integer: got %s" format
+        `opts$notaninteger throw
+    then
 ;
 
 # convert string to given type (NOT a list)
-:converttotype |v,t:|
+:converttotype |v,t,opt:|
     cases
         ?t `float = if 
-            ?v dup assertnumber tofloat
+            ?v dup ?opt assertnumber tofloat
             case
         ?t `integer = if 
-            ?v dup assertint toint
+            ?v dup ?opt assertint toint
             case
         ?t `string = if ?v tostr case
         ?t `bool = if 
-            ?v dup assertint toint
+            ?v dup ?opt assertint toint
             case
         ?t `opts$badvaltype otherwise
 ;
@@ -131,9 +145,9 @@ package opts
      `parsearg (|v,t:|
          ?t `list = if
              ?v ?opt`listsep split
-             (?opt?`listtype converttotype) map
+             (?opt?`listtype ?opt converttotype) map
          else
-             ?v ?t converttotype 
+             ?v ?t ?opt converttotype 
          then
      ),
          
@@ -163,7 +177,8 @@ package opts
                  ?optlist ?str getoptbyname !opt
                  # had it before?
                  ?opt?`name ?this?`gotopts in if
-                     ?opt?`name `opts$repeatedoption throw
+                     [?opt?`name] "%s has already been set" format
+                     `opts$repeatedoption throw
                  then
                  # mark as obtained
                  ?opt?`name ?this?`gotopts push
@@ -174,7 +189,9 @@ package opts
                      ?argstrings len if
                          ?argstrings shift !val
                      else
-                         ?opt?`name `opts$requiresargument throw
+                         [?opt?`name] "option %s requires an argument"
+                         format
+                         `opts$requiresargument throw
                      then
                      # parse the argument
                      ?val ?type ?this?`parsearg@ # parsed val now on stack
@@ -193,7 +210,8 @@ package opts
                      ?optlist i ?str get getoptbychar !opt
                      # had it before?
                      ?opt?`name ?this?`gotopts in if
-                         ?opt?`name `opts$repeatedoption throw
+                         [?opt?`name] "%s has already been set" format
+                         `opts$repeatedoption throw
                      then
                      # mark as obtained
                      ?opt?`name ?this?`gotopts push
@@ -208,7 +226,9 @@ package opts
                              ?argstrings len if
                                  ?argstrings shift !val
                              else
-                                 ?opt?`name `opts$requiresargument throw
+                                 [?opt?`name] "option %s requires an argument"
+                                 format
+                                 `opts$requiresargument throw
                              then
                          else
                              ?str i 1+ -1 substr !val
@@ -239,7 +259,8 @@ package opts
              
              i?`name ?this?`gotopts in not if
                  i?`required if
-                     i?`name `opts$required throw
+                     [i?`name] "%s is a required option" format
+                     `opts$required throw
                  else
                      i?`default isnone i?`type `bool = and if
                          0
@@ -260,7 +281,10 @@ package opts
              
              ?argstrings len 0 = if
                  i?`required if
-                     i?`name `opts$insufficientargs throw
+                     [i?`name]
+                     "insufficent arguments - expected at least '%s'"
+                     format
+                     `opts$insufficientargs throw
                  else
                      i?`default
                  then
@@ -286,7 +310,7 @@ package opts
         ?list each {
             i j = not if
                 ?x i get ?x j get = if
-                    ?x 
+                    [?x] "Duplicate key in definition: %s" format
                     `opts$duplicatekey throw
                 then
             then
