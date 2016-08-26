@@ -241,10 +241,12 @@ inline int wstrlen(const char *s){
     }
 }
 
-%wordargs substr sii (str start count --) get substring, if count -ve go to end
+%wordargs substr sii (str start count --) get substring, if count<=0 calculate count from end, if start -ve calculate start from end
 {
     int len = wstrlen(p0);
-    if(p1>len || p1<0 || p2==0){
+    if(p1<0)
+        p1 = len+p1;
+    if(p1>len || p1<0){
         a->pushString("");
     } else {
         wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
@@ -254,6 +256,10 @@ inline int wstrlen(const char *s){
             return;
         }
         s+=p1;
+        if(p2<=0){
+            p2=len+p2-p1;
+//            printf("**len=%d, p1=%d, p2=%d\n",len,p1,p2);
+        }
         if(p2>0)s[p2]=0;
         char *s2 = (char *)alloca(rv-p1+1);
         wcstombs(s2,s,rv-p1+1);
