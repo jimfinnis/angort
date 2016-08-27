@@ -6,12 +6,16 @@
 \setlength{\evensidemargin}{10.6mm}
 \setlength{\headheight}{15.2pt}
 \usepackage{listings}
+\usepackage{makeidx}
 \usepackage{footnote}
 \usepackage{graphicx}
 \usepackage{palatino}
-
 \makesavenoteenv{table}
 \makesavenoteenv{tabular}
+\usepackage{hyperref}
+\hypersetup{colorlinks}    
+
+\newcommand{\indw}[1]{\index{#1@\texttt{#1}}}
 
 \makeatletter
 \lst@Key{stringsprefix}\relax{\lst@DefActive\lst@stringsprefix{#1}}
@@ -35,12 +39,14 @@
 \makeatother
 \usepackage{fancyvrb}
 \usepackage{url}
+
+\makeindex
 \begin{document}
 \lstdefinelanguage{angort}{
 morekeywords={
 for,if,then,else,leave,dup,call,global,swap,drop,not,and,or,ifleave,const,over,each,include,stop,cmp,package,require,import,private,public,importall,
 def,defconst,recurse,self,library,cases,case,otherwise,
-searchpath,autogc,showclosure,dumpframe,endpackage,isconst,ispriv,names,
+    searchpath,autogc,showclosure,dumpframe,endpackage,isconst,ispriv,names,
 nspace,gc,rand,srand,type,listhelp,help,list,clear,reset,idone,ifirst,
 inext,icur,mkiter,iter,k,j,i,frangesteps,frange,srange,range,gccount,
 iscallable,isnone,neg,abs,assertmode,assert,assertdebug,disasm,debug,quit,
@@ -71,6 +77,8 @@ morestring=[b]"
     %frame=lines,framerule=0.5mm,
     fontsize=\small,xleftmargin=15pt}
 
+\tableofcontents
 \input{body}
 
+\printindex
 \end{document}

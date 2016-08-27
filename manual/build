@@ -1,0 +1,4 @@
+#!/bin/bash
+pdflatex main.tex
+makeindex main
+pdflatex main.tex

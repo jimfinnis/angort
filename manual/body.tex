@@ -23,11 +23,11 @@ in the startup file:
 
 range 1 7 const wheels
 
-# define a new word "d" with a single parameter "speed"
+# define a new function "d" with a single parameter "speed"
 
 :d [speed:]
 
-    # set a help text for this word
+    # set a help text for this function
 
     :"(speed --) set speed of all drive motors"
     
@@ -39,7 +39,7 @@ range 1 7 const wheels
     }
 ;
 
-# slightly more complex word for steering
+# slightly more complex function for steering
 
 :t [angle:]
     :"(angle --) turn front wheels one way, back wheels opposite way"
@@ -49,7 +49,7 @@ range 1 7 const wheels
     ?angle neg dup 5!steer 6!steer
 ;
 
-# define a word to stop the rover by setting all speeds to zero
+# define a function to stop the rover by setting all speeds to zero
 
 :s 0 d;
 
@@ -83,7 +83,7 @@ or even:
 to print the sum of the squares of the first 1000 integers.
 As can be seen, Angort is a very terse language.
 
-In the examples given so far, words such as \texttt{dactual},
+In the examples given so far, functions such as \texttt{dactual},
 \texttt{!drive} and \texttt{?drive} are links to native C++ code: it
 is very easy to interface Angort with C++.
 
@@ -109,20 +109,33 @@ Running the interpreter will give a prompt:
 The two numbers are the number of garbage-collectable objects in the
 system and the number of items on the stack, respectively.
 The interpreter is in ``immediate mode'', as opposed to ``compilation
-mode'' --- any words entered will be compiled to bytecode and run when
+mode'' --- any text entered will be compiled to bytecode and run when
 enter is pressed,
-rather than being added to a word definition.
+rather than being added to a function definition.
 
 In this mode, control constructs like
 \texttt{if...else...then} or loops cannot span more than one
 line. This is because such structures can only operate within a single 
 bytecode block, and the current block is closed and run at the end of each
-line in immediate mode. Inside a word definition this rule does not apply.
+line in immediate mode. Inside a function definition this rule does not apply.
 
+\subsection{Words and functions}
+\index{word}
+Most of the Angort language consists of functions which each perform
+a single, isolated task -- there is very little syntax. Even common
+``syntactic'' keywords like \texttt{if} (for conditions), \texttt{[]} 
+(for creating lists) and \texttt{+} (for addition) are just functions
+(albeit written in C++). Most things in Angort are just identifiers
+which compile to runnable code, including functions you have defined
+yourself. I will sometimes refer to these as 
+``words'' (after the original Forth usage), and sometimes as ``functions''
+(to reflect more modern usage). There is no real distinction, although
+I tend to use ``word'' for more basic, builtin operations.
 
 \section{The stack}
+\index{stack}
 Angort is a stack-based language: there is a single stack containing
-values, and most words change the contents
+values, and most functions change the contents
 of the stack in some way. For example,
 \begin{v}
 3
@@ -150,16 +163,17 @@ is a little difficult at first, but rapidly becomes second
 nature\footnote{Most old calculators work using RPN, and quite a few
 of the more powerful programmables still do.}
 
-\section{Defining new words}
-New words are defined with code of the form
+\section{Defining new functions}
+New functions are defined with code of the form
 \begin{v}
-:wordname ... ;
+:functionname ... ;
 \end{v}
 A simple example is:
 \begin{v}
 :square dup *;
 \end{v}
-This will define a word \texttt{square} which will duplicate
+indw{dup}
+This will define a function \texttt{square} which will duplicate
 the value on top of the stack, multiply the top two values
 (effectively squaring the number\footnote{This will produce
 an error if the value is not a number.}) and exit, leaving the
@@ -168,9 +182,9 @@ squared number on the stack. This can then be used thus:
 3 square 4 square + .
 \end{v}
 which will print 25, i.e. $3^2+4^2$.
-While defining a word, Angort is is compilation mode --- words will
-be converted to bytecode but added to the definition of the new word
-rather than executed immediately. Word definitions can therefore span
+While defining a function, Angort is is compilation mode --- functions will
+be converted to bytecode but added to the definition of the new function
+rather than executed immediately. Function definitions can therefore span
 more than one line:
 \begin{lstlisting}
 :factorial |x:|
@@ -192,9 +206,9 @@ putting a special block of the form
 \begin{v}
 |param1,param2,param3... : local1,local2,local3|
 \end{v}
-after the word name in the definition. Locals and parameters are
+after the function name in the definition. Locals and parameters are
 exactly the same internally, but the values of parameters are popped
-off the stack when the new word is called. 
+off the stack when the new function is called. 
 
 
 Once defined, locals (and parameters) can be read (i.e. pushed onto
@@ -233,15 +247,15 @@ locals but no parameters:
      
 \subsection{Word documentation strings and stack pictures}
 \label{stackpic}
-Following the locals and parameters (or just the word name if there
-are none) there may be a word documentation string. It has the form
+Following the locals and parameters (or just the function name if there
+are none) there may be a function documentation string. It has the form
 \begin{v}
-:"(before -- after) what the word does"
+:"(before -- after) what the function does"
 \end{v}
 The section in brackets is known as a \emph{stack picture,}\footnote{Or sometimes
 a \emph{stackflow symbol}.} and describes
-the action of the word on the stack. The part before the hyphen
-shows the part of the stack removed by the word, and the part after
+the action of the function on the stack. The part before the hyphen
+shows the part of the stack removed by the function, and the part after
 shows its replacement. For example:
 \begin{lstlisting}
 :dist |x1,y1,x2,y2:|
@@ -257,6 +271,7 @@ it's just a label for the value left behind on the stack.
 \section{Types}
 Angort is a dynamically typed language, with type coercion (weak typing).
 The following types are available:
+\indw{range}\indw{frange}\indw{[}\indw{]}
 \begin{center}
 \begin{tabular}{|l|p{2.7in}|l|}\hline
 \textbf{Name} & \textbf{Definition} & \textbf{Example of literal} \\ \hline
@@ -267,15 +282,20 @@ String & Strings of characters & \texttt{"Hello there"} \\
 Symbol & Single-word strings, internally stored as integers and
 generally used as hash keys & \texttt{`foo} \\
 Code& Blocks of Angort code, anonymous functions & \texttt{( dup * 1 + )}\\
-Integer range & A range of integers between two values with optional step& \texttt{0 4 range}\footnote{This is actually a call to the \texttt{range} word which takes two integers to create a range.}\\
-Float range & A range of floats between two values with  step& \texttt{0 4 0.1 frange}\\
-List & A array/list of values\footnote{Stored internally as an
-automatically resized array rather than a linked list.} & \texttt{[1,2,"foo"]} \\
+Integer range & 
+A range of integers between two values with optional step &
+\texttt{0 4 range}\footnotemark[1]\\
+Float range & A range of floats between two values with 
+step& \texttt{0 4 0.1 frange}\\
+List & A array/list of values\footnotemark[2] & \texttt{[1,2,"foo"]} \\
 Hash & A map of values to values implemented as a hash table, where
 keys can strings, symbols, integers or floats & \texttt{[\% `foo 1, "fish" "fish"]} \\
 \hline
 \end{tabular}
 \end{center}
+\footnotetext[1]{This is actually a call to the \texttt{range} function which takes two integers to create a range.}
+\footnotetext[2]{Stored internally as an
+automatically resized array rather than a linked list.}
 ``Code'' above actually conflates two types internally --- codeblocks,
 which have no environment; and closures, which consist of a codeblock and
 some stored variables. They appear identical to the user.
@@ -297,6 +317,9 @@ is a string, both will be coerced to strings.
 \clearpage
 
 \section{Conditions}
+\indw{if}
+\indw{then}
+\indw{else}
 These have the form:
 \begin{v}
 <condition> if <runs if true> then
@@ -335,6 +358,9 @@ number is odd
 \end{v}
 Conditions can be nested.
 \section{Case blocks}
+\indw{case}
+\indw{otherwise}
+\indw{cases}
 In order to avoid testing if..else..then constructions where a number of
 different, mutually exclusive cases need to be tested, the ``case block''
 structure is provided, which emulates the ``elsif'' construction in other
@@ -369,6 +395,13 @@ This function will print an appropriate message for integers from 0 to 7,
 and ``It's something else'' for any other value.
 
 \section{Loops}
+\index{loops}
+\indw{each}
+\def\opencurlybrace{\{}
+\def\closecurlybrace{\{}
+\indw{\opencurlybrace}
+\indw{\closecurlybrace}
+\indw{leave}\indw{ifleave}
 There are two kinds of loops in Angort --- infinite loops,
 which must be broken out of using \texttt{leave} or \texttt{ifleave}; and
 iterator loops, which loop over a collection (i.e. a hash or list) or
@@ -376,6 +409,7 @@ a range. Both are delimited with curly brackets \verb+{}+, but iterator loops
 use the \texttt{each} word before the opening brace.
 
 \subsection{Infinite loops}
+\index{loop!infinite}
 Any \texttt{leave} word will break out of an infinite loop:
 \begin{lstlisting}
 :foo |:counter|         # a local variable "counter", no parameters
@@ -398,7 +432,7 @@ as
 \begin{v}
 ifleave
 \end{v}
-The word above could be written tersely as
+The function above could be written tersely as
 \begin{lstlisting}
 :foo |:c| 0!c {?c. ?c 1+ !c ?c 100= ifleave};
 \end{lstlisting}
@@ -406,6 +440,7 @@ Loops can be nested, and the \texttt{leave} words will jump out of the
 innermost loop in which they appear.
 
 \subsection{Iterator loops}
+\indw{i}\index{loop!iterator}
 Iterator loops loop over an \emph{iterable} value. These are currently ranges,
 hashes and lists. They are delimited by curly braces like infinite loops,
 but are preceded by the 
@@ -448,6 +483,7 @@ of a hash:
 will print the hash's keys: ``foo'' and ``bar''. 
 
 \subsubsection{Nested iterator loops}
+\label{nestit}
 Each loop has its own iterator, even if they come from the same iterable:
 \begin{lstlisting}
 :foo |:r|
@@ -463,6 +499,7 @@ Each loop has its own iterator, even if they come from the same iterable:
 The range here is used twice, generating two separate iterators with
 their own current value.
 
+\indw{j}\indw{k}
 While the word \texttt{i} retrieves the iterator value inside the current
 loop, inside nested iterator loops it is often useful to get the value
 in outer loops. This can be done with the \texttt{j} and \texttt{k} words,
@@ -496,6 +533,7 @@ leaves the stack free for manipulation:
 \end{lstlisting}
 
 \subsection{Words to create ranges}
+\indw{range|textbf}\indw{frange|textbf}\indw{srange|textbf}
 There are three words to create a range on the stack:
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
@@ -507,9 +545,10 @@ frange & (x y s -- range) &  create an float range over the interval $[x,y)$ wit
 \end{tabular}
 \end{center}
 See Section~\ref{stackpic} for how stack pictures define the parameters
-and return values for a word.
+and return values for a function.
 
 \subsection{Explicit iterators}
+\indw{mkiter}\indw{icur}\indw{inext}\indw{idone}\indw{ifirst}
 It's sometimes necessary to use iterators manually instead of creating
 them automatically with "each" and getting the values using "i" in an
 iterator loop.
@@ -568,6 +607,7 @@ iterator to iterate over list b.
 
 
 \section{Globals}
+\indw{global}
 Global variables are defined in two ways. The ``polite'' way is to use the 
 \texttt{global} keyword, which creates a new global of the same following
 it, initially holding the nil value \texttt{none}:
@@ -597,6 +637,7 @@ Finally, using a ``bare'' global containing a none value will not stack
 that value.
 
 \section{Constants}
+\indw{const}
 Constants are similar to globals, but with the following differences:
 \begin{itemize}
 \item they are defined and set using the \texttt{const} keyword ---
@@ -623,7 +664,7 @@ pi 180/   const degsToRadsRatio
 ;
 \end{lstlisting}
 
-\section{The true nature of word definitions}
+\section{The true nature of function definitions}
 \label{globdetails}
 Words are actually global variables bound to anonymous functions.
 Given that anonymous functions are written as blocks of Angort
@@ -641,15 +682,17 @@ will simply stack its value, whereas referring to it without the sigil
 will check if it is holds a code block or closure and run it if so, otherwise
 stack the value. This is useful in functional programming.
 
-\subsection{Sealed words}
-Combined with constants, this allows for ``sealed'' word definitions. 
-In general all words can be redefined, but a word defined thus:
+\subsection{Sealed functions}
+\index{const functions}
+Combined with constants, this allows for ``sealed'' function definitions. 
+In general all functions can be redefined, but a function defined thus:
 \begin{lstlisting}
 (|x:| ?x ?x *) const square
 \end{lstlisting}
 cannot be. This can be useful in package development.
 
 \subsection{Forward declarations (deferred declarations)}
+\index{forward declaration}
 It's also possible to use this mechanism to define global variables,
 use them as function names, and change their values later. This lets
 us defer function definitions:
@@ -661,6 +704,7 @@ global foo      # define a global called ``foo'' (null-valued)
 \end{v}
 
 \section{Lists}
+\index{lists}\indw{[|textbf}\indw{]|textbf}
 Angort lists are actually array based, with the array resizing automatically
 once certain thresholds are passed (similar to a Java ArrayList).
 A list is defined by enclosing Angort expressions in square
@@ -689,6 +733,9 @@ be stored in variables:
 Note that the list in $B$ has also changed --- it is the same list,
 just a different reference.
 The following are the words which act on lists, with their stack pictures:
+\indw{[|textbf}\indw{]|textbf}\indw{,|textbf}\indw{get}
+\indw{set}\indw{remove}\indw{shift}\indw{unshift}
+\indw{push}\indw{pop}\indw{in}
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
@@ -723,17 +770,20 @@ without popping that list. This means we can write code to do a list copy:
 \end{lstlisting}
 
 \section{Symbols}
+\index{symbols}\indw{`}
 Symbols are single-word strings which are stored in an optimised form for easy
 and quick comparison (they are turned into unique integers
 internally). They are specified by using a backtick (\texttt{`}) in front of
 the word. They're most useful as keys in hashes, covered in the next section.
 
 \section{Hashes}
-Hashes allow data be stored using keys of any hashable type (integers, floats,
+\index{hashes}
+Hashes are like Python dictionaries: they allow data be stored using keys of any hashable type (integers, floats,
 strings, symbols -- anything except hashes and lists). Hashes are created
 using a similar syntax to the list initialiser, but with a \texttt{\%} after
 the closing brace and data in key,value pairs\footnote{This is a somewhat
 awkward syntax, but all the other bracket types were used elsewhere.}:
+\indw{[\%]}
 \begin{v}
 [%]
 \end{v}
@@ -759,6 +809,7 @@ and read values using \texttt{get} which has the picture \texttt{(key hash -- va
 2|1> .
 the foo string
 \end{v}
+\indw{ival}
 We can also iterate over the hash's keys and values:
 \begin{lstlisting}
 :dumphash |h:|
@@ -776,8 +827,15 @@ If we run this on the hash $H$ defined above, we get
 foo:   the foo string
 bar:   the bar string
 \end{v}
+\indw{jval}{kval}
+We can nest iterator loops for hashes too, as we did with lists.
+Just as \texttt{i}, \texttt{j} and \texttt{k} get the inner, next outer
+and next outer loop keys (see Sec.~\ref{nestit}), \texttt{ival},\texttt{jval} and \texttt{kval} get
+the inner, next outer and next outer loop values with hashes.
+
 
 \subsection{Shortcut symbol get and set}
+\indw{`}\index{hashes!shortcut set/get}
 There is a syntactic sugar for retrieving the value of a key in
 a hash where the key is a literal symbol. Instead of using
 \begin{v}
@@ -800,6 +858,7 @@ instead of
 
 \subsection{Words for hashes}
 Hashes can also use many of the same words as lists:
+\indw{[\%}\indw{,}\indw{set}\indw{get}\indw{remove}\indw{in}
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
@@ -817,6 +876,7 @@ Note that the comma and close bracket words examine the stack to
 determine if they are working on a list or a hash.
 
 \subsection{Hash to string function}
+\indw{toString}
 By default, printing a hash --- or converting it to a string any other way ---
 will just print the default string. This tells you it's a hash and gives
 its address in memory:
@@ -828,9 +888,11 @@ its address in memory:
 However, if we define a hash member called \verb+toString+ (where this
 key is a symbol) which is a function, then that function will be called
 to generate a string. This is useful in many cases where hashes are used
-as data structures.
+as data structures\footnote{However, this can sometimes go horribly
+wrong, particularly where debugging is involved. Use with care.}.
 
 \section{Garbage collection}
+\index{garbage collection}
 Garbage collection is done automatically --- up to a point. Specifically,
 the system does reference-counted garbage collection continuously,
 which works well in most cases. However, it is possible to
@@ -849,13 +911,14 @@ occasionally.
 This is done periodically, by default every 100000 instructions or so.
 This interval can be changed by writing to the \verb+autogc+ property
 with a new interval:
+\indw{autogc}
 \begin{v}
 1000 !autogc
 \end{v}
 It can also be disabled entirely by setting \texttt{autogc} to a negative
 value.
-
 A full garbage collect can be done manually by the word
+\indw{gc}
 \begin{v}
     gc
 \end{v}
@@ -865,9 +928,12 @@ the same style of garbage collection used by Python.
 
 
 \section{Functional programming}
+\index{functional programming}\index{anonymous functions}
+\indw{(}\indw{)}
 Anonymous functions are defined with brackets, which will push an object
 representing that function (and any closure created) onto the stack. This can
 then be called with \texttt{call}  (which can be abbreviated to ``\texttt{@}'')
+\indw{call}\indw{"@}
 Such functions may have parameters and local variables.
 
 For example, this is a function to run a function over a range of numbers,
@@ -888,12 +954,15 @@ or more simply
 \end{v}
 
 \subsection{Words for dealing with functions}
+\indw{map}\indw{reduce}\indw{filter}\indw{zipWith}
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
 map &(iter func -- list) & apply a function to an iterable, giving a list\\
 reduce & (start iter func -- result) & set an internal value (the accumulator) to "start", then iterate, applying the function (which must take two arguments) to the accumulator and the iterator's value, setting the accumulator to this new value before moving on.\\
 filter & (iter func -- list) & filter an iterable with a boolean function\\
+zipWith & (iter iter func -- list) & iterate over both iterables, combining
+the elements with a binary function and putting the results into a list\\
 \hline
 \end{tabular}
 \end{center}
@@ -918,9 +987,9 @@ We can also write a function to sum the values in an iterable using
 
 
 
-\subsection{Closures}
+\subsection{Closures}\index{closures}
 Anonymous functions can refer to variables in their enclosing function or
-word, in which case a closure is created to store the value when the enclosing
+function, in which case a closure is created to store the value when the enclosing
 function exits. This closure is mutable - its value can be changed by the
 anonymous function. For example, consider the following function:
 
@@ -980,6 +1049,7 @@ private copies:
 \end{lstlisting}
 
 \subsubsection{Objects with delegates and private members using hashes and closures}
+\index{objects}\index{delegates}
 Languages like C\# have a ``delegate'' type, which consists of
 the pointer to an object and a method to be called inside that
 object, as a single entity. 
@@ -1014,6 +1084,7 @@ in the creating function:
 20 20 ?R?`move@
 ?R?`draw@
 \end{lstlisting}
+\index{private member}
 This also provides a ``private member'' mechanism: if a value is defined
 in a closure in the function which creates the hash, rather than in
 the hash itself, that value will only be visible to functions defined
@@ -1024,9 +1095,11 @@ in the hash.
 \section{More built-in words}
 
 \subsection{Stack manipulation}
+\index{stack!manipulation}
 There exist a number of words whose sole purpose is to manipulate
 the stack. These words, and their stack pictures, are given in the table
 below.
+\indw{dup}\indw{drop}\indw{swap}\indw{over}
 \begin{center}
 \begin{tabular}{|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture}\\ \hline
@@ -1042,6 +1115,7 @@ words, which includes \texttt{rot}, \texttt{roll}, \texttt{nip} and \texttt{tuck
 The local variable system makes such complex operations unnecessary.
 
 \subsection{Binary operators}
+\indw{arithmetic}\indw{binary operations}
 In the following operations, these conversions take place:
 \begin{itemize}
 \item If one of the operands is a string, the other will be converted to a string. Only "+" and comparison operators will be valid.
@@ -1049,6 +1123,8 @@ In the following operations, these conversions take place:
 \item The comparison operators will do identity checks on objects (lists, ranges etc.), not deep comparisons.
 \item The comparison functions actually return integers, with non-zero indicating falsehood.
 \end{itemize}
+\indw{and}\indw{or}
+\indw{band}\indw{bor}\indw{bxor}
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
@@ -1064,11 +1140,15 @@ $<$    & (a b -- a$<$b)& string comparison works as expected\\
 !=   & (a b -- a!=b)& inequality test: string comparison works as expected\\
 and & (a b -- a$\wedge$b) & binary and -- inputs are coerced to integers, nonzero is true\\
 or & (a b -- a$\vee$b) & binary or  -- inputs are coerced to integers, nonzero is true\\
+band & (a b -- a \& b) & bitwise AND \\
+bor & (a b -- a $|$ b) & bitwise OR \\
+bxor & (a b -- a $\sim$ b) & bitwise XOR \\
 \hline
 \end{tabular}
 \end{center}
 
 \subsection{Unary operators}
+\indw{bnot}\indw{not}\indw{neg}\indw{abs}
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
@@ -1076,11 +1156,13 @@ not & (a -- !a) & logical negation of a boolean\\
 neg & (a -- -a) & arithmetic negation of float or integer\\
 abs & (a -- $|\textrm{a}|$) & absolute value\\
 isnone & (a -- bool) & true if value is \texttt{none} \\
+bnot & (a -- !b) & bitwise not\\    
 \hline
 \end{tabular}
 \end{center}
 
 \section{Getting help}
+\indw{??}\indw{help}
 There are many other functions and operations available in Angort.
 These can be listed with the \texttt{list} word, and help can
 be obtained on all words with \texttt{??} (except the very low-level words compiled
@@ -1090,7 +1172,7 @@ directly to bytecode, which are all covered above):
 filter: (iter func -- list) filter an iterable with a boolean function
 1|0 > 
 \end{v}
-If you have loaded a library or package and not imported the words
+If you have loaded a library or package and not imported the functions
 into the main namespace (see section~\ref{nameslibsmods}below), you
 can use the fully qualified name to get help:
 \begin{v}
@@ -1102,19 +1184,21 @@ io$open: (path mode -- fileobj) open a file, modes same as fopen()
 
 
 \section{Namespaces and packages}
+\indw{package}\indw{require}\index{namespaces}
+\index{packages}
+\def\dollarsign{\$}\indw{\dollarsign}
 Build a package by putting the \texttt{package} directive at the start
 of a file along with the package name, e.g.
 \begin{v}
 package wibble
 \end{v}
-
 and including that file with \texttt{require} instead of the usual \texttt{include.} 
 
 This will cause a new namespace to be created where \texttt{package} is 
 invoked, and all subsequent definitions until the end of the file will
 be put into that namespace. On return from the file, \texttt{require} will
 put an integer handle for that namespace on the stack. All the globals,
-constants and words defined in the package are available by prefixing
+constants and functions defined in the package are available by prefixing
 the name with the package name and a dollar sign:
 \begin{v}
 package$name
@@ -1123,6 +1207,7 @@ Note that the package name is that given to the \texttt{package} directive,
 not the name of the file!
 
 \subsection{Importing packages into the default space}
+\indw{import}
 With this handle on the stack, we can import the namespace --- either
 all of it or part of it. The \texttt{import} word takes two forms:
 \begin{v}
@@ -1137,6 +1222,8 @@ will only import the given names --- in this case, \texttt{foo} and \texttt{bar}
 The namespace handle can also be used in other ways:
 \begin{center}
 \begin{tabular}{|l|l|p{3in}|}\hline
+\indw{package}\indw{require}\indw{public}\indw{private}
+\indw{names}\indw{import}\indw{ispriv}\indw{isconst}\indw{names}
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
 require ``filename'' & (-- handle) & load a package\\
 package packagename & & directive to start a new namespace \\
@@ -1152,18 +1239,20 @@ isconst & (handle name -- bool) & return true if a name is constant in the names
 \end{center}
 
 \subsubsection{Local packages}
+\index{packages!local}
 It is sometimes necessary to create a package inside a script which
 is not included from another script. One example is where the script
-does not terminate, leaving the user at the prompt with some words defined,
-but some words should be private.
+does not terminate, leaving the user at the prompt with some functions defined,
+but some functions should be private.
 
 To do this, define the package thus:
+\indw{endpackage}
 \begin{v}
 package somename
 private
-...private words...
+...private functions...
 public
-...public words...
+...public functions...
 endpackage import
 \end{v}
 The \texttt{endpackage} word does the same as the return from a 
@@ -1171,25 +1260,26 @@ The \texttt{endpackage} word does the same as the return from a
 stack the package ID.
 
 \subsection{Namespaces, libraries and modules}
+\index{namespace, default}
 \label{nameslibsmods}
 Native functions created by using the shared library plugin system
 are loaded into namespaces, just as described above. However, native
-functions defined using Angort's built-in word registration system
+functions defined using Angort's built-in function registration system
 are loaded into \emph{modules.} These are very similar to namespaces,
 but are slightly faster\footnote{The pointers to the native functions
 are stored directly rather than being wrapped in Value objects.}. 
 
-Such words are automatically part of the default namespace, but can
-be overriden by your own words. If you still wish to use the standard
+Such functions are automatically part of the default namespace, but can
+be overriden by your own functions. If you still wish to use the standard
 definition, the fully specified name can be used. This is in the form
 \verb+module$name+, like that used for libraries or plugins. For example,
-if you have overriden the \texttt{p} word, you can use \verb+std$p+.
+if you have overriden the \texttt{p} function, you can use \verb+std$p+.
 
 \section{Plugin libraries (currently Linux only)}
+\indw{library}\index{libraries}
 These are shared libraries which can be loaded into Angort. They communicate
 with Angort via a simplified interface, and are easy to write in C++ (see
 the plugins directory for some examples). 
-
 Once created, they should be named with the \texttt{.angso} extension
 and placed in Angort's library search path (a colon separated string).
 By default, this is 
@@ -1200,6 +1290,7 @@ but it can be changed using the
 \texttt{searchpath} property (note that \verb+~+ will be expanded
 to the user's home directory). For example, to append \texttt{/home/foo/bin}
 to the path, you could write
+\indw{searchpath}
 \begin{v}
 ?searchpath ":/home/foo/bin" + !searchpath
 \end{v}
@@ -1235,6 +1326,9 @@ of this document:
 \item routines (generators) and \texttt{yield}
 \item constant expressions using $<<$ and $>>$
 \item sourceline
+\item exception and signal handling
+\item heredocs and barewords
+\item 
 \item explicit iterator values (\texttt{ival} etc)
 \item many more built-in words
 \item writing words and binary operators in C++ and adding them to Angort
