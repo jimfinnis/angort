@@ -13,11 +13,15 @@ namespace angort {
 
 class StringIterator : public Iterator<Value *> {
 private:
-    Value v;
+    Value v; // result
+    Value string; // string we're going over
+    StringBuffer buf; // string buffer
+    const wchar_t *wstr; // the string (as wide)
     char tmp[2];
+    int idx,len;
 public:
     const char *p,*str;
-    StringIterator(const char *s);
+    StringIterator(const Value *v);
     virtual ~StringIterator(){}
     virtual void first();
     virtual void next();
@@ -26,21 +30,27 @@ public:
 };
 
 
-StringIterator::StringIterator(const char *s){
-    str=p=s;
-    tmp[1]=0;
+StringIterator::StringIterator(const Value *s){
+    string.copy(s);
+    buf.set(s);
+    wstr=buf.getWide();
+    idx=0;
+    len=wcslen(wstr);
 }
+
 void StringIterator::first(){
-    p=str;
+    idx=0;
 }
 void StringIterator::next(){
-    p++;
+    idx++;
 }
+
 bool StringIterator::isDone() const {
-    return *p==0;
+    return idx>=len;
 }
 Value *StringIterator::current(){
-    tmp[0]=*p;
+    int n = wctomb(tmp,wstr[idx]);
+    tmp[n]=0;
     Types::tString->set(&v,tmp);
     return &v;
 }
@@ -164,7 +174,7 @@ void StringType::clone(Value *out,const Value *in,bool deep){
 
 
 Iterator<Value *> *StringType::makeValueIterator(Value *v){
-    return new StringIterator(getData(v));
+    return new StringIterator(v);
 }
 
 }

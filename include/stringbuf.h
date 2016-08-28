@@ -8,6 +8,7 @@
 #define __ANGORTSTRINGBUF_H
 
 #include <wchar.h>
+#include <stdlib.h>
 
 namespace angort {
 
@@ -20,14 +21,32 @@ private:
     bool allocated;
     const char *buf;
     wchar_t *wide;
+    char tmp[33]; // twice the usual MB_LEN_MAX, +1.
 public:
-    StringBuffer(const class Value *v);
-    ~StringBuffer(){
-        if(allocated){
-            free((void *)buf);
+    StringBuffer(){
+        buf=NULL;
+    }
+    
+    void set(const class Value *v);
+    
+    StringBuffer(const class Value *v) {
+        buf=NULL;
+        set(v);
+    }
+    
+    void clear(){
+        if(buf){
+            if(allocated){
+                free((void *)buf);
+            }
+            if(wide)
+                free((void *)wide);
+            buf = NULL;
         }
-        if(wide)
-            free((void *)wide);
+    }
+        
+    ~StringBuffer(){
+        clear();
     }
     
     const char *get() const{

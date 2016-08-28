@@ -45,6 +45,8 @@ struct FuncComparator : public ArrayListComparator<Value> {
 %name coll
 
 %word dumplist (list --) Dump a list
+Write the contents of a list crudely to stdout. Consider using
+util$show instead, from the util package.
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     
@@ -55,6 +57,8 @@ struct FuncComparator : public ArrayListComparator<Value> {
 }
 
 %wordargs head li (coll n -- list) get the first n items of a list
+Get the first n items of a list into a new list - returns a list
+even if the length requested is 1. (See also "fst".)
 {
     Value r;
     ArrayList<Value> *list = Types::tList->set(&r);
@@ -66,6 +70,8 @@ struct FuncComparator : public ArrayListComparator<Value> {
 }
 
 %wordargs tail li (coll n -- list) get the last n items of a list
+Get the last n items of a list into a new list - returns a list
+even if the length requested is 1. (See also "last".)
 {
     Value r;
     ArrayList<Value> *list = Types::tList->set(&r);
@@ -78,6 +84,8 @@ struct FuncComparator : public ArrayListComparator<Value> {
 }
 
 %wordargs splitlist li (coll n -- [list,list]) split list into two lists of [n,count-n] items
+Creates two new lists, returned as elements of a list, consisting of the
+first n items in the first list and the remainder in the second list.
 {
     Value r;
     ArrayList<Value> *list = Types::tList->set(&r);
@@ -92,6 +100,7 @@ struct FuncComparator : public ArrayListComparator<Value> {
     
 
 %word last (coll -- item/none) get last item
+Return the last item of a list or NONE if list is empty.
 {
     Value *c = a->stack.peekptr();
     int n = c->t->getCount(c)-1;
@@ -116,7 +125,10 @@ inline void getByIndex(Value *c,int idx){
     }
 }
 
-%word explode ([x,y,z] -- z y x) put all items onto stack 
+%word explode ([x,y,..] -- x,y,..) put all items onto stack
+Puts all items from the list onto the stack, permitting the metaphor
+[a,b,c] explode !c !b !a. Note the reversal of the order - a typical
+usage is "reverse explode" (but this is slow).
 {
     Value *iterable = a->popval();
     Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
@@ -128,25 +140,32 @@ inline void getByIndex(Value *c,int idx){
 }    
 
 %word fst (coll -- item/none) get first item
+Return the first item of a list or NONE if list is empty.
 {
     getByIndex(a->stack.peekptr(),0);
 }
 
 %word snd (coll -- item/none) get second item
+Return the 2nd item of a list or NONE if not present.
 {
     getByIndex(a->stack.peekptr(),1);
 }
 %word third (coll -- item/none) get second item
+Return the 3rd item of a list or NONE if not present.
 {
     getByIndex(a->stack.peekptr(),2);
 }
 %word fourth (coll -- item/none) get second item
+Return the 4th item of a list or NONE if not present.
 {
     getByIndex(a->stack.peekptr(),3);
 }
     
 
 %word get (key coll --) get an item from a list or hash
+For a list, get the key'th item (starting from zero). For a hash, look up
+the key and return the item. Lists will throw a ex$outofrange exception
+if out of range, hashes will return NONE if item not found.
 {
     Value *c = a->popval();
     Value *keyAndResult = a->stack.peekptr();
@@ -155,6 +174,9 @@ inline void getByIndex(Value *c,int idx){
     keyAndResult->copy(&v); // copy into the key's slot
 }
 %word set (val key coll --) put an item into a list or hash
+Store an item in a list of hash. Lists will be expanded to the required
+size, with all unset items set to NONE. This can result in enormous
+memory usage: lists are not stored sparsely.
 {
     Value *c = a->popval();
     Value *k = a->popval();
@@ -162,13 +184,17 @@ inline void getByIndex(Value *c,int idx){
     c->t->setValue(c,k,v);
 }
 %word len (list --) get length of list, hash or string
+Get the number of items in a list, hash or string.
 {
     Value *c = a->stack.peekptr();
     int ct = c->t->getCount(c);
     Types::tInteger->set(c,ct);
 }
 
-%word remove (idx list -- item) remove an item by index, returning it
+%word remove (key list -- item) remove an item by key or index, returning it.
+Removes the nth item of a list, moving all subsequent items down.
+In a hash, removes the item given by the key. In both cases the
+removed item is returned.
 {
     Value *c = a->popval();
     Value *keyAndResult = a->stack.peekptr();
@@ -179,6 +205,8 @@ inline void getByIndex(Value *c,int idx){
 
 
 %word shift (list -- item) remove and return the first item of the list
+Removes and returns the first item of the list, throwing ex$outofrange
+if there are no items.
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->pushval();
@@ -188,6 +216,7 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word unshift (item list --) prepend an item to a list
+Adds an item to the start of a list.
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->popval();
@@ -195,6 +224,8 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word pop (list -- item) pop an item from the end of the list
+Removes and returns the last item of the list, throwing ex$outofrange
+if there are no items.
 {
     Value v;
     v.copy(a->popval());
@@ -208,6 +239,7 @@ inline void getByIndex(Value *c,int idx){
 
 
 %word push (item list --) append an item to a list
+Adds an item to the end of a list.
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->popval();
@@ -216,6 +248,9 @@ inline void getByIndex(Value *c,int idx){
 
 
 %word map (iter func -- list) apply a function to an iterable, giving a list
+For each item in the iterable (list, range  or hash) apply a function,
+creating a new list containing the results. In the case of hashes, the
+hash key is passed to the function.
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -233,7 +268,11 @@ inline void getByIndex(Value *c,int idx){
     delete iter;
 }
 
-%word reduce (start iter func -- result) perform a (left) fold or reduce on an iterable
+%word reduce (accumulator iter func -- result) perform a (left) fold or reduce on an iterable.
+Works on lists, ranges or hashes. For each item or hash key, calculate the
+result of the binary function where the first operand is the accumulator
+and the second is the item or key, and set the accumulator to this value.
+Thus, "0 [1,2,3,4] (+) reduce" will sum the values.
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -251,6 +290,9 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word filter (iter func -- list) filter an iterable with a boolean function
+For each item in an iterable, return a list of those items for which the
+function returns nonzero. Accepts lists, ranges or hashes (in the latter case
+the hash key is used).
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -271,6 +313,10 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word filter2 (iter func -- falselist truelist) filter an iterable with a boolean function into two lists
+For each item in an iterable, return two lists of those items for which the
+function returns zero and those for which it returns nonzero. Accepts
+lists, ranges or hashes (in the latter case
+the hash key is used).
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -295,6 +341,8 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word in (item iterable -- bool) return if item is in list or hash keys
+Return true if an iterable (list, hash or integer range) contains
+the item.
 {
     Value *iterable = a->popval();
     Value *item = a->popval();
@@ -305,6 +353,8 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word index (item iterable -- int) return index of item in iterable, or none
+Return the zero based index of an item in a list. Other iterables will return
+none, non-iterable types will throw ex$noiter.
 {
     Value *iterable = a->popval();
     Value *item = a->popval();
@@ -315,6 +365,11 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word slice (iterable start len -- iterable) produce a slice of a string or list
+Return a slice of a string or list, returning another string or or list,
+given the start and length. Inappropriate types will throw ex$notcoll.
+If length of the iterable  is greater than the length requested, then the
+slice will go to the end. Empty results will be returned if the requested
+slice does not intersect the iterable.
 {
     int len = a->popInt();
     int start = a->popInt();
@@ -326,12 +381,19 @@ inline void getByIndex(Value *c,int idx){
 }
 
 %word clone (in -- out) construct a shallow copy of a collection
+Create a new collection (list or hash) of the same type, where
+each item is a shallow copy. For example, copying a list of lists
+creates a new list containing references to the lists in the original.
 {
     Value *v = a->stack.peekptr();
     v->t->clone(v,v,false);
 }
 
 %word deepclone (in -- out) produce a deep copy of a value
+Create a new collection (list or hash) of the same type, where
+each item is a deep copy (i.e. a recursive copy). For example, copying
+a list of lists creates a new list containing new copies of the original
+lists.
 {
     Value *v = a->stack.peekptr();
     v->t->clone(v,v,true);
@@ -352,6 +414,8 @@ struct StdComparator : public ArrayListComparator<Value> {
 };
 
 %word sort (in --) sort a list in place using default comparator
+Reorders the list using a standard comparison, which will fail if
+the types of the items are not comparable.
 {
     Value listv;
     // need copy because comparators use the stack
@@ -363,6 +427,8 @@ struct StdComparator : public ArrayListComparator<Value> {
 }
 
 %word rsort (in --) reverse sort a list in place using default comparator
+Reorders the list using a standard comparison, which will fail if
+the types of the items are not comparable.
 {
     Value listv;
     // need copy because comparators use the stack
@@ -375,6 +441,7 @@ struct StdComparator : public ArrayListComparator<Value> {
 
 
 %word fsort (in func --) sort a list in place using function comparator
+Reorders the list using a binary function.
 {
     Value func,listv;
     
@@ -389,6 +456,8 @@ struct StdComparator : public ArrayListComparator<Value> {
 }
 
 %word all (in func --) true if the function returns true for all items
+Returns true if the unary function provided returns nonzero for all the items
+in the iterable. For hashes, this will use the key.
 {
     int rv=1; // true by default
     
@@ -411,6 +480,8 @@ struct StdComparator : public ArrayListComparator<Value> {
 }
 
 %word any (in func --) true if the function returns true for all items
+Returns true if the unary function provided returns nonzero for any item
+in the iterable. For hashes, this will use the key.
 {
     int rv=0; // false by default
     
@@ -433,6 +504,9 @@ struct StdComparator : public ArrayListComparator<Value> {
 }
 
 %word zipWith (in1 in2 func -- out) apply binary func to pairs of items in list
+For two lists, apply a binary function to pairs of items taken sequentially
+from each list, creating a new list. Thus, "[1,2,3] [10,20,30] (+) zipWith"
+will return "[11,22,33]". 
 {
     Value *p[3];
     a->popParams(p,"IIc");
@@ -461,6 +535,9 @@ struct StdComparator : public ArrayListComparator<Value> {
 }
 
 %word reverse (iter -- list) reverse an iterable to return a list
+Reverse an iterable (list, hash, string, int range) creating
+a new list of the results. Will work on hashes, but is pointless
+since the keys are unordered.
 {
     Value *p = a->popval();
     Iterator<Value *> *iter = p->t->makeIterator(p);
@@ -490,7 +567,10 @@ struct StdComparator : public ArrayListComparator<Value> {
 
 
 
-%word intercalate (iter string -- string) turn elements of collection into string and intercalate with a separator
+%word intercalate (iter string -- string) concatenate strings of items with separator
+For each element in a list, turn that element into a string. Concatenate
+the strings together with the separator string supplied, and return the
+result. Thus, '[1,2,3] "," intercalate' will return "1,2,3".
 {
     Value *p[2];
     a->popParams(p,"vv"); // can be any type
@@ -530,6 +610,8 @@ struct StdComparator : public ArrayListComparator<Value> {
 
 
 %word listintercalate (iter item -- list) intercalate items in a list with another item
+Create a new list, containing items in the iterable (list, hash etc.)
+separated by the provided item.
 {
     Value *p[2];
     a->popParams(p,"vv"); // can be any type

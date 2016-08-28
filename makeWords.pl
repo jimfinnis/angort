@@ -13,7 +13,10 @@
 #     ...
 # }
 #
-# is how you define a word. The variable 'a' is passed in as a pointer
+# is how you define a word. DO NOT put the curly brace on the same line
+# as the word definition, and DO NOT put anything other than the brace
+# on the first line of the function! 
+# The variable 'a' is passed in as a pointer
 # to Angort. The description typically starts with a stack picture,
 # for example (a b -- a+b) for some kind of addition word.
 #
@@ -40,6 +43,15 @@
 # e.g.
 # %type foo tFoo FooObject
 #
+# Extra lines of description can be added after the %word or %wordargs,
+# before the opening curly brace:
+#
+# %wordargs multiply nn (a b -- a*b)
+# Multiples two thingies, leaving a thingy 
+# on the stack.
+# {
+#     ...
+# }
 #
 # If you have an initialisation function for this library, write it as
 #
@@ -84,19 +96,21 @@ $hasshutdown=0;
 $shared=0;
 
 open(WORDSFILE,">words");
+open(WORDSTEXFILE,">words.tex");
 
+$waitingforfuncstart=0;
 while(<>){
     chop;
     if(/^%name/){
         ($dummy,$libname)=split(/\s/,$_,2);
         $nsname = "_angortlib_ns_$libname";
+        print WORDSTEXFILE "\\section{$libname}\n";
         print "namespace $nsname {\n";
     }elsif(/^%type/){
         ($dummy,$type,$typeobj,$class) = split(/\s/,$_,4);
         my @dat = ($typeobj,$class);
         $types{$type} = \@dat;
     }elsif(/^%wordargs/){ # new version: %wordargs myword nnAB|tFoo,tFish (n n a a --)
-        $dummy = <>; # skip opening curly bracket
         defined($libname) || die "%name is required";
         ($dummy,$word,$args,$text)=split(/\s/,$_,4);
         if(index($args,"|")!=-1){
@@ -113,8 +127,12 @@ while(<>){
             
         push(@list,$word);
         $descs{$word}=$text;
+        $curword=$word;
         print WORDSFILE "$word,";
+        print WORDSTEXFILE "\\index{$libname\$$word}\\subsection{$word}\n";
         print "static void _word__$word"."(angort::Angort *a)\n";
+        # output a function def and opening curly bracket,
+        # and the initial arg fetch
         print "{\nValue *_parms[".length($args)."];\n";
         print "a->popParams(_parms,\"$args\"";
         if($hasspec){
@@ -135,7 +153,7 @@ while(<>){
             }elsif($c eq 'c' || $c eq 'v'){
                 print "Value * p$i = _parms[$i];\n"  # any value or callable
             } elsif($c eq 's' || $c eq 'S'){
-                print "const StringBuffer &_sb$i = _parms[$i]->toString();;\n";
+                print "const StringBuffer &_sb$i = _parms[$i]->toString();\n";
                 print "const char *p$i = _sb$i.get();\n";
             } elsif($c eq 'y'){
                 print "const char *p$i=NULL;\n";
@@ -155,13 +173,20 @@ while(<>){
                 print "Value *p$i = _parms[$i];\n"
             }
         }
+        $waitingforfuncstart=1;
     }elsif(/^%word/){
         defined($libname) || die "%name is required";
         ($dummy,$word,$text)=split(/\s/,$_,3);
         push(@list,$word);
         $descs{$word}=$text;
+        $curword=$word;
         print WORDSFILE "$word,";
-        print "static void _word__$word"."(angort::Angort *a)\n";
+        print WORDSTEXFILE "\\index{$libname\$$word}\\subsection{$word}\n";
+        # output a function def and opening curly bracket
+        print "static void _word__$word"."(angort::Angort *a){\n";
+        $waitingforfuncstart=1;
+    }elsif($waitingforfuncstart && !/^{/){
+            $descs{$curword}.="\\n".$_;
     }elsif(/^%binop/){
         defined($libname) || die "%name is required";
         ($dummy,$lhs,$opcode,$rhs)=split(/\s/,$_,4);
@@ -179,7 +204,16 @@ while(<>){
         $shared=1;
         print "\n";
     } else {
-        print "$_\n";
+        if($waitingforfuncstart){
+            # output the descs and ignore the line, we assume it's
+            # just a curly bracket
+            $waitingforfuncstart=0;
+            $t = $descs{$curword};
+            # substitute nice things for LaTeX (none yet)
+            print WORDSTEXFILE $t."\n";
+        }else{
+            print "$_\n";
+        }
     }
 }
 
@@ -188,6 +222,10 @@ defined($libname) || die "%name is required";
 print "static angort::WordDef _wordlist_[]={\n";
 foreach $v (@list) {
     $t = $descs{$v};
+    # replace newlines with newline-space to make it look better in
+    # ?? outputs. Escape chars.
+    $t =~ s/\\n/\\n /g;
+    $t =~ s/\"/\\\"/g;
     print "    {\"$v\",\"$t\",_word__$v},\n";
 }
 print "    {NULL,NULL,NULL} };\n";

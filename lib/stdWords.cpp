@@ -72,7 +72,7 @@ static NamespaceEnt *getNSEnt(Angort *a){
     
     int idx = ns->get(s.get());
     if(idx<0)
-        throw RUNT(EX_NOTFOUND,"ispriv: cannot find name in namespace");
+        throw RUNT(EX_NOTFOUND,"cannot find name in namespace");
     return ns->getEnt(idx);
 }
 
@@ -94,11 +94,19 @@ static void trapsig(int sig){
 }
 
 %wordargs signal i (sig --) install a signal handler for signal number sig
+After this call, signal number i will result in an exception ex$sigN,
+where N is the signal number i.
 {
     trapsig(p0);
 }
 
-%word signals (--) install a handler for all a good subset of signals
+%word signals (--) install a handler for a good subset of signals
+After this call, a signal will result in an exception ex$sigN,
+where N is the signal number. The signals trapped are:
+SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGIOT, SIGBUS, SIGFPE, SIGUSR1,
+SIGSEGV SIGUSR2, SIGPIPE, SIGALRM, SIGTERM, SIGALRM, SIGSTKFLT, SIGCHLD,
+SIGCONT, SIGTSTP SIGTTIN, SIGTTOU, SIGURG, SIGXCPU, SIGXFSZ, SIGVTALRM,
+SIGPROF, SIGWINCH, SIGIO SIGPWR, SIGSYS
 {
     trapsig(SIGHUP);
     trapsig(SIGINT);
@@ -134,6 +142,8 @@ static void trapsig(int sig){
 
 
 %wordargs strsignal i (sig -- name) get signal name for signal number
+Return the standard signal name for a given signal, e.g. "Hangup" for
+SIGHUP (1).
 {
     a->pushString(strsignal(p0));
 }
@@ -141,21 +151,29 @@ static void trapsig(int sig){
 
 
 %word version ( -- version ) version number
+Return the Angort version number as an integer.
 {
     a->pushInt(a->getVersion());
 }
 
 %word barewords (v --) turn bare words on or off
+If set to true, unknown identifiers will be converted to symbol values.
 {
     a->barewords = a->popInt()?true:false;
 }
 
 %word dump ( title -- ) dump the stack
+Print the values on the stack with a title, using naive string conversion
+(e.g. all the items in a list will not be printed, just a brief string
+identifying the list).
 {
     a->dumpStack(a->popString().get());
 }
 
 %word snark ( ) used during debugging; prints an autoincremented count
+Simply prints SNARK N, where N increments at every call. These are added
+to programs during debugging, so that one can "hunt the snarks" when
+removing them.
 {
     static int snarkct=0;
     printf("SNARK %d\n",snarkct++);
@@ -172,27 +190,36 @@ static void trapsig(int sig){
     a->pushInt(a->stack.ct);
 }
 
-%word rct (gcv -- ct) push the GC count for a GC value
+%word rct (gcv -- ct) push the ref count for a GC value
+For a garbage collected item, push the reference count. Pushes 0
+for other items.
 {
     Value *v = a->popval();
     GarbageCollected *gc = v->t->getGC(v);
     if(gc){
         a->pushInt(gc->refct);
-    }
+    } else 
+        a->pushInt(0);
 }
 
 %word p ( v -- ) print a value
+Prints a string representation of a value to stdout without a
+trailing newline.
 {
     fputs(a->popString().get(),stdout);
 }
 
 %word x (v -- ) print a value in hex
+Prints a hex representation of an integer value to stdout without a
+trailing newline.
 {
     int x = a->popval()->toInt();
     printf("%x",x);
 }
 
 %word rawp (v --) print a ptr value as raw hex
+Prints a raw hex representation of an  value to stdout without a
+trailing newline.
 {
     void *p = a->popval()->getRaw();
     printf("%p",p);
@@ -205,6 +232,8 @@ static void trapsig(int sig){
 }
 
 %word quit ( -- ) exit with return code 0
+Typically used to terminate an Angort program, which would normally
+drop back to the interpreter.
 {
     a->shutdown();
     exit(0);
@@ -213,26 +242,35 @@ static void trapsig(int sig){
 %word abort ( s -- ) exit with return code 1 and an error message to stderr
 {
     a->shutdown();
-    fprintf(stderr,a->popString().get());
+    fprintf(stderr,"%s\n",a->popString().get());
     exit(1);
 }
 
 %word debug ( v -- ) turn debugging on or off (value is 0 or 1)
+If true, every instruction executed will print to stdout along
+with a stack dump. Slows down the program!
 {
     a->debug = a->popInt();
 }
 
 %word disasm (name -- ) disassemble word
+Print the instructions for a named Angort function.
 {
     a->disasm(a->popString().get());
 }
 
 %word assertdebug (bool --) turn assertion printout on/off
+Assertions will not be printed if this is false. If true,
+both true and false assertions will print.
 {
     a->assertDebug = a->popInt()!=0;
 }
 
 %word assert (bool desc --) throw exception with string 'desc' if bool is false
+Asserts that the boolean is true, throwing ex$assert if not. Will
+print the assertion, even if it passes, if assertdebug has been set.
+If assertmode has been set to `negated, false assertions will pass (used
+in assertion testing).                                                                    
 {
     const StringBuffer &desc = a->popString();
     bool cond = (a->popInt()==0);
@@ -250,10 +288,13 @@ static void trapsig(int sig){
 
 static int stackcheck=-1;
 %word chkstart (--) start stack check block (save stack ct)
+Records the stack count, ready for "chkend".
 {
     stackcheck = a->stack.ct;
 }
 %word chkend (--) end stack check block (check stack count agrees with saved)
+If the current stack count does not match that stored by the last
+"chkstart", throw an ex$assert exception.
 {
     if(a->stack.ct!=stackcheck)
         throw AssertException("stack check failed",a->getLineNumber());
@@ -264,6 +305,8 @@ static int stackcheck=-1;
 
 
 %word assertmode (mode --) set to `negated or `normal, if negated assertion conditions are negated
+If set to `negated, subsequent assertions pass if they are false. This is
+used to test the assertion functionality.
 {
     const StringBuffer& sb = a->popString();
     if(!strcmp(sb.get(),"negated"))
@@ -273,6 +316,7 @@ static int stackcheck=-1;
 }
 
 %word asserteq (a b -- ) if a!=b assert
+Shortcut for asserting that two integer values are equal.
 {
     if(a->popInt()!=a->popInt())
         throw RUNT(EX_ASSERT,"assertq failure");
@@ -280,6 +324,7 @@ static int stackcheck=-1;
     
 
 %word abs (x --) absolute value
+return the absolute value of a float or int.
 {
     Value *v = a->popval();
     if(v->t == Types::tInteger){
@@ -290,12 +335,17 @@ static int stackcheck=-1;
         float f;
         f = v->toFloat();
         a->pushFloat(f<0?-f:f);
+    } else if(v->t == Types::tLong){
+        long l;
+        l = v->toLong();
+        Types::tLong->set(a->pushval(),l<0?-l:l);
     } else {
         throw RUNT(EX_TYPE,"bad type for 'abs'");
     }
 }
 
 %word neg (x --) negate
+Negate an int or float.
 {
     Value *v = a->popval();
     if(v->t == Types::tInteger){
@@ -317,23 +367,27 @@ static int stackcheck=-1;
     
 
 %word isnone (val -- bool) is a value NONE
+Returns true if the value is a NONE value.
 {
     Value *s = a->stack.peekptr();
     Types::tInteger->set(s,s->isNone()?1:0);
 }
 
 %word iscallable (val -- bool) return true if is codeblock or closure
+Return true if the value is a function.
 {
     Value *s = a->stack.peekptr();
     Types::tInteger->set(s,s->t->isCallable()?1:0);
 }
 
 %word gccount (-- val) return the number of GC objects
+Returns the total number of garbage collected objects in the system.
 {
     a->pushInt(GarbageCollected::getGlobalCount());
 }
 
 %wordargs getglobal s (string -- val) get a global by name
+Gets the value of a global variable by name.
 {
     int id = a->findOrCreateGlobal(p0);
     Value *v = a->names.getVal(id);
@@ -347,6 +401,7 @@ static int stackcheck=-1;
         a->pushval()->copy(a->names.getVal(id));
 }
 %wordargs setglobal vs (val string -- val) set a global by name
+Sets the value of a global variable by name.
 {
     int id = a->findOrCreateGlobal(p1);
     Value *v = a->names.getVal(id);
@@ -362,6 +417,10 @@ static int stackcheck=-1;
 
 
 %word range (start end -- range) build a range object
+Returns a new integer range object, which covers the range [start,end),
+i.e. "0 10 range" returns a range for the values 0 to 9. If the end
+is less than the start, the range will run backwards (step will be -1),
+otherwise the step will be 1.
 {
     int end = a->popInt();
     int start = a->popInt();
@@ -370,6 +429,9 @@ static int stackcheck=-1;
 }
 
 %word srange (start end step -- range) build a range object with step
+Returns a new integer range object, which covers the range [start,end),
+i.e. "0 10 1 srange" returns a range for the values 0 to 9. The step
+gives the interval, so "0 10 2 srange " will give the numbers 0,2,4,6,8.
 {
     int step = a->popInt();
     int end = a->popInt();
@@ -379,6 +441,8 @@ static int stackcheck=-1;
 }
 
 %word frange (start end step -- range) build a float range object with step size
+Returns a new floating point range object, with a step size for iteration.
+This excludes the end value, so "0 10 1 frange" will iterate over 0-9.
 {
     float step = a->popFloat();
     float end = a->popFloat();
@@ -388,6 +452,9 @@ static int stackcheck=-1;
 }
 
 %word frangesteps (start end stepcount -- range) build a float range object with step count
+Returns a new floating point range object, generating the step size from
+the number of steps required. This excludes the end value, so
+"0 10 10 frangesteps" will iterate over 0-9.
 {
     float steps = a->popFloat();
     float end = a->popFloat();
@@ -400,22 +467,30 @@ static int stackcheck=-1;
 }
 
 %word i (-- current) get current iterator value (key if hash)
+If in an iterator ("each") loop, return the current value. For hashes,
+this will return the key.
 {
     Value *p = a->pushval();
     p->copy(a->getTopIterator()->current);
 }
 %word j (-- current) get nested iterator value (key if hash)
+If in an 2-deep iterator ("each") loop, return the current value of
+the outer loop. For hashes, this will return the key.
 {
     Value *p = a->pushval();
     p->copy(a->getTopIterator(1)->current);
 }
 %word k (-- current) get nested iterator value (key if hash)
+If in an 3-deep iterator ("each") loop, return the current value of
+the outer loop. For hashes, this will return the key.
 {
     Value *p = a->pushval();
     p->copy(a->getTopIterator(2)->current);
 }
 
 %word ival (-- current) get current iterator value (value if hash)
+If in an iterator ("each") loop, return the current value. For hashes,
+this will return the value (as opposed to "i").
 {
     Value *iterable = a->getTopIterator()->iterable;
     Value *cur = a->getTopIterator()->current;
@@ -424,6 +499,8 @@ static int stackcheck=-1;
 }
 
 %word jval (-- current) get nested iterator value (value if hash)
+If in an 2-deep iterator ("each") loop, return the current value of
+the outer loop. For hashes, this will return the value (as opposed to "j").
 {
     Value *iterable = a->getTopIterator()->iterable;
     Value *cur = a->getTopIterator()->current;
@@ -432,6 +509,8 @@ static int stackcheck=-1;
 }
 
 %word kval (-- current) get nested iterator value (value if hash)
+If in an 3-deep iterator ("each") loop, return the current value of
+the outer loop. For hashes, this will return the value (as opposed to "k").
 {
     Value *iterable = a->getTopIterator()->iterable;
     Value *cur = a->getTopIterator()->current;
@@ -440,6 +519,8 @@ static int stackcheck=-1;
 }
 
 %word iter (-- iterable) get the iterable which is currently being looped over
+Return the actual iterable object which is being iterated over inside an
+"each" loop.
 {
     Value *p = a->pushval();
     IteratorObject *iterator = a->getTopIterator();
@@ -447,12 +528,18 @@ static int stackcheck=-1;
 }
 
 %word mkiter (iterable -- iterator) make an iterator object
+Create an iterator for an iterable value. Typical usage might be
+something like 
+ "?L mkiter !I { ?I idone ifleave ?I icurnext.}"
+although "each" is advisable for this simple situation.
 {
     Value *p = a->stack.peekptr();
     p->t->createIterator(p,p);
 }
 
 %word icur (iterator -- item) get current item in iterator made with mkiter
+Get the current value of an iterator created with "mkiter". Returns
+NONE if the iterator has completed.
 {
     Value *p = a->stack.peekptr();
     Iterator<Value *>* i = Types::tIter->get(p);
@@ -463,6 +550,7 @@ static int stackcheck=-1;
 }
 
 %word inext (iterator --) advance the iterator
+Advance an iterator created with "mkiter".
 {
     Value *p = a->stack.popptr();
     Iterator<Value *>* i = Types::tIter->get(p);
@@ -470,6 +558,9 @@ static int stackcheck=-1;
 }
 
 %word icurnext (iterator -- item) combined icur and inext
+Get the current value of an iterator created with "mkiter", advance
+the iterator and return the value. Returns NONE if the iterator has
+completed.
 {
     Value *p = a->stack.peekptr();
     Iterator<Value *>* i = Types::tIter->get(p);
@@ -483,6 +574,7 @@ static int stackcheck=-1;
 }
 
 %word ifirst (iterator --) reset the iterator to the start
+Reset an iterator created with "mkiter" to the start of the iterable.
 {
     Value *p = a->stack.popptr();
     Iterator<Value *>* i = Types::tIter->get(p);
@@ -490,6 +582,7 @@ static int stackcheck=-1;
 }
 
 %word idone (iterator -- boolean) true if iterator is done
+Return true if an iterator created with "mkiter" has completed.
 {
     Value *p = a->stack.peekptr();
     Iterator<Value *>* i = Types::tIter->get(p);
@@ -498,6 +591,7 @@ static int stackcheck=-1;
     
 
 %word reset (--) Clear everything
+Clears the stack and resets all namespaces.
 {
     while(!a->stack.isempty()){
         Value *v = a->popval();
@@ -507,6 +601,10 @@ static int stackcheck=-1;
 }
 
 %word clear (--) Clear the stack, and also set all values to None
+Clears the stack and resets all stack values to NONE, which should
+release any stale garbage collected objects which were previously
+on the stack (although those in the local variable stack and in
+globals will survive).
 {
     while(!a->stack.isempty()){
         Value *v = a->popval();
@@ -515,11 +613,13 @@ static int stackcheck=-1;
 }
 
 %word list (--) List everything
+List the names registered in all namespaces.
 {
     a->list();
 }
 
 %word help (s --) get help on a word or native function
+This is the same as "??name".
 {
     const StringBuffer &name = a->popString();
     const char *s = a->getSpec(name.get());
@@ -528,6 +628,8 @@ static int stackcheck=-1;
 }
 
 %word listhelp (s --) list and show help for all public functions in the given namespace
+List all words in a given namespace, showing the help texts for all
+of them.
 {
     Namespace *s = a->names.getSpaceByName(a->popString().get());
     for(int i=0;i<s->count();i++){
@@ -550,6 +652,8 @@ static int stackcheck=-1;
 }
 
 %word listtypes ( -- ) print the types
+Lists the names of all Angort types, including the internal ones
+(such as "natprop" and "deleted").
 {
     Type::dumpTypes();
 }
@@ -567,16 +671,25 @@ static int stackcheck=-1;
 
 
 %word rand (-- i) stack an integer random number
+Stacks an integer random number from 0 to the maximum integer. Typically
+used in "rand N %" to give a number from 0 to N-1.
 {
     a->pushInt(rand());
 }
 
 %word gc (--) perform a major garbage detect and cycle removal
+Runs a major garbage detect, which includes detecting cycles. This
+is automatically run every "autogc" ticks, so you may need to do this
+if your program has done "0!autogc" to turn that off. Alternatively
+you may not if your program does not create cyclic references (data
+structures which refer to themselves).
 {
     a->gc();
 }
 
 %word nspace (name -- handle) get a namespace by name
+Return a handle for a given namespace. Throws ex$notfound if there
+is no such namespace.
 {
     const StringBuffer& name = a->popString();
     Namespace *ns = a->names.getSpaceByName(name.get());
@@ -584,12 +697,16 @@ static int stackcheck=-1;
 }
 
 %word nspaces (-- list) return a list of all namespaces in index order
+Returns a list names of all namespaces, in the order in which they
+were created.
 {
     ArrayList<Value> *list=Types::tList->set(a->pushval());
     a->names.spaces.appendNamesToList(list);
 }
 
 %word names (handle --) get a list of names from a namespace
+Returns a list of names from a namespace whose handle has been obtained
+with "nspace".
 {
     int idx = a->popInt();
     Namespace *ns = a->names.getSpaceByIdx(idx);
@@ -602,12 +719,16 @@ static int stackcheck=-1;
 
 
 %word ispriv (handle name -- bool) return true if the definition is private in the namespace
+Returns true if the identifier is private inside the given namespace, which
+is identified by a handle returned by "nspace".
 {
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isPriv?1:0);
     
 }
 %word isconst (handle name -- bool) return true if the definition is constant in the namespace
+Returns true if the identifier is modifiable inside the given namespace, which
+is identified by a handle returned by "nspace".
 {
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isConst?1:0);
@@ -615,12 +736,13 @@ static int stackcheck=-1;
 }
 
 %word lookup (handle name -- value) look up the value of a namespace entity
+Looks up an identifier in a namespace, which is identified by a handle
+returned by "nspace", and returns its value.
 {
     NamespaceEnt *ent = getNSEnt(a);
     a->pushval()->copy(&ent->v);
 }
     
-
 %word tostr (val -- string) convert value to string
 {
     const StringBuffer& str = a->popString();
@@ -652,12 +774,15 @@ static int stackcheck=-1;
 
 
 %word endpackage () mark end of package, only when used within a single script
+For packages which are part of a long script, this marks the end. Normally
+the end of a package is marked by the end of the file.
 {
     a->endPackageInScript();
 }
 
 
 %word dumpframe () debugging - dump the frame variables
+Prints internal debugging data.
 {
     a->dumpFrame();
 }
@@ -711,6 +836,8 @@ static int stackcheck=-1;
 }
 
 %word read (-- s|none) read line from stdin
+Reads and returns a line from stdin, unless the end of file has been
+reached in which case NONE is returned.
 {
     if(!feof(stdin)){
         char *buf=NULL;

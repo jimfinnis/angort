@@ -9,7 +9,8 @@
 namespace angort {
 
 
-StringBuffer::StringBuffer(const Value *v){
+void StringBuffer::set(const Value *v){
+    if(buf)clear();
     allocated=false;
     buf = v->t->toString(&allocated,v);
     wide = NULL;
