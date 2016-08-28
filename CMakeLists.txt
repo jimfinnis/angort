@@ -46,5 +46,5 @@ foreach(item ${anglibfiles})
     endif(${item} MATCHES "${CMAKE_SOURCE_DIR}/anglibs/test*")
 endforeach(item)
 
-install(FILES ${anglibfiles} DESTINATION share/angort)
+install(FILES ${anglibfiles} makeWords.pl DESTINATION share/angort)
 
