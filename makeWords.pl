@@ -129,7 +129,7 @@ while(<>){
         $descs{$word}=$text;
         $curword=$word;
         print WORDSFILE "$word,";
-        print WORDSTEXFILE "\\index{$libname\$$word}\\subsection{$word}\n";
+        print WORDSTEXFILE "\\index{$libname\\\$$word}\\subsection{$word}\n";
         print "static void _word__$word"."(angort::Angort *a)\n";
         # output a function def and opening curly bracket,
         # and the initial arg fetch
@@ -181,7 +181,7 @@ while(<>){
         $descs{$word}=$text;
         $curword=$word;
         print WORDSFILE "$word,";
-        print WORDSTEXFILE "\\index{$libname\$$word}\\subsection{$word}\n";
+        print WORDSTEXFILE "\\index{$libname\\\$$word}\\subsection{$word}\n";
         # output a function def and opening curly bracket
         print "static void _word__$word"."(angort::Angort *a){\n";
         $waitingforfuncstart=1;
@@ -210,6 +210,11 @@ while(<>){
             $waitingforfuncstart=0;
             $t = $descs{$curword};
             # substitute nice things for LaTeX (none yet)
+            $t =~ s/\$/\\\$/g;
+            $t =~ s/\\n/\n/g;
+            # extract the first line.
+            ($firstline,$t) = split(/\n/,$t,2);
+            print WORDSTEXFILE $firstline."\n\n";
             print WORDSTEXFILE $t."\n";
         }else{
             print "$_\n";
@@ -225,6 +230,7 @@ foreach $v (@list) {
     # replace newlines with newline-space to make it look better in
     # ?? outputs. Escape chars.
     $t =~ s/\\n/\\n /g;
+    # other replaces
     $t =~ s/\"/\\\"/g;
     print "    {\"$v\",\"$t\",_word__$v},\n";
 }
