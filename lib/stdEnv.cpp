@@ -53,3 +53,9 @@ void setArgumentList(int argc,char *argv[]){
     a->popParams(p,"ss");
     setenv(p[1]->toString().get(),p[0]->toString().get(),1);
 }
+
+%wordargs unsetenv s (name --) unset environment variable
+{
+    unsetenv(p0);
+}
+    
