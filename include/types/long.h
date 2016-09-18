@@ -18,19 +18,21 @@ public:
         add("long","INTL");
     }
     /// get the value of v as a int
-    long get(Value *v);
+    long get(Value *v) const;
     /// set the value to the given int
-    void set(Value *v,long f);
+    void set(Value *v,long f) const;
     
     /// get a hash key
-    virtual uint32_t getHash(Value *v);
+    virtual uint32_t getHash(Value *v) const;
     
     /// are these two equal
-    virtual bool equalForHashTable(Value *a,Value *b);
+    virtual bool equalForHashTable(Value *a,Value *b) const;
     
     virtual int toInt(const Value *v) const;
     virtual long toLong(const Value *v) const;
     virtual float toFloat(const Value *v) const;
+    virtual double toDouble(const Value *v) const;
+    virtual void toSelf(Value *out,const Value *v) const;
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;
 };

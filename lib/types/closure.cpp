@@ -133,9 +133,9 @@ class ClosureIterator : public Iterator<Value *>{
     
 public:
     /// create a list iterator for a list
-    ClosureIterator(Closure *r){
+    ClosureIterator(const Closure *r){
         idx=0;
-        c = r;
+        c = (Closure *)r;
         c->incRefCt();
     }
     
@@ -242,7 +242,7 @@ void Closure::show(const char *s){
 }
 
 
-Iterator<class Value *> *Closure::makeValueIterator(){
+Iterator<class Value *> *Closure::makeValueIterator()const{
     return new ClosureIterator(this);
 }
 

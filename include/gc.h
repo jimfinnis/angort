@@ -70,11 +70,15 @@ public:
     /// many GC objects are containers for references to other objects - return a reference
     /// to an iterator iterating over containing these, and you won't need to subclass the methods 
     /// \todo rewrite docs for iterators?
-    virtual Iterator<class Value *> *makeKeyIterator(){return NULL;}
+    virtual Iterator<class Value *> *makeKeyIterator()const {
+        return NULL;
+    }
     /// many GC objects are containers for references to other objects - return a reference
     /// to an iterator iterating over containing these, and you won't need to subclass the methods 
     /// below! This is the values iterator.
-    virtual Iterator<class Value *> *makeValueIterator(){return NULL;}
+    virtual Iterator<class Value *> *makeValueIterator() const {
+        return NULL;
+    }
     
     /// this is the default function for making an iterator for use for cycle detection - override
     /// this to return NULL if the type is NOT iterating over true values inside, and bad things would

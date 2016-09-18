@@ -19,7 +19,7 @@ public:
         add("native","NATV");
     }
     
-    virtual bool isCallable(){
+    virtual bool isCallable()const{
         return true;
     }
     NativeFunc get(const Value *v);

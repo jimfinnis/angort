@@ -13,7 +13,7 @@ namespace angort {
 
     
 
-long LongType::get(Value *v){
+long LongType::get(Value *v) const{
     /*
     if(v->t == Types::tInteger)
         return v->v.i;
@@ -28,7 +28,7 @@ long LongType::get(Value *v){
 }
 
 
-void LongType::set(Value *v,long i){
+void LongType::set(Value *v,long i)const{
     v->clr();
     v->t = this;
     v->v.l=i;
@@ -42,6 +42,10 @@ float LongType::toFloat(const Value *v) const {
     return (float)v->v.l;
 }
 
+double LongType::toDouble(const Value *v) const {
+    return (double)v->v.l;
+}
+
 long LongType::toLong(const Value *v) const {
     return v->v.l;
 }
@@ -53,13 +57,17 @@ const char *LongType::toString(bool *allocated,const Value *v) const {
     return strdup(buf);
 }
 
-uint32_t LongType::getHash(Value *v){
+uint32_t LongType::getHash(Value *v) const{
     // crude.
     return (uint32_t)v->v.l;
 }
 
-bool LongType::equalForHashTable(Value *a,Value *b){
+bool LongType::equalForHashTable(Value *a,Value *b) const{
     return get(a) == get(b);
+}
+
+void LongType::toSelf(Value *out,const Value *v) const {
+    set(out,v->toLong());
 }
 
 

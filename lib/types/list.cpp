@@ -15,20 +15,20 @@ ListObject::ListObject() : GarbageCollected(), list(32) {
 ListObject::~ListObject(){
 }
 
-void ListType::set(Value *v,ListObject *lo){
+void ListType::set(Value *v,ListObject *lo)const{
     v->clr();
     v->t = this;
     v->v.list = lo;
     incRef(v);
 }
 
-ArrayList<Value> *ListType::set(Value *v){
+ArrayList<Value> *ListType::set(Value *v)const{
     ListObject *p = new ListObject();
     set(v,p);
     return &p->list;
 }
 
-ArrayList<Value> *ListType::get(Value *v){
+ArrayList<Value> *ListType::get(Value *v)const{
     if(v->t != this)
         throw RUNT("ex$nolist","not a list");
     return &v->v.list->list;
@@ -50,10 +50,10 @@ class ListIterator : public Iterator<Value *>{
     
 public:
     /// create a list iterator for a list
-    ListIterator(ListObject *r,bool iskeyiterator){
+    ListIterator(const ListObject *r,bool iskeyiterator){
         idx=0;
         isKey = iskeyiterator;
-        list = r;
+        list = (ListObject *)r;
         /// increment the list's reference count
         list->incRefCt();
     }
@@ -97,32 +97,32 @@ public:
 
 
 
-Iterator<Value *> *ListObject::makeValueIterator(){
+Iterator<Value *> *ListObject::makeValueIterator()const{
     return new ListIterator(this,false);
 }
 
-Iterator<Value *> *ListObject::makeKeyIterator(){
+Iterator<Value *> *ListObject::makeKeyIterator()const{
     return new ListIterator(this,true);
 }
 
 
-void ListType::setValue(Value *coll,Value *k,Value *v){
+void ListType::setValue(Value *coll,Value *k,Value *v)const{
     ListObject *r = coll->v.list;
     int i = k->toInt();
     r->list.set(i,v);
 }
 
-void ListType::getValue(Value *coll,Value *k,Value *result){
+void ListType::getValue(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
     int i = k->toInt();
     result->copy(r->list.get(i));
 }
 
-int ListType::getCount(Value *coll){
+int ListType::getCount(Value *coll)const{
     ListObject *r = coll->v.list;
     return r->list.count();
 }
-void ListType::removeAndReturn(Value *coll,Value *k,Value *result){
+void ListType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
     int i = k->toInt();
     // will throw if out of range
@@ -130,7 +130,7 @@ void ListType::removeAndReturn(Value *coll,Value *k,Value *result){
     r->list.remove(i);
 }
 
-void ListType::slice(Value *out,Value *coll,int start,int len){
+void ListType::slice(Value *out,Value *coll,int start,int len)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
     
@@ -147,7 +147,7 @@ void ListType::slice(Value *out,Value *coll,int start,int len){
     }
     
 }
-void ListType::clone(Value *out,const Value *in,bool deep){
+void ListType::clone(Value *out,const Value *in,bool deep)const{
     ListObject *p = new ListObject();
     // cast away constness - makeIterator() can't be const
     // because it modifies refcounts

@@ -46,8 +46,8 @@ static void addHashToHash(Hash *h,Hash *h2){
 
 void Angort::binop(Value *a,Value *b,int opcode){
     
-    Type *at = a->getType();
-    Type *bt = b->getType();
+    const Type *at = a->getType();
+    const Type *bt = b->getType();
     
     // first look to see if it's a registered binop. If
     // so, run it. Otherwise fall through to a set of if
@@ -164,7 +164,61 @@ void Angort::binop(Value *a,Value *b,int opcode){
             break;
         default:throw RUNT(EX_TYPE,"bad operation for strings");
         }
-        
+    }else if(at == Types::tDouble || bt == Types::tDouble){
+        /**
+         * One of the values is a doublet; coerce the other to a double and perform
+         * a float operation
+         */
+        double r;
+        double p = a->toDouble();
+        double q = b->toDouble();
+        bool cmp=false;
+        switch(opcode){
+        case OP_ADD:
+            r = p+q;break;
+        case OP_SUB:
+            r = p-q;break;
+        case OP_DIV:
+            if(q==0.0f)throw DivZeroException();
+            r = p/q;break;
+        case OP_MUL:
+            r = p*q;break;
+            // "comparisons" go down here - things which
+            // produce integer results even though one operand
+            // is float.
+        case OP_EQUALS:
+            cmp=true;
+            pushInt(p==q);break;
+        case OP_NEQUALS:
+            cmp=true;
+            pushInt(p!=q);break;
+        case OP_AND:
+            cmp=true;
+            pushInt(p&&q);break;
+        case OP_OR:
+            cmp=true;
+            pushInt(p&&q);break;
+        case OP_GT:
+            cmp=true;
+            pushInt(p>q);break;
+        case OP_LT:
+            cmp=true;
+            pushInt(p<q);break;
+        case OP_GE:
+            cmp=true;
+            pushInt(p>=q);break;
+        case OP_LE:
+            cmp=true;
+            pushInt(p<=q);break;
+        case OP_CMP:
+            cmp=true;
+            pushInt(((p-q)>0)?1:(((p-q)<0)?-1:0));
+            break;
+        default:
+            throw RUNT(EX_TYPE,"invalid operator for floats");
+        }
+        if(!cmp)
+            pushDouble(r);
     }else if(at == Types::tFloat || bt == Types::tFloat){
         /**
          * One of the values is a float; coerce the other to a float and perform

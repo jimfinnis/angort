@@ -100,7 +100,7 @@ public:
         int n_used = used;
         
         // we use the type directly, it's a bit quicker than isUsed() et. al.
-        Type *tp = ent->k.t;
+        const Type *tp = ent->k.t;
         if(tp==Types::tNone || tp==Types::tDeleted) {
             // there wasn't a value there before
             if(tp==Types::tNone)

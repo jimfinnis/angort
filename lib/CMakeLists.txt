@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 2.6)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX)
+    
+
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+set(CMAKE_CXX_FLAGS "-Woverloaded-virtual")
 
 project(ANGORTLIB)
 
@@ -53,7 +57,7 @@ set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
     types/hashtype.cpp         types/symbol.cpp       types/native.cpp
-    types/long.cpp
+    types/long.cpp types/double.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})

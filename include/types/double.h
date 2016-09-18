@@ -1,36 +1,34 @@
 /**
- * @file
- * brief description, full stop.
+ * @file double.h
+ * @brief  Brief description of file.
  *
- * long description, many sentences.
- * 
  */
 
-#ifndef __ANGORTFLOAT_H
-#define __ANGORTFLOAT_H
+#ifndef __ANGORTDOUBLE_H
+#define __ANGORTDOUBLE_H
 
 #include "../types.h"
 
 namespace angort {
 
-/// floating point type object, permitting
+/// double floating point type object, permitting
 /// conversions
 
-class FloatType : public Type {
+class DoubleType : public Type {
 public:
-    FloatType(){
-        add("float","FLOT");
+    DoubleType(){
+        add("double","DFLT");
     }
     /// get the value of v as a float
-    float get(Value *v) const ;
+    double get(Value *v)const;
     /// set the value to the given float
-    void set(Value *v,float f)const ;
+    void set(Value *v,double f)const;
 
     /// get a hash key
-    virtual uint32_t getHash(Value *v) const;
+    virtual uint32_t getHash(Value *v)const;
     
     /// are these two equal
-    virtual bool equalForHashTable(Value *a,Value *b) const;
+    virtual bool equalForHashTable(Value *a,Value *b)const;
     
     virtual int toInt(const Value *v) const;
     virtual long toLong(const Value *v) const;
@@ -42,4 +40,6 @@ protected:
 };
 
 }
-#endif /* __FLOAT_H */
+
+
+#endif /* __DOUBLE_H */

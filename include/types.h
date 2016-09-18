@@ -65,18 +65,18 @@ public:
     /// that is, two values of this type can point to
     /// the same object.
     
-    virtual bool isReference(){
+    virtual bool isReference() const{
         return false;
     }
     
     /// true if this is callable; in which case a global
     /// of this name will be run rather than stacked (unless ? is used)
-    virtual bool isCallable(){
+    virtual bool isCallable() const{
         return false;
     }
     
     /// return the GC object only if this is a GC type
-    virtual class GarbageCollected *getGC(Value *v){
+    virtual class GarbageCollected *getGC(Value *v) const{
         return NULL;
     }
           
@@ -91,7 +91,7 @@ public:
     
     /// get the binary operation for this type as the LHS and
     /// another as the LHS, or NULL.
-    inline BinopFunction *getBinop(Type *rhs,int opcode){
+    inline BinopFunction *getBinop(const Type *rhs,int opcode){
         uint32_t key = (rhs->binopID << 16) + opcode;
         return binops.ffind(key);
     }
@@ -129,22 +129,29 @@ public:
         throw RUNT(EX_NOTREF,"trying to store a value in a non-reference value");
     }
     
+    /// convert a value to another value of my type, generally used
+    /// in type coercion of arguments. Throws a BadConversionException
+    /// on failure.
+    virtual void toSelf(Value *out,const Value *v) const;
+    
     /// convert to a float - exception by default
     virtual float toFloat(const Value *v) const;
     /// convert to an int - exception by default
     virtual int toInt(const Value *v) const;
     /// convert to a long - exception by default
     virtual long toLong(const Value *v) const;
+    /// convert to a double - exception by default
+    virtual double toDouble(const Value *v) const;
     
     /// create a low-level iterator and then wrap it in an iterator value
-    void createIterator(Value *dest,Value *src);
+    void createIterator(Value *dest,Value *src)const;
     
-    virtual uint32_t getHash(Value *v){
+    virtual uint32_t getHash(Value *v)const{
         throw RUNT(EX_NOHASH,"type is not hashable");
         return 0;
     }
     
-    virtual bool equalForHashTable(Value *a,Value *b){
+    virtual bool equalForHashTable(Value *a,Value *b)const{
         throw RUNT(EX_NOHASH,"type is not hashable");
         return false;
     }
@@ -153,53 +160,53 @@ public:
     
     
     /// increment the reference count, default does nothing
-    virtual void incRef(Value *v){
+    virtual void incRef(Value *v)const{
     }
     
     /// decrement the reference count and delete if zero, default does nothing
-    virtual void decRef(Value *v){
+    virtual void decRef(Value *v)const{
     }
     
     /// the "default" iterator is a value iterator for lists etc,
     /// and a key iterator for hashes.
-    virtual Iterator<Value *> *makeIterator(Value *v){
+    virtual Iterator<Value *> *makeIterator(Value *v)const{
         return makeValueIterator(v);
     }
     
     /// create the low-level iterator if possible. GCType does this by calling
     /// makeValueIterator on the underlying GarbageCollected object in the value.
-    virtual Iterator<Value *> *makeValueIterator(Value *v){
+    virtual Iterator<Value *> *makeValueIterator(Value *v)const{
         throw RUNT(EX_NOITER,"cannot iterate a non-iterable value");
     }
     
     /// create the low-level key iterator if possible. GCType does this by calling
     /// makeValueIterator on the underlying GarbageCollected object in the value.
-    virtual Iterator<Value *> *makeKeyIterator(Value *v){
+    virtual Iterator<Value *> *makeKeyIterator(Value *v)const{
         throw RUNT(EX_NOITER,"cannot iterate a non-iterable value");
     }
     
     /// return the index of item is in the collection (uses the same
     /// equality test as hash keys).If not present, returns -1.
-    virtual int getIndexOfContainedItem(Value *v,Value *item);
+    virtual int getIndexOfContainedItem(Value *v,Value *item)const;
         
     
     /// set a value in a collection, if this type is one
-    virtual void setValue(Value *coll,Value *k,Value *v){
+    virtual void setValue(Value *coll,Value *k,Value *v)const{
         throw RUNT(EX_NOTCOLL,"cannot set value of item inside a non-collection");
     }
     /// get a value from a collection, if this type is one
-    virtual void getValue(Value *coll,Value *k,Value *result){
+    virtual void getValue(Value *coll,Value *k,Value *result)const{
         throw RUNT(EX_NOTCOLL,"cannot get value of item inside a non-collection");
     }
     /// get number of items in a collection if this is one
-    virtual int getCount(Value *coll){
+    virtual int getCount(Value *coll)const{
         throw RUNT(EX_NOTCOLL,"cannot get count of non-collection");
     }
-    virtual void removeAndReturn(Value *coll,Value *k,Value *result){
+    virtual void removeAndReturn(Value *coll,Value *k,Value *result)const{
         throw RUNT(EX_NOTCOLL,"cannot remove from non-collection");
     }
     
-    virtual void slice(Value *out,Value *coll,int start,int len){
+    virtual void slice(Value *out,Value *coll,int start,int len)const{
         throw RUNT(EX_NOTCOLL,"cannot get slice of non-collection");
     }
     
@@ -207,7 +214,7 @@ public:
     /// default action is to just copy the value; collections
     /// need to do more. Note that in and out may point to
     /// the same Value.
-    virtual void clone(Value *out,const Value *in,bool deep=false);
+    virtual void clone(Value *out,const Value *in,bool deep=false) const;
     
 protected:
     
@@ -226,21 +233,21 @@ struct BlockAllocHeader {
 class BlockAllocType : public Type {
 public:
     
-    virtual bool isReference(){
+    virtual bool isReference()const{
         return true;
     }
     /// increment the reference count
-    virtual void incRef(Value *v);
+    virtual void incRef(Value *v)const;
     
     /// decrement the reference count and delete if zero
-    virtual void decRef(Value *v);
+    virtual void decRef(Value *v)const;
     
     
     /// allocate a block of memory plus 16 bits for refcount, 
     /// setting the refcount to 1, setting v.s to the start of the whole block,
     /// returning a pointer to just after the header.
     /// Also clears the value type and sets the new type.
-    char *allocate(Value *v,int len,Type *t);
+    char *allocate(Value *v,int len,const Type *t)const;
     /// return a pointer to the allocated data (AFTER the header)
     const char *getData(const Value *v) const;
 };
@@ -248,23 +255,23 @@ public:
 /// this is for GC types which contain a GarbageCollected item
 class GCType : public Type {
 public:
-    virtual bool isReference(){
+    virtual bool isReference()const{
         return true;
     }
     
     
     /// increment the reference count
-    virtual void incRef(Value *v);
+    virtual void incRef(Value *v)const;
     
     /// decrement the reference count and delete if zero
-    virtual void decRef(Value *v);
+    virtual void decRef(Value *v)const;
 
-    virtual class GarbageCollected *getGC(Value *v);
+    virtual class GarbageCollected *getGC(Value *v)const;
     
     /// make an iterator by calling the gc's method
-    virtual Iterator<class Value *> *makeValueIterator(Value *v);
+    virtual Iterator<class Value *> *makeValueIterator(Value *v)const;
     /// make an iterator by calling the gc's method
-    virtual Iterator<class Value *> *makeKeyIterator(Value *v);
+    virtual Iterator<class Value *> *makeKeyIterator(Value *v)const;
     
 };
 
@@ -288,6 +295,7 @@ public:
 #include "types/none.h"
 #include "types/native.h"
 #include "types/long.h"
+#include "types/double.h"
 
 
 namespace angort {
@@ -331,6 +339,8 @@ struct Types {
     static PropType *tProp;
     /// v.l is a long
     static LongType *tLong;
+    /// v.df is a double
+    static DoubleType *tDouble;
     
     
     /// v.gc is some unspecified garbage-collected type

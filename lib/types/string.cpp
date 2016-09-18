@@ -59,19 +59,19 @@ Value *StringIterator::current(){
 
 
 
-void StringType::set(Value *v,const char *s){
+void StringType::set(Value *v,const char *s)const{
     int len = strlen(s);
     char *dest = allocate(v,len+1,this);
     strcpy(dest,s);
 }
 
-int StringType::getCount(Value *v){
+int StringType::getCount(Value *v)const{
     const char *s = getData(v);
     return mbstowcs(NULL,s,0);
 }
 
 
-void StringType::setPreAllocated(Value *v,BlockAllocHeader *b){
+void StringType::setPreAllocated(Value *v,BlockAllocHeader *b)const{
     v->clr();
     v->t = Types::tString;
     v->v.block = b;
@@ -89,7 +89,7 @@ int StringType::toInt(const Value *v) const {
     return atoi(getData(v));
 }
 
-uint32_t StringType::getHash(Value *v){
+uint32_t StringType::getHash(Value *v)const{
     // Fowler-Noll-Vo hash, variant 1a
     const unsigned char *s = (const unsigned char *)getData(v);
     uint32_t h = 2166136261U;
@@ -101,17 +101,17 @@ uint32_t StringType::getHash(Value *v){
     return h;
 }
 
-bool StringType::equalForHashTable(Value *a,Value *b){
+bool StringType::equalForHashTable(Value *a,Value *b)const{
     if(a->t != b->t)return false;
     return !strcmp(getData(a),getData(b));
 }
 
-void StringType::setValue(Value *coll,Value *k,Value *v){
+void StringType::setValue(Value *coll,Value *k,Value *v)const{
     char *s = (char *)getData(coll);
     int idx = k->toInt();
     s[idx]=v->toString().get()[0];
 }
-void StringType::getValue(Value *coll,Value *k,Value *result){
+void StringType::getValue(Value *coll,Value *k,Value *result)const{
     const char *s = (char *)getData(coll);
     
     int idx = k->toInt();
@@ -121,7 +121,7 @@ void StringType::getValue(Value *coll,Value *k,Value *result){
     set(result,out);
 }
 
-void StringType::slice(Value *out,Value *coll,int start,int len){
+void StringType::slice(Value *out,Value *coll,int start,int len)const{
     const StringBuffer &b = StringBuffer(coll);
     wchar_t *s = b.getWideBuffer(); // allocates memory
     
@@ -158,7 +158,7 @@ void StringType::slice(Value *out,Value *coll,int start,int len){
     free(s); // free the buffer
 }
 
-void StringType::clone(Value *out,const Value *in,bool deep){
+void StringType::clone(Value *out,const Value *in,bool deep)const{
     const char *s = getData(in);
     // note - will work for UTF-8, because gives memory size,
     // not character count
@@ -172,8 +172,12 @@ void StringType::clone(Value *out,const Value *in,bool deep){
     out->t = this;
 }
 
+void StringType::toSelf(Value *out,const Value *v) const {
+    set(out,v->toString().get());
+}
 
-Iterator<Value *> *StringType::makeValueIterator(Value *v){
+
+Iterator<Value *> *StringType::makeValueIterator(Value *v)const{
     return new StringIterator(v);
 }
 

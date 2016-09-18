@@ -772,6 +772,11 @@ returned by "nspace", and returns its value.
     Types::tLong->set(a->pushval(),a->popval()->toLong());
 }
 
+%word todouble (val -- double) -- convert value to double
+{
+    Types::tDouble->set(a->pushval(),a->popval()->toDouble());
+}
+
 
 %word endpackage () mark end of package, only when used within a single script
 For packages which are part of a long script, this marks the end. Normally

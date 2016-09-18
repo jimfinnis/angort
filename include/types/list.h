@@ -11,8 +11,8 @@ namespace angort {
 
 struct ListObject : public GarbageCollected {
     ArrayList<Value> list;
-    virtual Iterator<class Value *> *makeValueIterator();
-    virtual Iterator<class Value *> *makeKeyIterator();
+    virtual Iterator<class Value *> *makeValueIterator()const;
+    virtual Iterator<class Value *> *makeKeyIterator()const;
     
     ListObject();
     ~ListObject();
@@ -26,20 +26,20 @@ public:
     }
     
     /// get this value's arraylist, throwing if it's not a list
-    ArrayList<Value> *get(Value *v);
+    ArrayList<Value> *get(Value *v)const;
     
     /// create a new list
-    ArrayList<Value> *set(Value *v);
+    ArrayList<Value> *set(Value *v)const;
     
     /// set a value to an existing list
-    void set(Value *v,ListObject *lo);
+    void set(Value *v,ListObject *lo)const;
     
-    virtual void setValue(Value *coll,Value *k,Value *v);
-    virtual void getValue(Value *coll,Value *k,Value *result);
-    virtual int getCount(Value *coll);
-    virtual void removeAndReturn(Value *coll,Value *k,Value *result);
-    virtual void slice(Value *out,Value *coll,int start,int len);
-    virtual void clone(Value *out,const Value *in,bool deep=false);
+    virtual void setValue(Value *coll,Value *k,Value *v)const;
+    virtual void getValue(Value *coll,Value *k,Value *result)const;
+    virtual int getCount(Value *coll)const;
+    virtual void removeAndReturn(Value *coll,Value *k,Value *result)const;
+    virtual void slice(Value *out,Value *coll,int start,int len)const;
+    virtual void clone(Value *out,const Value *in,bool deep=false)const;
 };
 
 }

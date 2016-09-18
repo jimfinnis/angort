@@ -158,7 +158,7 @@ int main(int argc,char *argv[]){
     
     a->assertDebug=true;
     int vv = a->getVersion();
-    printf("Angort version %d.%d (c) Jim Finnis 2012-2015\nUse '??word' to get help on a word.\n",
+    printf("Angort version %d.%d (c) Jim Finnis 2012-2016\nUse '??word' to get help on a word.\n",
            vv / 100,
            vv % 100);
     

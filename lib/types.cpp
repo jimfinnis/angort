@@ -28,14 +28,23 @@ int Type::toInt(const Value *v) const {
 long Type::toLong(const Value *v) const {
     throw BadConversionException(v->t->name,Types::tLong->name);
 }
+double Type::toDouble(const Value *v) const {
+    throw BadConversionException(v->t->name,Types::tDouble->name);
+}
 
-void Type::createIterator(Value *dest,Value *src){
+void Type::toSelf(Value *out,const Value *v) const {
+    throw BadConversionException(v->t->name,name);
+}
+    
+
+
+void Type::createIterator(Value *dest,Value *src)const{
     Iterator<Value *> *i = makeIterator(src);
     i->first();
     Types::tIter->set(dest,src,i);
 }
 
-void Type::clone(Value *out,const Value *in,bool deep){
+void Type::clone(Value *out,const Value *in,bool deep)const{
     // default action is to just copy the value; collections
     // need to do more.
     out->copy(in);
@@ -83,7 +92,8 @@ void Type::registerBinop(Type *rhs, int opcode, BinopFunction f){
 }
 
 bool Type::binop(Angort *a,int opcode,Value *lhs,Value *rhs){
-    BinopFunction *f = lhs->t->getBinop(rhs->t,opcode);
+    // have to cast away the constness because getBinop can't be const.
+    BinopFunction *f = const_cast<Type *>(lhs->t)->getBinop(rhs->t,opcode);
     if(!f)
         return false;
     (**f)(a,lhs,rhs);
@@ -91,7 +101,7 @@ bool Type::binop(Angort *a,int opcode,Value *lhs,Value *rhs){
 }
 
 
-char *BlockAllocType::allocate(Value *v,int len,Type *type){
+char *BlockAllocType::allocate(Value *v,int len,const Type *type)const{
     v->clr();
     BlockAllocHeader *h = (BlockAllocHeader *)malloc(len+sizeof(BlockAllocHeader));
     h->refct=1;
@@ -100,7 +110,7 @@ char *BlockAllocType::allocate(Value *v,int len,Type *type){
     return (char *)(h+1);
 }
 
-int Type::getIndexOfContainedItem(Value *v,Value *item){
+int Type::getIndexOfContainedItem(Value *v,Value *item)const{
     Iterator<Value *> *iter = makeIterator(v); // will throw for non-iterables
     int i=0;
     for(iter->first();!iter->isDone();iter->next()){
@@ -118,7 +128,7 @@ const char *BlockAllocType::getData(const Value *v) const{
     return (const char *)(v->v.block+1);
 }
 
-void BlockAllocType::incRef(Value *v){
+void BlockAllocType::incRef(Value *v)const{
     BlockAllocHeader *h = v->v.block;
     h->refct++;
     tdprintf("INCREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
@@ -127,7 +137,7 @@ void BlockAllocType::incRef(Value *v){
     //        throw RUNT("reference count too large");
 }
     
-void BlockAllocType::decRef(Value *v){
+void BlockAllocType::decRef(Value *v)const{
     BlockAllocHeader *h = v->v.block;
     if(h->refct!=0xffff)h->refct--; // MAX REFCOUNT is never freed!
     tdprintf("DECREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
@@ -136,12 +146,12 @@ void BlockAllocType::decRef(Value *v){
     }
 }
 
-void GCType::incRef(Value *v){
+void GCType::incRef(Value *v)const{
     v->v.gc->incRefCt();
     tdprintf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
 }
 
-void GCType::decRef(Value *v){
+void GCType::decRef(Value *v)const{
     bool b = v->v.gc->decRefCt();
     tdprintf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
@@ -150,15 +160,15 @@ void GCType::decRef(Value *v){
     }
 }
 
-Iterator<class Value *> *GCType::makeKeyIterator(Value *v){
+Iterator<class Value *> *GCType::makeKeyIterator(Value *v)const{
     return v->v.gc->makeKeyIterator();
 }
-Iterator<class Value *> *GCType::makeValueIterator(Value *v){
+Iterator<class Value *> *GCType::makeValueIterator(Value *v)const{
     return v->v.gc->makeValueIterator();
 }
     
 
-GarbageCollected *GCType::getGC(Value *v){
+GarbageCollected *GCType::getGC(Value *v)const{
     return v->v.gc;
 }
 
@@ -226,6 +236,9 @@ PropType *Types::tProp = &_Prop;
 
 static LongType _Long;
 LongType *Types::tLong = &_Long;
+
+static DoubleType _Double;
+DoubleType *Types::tDouble = &_Double;
 
 
 

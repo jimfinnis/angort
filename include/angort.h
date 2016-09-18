@@ -851,6 +851,9 @@ public:
     void pushFloat(float f){
         Types::tFloat->set(stack.pushptr(),f);
     }
+    void pushDouble(double f){
+        Types::tDouble->set(stack.pushptr(),f);
+    }
     void pushString(const char *s){
         Types::tString->set(stack.pushptr(),s);
     }

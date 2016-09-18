@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 262
+#define ANGORT_VERSION 263
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -191,7 +191,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
 
 const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     const CodeBlock *cb;
-    Type *t;
+    const Type *t;
     
     if(a->isNone())return returnip; // NONE does nothing when called
     
@@ -240,17 +240,12 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         if(tp){
             // type check
             if(tp != paramval->t){
-                // mismatch - special cases of coercion
-                if(tp == Types::tFloat && paramval->t==Types::tInteger){
-                    // expecting a float, got an int.
-                    Types::tFloat->set(&tmpval,paramval->v.i);
-                    paramval = &tmpval;
-                } else if(tp == Types::tInteger && paramval->t==Types::tFloat){
-                    Types::tInteger->set(&tmpval,(int)(paramval->v.f));
-                    paramval = &tmpval;
-                } else
+                try {
+                    tp->toSelf(&tmpval,paramval);
+                } catch(BadConversionException e){
                     throw RUNT(EX_BADPARAM,"").set("Type mismatch: argument %d is %s, expected %s",
                                                    i,paramval->t->name,tp->name);
+                }
             }
         }                          
         

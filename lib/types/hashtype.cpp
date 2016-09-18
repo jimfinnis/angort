@@ -20,16 +20,16 @@ HashObject::~HashObject(){
     delete hash;
 }
 
-Iterator<Value *> *HashObject::makeValueIterator() {
+Iterator<Value *> *HashObject::makeValueIterator() const{
     return hash->createIterator(false);
 }
 
-Iterator<Value *> *HashObject::makeKeyIterator() {
+Iterator<Value *> *HashObject::makeKeyIterator() const {
     return hash->createIterator(true);
 }
 
 
-Hash *HashType::set(Value *v){
+Hash *HashType::set(Value *v)const{
     v->clr();
     v->t = this;
     HashObject *h = new HashObject();
@@ -38,7 +38,7 @@ Hash *HashType::set(Value *v){
     return h->hash;
 }
 
-void HashType::set(Value *v,HashObject *ho){
+void HashType::set(Value *v,HashObject *ho)const{
     v->clr();
     v->t = this;
     v->v.hash = ho;
@@ -46,20 +46,20 @@ void HashType::set(Value *v,HashObject *ho){
 }
 
 
-Hash *HashType::get(Value *v){
+Hash *HashType::get(Value *v)const{
     if(v->t != this)
         throw RUNT("ex$nohash","").set("not a hash, is a %s",v->t->name);
     return v->v.hash->hash;
 }
 
-void HashType::setValue(Value *coll,Value *k,Value *v){
+void HashType::setValue(Value *coll,Value *k,Value *v)const{
     if(coll->t != this)
         throw RUNT("ex$nohash","").set("not a hash, is a %s",coll->t->name);
     Hash *h = coll->v.hash->hash;
     h->set(k,v);
 }
 
-void HashType::getValue(Value *coll,Value *k,Value *result){
+void HashType::getValue(Value *coll,Value *k,Value *result)const{
     Hash *h = coll->v.hash->hash;
     if(h->find(k))
         result->copy(h->getval());
@@ -67,12 +67,12 @@ void HashType::getValue(Value *coll,Value *k,Value *result){
         result->clr();
 }
 
-int HashType::getCount(Value *coll){
+int HashType::getCount(Value *coll)const{
     Hash *h = coll->v.hash->hash;
     return h->count();
 }
 
-void HashType::removeAndReturn(Value *coll,Value *k,Value *result){
+void HashType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     Hash *h = coll->v.hash->hash;
     if(h->find(k)){
         result->copy(h->getval());
@@ -81,7 +81,7 @@ void HashType::removeAndReturn(Value *coll,Value *k,Value *result){
         result->clr();
 }
 
-bool HashType::isIn(Value *coll,Value *item){
+bool HashType::isIn(Value *coll,Value *item)const{
     Hash *h = coll->v.hash->hash;
     if(h->find(item))
         return true;
@@ -89,7 +89,7 @@ bool HashType::isIn(Value *coll,Value *item){
         return false;
 }
 
-void HashType::clone(Value *out,const Value *in,bool deep){
+void HashType::clone(Value *out,const Value *in,bool deep)const{
     HashObject *p = new HashObject();
     Hash *h = get(const_cast<Value *>(in));
     

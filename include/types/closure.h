@@ -39,7 +39,7 @@ public:
     // to with getCallingInstance().
     void init(const CodeBlock *_cb);
     virtual ~Closure();
-    Iterator<class Value *> *makeValueIterator();
+    Iterator<class Value *> *makeValueIterator()const;
     
     void show(const char *s);
     
@@ -60,7 +60,7 @@ public:
     }
     
     
-    virtual bool isCallable(){
+    virtual bool isCallable()const{
         return true;
     }
     void set(Value *v, Closure *c);

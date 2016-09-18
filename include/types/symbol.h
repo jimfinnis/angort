@@ -37,10 +37,10 @@ public:
     void set(Value *v,int i);
     
     /// get a hash key
-    virtual uint32_t getHash(Value *v);
+    virtual uint32_t getHash(Value *v)const;
     
     /// are these two equal
-    virtual bool equalForHashTable(Value *a,Value *b);
+    virtual bool equalForHashTable(Value *a,Value *b)const;
 protected:    
     virtual const char *toString(bool *allocated,const Value *v) const;
 };

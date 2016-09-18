@@ -18,7 +18,6 @@
 10 ?L in not "listin4" assert
 
 # slices
-
 :eq |x,y:| # quick list equiv check
     ?x type "list"=
     ?y type "list"= and

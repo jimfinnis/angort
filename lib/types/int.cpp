@@ -13,7 +13,7 @@ namespace angort {
 
     
 
-int IntegerType::get(Value *v){
+int IntegerType::get(Value *v) const {
     /*
     if(v->t == Types::tInteger)
         return v->v.i;
@@ -26,7 +26,7 @@ int IntegerType::get(Value *v){
 }
 
 
-void IntegerType::set(Value *v,int i){
+void IntegerType::set(Value *v,int i) const {
     v->clr();
     v->t = Types::tInteger;
     v->v.i=i;
@@ -40,9 +40,18 @@ float IntegerType::toFloat(const Value *v) const {
     return (float)v->v.i;
 }
 
+double IntegerType::toDouble(const Value *v) const {
+    return (double)v->v.i;
+}
+
 long IntegerType::toLong(const Value *v) const {
     return (long)v->v.i;
 }
+
+void IntegerType::toSelf(Value *out,const Value *v) const {
+    set(out,v->toInt());
+}
+
 
 const char *IntegerType::toString(bool *allocated,const Value *v) const {
     char buf[128];
@@ -51,13 +60,14 @@ const char *IntegerType::toString(bool *allocated,const Value *v) const {
     return strdup(buf);
 }
 
-uint32_t IntegerType::getHash(Value *v){
+uint32_t IntegerType::getHash(Value *v) const {
     return (uint32_t)v->v.i;
 }
 
-bool IntegerType::equalForHashTable(Value *a,Value *b){
+bool IntegerType::equalForHashTable(Value *a,Value *b) const {
     return a->toInt() == b->toInt();
 }
+
 
 
 }

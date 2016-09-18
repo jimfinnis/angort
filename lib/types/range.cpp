@@ -46,7 +46,7 @@ template <> void RangeType<int>::set(Value *v, int start,int end,int step){
     incRef(v);
 }
 
-template<> bool RangeType<int>::isIn(Value *v,Value *item){
+template<> bool RangeType<int>::isIn(Value *v,Value *item)const{
     Range<int> *r = v->v.irange;
     int i = item->toInt();
     if(i<r->start || i>=r->end)
@@ -56,10 +56,10 @@ template<> bool RangeType<int>::isIn(Value *v,Value *item){
 
 
 // for hash keys, int ranges are equal if their members are equal
-template<> uint32_t RangeType<int>::getHash(Value *v){
+template<> uint32_t RangeType<int>::getHash(Value *v)const{
     return (uint32_t)(v->v.irange->start + v->v.irange->end*10000 + v->v.irange->step);
 }
-template<> bool RangeType<int>::equalForHashTable(Value *a,Value *b){
+template<> bool RangeType<int>::equalForHashTable(Value *a,Value *b)const{
     if(a->t != b->t)return false;
     Range<int> *ra = a->v.irange;
     Range<int> *rb = b->v.irange;
@@ -67,10 +67,10 @@ template<> bool RangeType<int>::equalForHashTable(Value *a,Value *b){
 }
 
 // for hash keys, float ranges are equal if they are the same range
-template<> uint32_t RangeType<float>::getHash(Value *v){
+template<> uint32_t RangeType<float>::getHash(Value *v)const{
     return (uint32_t)(v->v.irange->start + v->v.irange->end*10000 + v->v.irange->step);
 }
-template<> bool RangeType<float>::equalForHashTable(Value *a,Value *b){
+template<> bool RangeType<float>::equalForHashTable(Value *a,Value *b)const{
     return a==b;
 }
 
@@ -80,9 +80,9 @@ struct IntRangeIterator : public Iterator<Value *>{
     Value v; //!< the current value, as an actual value
     Range<int> *range; //!< the range we're iterating over
 public:
-    /// create a range iterator for a range
-    IntRangeIterator(Range<int> *r){
-        range = r;
+    /// create a range iterator for a range. The constness is a mess.
+    IntRangeIterator(const Range<int> *r){
+        range = (Range<int> *)r;
         /// increment the range's reference count
         range->incRefCt();
         Types::tInteger->set(&v,range->start);
@@ -120,8 +120,8 @@ struct FloatRangeIterator : public Iterator<Value *>{
     Range<float> *range; //!< the range we're iterating over
 public:
     /// create a range iterator for a range
-    FloatRangeIterator(Range<float> *r){
-        range = r;
+    FloatRangeIterator(const Range<float> *r){
+        range = (Range<float>*)r;
         /// increment the range's reference count
         range->incRefCt();
         Types::tFloat->set(&v,range->start);
@@ -153,14 +153,14 @@ public:
     }
 };
 
-template <> Iterator<Value *> *Range<int>::makeValueIterator(){
+template <> Iterator<Value *> *Range<int>::makeValueIterator()const{
     return new IntRangeIterator(this);
 }
-template <> Iterator<Value *> *Range<float>::makeValueIterator(){
+template <> Iterator<Value *> *Range<float>::makeValueIterator()const{
     return new FloatRangeIterator(this);
 }
 
-template<> bool RangeType<float>::isIn(Value *v,Value *item){
+template<> bool RangeType<float>::isIn(Value *v,Value *item)const{
     throw RUNT("ex$range","cannot determine membership of float range");
 }
 

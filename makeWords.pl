@@ -150,6 +150,8 @@ while(<>){
                 print "float p$i = _parms[$i]->toFloat();\n"
             }elsif($c eq 'i'){
                 print "int p$i = _parms[$i]->toInt();\n"
+            }elsif($c eq 'd'){
+                print "double p$i = _parms[$i]->toDouble();\n"
             }elsif($c eq 'c' || $c eq 'v'){
                 print "Value * p$i = _parms[$i];\n"  # any value or callable
             } elsif($c eq 's' || $c eq 'S'){

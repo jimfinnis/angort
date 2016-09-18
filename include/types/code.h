@@ -17,10 +17,10 @@ public:
     CodeType(){
         add("codeblock","CODE");
     }
-    virtual bool isReference(){
+    virtual bool isReference()const{
         return true;
     }
-    virtual bool isCallable(){
+    virtual bool isCallable()const{
         return true;
     }
     void set(Value *v,const struct CodeBlock *cb);

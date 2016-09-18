@@ -23,12 +23,13 @@ namespace angort {
 
 struct Value {
     /// the type object for the value
-    Type *t;
+    const Type *t;
     
     union {
         float f;
         int i;
         long l;
+        double df;
         char *s;
         struct BlockAllocHeader *block;
         const struct CodeBlock *cb;
@@ -79,7 +80,7 @@ struct Value {
         t->incRef(this);
     }
     
-    Type *getType() const{
+    const Type *getType() const{
         return t;
     }
     
@@ -87,14 +88,17 @@ struct Value {
         return StringBuffer(this);
     }
     
-    float toFloat(){
+    float toFloat() const {
         return t->toFloat(this);
     }
-    int toInt(){
+    int toInt() const {
         return t->toInt(this);
     }
-    int toLong(){
+    long toLong() const {
         return t->toLong(this);
+    }
+    double toDouble() const {
+        return t->toDouble(this);
     }
     
     void *getRaw(){

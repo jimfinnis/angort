@@ -74,7 +74,7 @@ const char *SymbolType::toString(bool *allocated,const Value *v) const {
     return strdup(buf);
 }
 
-uint32_t SymbolType::getHash(Value *v){
+uint32_t SymbolType::getHash(Value *v)const{
     // Fowler-Noll-Vo hash, variant 1a
     const unsigned char *s = (const unsigned char *)get(v);
     uint32_t h = 2166136261U;
@@ -86,7 +86,7 @@ uint32_t SymbolType::getHash(Value *v){
     return h;
 }
 
-bool SymbolType::equalForHashTable(Value *a,Value *b){
+bool SymbolType::equalForHashTable(Value *a,Value *b)const{
     //This does mean that the key "foo" will
     //not match the key `foo, but that's OK.
     return a->v.i == b->v.i;

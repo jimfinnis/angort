@@ -13,10 +13,10 @@ namespace angort {
 
 template <class T> struct Range : public GarbageCollected {
     T start,end,step;
-    virtual Iterator<class Value *> *makeValueIterator();
+    virtual Iterator<class Value *> *makeValueIterator()const;
     
     /// the key iterator of a range is the same as the value iterator
-    virtual Iterator<class Value *> *makeKeyIterator(){
+    virtual Iterator<class Value *> *makeKeyIterator()const{
         return makeValueIterator();
     }
 };
@@ -27,12 +27,12 @@ public:
     RangeType();
 
     /// get a hash key
-    virtual uint32_t getHash(Value *v);
+    virtual uint32_t getHash(Value *v)const;
     
-    virtual bool isIn(Value *v,Value *item);
+    virtual bool isIn(Value *v,Value *item)const;
     
     /// are these two equal
-    virtual bool equalForHashTable(Value *a,Value *b);
+    virtual bool equalForHashTable(Value *a,Value *b)const;
 };
 
 }
