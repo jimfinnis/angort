@@ -173,17 +173,17 @@ loop:
         // special case ignoring for '.' AND '-' before a number
         bool possibleNumChar = *p == '.' || *p=='-';
         if(!possibleNumChar || !isdigit(p[1])){
-        
+            
             // if the token type is -ve, return the character as the token type
             if(curtype == -1)
                 curtype = *p;
-        
+            
             dprintf("got char - %c",*p,curtype);
             val.s[0]=*p++;
             val.s[1]=0;
             current=p;
-        
-        
+            
+            
             return curtype;
         }
     }
@@ -204,7 +204,7 @@ loop:
                 seterror();
                 return -1;
             }
-                
+            
             // string escape handing
             if(*p == '\\'){
                 switch(*++p){
@@ -238,9 +238,9 @@ loop:
         // - not whitespace and
         // - not special character token or digit preceded by . or -
         while((*p && *p!=' ' && *p!='\t' && *p!=0x0a &&
-              *p!=0x0d && 
+               *p!=0x0d && 
                (chartable[(unsigned char)*p]<-1)) || 
-               (*p && isdigit(p[1]) && (*p=='.'||*p=='-')))p++;
+              (*p && isdigit(p[1]) && (*p=='.'||*p=='-')))p++;
         len = p-b;
         memcpy(val.s,b,len);
         val.s[len]=0;
@@ -251,42 +251,58 @@ loop:
         
         if(isdigit(val.s[0]) || val.s[0]=='-'){ // starts with a digit, must be a number. Hex would be 0ffh etc.
             bool gotPoint = false;
+            bool isLong = false;
+            
+            // first, look at the last character to see if it's a long
+            if(tolower(val.s[len-1]=='l')){
+                // if so, set the flag and chop off that char.
+                val.s[--len]=0;
+                isLong=true;
+            }
+            // is there a point? (Indicates float)
             for(int i=0;i<len;i++)
             {
                 if(val.s[i] == '.')
                     gotPoint = true;
             }
-            if(isalpha(val.s[len-1])){
-                // special weird case - a non-zero length numeric string terminated by a letter.
-                // This is an integer with a base character: 15x or 0010b. Characters
-                // supported are d, x, b, o for bases 10,16,2,8.
-                char basechar = val.s[len-1];
-                val.s[len-1]=0;
-                int x;
-                switch(basechar){
-                case 'd':x=atoi(val.s);break;
-                case 'h':
-                case 'x':x=strtol(val.s,NULL,16);break;
-                case 'b':x=strtol(val.s,NULL,2);break;
-                case 'o':x=strtol(val.s,NULL,8);break;
-                default:
-                    curtype=identtoken; // return as ident if bad char!
+            // get the (possibly new) end char for the base.
+            char endchar = val.s[len-1];
+            if(isalpha(endchar)){
+                if(gotPoint){ // can't have a base char on a float/double
+                    seterror();
+                    return -1; 
+                }else{
+                    // evaluate
+                    long x;
+                    switch(tolower(endchar)){
+                    case 'd':x=atol(val.s);break;
+                    case 'h':
+                    case 'x':x=strtol(val.s,NULL,16);break;
+                    case 'b':x=strtol(val.s,NULL,2);break;
+                    case 'o':x=strtol(val.s,NULL,8);break;
+                    default:
+                        curtype=identtoken; // return as ident if bad char!
+                        return curtype;
+                    }
+                    val.i=x;
+                    curtype = isLong ? longtoken : inttoken;
                     return curtype;
                 }
-                val.i=x;
-                curtype=inttoken;
-                return curtype;
             } else if(gotPoint){
-                float f = atof(val.s);
-                val.f= f;
-                curtype = floattoken;
+                if(isLong){
+                    val.df = atof(val.s);
+                    curtype = doubletoken;
+                } else {
+                    val.f = atof(val.s);
+                    curtype = floattoken;
+                }                    
             } else {
-                val.i= atoi(val.s);
-                curtype = inttoken;
+                val.i= atol(val.s);
+                curtype = isLong ? longtoken : inttoken;
             }
             return curtype;
         }
-            
+        
         int w=-1;
         if(!keywordsOff)
             w = findkeyword(val.s);
@@ -336,6 +352,8 @@ void Tokeniser::settokens(TokenRegistry *k)
             case 's': stringtoken = k->token; break;
             case 'n': inttoken = k->token; break;
             case 'f': floattoken = k->token; break;
+            case 'D': doubletoken = k->token; break;
+            case 'L': longtoken = k->token; break;
             case 'e': endtoken = k->token;break;
             case 'c':
                 {

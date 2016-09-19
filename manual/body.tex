@@ -268,7 +268,7 @@ shows its replacement. For example:
 Note that the ``after'' part of the stack picture often doesn't refer to a named variable ---
 it's just a label for the value left behind on the stack.
 
-\section{Types}
+\section{Types and literals}
 Angort is a dynamically typed language, with type coercion (weak typing).
 The following types are available:
 \indw{range}\indw{frange}\indw{[}\indw{]}
@@ -277,7 +277,9 @@ The following types are available:
 \textbf{Name} & \textbf{Definition} & \textbf{Example of literal} \\ \hline
 None & The nil object, specifying ``no value'' & \texttt{none} \\
 Integer & 32 or 64-bit integers depending on architecture & \texttt{5045} \\
+Long & depends on architecture & \texttt{5045l,32L,0ffx, 45ao, 10111b, 3200ffffhl} \\
 Float & 32-bit floats & \texttt{54.0} \\
+Double & 64-bit floats & \texttt{54.0l,32.2L} \\
 String & Strings of characters & \texttt{"Hello there"} \\
 Symbol & Single-word strings, internally stored as integers and
 generally used as hash keys & \texttt{`foo} \\
@@ -301,6 +303,13 @@ which have no environment; and closures, which consist of a codeblock and
 some stored variables. They appear identical to the user.
 There are some other types used internally, such as the
 types for iterators and deleted objects in a hash.
+
+Integers can also have a base character, `b', `x'/`h', `o' or `d', which
+goes before the optional 'l' for 'long.' \textbf{Note that} all numbers
+must start with a digit, so a leading zero will be required for some 
+hex numbers (e.g. `0ffh' not `ffh').
+
+\clearpage
 \subsection{Coercions}
 \begin{itemize}
 \item Integers and floats are coerced to strings in string contexts.
@@ -314,7 +323,6 @@ types for iterators and deleted objects in a hash.
 \item In certain binary operations (currently just ``+'') if one of the operands
 is a string, both will be coerced to strings.
 \end{itemize}
-\clearpage
 
 \section{Conditions}
 \indw{if}
@@ -663,6 +671,8 @@ pi 180/   const degsToRadsRatio
     radsToDegsRatio*
 ;
 \end{lstlisting}
+
+
 
 \section{The true nature of function definitions}
 \label{globdetails}
@@ -1090,6 +1100,25 @@ in a closure in the function which creates the hash, rather than in
 the hash itself, that value will only be visible to functions defined
 in the hash.
 
+
+\section{Exceptions}
+Exception handling is done with a \texttt{try}/\texttt{catch}/\texttt{endtry} 
+construction:
+\begin{lstlisting}
+try
+    ...
+catch:symbol1,symbol2...
+    ...
+endtry
+\end{lstlisting}
+Upon entry to the catch block, the stack will hold the exception symbol
+on the top with extra data (typically a string with more information)
+under that. There are quite a few built-in exceptions: they are listed
+in \texttt{exceptsymbs.h}. To throw your own exception, use \\
+\texttt{throw (data except --)}, e.g.
+\begin{lstlisting}
+"Can't open file: " ?fn + `badfile throw 
+\end{lstlisting}
 
 
 \section{More built-in words}

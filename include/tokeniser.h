@@ -27,7 +27,8 @@ struct Token
 {
     char s[1024];
     float f;
-    int i;
+    double df;
+    long i; // used for both int and long
 };
 
 /// an interface for a error handler (see seterrorhandler())
@@ -120,6 +121,19 @@ public:
         else
             return -9999;
     }
+    /// get the value of the next token - must be a double
+    float getdouble()
+    {
+        if(curtype==doubletoken)
+            return val.df;
+        return -9999;
+    }
+    
+    long getlong(){
+        if(curtype==longtoken)
+            return val.i;
+        return -9999;
+    }        
     
     /// get the string value of the next token
     char *getstring()
@@ -288,7 +302,8 @@ private:
     
     TokenRegistry *tokens;
     
-    int endtoken,inttoken,stringtoken,identtoken,floattoken;
+    int endtoken,inttoken,stringtoken,identtoken,floattoken,doubletoken,
+          longtoken;
     ITokeniserErrorHandler *handler;
 };
 

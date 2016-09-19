@@ -1,0 +1,55 @@
+:excepttest |v:foo|
+    0!foo
+    try
+        ?v 6 = if "test1" `barry throw then
+        ?v 7 = if "test2" `barry throw then
+        ?v 8 = if "test2" `ken throw then
+        1!foo
+        5 ?v /
+        2!foo
+    catch:ex$divzero,barry
+        !Except !Tmp
+        1!foo
+    endtry
+    
+    ?foo
+;
+
+
+0 excepttest 1 = "except1" assert
+?Tmp "division by zero" = "except1a" assert
+?Except `ex$divzero = "except1b" assert
+
+6 excepttest 1 = "except2" assert
+?Tmp "test1" = "except2a" assert
+?Except `barry = "except2b" assert
+
+7 excepttest 1 = "except2" assert
+?Tmp "test2" = "except2a" assert
+?Except `barry = "except2b" assert
+
+:except2test
+    try
+        8 excepttest drop
+    catch:ken
+        "foo" `fred throw
+    endtry
+;
+
+
+(
+    try
+        except2test
+        0 "except3a" assert
+    catch:fred
+        `fred = "except3b" assert
+        "foo" = "except3c" assert
+        10
+        stop
+    endtry
+    11
+)@
+
+10 = "except3d" assert
+
+quit

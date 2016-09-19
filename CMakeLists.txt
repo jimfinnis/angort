@@ -35,6 +35,7 @@ add_test(hash cli/angort ${ANGORT_SOURCE_DIR}/testfiles/hash.ang)
 add_test(cycle cli/angort ${ANGORT_SOURCE_DIR}/testfiles/cycle.ang)
 add_test(constexpr cli/angort ${ANGORT_SOURCE_DIR}/testfiles/constexpr.ang)
 add_test(generator cli/angort ${ANGORT_SOURCE_DIR}/testfiles/generator.ang)
+add_test(exception cli/angort ${ANGORT_SOURCE_DIR}/testfiles/exception.ang)
 
 # this only works in the testfiles directory.
 #add_test(pkg cli/angort ${ANGORT_SOURCE_DIR}/testfiles/pkg.ang)

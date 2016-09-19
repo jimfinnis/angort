@@ -108,6 +108,8 @@ struct Instruction {
     union {
         int i;
         float f;
+        double df;
+        long l;
         const char *s;
         NativeFunc func;
         const CodeBlock *cb;
@@ -847,6 +849,9 @@ public:
     
     void pushInt(int i){
         Types::tInteger->set(stack.pushptr(),i);
+    }
+    void pushLong(long i){
+        Types::tLong->set(stack.pushptr(),i);
     }
     void pushFloat(float f){
         Types::tFloat->set(stack.pushptr(),f);

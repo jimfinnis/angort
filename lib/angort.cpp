@@ -462,6 +462,14 @@ void Angort::run(const Instruction *startip){
                     pushInt(ip->d.i);
                     ip++;
                     break;
+                case OP_LITLONG:
+                    pushLong(ip->d.l);
+                    ip++;
+                    break;
+                case OP_LITDOUBLE:
+                    pushDouble(ip->d.df);
+                    ip++;
+                    break;
                 case OP_LITERALFLOAT:
                     pushFloat(ip->d.f);
                     ip++;
@@ -1477,8 +1485,14 @@ void Angort::feed(const char *buf){
             case T_INT:
                 compile(OP_LITERALINT)->d.i = tok.getint();
                 break;
+            case T_LONG:
+                compile(OP_LITLONG)->d.l = tok.getlong();
+                break;
             case T_FLOAT:
                 compile(OP_LITERALFLOAT)->d.f = tok.getfloat();
+                break;
+            case T_DOUBLE:
+                compile(OP_LITDOUBLE)->d.df = tok.getdouble();
                 break;
             case T_LEAVE:
                 context->compileAndAddToLeaveList(OP_LEAVE);

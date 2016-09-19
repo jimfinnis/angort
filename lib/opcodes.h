@@ -28,7 +28,9 @@ const char *opcodenames[]=
     "newlist","appendlist", "closelist","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse",
     "self","dummycase","le","ge","constexpr",
-    "yield","try","endtry","throw"
+    "yield","try","endtry","throw","litdouble",
+    "litlong"
+    
 };
 
 }
@@ -114,5 +116,7 @@ const char *opcodenames[]=
 #define OP_TRY 63
 #define OP_ENDTRY 64
 #define OP_THROW 65
+#define OP_LITDOUBLE 66
 
+#define OP_LITLONG 67
 #endif /* __OPCODES_H */

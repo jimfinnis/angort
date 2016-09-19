@@ -5,6 +5,8 @@
 *i      :   T_IDENT
 *n      :   T_INT
 *f      :   T_FLOAT
+*D      :   T_DOUBLE
+*L      :   T_LONG
 
 # digraphs, which take precedence over characters but also
 # do not require trailing spaces
