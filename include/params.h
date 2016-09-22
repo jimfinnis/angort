@@ -39,7 +39,9 @@ class Parameters {
     Angort a;
     Value val;
     Hash *hash;
+    ArrayList<Value> *list;
     Stack<Hash *,8> hashstack;
+    Stack<ArrayList<Value> *,8> liststack;
     
     Value *get(const char *s){
         if(!hash)
@@ -73,6 +75,12 @@ class Parameters {
         }
         
     }
+    inline Value *getList(int n){
+        if(!list)throw RUNT(EX_TYPE,"not in a pushed list");
+        return list->get(n);
+    }
+    
+    
     
     const char *errorstr;
 public:
@@ -81,6 +89,7 @@ public:
     /// (var=val,var=val) for globals to set before this runs.
     Parameters(const char *fn,char *varstr=NULL){
         hash=NULL; // initialise to invalid
+        list=NULL;
         errorstr=NULL;
         if(varstr)parseVars(varstr);
         // this will cause the entire program to exit
@@ -139,16 +148,65 @@ public:
         a.runValue(v);
     }
     
+    // for processing lists - go into a list with "pushList" and
+    // access the items within using getList..(). Remember to popList().
+    // You can enter a list inside a list with pushListList(n), and
+    // check the size with listCount().
+    // You can enter a hash inside a list with pushListHash(n)
+    
+    void pushList(const char *s){
+        Value *v = get(s);
+        if(v->t != Types::tList)
+            throw RUNT(EX_TYPE,"").set("%s is not a list",s);
+        liststack.push(list);
+        list = Types::tList->get(v);
+    }
+    
+    void pushListList(int n){
+        Value *v = getList(n);
+        if(v->t != Types::tList)
+            throw RUNT(EX_TYPE,"").set("item %d is not a list",n);
+        liststack.push(list);
+        list = Types::tList->get(v);
+    }
+    
+    int listCount(){
+        if(!list)throw RUNT(EX_TYPE,"not in a pushed list");
+        return list->count();
+    }
+        
+    void popList(){
+        list = liststack.pop();
+    }
+    
+    
+    
     
     /// read a value from the current hash
     double getFloat(const char *s){
-        return get(s)->toFloat();
+        return get(s)->toDouble();
     }
     
     /// read a value from the current hash
     double getInt(const char *s){
         return get(s)->toInt();
     }
+    
+    double getListFloat(int n){
+        return getList(n)->toDouble();
+    }
+    int getListInt(int n){
+        return getList(n)->toInt();
+    }
+    
+    void pushListHash(int n){
+        Value *v = getList(n);
+        if(v->t != Types::tHash)
+            throw RUNT(EX_TYPE,"").set("item %d is not a hash",n);
+        hashstack.push(hash);
+        hash = Types::tHash->get(v);
+    }
+                             
     
     /// read a string from the hash into a buffer
     void getString(const char *s,char *out,int max){
