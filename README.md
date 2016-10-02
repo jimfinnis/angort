@@ -1,3 +1,5 @@
+This is a very brief introduction to Angort - much more is available in [https://github.com/jimfinnis/angort/blob/master/manual/main.pdf](the full documentation) (and even that isn't as full as it could be.
+
 Angort is a (primarily) robot control language, inspired by Forth
 but with many features designed to help the coder. These features
 include:
