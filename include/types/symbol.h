@@ -41,6 +41,7 @@ public:
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b)const;
+    virtual int toInt(const Value *v) const;
 protected:    
     virtual const char *toString(bool *allocated,const Value *v) const;
 };

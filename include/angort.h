@@ -705,6 +705,12 @@ public:
         return i;
     }
     
+    Value *findOrCreateGlobalVal(const char *name){
+        int g = findOrCreateGlobal(name);
+        return names.getVal(g);
+    }
+          
+    
     /// this is used by external programs which use angort as a 
     /// library to find/create a global and set it to a string
     /// value.
@@ -872,6 +878,9 @@ public:
     }
     float popFloat(){
         return Types::tFloat->get(popval());
+    }
+    double popDouble(){
+        return Types::tDouble->get(popval());
     }
     StringBuffer popString(){
         return StringBuffer(popval());

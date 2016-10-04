@@ -14,9 +14,9 @@ private
     
 :runchain |x,y:|
     ?TXChain each {
-        ?x ?y i@ !x !y
+        ?x ?y i@ !y !x
     }
-    ?x ?y
+    ?y ?x
 ;
 
 public

@@ -74,6 +74,11 @@ const char *SymbolType::toString(bool *allocated,const Value *v) const {
     return strdup(buf);
 }
 
+int SymbolType::toInt(const Value *v) const {
+    return (int)v->v.i;
+}
+
+
 uint32_t SymbolType::getHash(Value *v)const{
     // Fowler-Noll-Vo hash, variant 1a
     const unsigned char *s = (const unsigned char *)get(v);

@@ -275,6 +275,8 @@ package opts
          # Now process the arguments
          
          ?arglist each {
+             i!opt # to make sure the asserts and converts work 
+             
              # if we've run out of args, and the arg we now
              # want is mandatory, that's an error. Otherwise,
              # get the default.
@@ -340,7 +342,7 @@ public
         i `listsep "," procdef
         
         # assert that things are there
-        i `name `string asserthas
+        i `name `symbol asserthas
         i `description `string asserthas
         i `type asserttype
         i?`type `list = if
@@ -359,7 +361,7 @@ public
         i `required 1 procdef
         i `type `integer procdef
         i `listsep "," procdef
-        i `name `string asserthas
+        i `name `symbol asserthas
         i `description `string asserthas
         i `type asserttype
         i?`type `list = if

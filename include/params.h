@@ -52,6 +52,7 @@ class Parameters {
         return v;
     }
     
+    
     /// parse a list of var=val,var=val,var=val
     /// and set globals in Angort from them (as strings).
     /// Will damage te string (putting nulls in)
@@ -120,6 +121,18 @@ public:
         return hash ? NULL : errorstr;
     }
     
+    /// used for assorted hackage to get a global from Angort
+    double getGlobalFloat(const char *s){
+        Value *v = a.findOrCreateGlobalVal(s);
+        return v->toDouble();
+    }
+    
+    /// used for assorted hackage to set a global in Angort
+    void setGlobalFloat(const char *s,double val){
+        Value *v = a.findOrCreateGlobalVal(s);
+        Types::tDouble->set(v,val);
+    }
+        
     
     /// does a key exist in the current hash?
     bool exists(const char *s){
@@ -232,12 +245,12 @@ public:
         return v;
     }
     
-    void pushFuncArg(float v){
-        a.pushFloat(v);
+    void pushFuncArg(double v){
+        a.pushDouble(v);
     }
     
-    float popFuncResult(){
-        return a.popFloat();
+    double popFuncResult(){
+        return a.popDouble();
     }
 };
 
