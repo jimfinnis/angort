@@ -157,10 +157,8 @@ int main(int argc,char *argv[]){
     char buf[256];
     
     a->assertDebug=true;
-    int vv = a->getVersion();
-    printf("Angort version %d.%d (c) Jim Finnis 2012-2016\nUse '??word' to get help on a word.\n",
-           vv / 100,
-           vv % 100);
+    printf("Angort version %s (c) Jim Finnis 2012-2016\nUse '??word' to get help on a word.\n",
+           a->getVersion());
     
     // set up the autocomplete function
     rl_completion_entry_function = generator;

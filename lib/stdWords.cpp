@@ -151,9 +151,9 @@ SIGHUP (1).
 
 
 %word version ( -- version ) version number
-Return the Angort version number as an integer.
+Return the Angort version number as an string.
 {
-    a->pushInt(a->getVersion());
+    a->pushString(a->getVersion());
 }
 
 %word barewords (v --) turn bare words on or off

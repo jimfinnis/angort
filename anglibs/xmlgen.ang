@@ -4,18 +4,18 @@ private
 :closetag |name:| "</" ?name + ">" +;
 
 public
-:mktag |name,attrhash,contents:|
-    [%
+:mktag |name,attrhash,contents:this|
+    [% dup!this # object hack!
      `output (
          "<" ?name +
-         ?attrhash isnone not if
-             ?attrhash each {" " + i + "=\"" + ival  + "\"" +}
+         ?this?`attrs isnone not if
+             ?this?`attrs each {" " + i + "=\"" + ival  + "\"" +}
          then
          cases
-             ?contents isnone if "/>\n" + case
-             ?contents type `list = if
+             ?this?`contents isnone if "/>\n" + case
+             ?this?`contents type `list = if
                  ">\n" +
-             ?contents each {
+             ?this?`contents each {
                  i type `hash = if
                      i?`output@ +
                  else
@@ -23,10 +23,25 @@ public
                  then " " +
              } ?name closetag + "\n" + case
          ">" +
-         ?contents + ?name closetag + "\n" + otherwise
-     )
+         ?this?`contents + ?name closetag + "\n" + otherwise
+       ),
+       `contents ?contents, # expose for modification
+       `attrs ?attrhash,
+       `name ?name
      ]
 ;
+
+:rmtagfromlist |l/list,name:t|
+    :"remove a named tag from a list of tags"
+    []
+    0 ?l len range each { 
+        i ?l get !t
+        ?t type `hash = if 
+            ?t?`name ?name = if i, then
+        then
+    }
+    each{i ?l remove drop}    
+;       
      
 :tst
     `foo 

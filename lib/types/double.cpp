@@ -12,6 +12,8 @@ namespace angort {
 double DoubleType::get(Value *v)const{
     if(v->t == Types::tInteger)
         return (double)v->v.i;
+    else if(v->t == Types::tFloat)
+        return (double)v->v.f;
     else if(v->t == Types::tDouble)
         return (double)v->v.df;
     else

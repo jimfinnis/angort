@@ -15,6 +15,8 @@ namespace angort {
 float FloatType::get(Value *v) const{
     if(v->t == Types::tInteger)
         return (float)v->v.i;
+    else if(v->t == Types::tDouble)
+        return (float)v->v.df;
     else if(v->t == Types::tFloat)
         return (float)v->v.f;
     else

@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION 263
+#define ANGORT_VERSION "2.6.3"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,7 +34,7 @@ LIBNAME(stdmath),LIBNAME(stdenv);
 
 namespace angort {
 
-int Angort::getVersion(){
+const char* Angort::getVersion(){
     return ANGORT_VERSION;
 }
 

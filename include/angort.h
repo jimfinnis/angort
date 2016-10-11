@@ -761,10 +761,8 @@ public:
     void binop(Value *a,Value *b,int opcode);
     
     
-    /// call this to get the version number. It's a denary integer,
-    /// the lowest two digits of which are the minor version. It's
-    /// a number because it's used in files.
-    static int getVersion();
+    /// call this to get the version number.
+    static const char *getVersion();
     
     Stack<Value,128>stack;
     bool emergencyStop;
