@@ -658,24 +658,6 @@ Lists the names of all Angort types, including the internal ones
     Type::dumpTypes();
 }
 
-%word srand (none --) set the random number generator seed. If none, use the timestamp.
-{
-    Value *v = a->popval();
-    long t;
-    if(v->isNone())
-        time(&t);
-    else
-        t = v->toInt();
-    srand(t);
-}
-
-
-%word rand (-- i) stack an integer random number
-Stacks an integer random number from 0 to the maximum integer. Typically
-used in "rand N %" to give a number from 0 to N-1.
-{
-    a->pushInt(rand());
-}
 
 %word gc (--) perform a major garbage detect and cycle removal
 Runs a major garbage detect, which includes detecting cycles. This
