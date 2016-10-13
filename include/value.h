@@ -165,8 +165,7 @@ struct Value {
     /// debugging method - dump a value to stdout, using the string
     /// from toString().
     void dump(const char *prefix){
-        const char *s = toString().get();
-        printf("%s: %s\n",prefix,s);
+        printf("%s: %s\n",prefix,toString().get());
     }
     
 //private:    

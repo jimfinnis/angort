@@ -24,6 +24,20 @@ struct RevStdComparator : public ArrayListComparator<Value> {
     }
 };
 
+struct StdComparator : public ArrayListComparator<Value> {
+    Angort *ang;
+    StdComparator(Angort *a){
+        ang = a;
+    }
+    virtual int compare(const Value *a, const Value *b){
+        // binop isn't const, sadly.
+        ang->binop(const_cast<Value *>(a),
+                   const_cast<Value *>(b),OP_CMP);
+        return ang->popInt();
+    }
+};
+
+
 struct FuncComparator : public ArrayListComparator<Value> {
     Value *func;
     Angort *ang;
@@ -124,6 +138,92 @@ inline void getByIndex(Value *c,int idx){
         c->copy(&out);
     }
 }
+
+%word min ([a,b...] -- minimum) Find minimum value in iterable
+{
+    Value *iterable = a->popval();
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    if(iter->isDone())
+        a->pushNone();
+    else {
+        StdComparator cmp(a);
+        iter->first();
+        Value m;
+        m.copy(iter->current());
+        if(iter->isDone())
+            a->pushval()->copy(iter->current());
+        else {
+            for(;!iter->isDone();iter->next()){
+                if(cmp.compare(iter->current(),&m)<0){
+                    m.copy(iter->current());
+                }
+            }
+        }
+        a->pushval()->copy(&m);
+    }
+    delete iter;
+}
+
+%word max ([a,b...] -- maximum) Find maximum value in iterable
+{
+    Value *iterable = a->popval();
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    if(iter->isDone())
+        a->pushNone();
+    else {
+        StdComparator cmp(a);
+        iter->first();
+        Value m;
+        m.copy(iter->current());
+        if(iter->isDone())
+            a->pushval()->copy(iter->current());
+        else {
+            for(;!iter->isDone();iter->next()){
+                if(cmp.compare(iter->current(),&m)>0){
+                    m.copy(iter->current());
+                }
+            }
+        }
+        a->pushval()->copy(&m);
+    }
+    delete iter;
+}
+
+%word maxf ([a,b...] func -- maximum) Find maximum value in iterable using function
+This uses the supplied function as a comparator to find the maximum
+item in an iterable.
+{
+    Value func;
+    
+    func.copy(a->popval());
+    Value *iterable = a->popval();
+    
+    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    if(iter->isDone())
+        a->pushNone();
+    else {
+        FuncComparator cmp(a,&func);
+        iter->first();
+        Value m;
+        m.copy(iter->current());
+        if(iter->isDone())
+            a->pushval()->copy(iter->current());
+        else {
+            for(;!iter->isDone();iter->next()){
+                if(cmp.compare(iter->current(),&m)>0){
+                    m.copy(iter->current());
+                }
+            }
+        }
+        a->pushval()->copy(&m);
+    }
+    delete iter;
+}
+
+
+
+
+
 
 %word explode ([x,y,..] -- x,y,..) put all items onto stack
 Puts all items from the list onto the stack, permitting the metaphor
@@ -399,19 +499,6 @@ lists.
     v->t->clone(v,v,true);
     
 }
-
-struct StdComparator : public ArrayListComparator<Value> {
-    Angort *ang;
-    StdComparator(Angort *a){
-        ang = a;
-    }
-    virtual int compare(const Value *a, const Value *b){
-        // binop isn't const, sadly.
-        ang->binop(const_cast<Value *>(a),
-                   const_cast<Value *>(b),OP_CMP);
-        return ang->popInt();
-    }
-};
 
 %word sort (in --) sort a list in place using default comparator
 Reorders the list using a standard comparison, which will fail if
