@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION "2.6.4"
+#define ANGORT_VERSION "2.6.5"
 
 #include <stdlib.h>
 #include <sys/types.h>

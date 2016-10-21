@@ -128,6 +128,7 @@ public:
 };
 
 template <class T> class StringMapIterator : public Iterator<StringMapEnt<T>* > {
+    int iteridx;
 public:
     
     StringMapIterator(StringMap<T> *m){
@@ -136,10 +137,15 @@ public:
     
     virtual void first(){
         ptr = map->head;
+        iteridx=0;
     }
     
     virtual void next(){
         ptr = ptr->next;
+    }
+    
+    virtual int index() const {
+        return iteridx;
     }
     
     virtual bool isDone() const{

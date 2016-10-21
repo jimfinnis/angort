@@ -79,6 +79,7 @@ template<> bool RangeType<float>::equalForHashTable(Value *a,Value *b)const{
 struct IntRangeIterator : public Iterator<Value *>{
     Value v; //!< the current value, as an actual value
     Range<int> *range; //!< the range we're iterating over
+    int iteridx;
 public:
     /// create a range iterator for a range. The constness is a mess.
     IntRangeIterator(const Range<int> *r){
@@ -95,13 +96,19 @@ public:
             delete range;
     }
     
+    virtual int index() const {
+        return iteridx;
+    }
+    
     /// set the current value to the first item
     virtual void first(){
         v.v.i = range->start;
+        iteridx=0;
     }
     /// set the current value to the next item
     virtual void next(){
         v.v.i += range->step;
+        iteridx++;
     }
     /// return true if we're out of bounds
     virtual bool isDone() const{
@@ -118,6 +125,7 @@ public:
 struct FloatRangeIterator : public Iterator<Value *>{
     Value v; //!< the current value, as an actual value
     Range<float> *range; //!< the range we're iterating over
+    int iteridx;
 public:
     /// create a range iterator for a range
     FloatRangeIterator(const Range<float> *r){
@@ -137,14 +145,20 @@ public:
     /// set the current value to the first item
     virtual void first(){
         v.v.f = range->start;
+        iteridx=0;
     }
     /// set the current value to the next item
     virtual void next(){
         v.v.f += range->step;
+        iteridx++;
     }
     /// return true if we're out of bounds
     virtual bool isDone() const{
         return range->step < 0 ? (v.v.f <= range->end) : (v.v.f >= range->end);
+    }
+    
+    virtual int index() const {
+        return iteridx;
     }
     
     /// return the current value

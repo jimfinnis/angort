@@ -502,8 +502,8 @@ this will return the value (as opposed to "i").
 If in an 2-deep iterator ("each") loop, return the current value of
 the outer loop. For hashes, this will return the value (as opposed to "j").
 {
-    Value *iterable = a->getTopIterator()->iterable;
-    Value *cur = a->getTopIterator()->current;
+    Value *iterable = a->getTopIterator(1)->iterable;
+    Value *cur = a->getTopIterator(1)->current;
     Value *p = a->pushval();
     iterable->t->getValue(iterable,cur,p);
 }
@@ -512,11 +512,42 @@ the outer loop. For hashes, this will return the value (as opposed to "j").
 If in an 3-deep iterator ("each") loop, return the current value of
 the outer loop. For hashes, this will return the value (as opposed to "k").
 {
-    Value *iterable = a->getTopIterator()->iterable;
-    Value *cur = a->getTopIterator()->current;
+    Value *iterable = a->getTopIterator(2)->iterable;
+    Value *cur = a->getTopIterator(2)->current;
     Value *p = a->pushval();
     iterable->t->getValue(iterable,cur,p);
 }
+
+%word iidx (-- index) get current iterator index integer
+The iterator index counts how many times the iterator has moved forwards
+in the iterable.
+{
+    // this subtracts 1 because OP_ITERLEAVEIFDONE advances the
+    // iterator at the start of the loop code, after stashing the
+    // current value away.
+    a->pushInt(a->getTopIterator()->iterator->index()-1);
+}    
+
+%word jidx (-- index) get nested iterator index integer.
+The iterator index counts how many times the iterator has moved forwards
+in the iterable.
+{
+    // this subtracts 1 because OP_ITERLEAVEIFDONE advances the
+    // iterator at the start of the loop code, after stashing the
+    // current value away.
+    a->pushInt(a->getTopIterator(1)->iterator->index()-1);
+}    
+
+%word kidx (-- index) get 2nd nested iterator index integer.
+The iterator index counts how many times the iterator has moved forwards
+in the iterable.
+{
+    // this subtracts 1 because OP_ITERLEAVEIFDONE advances the
+    // iterator at the start of the loop code, after stashing the
+    // current value away.
+    a->pushInt(a->getTopIterator(2)->iterator->index()-1);
+}    
+
 
 %word iter (-- iterable) get the iterable which is currently being looped over
 Return the actual iterable object which is being iterated over inside an

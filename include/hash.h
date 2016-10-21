@@ -331,12 +331,14 @@ public:
     virtual void first(){
         size=hash->mask+1;
         ent=hash->table;
+        iteridx=0;
         idx=0;
         while(idx<size && !ent->isUsed()) {idx++;ent++;}
     }
     virtual void next(){
         ent++;idx++;
         while(idx<size && !ent->isUsed()) {idx++;ent++;}
+        iteridx++;
     }
     virtual bool isDone() const {
         return idx>=size;
@@ -346,10 +348,13 @@ public:
             throw Exception("first() not called on iterator");
         return &ent->v;
     }
+    virtual int index() const {
+        return iteridx;
+    }
 private:
     Value key; //!< temporary for currentKey()
     Hash *hash;
-    int idx,size;
+    int idx,size,iteridx;
     HashEnt *ent;
 };
 
@@ -372,11 +377,13 @@ public:
         size=hash->mask+1;
         ent=hash->table;
         idx=0;
+        iteridx=0;
         while(idx<size && !ent->isUsed()) {idx++;ent++;}
     }
     virtual void next(){
         ent++;idx++;
         while(idx<size && !ent->isUsed()) {idx++;ent++;}
+        iteridx++;
     }
     virtual bool isDone() const {
         return idx>=size;
@@ -391,10 +398,13 @@ public:
             throw Exception("first() not called on iterator");
         return &ent->v;
     }
+    virtual int index() const {
+        return iteridx;
+    }
         
 private:
     Hash *hash;
-    int idx,size;
+    int idx,size,iteridx;
     HashEnt *ent;
 };
 

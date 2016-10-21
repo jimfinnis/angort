@@ -219,7 +219,9 @@ public:
     virtual bool isDone() const {
         return idx>=list->count();
     }
-    
+    virtual int index() const {
+        return idx;
+    }
     virtual T *current() {
         return list->get(idx);
     }

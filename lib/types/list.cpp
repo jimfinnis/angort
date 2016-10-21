@@ -92,6 +92,9 @@ public:
     virtual Value *current(){
         return &v;
     }
+    virtual int index() const {
+        return idx;
+    }
 };
 
 

@@ -27,6 +27,9 @@ public:
     virtual void next();
     virtual bool isDone() const;
     virtual Value *current();
+    virtual int index() const {
+        return idx;
+    }
 };
 
 

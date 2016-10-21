@@ -10,6 +10,7 @@ public:
     virtual ~BaseIterator(){}
     virtual void first()=0;
     virtual void next()=0;
+    virtual int index() const =0;
     virtual bool isDone() const =0;
 };    
 

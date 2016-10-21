@@ -163,6 +163,10 @@ public:
             v.clr();
     }
     
+    virtual int index() const {
+        return idx;
+    }
+    
     /// return true if we're out of bounds
     virtual bool isDone() const{
         return idx>=c->cb->closureBlockSize;
