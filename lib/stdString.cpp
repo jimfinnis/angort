@@ -83,7 +83,6 @@ inline int wstrlen(const char *s){
     int len = wstrlen(s.get());
     wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
     mbstowcs(buf,s.get(),len+1);
-    
     for(int i=0;i<len;i++){
         buf[i]=towlower(buf[i]);
     }
@@ -198,11 +197,11 @@ inline int wstrlen(const char *s){
 %word trunc (string maxlen -- string) truncate a string if required
 {
     wchar_t buf[1024];
-    
     int maxlen = a->popInt();
     Value *v = a->stack.peekptr();
     const StringBuffer &s = v->toString();
-    int rv = mbstowcs(buf,s.get(),1023);
+    const char *src = s.get();
+    int rv = mbstowcs(buf,src,1023);
     
     if(rv<0 || maxlen>1024 || maxlen<0 || wcslen(buf)<(unsigned int)maxlen)
         return;

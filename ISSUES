@@ -13,12 +13,15 @@ Not yet documented:
     Parameter type checking
     yield and routines! Must be anon
     various new words: fst snd etc, explode..
+
+*** Weird thing with mbstowcs in trunc failing first time - global state
+kept somewhere?
     
 Exceptions:
     Odd stack frames can result because of the peekPtr optimisation
         in things like std::get
-    Spurious stack traces
-    
+***    Spurious stack traces
+   
 
 closure iterators - WTF?
 
