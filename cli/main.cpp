@@ -16,6 +16,9 @@
 
 using namespace angort;
 
+extern angort::LibraryDef LIBNAME(cli);
+
+
 Angort *a;
 
 static void showException(Exception& e){
@@ -36,7 +39,7 @@ static void showException(Exception& e){
 #define F_CMD 1
 #define F_LOOP 2
 
-static char *generator(const char *text,int state){
+static char *autocomplete_generator(const char *text,int state){
     static int idx;
     const char *name;
     static int len;
@@ -71,6 +74,33 @@ static char *generator(const char *text,int state){
     return NULL;
 }
 
+const char *getPrompt(Angort *a){
+    extern Value promptCallback;
+    
+    static char buf[256];
+    char pchar=0;
+    if(a->isDefining())
+        pchar = ':';
+    else if(a->inSubContext())
+        pchar = '*';
+    else
+        pchar = '>';
+    
+    if(promptCallback.t->isCallable()){
+        a->pushInt(GarbageCollected::getGlobalCount());
+        a->pushInt(a->stack.ct-1); // -1 because we just pushed the gcount
+        buf[0]=pchar;
+        buf[1]=0;
+        a->pushString(buf);
+        a->runValue(&promptCallback);
+        strncpy(buf,a->popval()->toString().get(),256);
+    } else {
+        sprintf(buf,"%d|%d %c ",
+                GarbageCollected::getGlobalCount(),
+                a->stack.ct,pchar);
+    }
+    return buf;
+}
 
 int main(int argc,char *argv[]){
     
@@ -78,6 +108,7 @@ int main(int argc,char *argv[]){
     
     a = new Angort();
     
+    a->registerLibrary(&LIBNAME(cli),true);
     
     // first, we'll try to include the standard startup
     try {
@@ -154,28 +185,16 @@ int main(int argc,char *argv[]){
     
     // then read lines from input
     
-    char buf[256];
-    
     a->assertDebug=true;
     printf("Angort version %s (c) Jim Finnis 2012-2016\nUse '??word' to get help on a word.\n",
            a->getVersion());
     
     // set up the autocomplete function
-    rl_completion_entry_function = generator;
+    rl_completion_entry_function = autocomplete_generator;
     rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
     for(;;){
-        char prompt=0;
-        if(a->isDefining())
-            prompt = ':';
-        else if(a->inSubContext())
-            prompt = '*';
-        else
-            prompt = '>';
-        
-        sprintf(buf,"%d|%d %c ",
-                GarbageCollected::getGlobalCount(),
-                a->stack.ct,prompt);
-        char *line = readline(buf);
+        const char *prompt = getPrompt(a);
+        char *line = readline(prompt);
         if(!line)break;
         if(*line){
             add_history(line);

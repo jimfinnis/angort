@@ -701,6 +701,19 @@ In general all functions can be redefined, but a function defined thus:
 \end{lstlisting}
 cannot be. This can be useful in package development.
 
+\subsection{``import as'' semantics}
+This is also useful when you want to import only certain names from
+a library. Consider the \texttt{vector2d} library, which contains
+the functions \texttt{vector2d\$x} and \texttt{vector2d\$y}. These
+are cumbersome, so we could import just these in their short forms
+as
+\begin{lstlisting}
+?vector2d$x const x
+?vector2d$y const y
+\end{lstlisting}
+Using the \texttt{?} ensures that we get the function itself, rather
+than trying to run it.
+
 \subsection{Forward declarations (deferred declarations)}
 \index{forward declaration}
 It's also possible to use this mechanism to define global variables,
