@@ -152,7 +152,7 @@ while(<>){
                 print "int p$i = _parms[$i]->toInt();\n"
             }elsif($c eq 'd'){
                 print "double p$i = _parms[$i]->toDouble();\n"
-            }elsif($c eq 'c' || $c eq 'v'){
+            }elsif($c eq 'c' || $c eq 'v' || $c eq 'C'){
                 print "Value * p$i = _parms[$i];\n"  # any value or callable
             } elsif($c eq 's' || $c eq 'S'){
                 print "const StringBuffer &_sb$i = _parms[$i]->toString();\n";
