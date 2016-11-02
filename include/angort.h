@@ -783,6 +783,8 @@ public:
     NamespaceManager names; //!< the namespaces are all handled by the namespace manager
     /// print trace on exception in run()
     bool traceOnException;
+    /// stream used for output
+    FILE *outputStream;
     
     
     /// called at the end of a script which contains a package, where that

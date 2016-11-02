@@ -206,7 +206,7 @@ for other items.
 Prints a string representation of a value to stdout without a
 trailing newline.
 {
-    fputs(a->popString().get(),stdout);
+    fputs(a->popString().get(),a->outputStream);
 }
 
 %word x (v -- ) print a value in hex
@@ -214,7 +214,7 @@ Prints a hex representation of an integer value to stdout without a
 trailing newline.
 {
     int x = a->popval()->toInt();
-    printf("%x",x);
+    fprintf(a->outputStream,"%x",x);
 }
 
 %word rawp (v --) print a ptr value as raw hex
@@ -222,13 +222,31 @@ Prints a raw hex representation of an  value to stdout without a
 trailing newline.
 {
     void *p = a->popval()->getRaw();
-    printf("%p",p);
+    fprintf(a->outputStream,"%p",p);
+}
+
+%wordargs redir s (filename --) open a new file and redirect output to it.
+For more complex file output, use the IO library. On fail, throws
+ex$failed.
+{
+    FILE *f = fopen(p0,"w");
+    if(!f)
+        throw RUNT(EX_FAILED,"").set("redir unable to open file %s",p0);
+    a->outputStream=f;
+}
+
+%word endredir (--) close a redirected output stream
+{
+    if(a->outputStream != stdout){
+        fclose(a->outputStream);
+        a->outputStream=stdout;
+    }
 }
 
 
 %word nl ( -- ) print a new line
 {
-    puts("");
+    fputc('\n',a->outputStream);
 }
 
 %word quit ( -- ) exit with return code 0
@@ -254,7 +272,7 @@ with a stack dump. Slows down the program!
 }
 
 %word disasm (name -- ) disassemble word
-Print the instructions for a named Angort function.
+Print to stdout the instructions for a named Angort function.
 {
     a->disasm(a->popString().get());
 }
@@ -270,7 +288,7 @@ both true and false assertions will print.
 Asserts that the boolean is true, throwing ex$assert if not. Will
 print the assertion, even if it passes, if assertdebug has been set.
 If assertmode has been set to `negated, false assertions will pass (used
-in assertion testing).                                                                    
+in assertion testing). All prints are to stdout.
 {
     const StringBuffer &desc = a->popString();
     bool cond = (a->popInt()==0);

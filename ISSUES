@@ -1,4 +1,5 @@
 Not yet documented:
+    redir/endredir (and other IO)
     barewords
     heredocs
     exceptions and signal handling

@@ -171,7 +171,7 @@ none "txtoattr" def # forward declare
     ?s appendst
     [] tag) mkgen
 
-`text (|x,y,h,a,str,s:| # a=middle,start,end
+`text (|x,y,h,a,str,s:| # a="middle","start" or "end"
     ?x ?y runchain !x !y
     "text" [% `x ?x,
             `y ?y,

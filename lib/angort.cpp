@@ -7,7 +7,7 @@
  */
 
 
-#define ANGORT_VERSION "2.6.6"
+#define ANGORT_VERSION "2.6.7"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -43,6 +43,7 @@ Angort *Angort::callingInstance=NULL;
 Angort::Angort() {
     traceOnException=true;
     running = true;
+    outputStream = stdout;
     Types::createTypes();
     // create and set default namespace
     stdNamespace = names.create("std");
@@ -712,7 +713,8 @@ void Angort::run(const Instruction *startip){
                 case OP_DOT:{
                     a = popval();
                     const StringBuffer &sb = a->toString();
-                    puts(sb.get());
+                    fputs(sb.get(),outputStream);
+                    fputc('\n',outputStream);
                 }
                     ip++;
                     break;
