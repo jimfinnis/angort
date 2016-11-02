@@ -225,18 +225,12 @@ trailing newline.
     fprintf(a->outputStream,"%p",p);
 }
 
-static void endredir(Angort *a){
-    if(a->outputStream != stdout){
-        fclose(a->outputStream);
-        a->outputStream=stdout;
-    }
-}    
 
 %wordargs redir s (filename --) open a new file and redirect output to it.
 For more complex file output, use the IO library. On fail, throws
 ex$failed.
 {
-    endredir(a);
+    a->endredir();
     FILE *f = fopen(p0,"w");
      if(!f)
         throw RUNT(EX_FAILED,"").set("redir unable to open file %s",p0);
@@ -245,7 +239,7 @@ ex$failed.
 
 %word endredir (--) close a redirected output stream
 {
-    endredir(a);
+    a->endredir();
 }
 
 

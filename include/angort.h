@@ -786,6 +786,13 @@ public:
     /// stream used for output
     FILE *outputStream;
     
+    void endredir(){
+        if(outputStream != stdout){
+            fclose(outputStream);
+            outputStream=stdout;
+        }
+    }
+    
     
     /// called at the end of a script which contains a package, where that
     /// package is not included by another script - effectively

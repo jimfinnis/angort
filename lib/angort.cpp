@@ -104,6 +104,7 @@ Angort::Angort() {
 }
 
 Angort::~Angort(){
+    endredir();
     if(running)
         shutdown();
 }
