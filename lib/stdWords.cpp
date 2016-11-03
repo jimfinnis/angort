@@ -248,6 +248,17 @@ ex$failed.
     fputc('\n',a->outputStream);
 }
 
+%wordargs errp s ( s -- ) print a string to stdout
+{
+    fputs(p0,stderr);
+}
+
+%word errnl ( -- ) print newline to stdout
+{
+    fputc('\n',stderr);
+}
+
+
 %word quit ( -- ) exit with return code 0
 Typically used to terminate an Angort program, which would normally
 drop back to the interpreter.
