@@ -22,6 +22,9 @@ public:
     
     /// set the value to the given string, copying
     void set(Value *v,const char *s)const;
+    /// set the value to the given string, copying, and taking
+    /// the length (for certain kind of unicode strings)
+    void setwithlen(Value *v,const char *s,int len) const;
     void setPreAllocated(Value *v,BlockAllocHeader *b)const;
     
     /// get length of string

@@ -68,6 +68,12 @@ void StringType::set(Value *v,const char *s)const{
     strcpy(dest,s);
 }
 
+void StringType::setwithlen(Value *v,const char *s,int len)const{
+    char *dest = allocate(v,len+1,this);
+    memcpy(dest,s,len);
+    dest[len]=0;
+}
+
 int StringType::getCount(Value *v)const{
     const char *s = getData(v);
     return mbstowcs(NULL,s,0);
