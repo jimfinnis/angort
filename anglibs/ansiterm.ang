@@ -1,0 +1,32 @@
+package ansiterm
+`sys library drop
+
+private
+
+27 chr !ESC
+ESC "["+ !CSI
+
+:seq |s:| ?CSI ?s + "m"+;
+:seq2 |a,b:| ?CSI ?a + ";" + ?b + "m" +;
+
+
+:colmap
+    <<[ `black, `red, `green, `yellow, `blue, `magenta, `cyan, `white ]>>
+    index dup isnone if drop 7 then
+;
+
+public
+
+# generate strings to produce various terminal effects in ANSI
+# terminals
+
+"0" seq const rset
+"s" seq const savepos
+"u" seq const restorepos
+
+
+:setfc colmap 30 + tostr seq;
+:setfbc colmap 30 + tostr 1 seq2;
+:setbc colmap 40 + tostr seq;
+:setcol |f,b:| ?f colmap 30 + ?b colmap 40+ seq2;
+    

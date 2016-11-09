@@ -207,14 +207,30 @@ loop:
             
             // string escape handing
             if(*p == '\\'){
-                switch(*++p){
-                case 'n':                    *strout++='\n';                    break;
-                case 't':                    *strout++='\t';                    break;
-                case 'r':                    *strout++='\r';                    break;
-                case '\\':                   *strout++='\\';                    break;
-                case '\'':                   *strout++='\'';                    break;
-                case '\"':                   *strout++='\"';                    break;
-                default:seterror();return -1;
+                if(isdigit(p[1])){
+                    // octal
+                    int d = (*++p - '0')*8*8;
+                    if(!*++p){
+                        seterror();return -1;
+                    }
+                    d += (*p - '0')*8;
+                    if(!*++p){
+                        seterror();return -1;
+                    }
+                    d += (*p - '0');
+                    *strout++ = (char)d;
+                } else {
+                    switch(*++p){
+                    case 'n':                    *strout++='\n';                    break;
+                    case 't':                    *strout++='\t';                    break;
+                    case 'r':                    *strout++='\r';                    break;
+                    case '\\':                   *strout++='\\';                    break;
+                    case '\'':                   *strout++='\'';                    break;
+                    case '\"':                   *strout++='\"';                    break;
+                    default:
+                        seterror();
+                        return -1;
+                    }
                 }
                 p++;
             }else
