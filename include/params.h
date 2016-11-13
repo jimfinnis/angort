@@ -15,6 +15,7 @@
 #define __PARAMS_H
 
 #include "angort/angort.h"
+#include "angort/tokeniser.h"
 #include "angort/hash.h"
 
 using namespace angort;
@@ -54,27 +55,71 @@ class Parameters {
     
     
     /// parse a list of var=val,var=val,var=val
-    /// and set globals in Angort from them (as strings).
-    /// Will damage te string (putting nulls in)
+    /// and set globals in Angort from them, as ints, floats or strings
+    /// depending on the characters in the value.
     void parseVars(char *s){
-        char *var,*val;
-        // is the char which *was* at the end but we have overwritten
-        // with null. If it was null before, we terminate.
-        char t = *s; 
-        while(t){
-            var=s;
-            // run forwards to next '=' or NULL
-            while(*s && *s!='=')s++;
-            if(!*s)throw RUNT(EX_CORRUPT,"bad variable string");
-            *s++=0;
-            val=s;
-            // run forwards to next ',' or NULL
-            while(*s && *s!=',')s++;
-            t=*s;*s++=0;// null term, but remember what was there
-            // set the var in Angort
-            a.setGlobal(var,val);
+#define VT_END 0
+#define VT_STRING 1
+#define VT_IDENT 2
+#define VT_INT 3
+#define VT_FLOAT 4
+#define VT_DOUBLE 5
+#define VT_LONG 6 
+#define VT_EQUALS 7
+#define VT_COMMA 8
+        static TokenRegistry vtoks[]=
+        {
+            {"*e", VT_END},
+            {"*s", VT_STRING},
+            {"*i", VT_IDENT},
+            {"*n", VT_INT},
+            {"*f", VT_FLOAT},
+            {"*D", VT_DOUBLE},
+            {"*L", VT_LONG},
+            {"*c=", VT_EQUALS},
+            {"*c,", VT_COMMA},
+            {NULL,-10}
+        };
+            
+            
+        Tokeniser tok;
+        tok.init();
+        tok.settokens(vtoks);
+        tok.reset(s);
+        for(;;){
+            int t = tok.getnext();
+            if(t==VT_END)
+                break;
+            else if(t==VT_IDENT){
+                char var[128];
+                strcpy(var,tok.getstring());
+                if(tok.getnext()!=VT_EQUALS)
+                    throw RUNT(EX_CORRUPT,"bad varstr: expected '='");
+                Value *val = a.findOrCreateGlobalVal(var);
+                switch(tok.getnext()){
+                case VT_FLOAT:
+                    angort::Types::tFloat->set(val,tok.getfloat());
+                    break;
+                case VT_INT:
+                    angort::Types::tInteger->set(val,tok.getint());
+                    break;
+                case VT_LONG:
+                    angort::Types::tLong->set(val,tok.getlong());
+                    break;
+                case VT_DOUBLE:
+                    angort::Types::tDouble->set(val,tok.getdouble());
+                    break;
+                case VT_STRING:
+                case VT_IDENT:
+                    angort::Types::tString->set(val,tok.getstring());
+                    break;
+                default:
+                    throw RUNT(EX_CORRUPT,"bad var value");
+                }
+            }
+            else if(t!=VT_COMMA)
+                throw RUNT(EX_CORRUPT,"bad varstr: expected varname");
         }
-        
     }
     inline Value *getList(int n){
         if(!list)throw RUNT(EX_TYPE,"not in a pushed list");
@@ -86,13 +131,14 @@ class Parameters {
     const char *errorstr;
 public:
     /// execute the parameters file, which stores the result
-    /// on the stack as a hash. Also takes an optional variable string
-    /// (var=val,var=val) for globals to set before this runs.
-    Parameters(const char *fn,char *varstr=NULL){
+    /// on the stack as a hash. Also takes two optional variable strings
+    /// (var=val,var=val) for globals to set: one before the param file
+    /// runs and one after. These will be damaged (nulls added).
+    Parameters(const char *fn,char *prevarstr=NULL,char *postvarstr=NULL){
         hash=NULL; // initialise to invalid
         list=NULL;
         errorstr=NULL;
-        if(varstr)parseVars(varstr);
+        if(prevarstr)parseVars(prevarstr);
         // this will cause the entire program to exit
         // if the Angort code calls "quit" or "abort"!
         try {
@@ -109,6 +155,7 @@ public:
             throw "parameter file did not leave hash on stack";
         }
         hash = Types::tHash->get(&val);
+        if(postvarstr)parseVars(postvarstr);
     }
     ~Parameters(){
         if(errorstr)
