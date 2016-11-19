@@ -20,6 +20,7 @@ class FloatType : public Type {
 public:
     FloatType(){
         add("float","FLOT");
+        flags |= TF_NUMBER;
     }
     /// get the value of v as a float
     float get(Value *v) const ;

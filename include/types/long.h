@@ -16,6 +16,7 @@ class LongType : public Type {
 public:
     LongType(){
         add("long","INTL");
+        flags |= TF_NUMBER;
     }
     /// get the value of v as a int
     long get(Value *v) const;

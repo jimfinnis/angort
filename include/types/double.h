@@ -18,6 +18,7 @@ class DoubleType : public Type {
 public:
     DoubleType(){
         add("double","DFLT");
+        flags |= TF_NUMBER;
     }
     /// get the value of v as a float
     double get(Value *v)const;

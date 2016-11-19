@@ -17,6 +17,7 @@ struct Value;
 typedef void (*BinopFunction)(Angort *a,Value *lhs, Value *rhs);
 
 #define TF_ITERABLE 1
+#define TF_NUMBER 2
 
 /// Each Value has a pointer to one of these, which exist as a set of
 /// singletons describing each type's allocation behaviour etc.

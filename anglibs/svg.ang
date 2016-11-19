@@ -29,8 +29,8 @@ public
 :tag |name,attrhash,contents:hascons|
     "<" ?name + 
     ?attrhash each {" " + i + "=\"" + ival  + "\"" +}
-    ?contents type `list = if ?contents 
-        len 0 > !hascons
+    ?contents type `list = if 
+        ?contents len 0 > !hascons
     else 
         0 !hascons 
     then
@@ -93,7 +93,9 @@ public
 
 # generate an SVG container tag
 :svg |w,h,contents:|
-    "svg" [%`width ?w, `height ?h] ?contents tag
+    "svg" [%`width ?w, `height ?h] 
+    ?contents
+    tag
 ;
 
 none "txtoattr" def # forward declare
@@ -315,7 +317,7 @@ new
 # print the whole shebang to stdout, i.e. the entire shapelist
 
 :out |w,h:|
-    ?w ?h ?MarkerDefs ?ShapeList + svg.
+    ?w ?h [?MarkerDefs] ?ShapeList + svg.
 ;
 
 # start a new group, setting its style. The group elements
