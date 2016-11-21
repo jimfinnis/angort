@@ -148,6 +148,8 @@ while(<>){
             $c = substr($args,$i,1);
             if($c eq 'n'){
                 print "float p$i = _parms[$i]->toFloat();\n"
+            }elsif($c eq 'L'){
+                print "long p$i = _parms[$i]->toLong();\n"
             }elsif($c eq 'i'){
                 print "int p$i = _parms[$i]->toInt();\n"
             }elsif($c eq 'd'){

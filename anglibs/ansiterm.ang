@@ -24,7 +24,6 @@ public
 "s" seq const savepos
 "u" seq const restorepos
 
-
 :setfc colmap 30 + tostr seq;
 :setfbc colmap 30 + tostr 1 seq2;
 :setbc colmap 40 + tostr seq;
