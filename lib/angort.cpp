@@ -7,7 +7,11 @@
  */
 
 
-#define ANGORT_VERSION "2.6.8"
+// semantic versioning: (incs on backcompat breaking features).
+//                      (incs on backcompat retaining features).
+//                      (incs on bug fixing patches)
+
+#define ANGORT_VERSION "2.7.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -2151,6 +2155,17 @@ const char *Angort::getNextAutoComplete(){
     }
 }
 
+const char *Angort::appendToSearchPath(const char *path){
+    const char *prev = searchPath;
+    int len = strlen(searchPath)+1+strlen(path);
+    char *n = (char *)malloc(len+1);
+    strcpy(n,searchPath);
+    char *p = n+strlen(n);
+    *p++=':';
+    strcpy(p,path);
+    searchPath = n;
+    return prev;
+}
 
 
 /// comparator for ArrayList sorting of values with a comparator

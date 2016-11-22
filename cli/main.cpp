@@ -102,6 +102,13 @@ const char *getPrompt(Angort *a){
     return buf;
 }
 
+void addDirToSearchPath(const char *data){
+    char *path = realpath(data,NULL); // get absolute path
+    *strrchr(path,'/')=0; // terminate at last / to get directory
+    free((void *)a->appendToSearchPath(path));
+    free((void *)path);
+}
+
 int main(int argc,char *argv[]){
     
     extern void setArgumentList(int argc,char *argv[]);
@@ -140,7 +147,7 @@ int main(int argc,char *argv[]){
     
     // either the filename to run or a command (depending on opts)
     if(argc>optind){
-            const char *data = argv[optind];
+        const char *data = argv[optind];
         try {
             if(flags & F_CMD){
                 if(flags & F_LOOP){
@@ -176,6 +183,7 @@ int main(int argc,char *argv[]){
                     printf("cannot open file: %s\n",data);
                     exit(1);
                 }
+                addDirToSearchPath(data);
                 a->fileFeed(data);
             }
         }catch(Exception e){

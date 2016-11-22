@@ -28,6 +28,7 @@ void Angort::popParams(Value **out,const char *spec,const Type *type0,
         case 'n':
         case 'd':
         case 'i':
+        case 'L':
             if(!(v->t->flags & TF_NUMBER))
                 throw ParameterTypeException(i,"number");
             break;

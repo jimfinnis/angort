@@ -990,6 +990,11 @@ public:
     /// return the next possible autocomplete candidate
     const char *getNextAutoComplete();
     
+    /// append a path to the search path, returning the prior
+    /// path (which should be freed; the new path is malloced())
+    const char *appendToSearchPath(const char *path);
+    
+    
     /// throw an exception, setting the IP of the handler or NULL
     /// if no handler was found.
     void throwAngortException(int symbol, Value *data);
