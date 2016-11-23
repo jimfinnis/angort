@@ -222,7 +222,7 @@ inline int wstrlen(const char *s){
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
     // must be the size of the longest string
-    char *buf = (char *)alloca(strlen(s)+1);
+    char *buf = (char *)malloc(strlen(s)+1);
     const char *p=s;
     const char *base=s;
     
@@ -238,6 +238,7 @@ inline int wstrlen(const char *s){
         } else
             s++;
     }
+    free((void *)buf);
 }
 
 %wordargs substr sii (str start count --) get substring, if count<=0 calculate count from end, if start -ve calculate start from end
