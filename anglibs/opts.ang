@@ -4,7 +4,6 @@
 
 
 `regex library drop
-require "util.ang" drop
 package opts
 
 # get an option from a list by its name. We do this because options
@@ -322,8 +321,8 @@ package opts
 
 public
 
-:parse |strings/list,optlist/list,arglist/list:bothlist|
-    :"(strings optlist arglist -- results remnants) Parse a string list"
+:mkparse |optlist/list,arglist/list:bothlist|
+    :"(optlist arglist) make a parser"
     
     [`char, `name, `description ] each {
         ?optlist i checkfordupes
@@ -372,6 +371,79 @@ public
             i `default i?`type asserthas
         then
     }
-    ?strings ?optlist ?arglist genp?`parse@
+    
+    # make the hash
+    
+    [%
+     # call this to do the parsing
+     `parse (|strings:|
+         ?strings ?optlist ?arglist genp?`parse@
+     ),
+     # generate a usage string, must supply program name
+     `usage (|progname:t|
+         "Usage: " ?progname + " " +
+         
+         ?optlist (|a:| ?a?`type `bool = ?a?`char isnone not and) filter !t
+         ?t len if 
+             "-" +
+             ?t (?`char) map "" intercalate +
+             " " +
+         then
+         
+         ?arglist (|a:|
+             ?a?`required if "<" else "[<" then
+             ?a?`name + 
+             ?a?`required if ">" else ">]" then +
+         ) map " " intercalate + 
+         
+         
+         ?arglist len if
+             "\nArguments:\n" +
+             ?arglist (|a:|
+                 " " ?a?`name 20 padright + ":" +
+                 ?a?`description + " (" + ?a?`type + ")" +
+                 ?a?`required not if
+                     " (optional, default=" +
+                     ?a?`default
+                     ?a?`default type `list = if
+                         "," intercalate
+                     then + ")" +
+                 then
+             ) map "\n" intercalate +
+         then
+         ?optlist len if
+             "\nOptions:\n" +
+             ?optlist (|a:|
+                 ?a?`char isnone not if
+                     "-" ?a?`char + "," +
+                 else
+                     ""
+                 then
+                 " --" + ?a?`name +
+                 21 padright ":" +
+                 ?a?`description + " (" + ?a?`type + ")" +
+                 ?a?`required not if
+                     " (optional, default=" +
+                     ?a?`default tostr
+                     ?a?`default type `list = if
+                         "," intercalate
+                     then + ")" +
+                 then
+             ) map "\n" intercalate+
+         then
+     )
+         
+     ]
+         
+         
 ;
 
+:getargs |:a|
+    :" used to get the command line arguments without angort or progname."
+    args clone !a
+    0 ?a get "angort" stridx isnone not if
+        ?a shift drop
+    then
+    ?a shift drop
+    ?a
+;

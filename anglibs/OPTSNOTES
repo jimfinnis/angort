@@ -32,58 +32,73 @@ Each argument:
     `default            :   the default value if `required is false
 Note: optional args must follow all the required args.    
 
-Parsing:
-
-    parse (strings optlist arglist -- results remnants)
+Getting arguments without leading stuff:
     
-Takes a list of strings (such as that produced by "args shift drop args"
-to get the args without the command name)
+    opts$getargs (-- list)
+    
+This copies "args" (i.e. the system argv). It then removes
+the leading item if it contains the string "angort" (i.e. it's
+the name of the interpreter). It then removes the string after
+that (the script name) and returns the result.
 
+Creating a parser:
+
+    mkparse (optlist arglist -- parser) 
+
+Takes options and arguments lists and creates a parser. ?`parse and ?`usage are
+methods available to run the parser, e.g.
+
+    ?OPTS ?ARGS opts$mkparse !P
+    opts$getargs ?P?`parse@
+    
 Results is a hash containing the value of each option and
 argument keyed by name. Any unprocessed args are in remnants.
+See below for how to print the usage on exception.
 
 
 
 
 require "./opts.ang" drop
 
-# need to drop angort specific args ("angort foo.ang") and other stuff,
-# but that should be done in the library!
+(|:p|
+    try
+        [
+         [%
+          `description "blah",
+          `char "x",
+          `name "foo"
+         ],
+         [%
+          `description "blah2",
+          `name "bar",
+          `char "y",
+          `type `string,
+          `default "wob"
+          ],
+         [%
+          `description "z",
+          `name "z",
+          `char "z",
+          `type `integer,
+          `default 3,
+          `required 1
+          ]
+        ]
 
-args shift drop
-args shift drop args 
-
-[
- [%
-  `description "blah",
-  `char "x",
-  `name "foo"
- ],
- [%
-  `description "blah2",
-  `name "bar",
-  `char "y",
-  `type `string,
-  `default "wob"
-  ],
- [%
-  `description "z",
-  `name "z",
-  `char "z",
-  `type `integer,
-  `default 3,
-  `required 1
-  ]
-]
-
-[
- [%
-  `description "the wibble",
-  `name "wibble"
-  ]
- ]
-opts$parse
-
+        [
+         [%
+          `description "the wibble",
+          `name "wibble"
+          ]
+         ]
+        opts$mkparse !p
+        opts$getargs ?p?`parse@
+    catchall
+        drop . # print exception string
+        "progname" ?p?`usage@.
+        quit
+    endtry
+)@
 
 swap
 "Results:".
