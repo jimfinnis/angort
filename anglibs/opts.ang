@@ -57,7 +57,7 @@ package opts
 :asserttype |hash,key:|
     ?key ?hash get <<[`bool,`string,`integer,`list,`float]>> in not if
         [?key,?hash?`name] "%s in definition %s is not a type" format
-        ?key `opts$notatypeindefs throw
+        `opts$notatypeindefs throw
     then
 ;
 
@@ -343,7 +343,7 @@ public
         # assert that things are there
         i `name `symbol asserthas
         i `description `string asserthas
-        i `type asserttype
+        i `type asserttype 
         i?`type `list = if
             i `listtype 1 asserttype
         then
@@ -375,10 +375,6 @@ public
     # make the hash
     
     [%
-     # call this to do the parsing
-     `parse (|strings:|
-         ?strings ?optlist ?arglist genp?`parse@
-     ),
      # generate a usage string, must supply program name
      `usage (|progname:t|
          "Usage: " ?progname + " " +
@@ -431,6 +427,10 @@ public
                  then
              ) map "\n" intercalate+
          then
+     ),
+     # call this to do the parsing
+     `parse (|strings:|
+         ?strings ?optlist ?arglist genp?`parse@
      )
          
      ]
