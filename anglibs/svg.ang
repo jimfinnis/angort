@@ -250,22 +250,71 @@ none "txtoattr" def # forward declare
     ?contents tag
 ;
 
+# used for building base marker types we can turn into markers
+# when we want to
+:markerbase |w,h,refx,refy,contents:|
+    [% 
+     `markerWidth ?w,
+     `markerHeight ?h,
+     `orient `auto,
+     `refX ?refx,
+     `refY ?refy,
+     `contents ?contents 
+    ]
+;
 
 
-# and here we generate a list of markers, which gets rendered
-# as part of the svg tag. If you don't want these, just remove
-# things from or clear the MarkerDefs list.
 
-"defs" [%] 
-[
- `markerArrowLEnd 13 13 2 6 
- ["M2,2 L2,11 L10,6 L2,2" [%] str_solidpath] marker,
- `markerArrowSStart 7 7 5 3 
- ["M5,1 L5,5 L1,3 L5,1" [%] str_solidpath] marker,
- `markerArrowSEnd 7 7 1 3 
- ["M1,1 L1,5 L5,3 L1,1" [%] str_solidpath] marker
-]
-tag !MarkerDefs
+# These are just dups of the base markers. They can get added
+# to with makemarker.
+
+[%] !MarkerDefs
+
+[%
+ `smallstart 7 7 5 3 
+ ["M5,1 L5,5 L1,3 L5,1", `solidpath] markerbase,
+ `smallend 7 7 1 3 
+ ["M1,1 L1,5 L5,3 L1,1", `solidpath] markerbase,
+ `largeend 13 13 2 6 
+ ["M2,2 L2,11 L10,6 L2,2", `solidpath] markerbase
+ ] !BaseMarkers
+
+# make a full marker def from base and colour. This directly
+# creates a path tag and uses it as the new contents
+# for a marker tag.
+
+:makedeffrombaseandcol |name,b,col:p,t,c|
+    ?b?`contents fst !p # marker path desc
+    ?b?`contents snd !t # marker path type
+    
+    ["path" [% `d ?p,
+            "fill-opacity" ?t `solidpath = if 1 else 0 then,
+            ?t `solidpath = if "fill" else "stroke" then ?col
+            ] [] tag] !c
+    
+    ?name ?b?`markerWidth ?b?`markerHeight
+    ?b?`refX ?b?`refY 
+    ?c
+    marker
+;
+
+# make a marker (or find one already) from a base marker and colour
+:makemarker |basename,col:b,name,marker|
+    ?basename ?BaseMarkers get !b
+    ?b isnone if 
+        `ex$notfound "base marker " ?basename + " not found"+ throw
+    then
+    # get name for def hash
+    ?basename "-COL-" + ?col + !name
+    # if already there, use it, else make one
+    ?name ?MarkerDefs get !marker
+    ?marker isnone if
+        ?name ?b ?col makedeffrombaseandcol !marker
+        ?marker ?name ?MarkerDefs set
+    then
+    ?name
+;
+
 
 :mkhandleurl |handle:| "url(#" ?handle + ")"+;
 :markerstyleEnd |name:| [%"marker-end" ?name mkhandleurl ];
@@ -274,9 +323,24 @@ tag !MarkerDefs
 # this will merge the marker style into the style argument
 # for line.
 
-:arrow :"(x1 y1 x2 y2 --) single ended arrow"
+:arrow |:c| :"(x1 y1 x2 y2 --) single ended arrow"
+    "black"!c
+    ?StyleStack len  0 = if
+        ?StyleStack last ?`stroke isnone not if
+            ?StyleStack last?`stroke
+        then
+    then
+    `smallend ?c makemarker markerstyleEnd pushstyle
     `markerArrowSEnd markerstyleEnd pushstyle
     line
+    popstyle
+;
+
+:colarrow |col,wid:| :"(x1 y1 x2 y2 col wid--) single ended arrow, coloured with width"
+    [% `stroke ?col, `width ?wid] pushstyle
+    `smallend ?col makemarker markerstyleEnd pushstyle
+    line
+    popstyle
     popstyle
 ;
 
@@ -317,7 +381,9 @@ new
 # print the whole shebang to stdout, i.e. the entire shapelist
 
 :out |w,h:|
-    ?w ?h [?MarkerDefs] ?ShapeList + svg.
+    ?w ?h 
+    ["defs" [%] [] ?MarkerDefs each {ival,} tag]
+    ?ShapeList + svg.
 ;
 
 # start a new group, setting its style. The group elements

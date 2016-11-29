@@ -401,6 +401,12 @@ Returns true if the value is a NONE value.
     Types::tInteger->set(s,s->isNone()?1:0);
 }
 
+%word isnumber (val -- bool) return true if a numeric type
+{
+    Value *s = a->stack.peekptr();
+    Types::tInteger->set(s,s->t->flags & TF_NUMBER?1:0);
+}
+
 %word iscallable (val -- bool) return true if is codeblock or closure
 Return true if the value is a function.
 {
