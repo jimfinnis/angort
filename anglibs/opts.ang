@@ -161,6 +161,7 @@ package opts
              ?a 0 swap get "-" = 
              ?a isnumberornumberlist not and
          ) filter2 !optstrings !argstrings
+         
          # remove the leading "-" from the optstrings
          ?optstrings (1 -1 substr) map !optstrings
          0!curidx
@@ -253,7 +254,6 @@ package opts
          
          # check all required got, and fill in defaults 
          # for others.
-         
          ?optlist each {
              
              i?`name ?this?`gotopts in not if
@@ -298,7 +298,6 @@ package opts
              # and set it in the results.
              i?`name ?results set
          }
-         
          ?results
          ?argstrings
      )
@@ -447,3 +446,22 @@ public
     ?a shift drop
     ?a
 ;
+
+
+:process |commandname,opts,args:|
+    :"generates a parser, which it runs on the command line args"
+    try
+        ?opts ?args opts$mkparse !P
+        opts$getargs ?P?`parse@
+        drop # drop remainder
+    catchall
+        errp ": " errp
+        errp errnl 
+        ?P isnone not if
+            ?commandname ?P?`usage@ errp errnl
+        then
+        quit
+    endtry
+;
+    
+    

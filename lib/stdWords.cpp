@@ -387,7 +387,11 @@ Negate an int or float.
     } else if(v->t == Types::tLong){
         long l;
         l = v->toLong();
-        Types::tLong->set(a->pushval(),l);
+        Types::tLong->set(a->pushval(),-l);
+    } else if(v->t == Types::tDouble){
+        double f;
+        f = v->toDouble();
+        Types::tDouble->set(a->pushval(),-f);
     } else {
         throw RUNT(EX_TYPE,"bad type for 'neg'");
     }
