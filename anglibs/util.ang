@@ -19,7 +19,7 @@ public
     :"(namelist -- .. arg2 arg1) given a list of args, produces them on stack in reverse order"
     # args is the entire command line, including the script name etc.
     # so let's remove the script name and the executable name
-    args 0 = if ?list usage quit then
+    args len 0 = if ?list usage quit then
     args shift "angort" = if
         args shift drop
     then
