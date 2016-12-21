@@ -449,7 +449,7 @@ public
 
 
 :process |commandname,opts,args:|
-    :"generates a parser, which it runs on the command line args"
+    :"(cmdname opts args -- argshash) generates a parser, which it runs on the command line args"
     try
         ?opts ?args opts$mkparse !P
         opts$getargs ?P?`parse@

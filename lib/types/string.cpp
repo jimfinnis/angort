@@ -135,6 +135,7 @@ void StringType::slice(Value *out,Value *coll,int start,int len)const{
     wchar_t *s = b.getWideBuffer(); // allocates memory
     
     int slen = wcslen(s);
+    if(start<0)start=slen+start;
     if(start<0)start=0;
     if(len<0)len=slen;
     

@@ -468,7 +468,8 @@ none, non-iterable types will throw ex$noiter.
 Return a slice of a string or list, returning another string or or list,
 given the start and length. Inappropriate types will throw ex$notcoll.
 If length of the iterable  is greater than the length requested, then the
-slice will go to the end. Empty results will be returned if the requested
+slice will go to the end. If the start<0 it is counted from the end.
+Empty results will be returned if the requested
 slice does not intersect the iterable.
 {
     int len = a->popInt();

@@ -65,10 +65,16 @@ using namespace angort;
 %word abs (x -- abs(x))
 {
     Value *v = a->popval();
-    if(v->t == Types::tInteger){
+    if(v->t == Types::tInteger)
         a->pushInt(ABS(v->toInt()));
-    } else 
+    else if(v->t == Types::tDouble)
         a->pushDouble(ABS(v->toDouble()));
+    else if(v->t == Types::tLong)
+        a->pushLong(ABS(v->toLong()));
+    else if(v->t == Types::tFloat)
+        a->pushFloat(ABS(v->toFloat()));
+    else 
+        throw RUNT(EX_TYPE,"").set("Bad type for abs(): %s",v->t->name);
 }
 
 %word fmod (x y -- fmod(x,y))

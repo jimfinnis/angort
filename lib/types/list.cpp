@@ -138,6 +138,7 @@ void ListType::slice(Value *out,Value *coll,int start,int len)const{
     ArrayList<Value> *list = get(coll);
     
     int listlen = list->count();
+    if(start<0)start=listlen+start;
     if(start<0)start=0;
     if(len<0)len=listlen;
     if(start<listlen){
