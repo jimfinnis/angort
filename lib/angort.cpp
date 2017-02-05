@@ -288,6 +288,8 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     f->loopIterCt=loopIterCt;
     loopIterCt=0;
     
+    // if the closure has a stored IP (due to a yield) then start
+    // from there, otherwise start from the codeblock's beginning.
     struct Instruction *ip;
     if(clos && clos->ip)
         ip=clos->ip;
