@@ -447,10 +447,18 @@ public
     ?a
 ;
 
+""!CommandName
+
+:usage
+    :"(-- str) generate a usage string; \"process\" must have run"
+    ?CommandName ?P?`usage@
+;
+
 
 :process |commandname,opts,args:|
     :"(cmdname opts args -- argshash) generates a parser, which it runs on the command line args"
     try
+        ?commandname !CommandName
         ?opts ?args opts$mkparse !P
         opts$getargs ?P?`parse@
         drop # drop remainder
@@ -458,10 +466,9 @@ public
         errp ": " errp
         errp errnl 
         ?P isnone not if
-            ?commandname ?P?`usage@ errp errnl
+            usage errp errnl
         then
         quit
     endtry
 ;
-    
     

@@ -600,7 +600,7 @@ private:
     
     Stack<Value,RSTACKSIZE> loopIterStack; // stack of loop iterators
     
-    Stack<CompileContext,4> contextStack;
+    Stack<CompileContext,8> contextStack;
     VarStack locals;
     
     ArrayList<LibraryDef *> *libs; //!< list of libraries
