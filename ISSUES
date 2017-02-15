@@ -22,6 +22,13 @@ Exceptions:
     Odd stack frames can result because of the peekPtr optimisation
         in things like std::get
 ***    Spurious stack traces
+
+What would be glorious:
+    copyonwrite list clones and slices. When we clone/slice a list, we actually make
+    a new reference to the old data with some optional slice info. Either a new data
+    type (might have messy ramifications) or some cleverness in ArrayList (might be hard
+    to reftrack). We only actually copy the list if we ever write to it.
+    
    
 
 closure iterators - WTF?

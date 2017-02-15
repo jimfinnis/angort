@@ -14,6 +14,37 @@ package stats
     ?list len 1- tofloat /
 ;
 
+:mediansorted |list:|
+    :"(list --) median for sorted lists"
+    ?list len 1 band if
+        # odd
+        ?list len 2/ ?list get
+    else
+        ?list len 2/ ?list get
+        ?list len 2/ 1- ?list get + 0.5 *
+    then
+;
+
+:median |list:|
+    :"(list --) median for unsorted lists (clones and sorts)"
+    ?list clone !list 
+    ?list dup sort mediansorted
+;
+
+:quartiles |list:h1,h2|
+    :"(list -- upper median lower) find quartiles (Tukey hinge method)"
+    ?list clone !list ?list sort
+    ?list len 1 band if
+        ?list 0 ?list len 2/ 1+ slice !h1
+        ?list ?list len 2/ -1 slice !h2
+    else
+        ?list 0 ?list len 2/ slice !h1
+        ?list ?list len 2/ -1 slice !h2
+    then
+    ?h2 mediansorted
+    ?list mediansorted
+    ?h1 mediansorted
+;
 :popsd popvariance sqrt;
 :sampsd sampvariance sqrt;
 
