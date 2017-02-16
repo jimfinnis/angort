@@ -48,7 +48,7 @@ long FloatType::toLong(const Value *v) const {
 
 const char *FloatType::toString(bool *allocated,const Value *v) const {
     char buf[128];
-    snprintf(buf,128,"%f",v->v.f);
+    snprintf(buf,128,formatString,v->v.f);
     *allocated=true;
     return strdup(buf);
 }

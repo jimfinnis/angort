@@ -909,7 +909,27 @@ reached in which case NONE is returned.
     } else
         a->pushNone();
 }
-        
+
+%wordargs setfloatformat s (s --) set a printf format string for floats
+Sets the format string used for the standard conversion from floats
+to strings. The default is "%f". Doubles have a separate string set
+with setdoubleformat.
+{
+    if(strlen(p0)>63)
+        throw RUNT(EX_LONGNAME,"format string too long");
+    strcpy(Types::tFloat->formatString,p0);
+}
+
+%wordargs setdoubleformat s (s --) set a printf format string for doubless
+Sets the format string used for the standard conversion from doubles
+to strings. The default is "%f". Floats have a separate string set
+with setfloatformat.
+{
+    if(strlen(p0)>63)
+        throw RUNT(EX_LONGNAME,"format string too long");
+    strcpy(Types::tDouble->formatString,p0);
+}
+
 
 
 

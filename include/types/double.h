@@ -19,6 +19,7 @@ public:
     DoubleType(){
         add("double","DFLT");
         flags |= TF_NUMBER;
+        strcpy(formatString,"%f");
     }
     /// get the value of v as a float
     double get(Value *v)const;
@@ -36,6 +37,9 @@ public:
     virtual float toFloat(const Value *v) const;
     virtual double toDouble(const Value *v) const;
     virtual void toSelf(Value *out,const Value *v) const;
+
+    char formatString[64]; // used for toString()
+
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;
 };
