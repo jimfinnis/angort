@@ -213,9 +213,10 @@ while(<>){
             # just a curly bracket
             $waitingforfuncstart=0;
             $t = $descs{$curword};
-            # substitute nice things for LaTeX (none yet)
+            # substitute nice things for LaTeX
             $t =~ s/\$/\\\$/g;
             $t =~ s/\\n/\n/g;
+            $t =~ s/_/\\_/g;
             # extract the first line.
             ($firstline,$t) = split(/\n/,$t,2);
             print WORDSTEXFILE $firstline."\n\n";
