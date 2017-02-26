@@ -42,7 +42,7 @@ long DoubleType::toLong(const Value *v) const {
 
 const char *DoubleType::toString(bool *allocated,const Value *v) const {
     char buf[128];
-    snprintf(buf,128,"%f",v->v.df);
+    snprintf(buf,128,formatString,v->v.df);
     *allocated=true;
     return strdup(buf);
 }

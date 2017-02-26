@@ -17,8 +17,11 @@ using namespace angort;
 {
     a->pushDouble(atan2(p0,p1));
 }
-    
 
+%word round (x -- x to nearest int, as a double)
+{
+    FN(round);
+}
 %word cos (x -- cos x)
 {
     FN(cos);

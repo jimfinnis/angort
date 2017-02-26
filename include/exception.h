@@ -71,8 +71,8 @@ public:
     int id; // ID of symbol
 };
 
-#define RUNT(xid,x) RuntimeException(xid,x,__FILE__,__LINE__)
-#define WTF RuntimeException(EX_WTF,"What a Terrible Failure",__FILE__,__LINE__)
+#define RUNT(xid,x) angort::RuntimeException(xid,x,__FILE__,__LINE__)
+#define WTF angort::RuntimeException(EX_WTF,"What a Terrible Failure",__FILE__,__LINE__)
 
 /// this exception is thrown when a generic runtime error occurs.
 /// It can be caught by Angort exception handling.
