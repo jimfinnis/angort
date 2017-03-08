@@ -14,6 +14,10 @@ Not yet documented:
     Parameter type checking
     yield and routines! Must be anon
     various new words: fst snd etc, explode..
+    
+*** Signed/unsigned ints! 
+    - readu32 just converts to a signed 32, it should at least push as long.
+    - shifts don't work on longs (just convert to ints!)
 
 *** Weird thing with mbstowcs in trunc failing first time - global state
 kept somewhere?
