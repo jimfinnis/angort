@@ -248,9 +248,10 @@ ex$failed.
     fputc('\n',a->outputStream);
 }
 
-%wordargs errp s ( s -- ) print a string to stdout
+%word errp s ( s -- ) print a string to stdout
 {
-    fputs(p0,stderr);
+    const StringBuffer& str = a->popString();
+    fputs(str.get(),stderr);
 }
 
 %word errnl ( -- ) print newline to stdout
