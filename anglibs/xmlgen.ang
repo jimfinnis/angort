@@ -25,7 +25,7 @@ public
                      i?`output@ +
                  else
                      i+ 
-                 then " " +
+                 then #" " +
              } ?name closetag + case
          ">" +
          ?this?`contents + ?name closetag + otherwise
