@@ -5,6 +5,7 @@ private
 
 public
 :mktag |name,attrhash,contents:this|
+    :"(name attributehash contents -- tag) make a tag; contents can be list, hash or text"
     [% dup!this # object hack!
      `output (
          "<" ?name +
@@ -12,18 +13,22 @@ public
              ?this?`attrs each {" " + i + "=\"" + ival  + "\"" +}
          then
          cases
-             ?this?`contents isnone if "/>\n" + case
+             ?this?`contents type `hash = if 
+                 ">" +
+                 ?this?`contents?`output@ +
+                 ?name closetag +  case
+             ?this?`contents isnone if "/>" + case
              ?this?`contents type `list = if
-                 ">\n" +
+                 ">" +
              ?this?`contents each {
                  i type `hash = if
                      i?`output@ +
                  else
                      i+ 
                  then " " +
-             } ?name closetag + "\n" + case
+             } ?name closetag + case
          ">" +
-         ?this?`contents + ?name closetag + "\n" + otherwise
+         ?this?`contents + ?name closetag + otherwise
        ),
        `contents ?contents, # expose for modification
        `attrs ?attrhash,
@@ -32,7 +37,7 @@ public
 ;
 
 :rmtagfromlist |l/list,name:t|
-    :"remove a named tag from a list of tags"
+    :"(list name --) remove a named tag from a list of tags"
     []
     0 ?l len range each { 
         i ?l get !t
