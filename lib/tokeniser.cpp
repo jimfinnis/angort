@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "tokeniser.h"
 
@@ -266,8 +267,9 @@ loop:
         
         
         if(isdigit(val.s[0]) || val.s[0]=='-'){ // starts with a digit, must be a number. Hex would be 0ffh etc.
-            bool gotPoint = false;
+            bool gotpoint;
             bool isLong = false;
+            char *exponent; // exponent (ptr to 'e') if present
             
             // first, look at the last character to see if it's a long
             if(tolower(val.s[len-1]=='l')){
@@ -276,15 +278,14 @@ loop:
                 isLong=true;
             }
             // is there a point? (Indicates float)
-            for(int i=0;i<len;i++)
-            {
-                if(val.s[i] == '.')
-                    gotPoint = true;
-            }
+            gotpoint = strchr(val.s,'.')!=NULL;
+            // or an exponent? (Also indicates float - and keep the ptr)
+            exponent = strchr(val.s,'e');
+            
             // get the (possibly new) end char for the base.
             char endchar = val.s[len-1];
             if(isalpha(endchar)){
-                if(gotPoint){ // can't have a base char on a float/double
+                if(gotpoint && !exponent){ // can't have a base char on a float/double
                     seterror();
                     return -1; 
                 }else{
@@ -304,12 +305,24 @@ loop:
                     curtype = isLong ? longtoken : inttoken;
                     return curtype;
                 }
-            } else if(gotPoint){
+            } else if(gotpoint || exponent){
+                // this might have an E in it, for exponential notation
+                double v;
+                if(exponent){
+                    *exponent = 0;
+                    double mant = atof(val.s);
+                    double expn = atof(exponent+1);
+                    *exponent = 'e'; // best put it back
+                    v = pow(10.0,expn)*mant;
+                } else {
+                    v = atof(val.s);
+                }
+                    
                 if(isLong){
-                    val.df = atof(val.s);
+                    val.df = v;
                     curtype = doubletoken;
                 } else {
-                    val.f = atof(val.s);
+                    val.f = v;
                     curtype = floattoken;
                 }                    
             } else {
