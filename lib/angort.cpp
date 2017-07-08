@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "2.9.0"
+#define ANGORT_VERSION "2.9.1"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -116,8 +116,9 @@ Angort::~Angort(){
 void CompileContext::dump(){
     printf("CompileContext final setup\nLocals\n");
     printf("Closure count %d, Param count %d\n",closureCt,paramCt);
+    printf("   %20s %8s %s","name","closed?","localindex\n");
     for(int i=0;i<localTokenCt;i++){
-        printf("   %20s %s %4d\n",
+        printf("   %20s %8s %d\n",
                localTokens[i],
                (localsClosed&(1<<i))?"C":" ",
                localIndices[i]);
@@ -243,6 +244,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         Value *paramval = stack.peekptr((cb->params-1)-i);
         
         Type *tp = cb->paramTypes[i];
+        Value *valptr=paramval; // the value we'll actually store
         if(tp){
             // type check
             if(tp != paramval->t){
@@ -252,6 +254,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
                     throw RUNT(EX_BADPARAM,"").set("Type mismatch: argument %d is %s, expected %s",
                                                    i,paramval->t->name,tp->name);
                 }
+                valptr = &tmpval;
             }
         }                          
         
@@ -259,10 +262,10 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         
         if(cb->localsClosed & (1<<i)){
             //            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
-            clos->map[*pidx]->copy(paramval);
+            clos->map[*pidx]->copy(valptr);
         } else {
             //            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
-            locals.store(*pidx,paramval);
+            locals.store(*pidx,valptr);
         }
     }
     stack.drop(cb->params);
@@ -895,7 +898,7 @@ void Angort::endDefine(CompileContext *c){
     
     // get the codeblock out of the context and set it up.
     CodeBlock *cb = c->cb;
-    //    c->dump();
+//        c->dump(); //snark
     cb->setFromContext(c);
     Value *wordVal = names.getVal(wordValIdx);
     
@@ -1101,23 +1104,23 @@ void CompileContext::convertToClosure(const char *name){
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
-    //    printf("Beginning scan to convert local %d into closure %d\n",
-    //           localIndex,localIndices[previdx]);
+//        printf("Beginning scan to convert local %d into closure %d\n",
+//               localIndex,localIndices[previdx]);
     for(int i=0;i<compileCt;i++,inst++){
-        //        char buf[1024];
-        //        printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
+//                char buf[1024];
+//                printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
         if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSUREGET;
-            //            printf("Rehashing to %d\n",localIndices[previdx]);
+//                        printf("Rehashing to %d\n",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
         if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSURESET;
-            //            printf("Rehashing to %d\n",localIndices[previdx]);
+//                        printf("Rehashing to %d\n",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
     }
-    //    printf("Ending scan\n");
+//        printf("Ending scan\n");
     
     // now decrement all indices of locals greater than this.
     // Firstly do this in the table.
@@ -1663,7 +1666,7 @@ void Angort::feed(const char *buf){
                     
                     // set the codeblock up
                     lambdaContext->cb->setFromContext(lambdaContext);
-                    //                    lambdaContext->dump();
+//                                        lambdaContext->dump();//snark
                     
                     // here, we compile LITERALCODE word with a codeblock created
                     // from the context.

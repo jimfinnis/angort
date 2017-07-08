@@ -100,6 +100,8 @@ hilight   .hilight.angort 1 "throw" .scheme.prepro
     hilight   .hilight.angort 1 "x"         .scheme.keyword
     hilight   .hilight.angort 1 "nl"         .scheme.keyword
     hilight   .hilight.angort 1 "quit"         .scheme.keyword
+    hilight   .hilight.angort 1 "get"         .scheme.keyword
+    hilight   .hilight.angort 1 "set"         .scheme.keyword
     
     hilight   .hilight.angort 4 ":\"" "\"" ""     .scheme.keyword
     hilight   .hilight.angort 4 ":" "\\W" ""     .scheme.function
@@ -126,7 +128,12 @@ hilight   .hilight.angort 1 "throw" .scheme.prepro
     indent .hilight.angort n "("  t
     indent .hilight.angort o ")" -t
     indent .hilight.angort e "\"" "\"" "\\"
-    indent .hilight.angort b "\\[" "\\]"
+    
+    ;    indent .hilight.angort b "\\[" "\\]"
+    indent .hilight.angort n "\\[" t
+    indent .hilight.angort o "\\]" -t
+    
+    indent .hilight.angort i "#"
     indent .hilight.angort n "[^[:alnum:]]cases[^[:alnum:]]" t
     indent .hilight.angort n "[^[:alnum:]]if[^[:alnum:]]" t
     indent .hilight.angort s "[^[:alnum:]]else[^[:alnum:]]" -t

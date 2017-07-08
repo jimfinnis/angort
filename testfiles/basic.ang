@@ -113,4 +113,17 @@ fred 2 * 200 = "intconst" assert
 
 one fish + 111 = "multiconst" assert
 
+:twonk |a/float,b/string:|
+    ?a ?b
+;
+
+15 "foo" twonk
+dup type `string = "paramconv1" assert
+"foo" = "paramconv2" assert
+dup type `float = "paramconv3" assert
+20 / 0.75 = "paramconv4" assert
+
+
+    
+
 quit
