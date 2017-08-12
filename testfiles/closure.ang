@@ -116,8 +116,6 @@ mkcounter !b
 0 !a
 0 !b
 0 !t
-"GCCOUNT=" p gccount p nl
-1 gccount = "GC count zero at end of closure tests" assert
 
 
 # ordering of parameters
@@ -135,8 +133,25 @@ mkcounter !b
 ;
 
 `a f@
-quit
 
 
+# 
+# Here, the inner closure attempted to lookup the variable in the outer function "s",
+# and in building its table, used the index in the outer function's table rather than the
+# index in the block. This was fixed by the code labelled CRASH 12/8/17 in angort.cpp,
+# which dereferences again through the closure list of the parent (which becomes its table)
+# to get the block index.
+
+:mkcrash |t:|
+    (|s:|
+         ?t (?s +) @
+    )
+;
+4 mkcrash !F
+7 ?F @ 11 = "crashtest1" assert
+0!F
+
+"GCCOUNT=" p gccount p nl
+1 gccount = "GC count clear at end of closure tests" assert
 
 quit

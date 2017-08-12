@@ -201,7 +201,7 @@ class CompileContext {
     void convertToClosure(const char *name);
     
     int addClosureListEnt(CodeBlock *c,int n){
-//        printf("adding new closure list entry, codeblock %p number %d\n",c,n);
+        cdprintf("adding new closure list entry, codeblock %p number %d",c,n);
         ClosureListEnt *p = new ClosureListEnt(c,n);
         p->next = NULL;
         
@@ -214,6 +214,30 @@ class CompileContext {
         }
         
         return closureListCt++;
+    }
+    
+    // this is used when we try to get the index of an variable in
+    // a containing context's closure block from its index in that context's
+    // closure table.
+    ClosureListEnt *getClosureListEntByIdx(int n){
+        cdprintf("Scanning for the block location of table (list) entry %d",n);
+        ClosureListEnt *p = closureList;
+        for(int i=0;i<n;i++){
+            // this is thrown when we don't have enough entries in the table -
+            // like trying to get index 1 in a length 1 table.
+            if(!p)throw WTF;
+            p=p->next;
+        }
+        return p;
+    }
+    
+    void dumpClosureList(){
+        int i=0;
+        ClosureListEnt *p;
+        for(p=closureList;p;p=p->next,i++){
+            cdprintf("Closure list entry %d: codeblock %p, index %d",i,p->c,p->i);
+        }
+        
     }
     
     void freeClosureList(){
@@ -253,6 +277,17 @@ public:
         cb=NULL;
         reset(NULL,NULL);
     }
+    
+    void cdprintf(const char *s,...){
+#if 0
+        char buf[256];
+        va_list args;
+        va_start(args,s);
+        vsprintf(buf,s,args);
+        printf("[context %p with cb %p]  %s\n",this,cb,buf);
+#endif
+    }
+        
     
     void dump();
     
@@ -313,6 +348,7 @@ public:
         int t = localTokenCt;
         if(localTokenCt==MAXLOCALS)
             throw RUNT(EX_TOOMANYLOCALS,"too many local tokens");
+        cdprintf(" Local index for %s added as %d",s,localTokenCt);
         localIndices[localTokenCt]=localTokenCt;
         localTypes[localTokenCt]=typ;
         strcpy(localTokens[localTokenCt++],s);
@@ -716,7 +752,7 @@ public:
     /// value.
     void setGlobal(const char *name,const char *val){
         int g = findOrCreateGlobal(name);
-        printf("Global: %d\n",g);
+//        printf("Global: %d\n",g);
         Types::tString->set(names.getVal(g),val);
     }
     
@@ -960,6 +996,9 @@ public:
     
     /// disassemble a named word
     void disasm(const char *name);
+    
+    /// disassemble a codeblock
+    void disasm(const CodeBlock *cb);
     
     /// list all words, globals and consts
     void list();

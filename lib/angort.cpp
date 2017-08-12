@@ -114,15 +114,19 @@ Angort::~Angort(){
 }
 
 void CompileContext::dump(){
-    printf("CompileContext final setup\nLocals\n");
-    printf("Closure count %d, Param count %d\n",closureCt,paramCt);
-    printf("   %20s %8s %s","name","closed?","localindex\n");
+    printf("CompileContext dump for context %p with codeblock %p, closure block size %d, closure table size %d\n  Locals\n",
+           this,cb,cb->closureBlockSize,cb->closureTableSize);
+    printf("  Closure count %d, Param count %d\n",closureCt,paramCt);
+    printf("     %20s %8s %s","name","closed?","localindex\n");
     for(int i=0;i<localTokenCt;i++){
-        printf("   %20s %8s %d\n",
+        printf("     %20s %8s %d\n",
                localTokens[i],
                (localsClosed&(1<<i))?"C":" ",
                localIndices[i]);
     }
+    printf("Disassembly:\n");
+    Angort::getCallingInstance()->disasm(cb);
+    
 }
 
 
@@ -169,17 +173,17 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
     case OP_GLOBALDO:
     case OP_GLOBALSET:
     case OP_GLOBALGET:
-        printf("(%s)",names.getName(ip->d.i));
+        printf("(idx %s)",names.getName(ip->d.i));
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
     case OP_LOCALSET:
     case OP_LOCALGET:
-        printf("(%d)",ip->d.i);break;
+        printf("(idx %d)",ip->d.i);break;
     case OP_PROPSET:
     case OP_PROPGET:
         Types::tProp->set(&tmp,ip->d.prop);
-        printf(" (%s)",names.getNameByValue(&tmp,buf,128));
+        printf(" (name %s)",names.getNameByValue(&tmp,buf,128));
         break;
     case OP_LITERALSTRING:
         printf("(%s)",ip->d.s);
@@ -228,8 +232,8 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     if(!cb->ip)
         throw RUNT(EX_DEFCALL,"call to a word with a deferred definition");
     
-    //    printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
-    //    printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
+//        printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
+//        printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
     // allocate true locals (stack locals)
     locals.alloc(cb->locals - cb->closureBlockSize);
     
@@ -261,15 +265,15 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         
         
         if(cb->localsClosed & (1<<i)){
-            //            printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
+//                        printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
             clos->map[*pidx]->copy(valptr);
         } else {
-            //            printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
+//                        printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
             locals.store(*pidx,valptr);
         }
     }
     stack.drop(cb->params);
-    //    if(clos)clos->show("VarStorePostParams");
+//        if(clos)clos->show("VarStorePostParams");
     
     
     // do the push
@@ -286,7 +290,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     else
         currClosure.clr();
     
-    //    printf("PUSHED closure %s\n",currClosure.toString().get());
+//        printf("PUSHED closure %s\n",currClosure.toString().get());
     
     f->loopIterCt=loopIterCt;
     loopIterCt=0;
@@ -495,6 +499,8 @@ void Angort::run(const Instruction *startip){
                     // as in globaldo, here we construct a 
                     // closure if required and stack that instead.
                     if(cb->closureBlockSize || cb->closureTableSize){
+//                        printf("OP_LITERALCODE running - creating a closure. Blocksize is %d, tablesize is %d\n",
+//                               cb->closureBlockSize,cb->closureTableSize);
                         Closure *cl = new Closure(currClosure.v.closure); // 1st stage of setup
                         Types::tClosure->set(a,cl);
                         a->v.closure->init(cb); // 2nd stage of setup
@@ -557,6 +563,8 @@ void Angort::run(const Instruction *startip){
                         if(a->t == Types::tCode){
                             const CodeBlock *cb = a->v.cb;
                             if(cb->closureBlockSize || cb->closureTableSize){
+//                        printf("OP_GLOBALDO running to call a closure - creating the closure. Blocksize is %d, tablesize is %d\n",
+//                               cb->closureBlockSize,cb->closureTableSize);
                                 clos = new Closure(NULL); // 1st stage of setup
                                 Types::tClosure->set(&vv,clos);
                                 a = &vv;
@@ -879,7 +887,7 @@ leaverun:
 }
 
 void Angort::startDefine(const char *name){
-    //    printf("---Now defining %s\n",name);
+//        printf("---Now defining %s\n",name);
     int idx;
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
@@ -898,8 +906,9 @@ void Angort::endDefine(CompileContext *c){
     
     // get the codeblock out of the context and set it up.
     CodeBlock *cb = c->cb;
-//        c->dump(); //snark
+//    printf("End of define.\n");
     cb->setFromContext(c);
+//        c->dump(); //snark
     Value *wordVal = names.getVal(wordValIdx);
     
     Types::tCode->set(wordVal,cb);
@@ -1052,29 +1061,31 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
         if(!cc)throw WTF; // didn't find it, and it should be there!
         t->levelsUp = level;
         t->idx = p->i;
-        //        printf("Closure table for context %p: Setting entry %d to %d/%d\n",this,(int)(t-table),level,t->idx);
+        cdprintf("Closure table : Setting entry %d to level %d, index %d",(int)(t-table),level,t->idx);
         t++;
     }
     return table;
 }
 
 void CompileContext::closeAllLocals(){
-    //    printf("YIELD DETECTED: CLOSING ALL LOCALS\n");
+        cdprintf("YIELD DETECTED: CLOSING ALL LOCALS");
     for(int i=0;i<localTokenCt;i++){
         convertToClosure(localTokens[i]);
     }
 }
 
 void CompileContext::convertToClosure(const char *name){
+    cdprintf("Convert to closure for cb %p, %s",cb,name);
     // find which local this is
     int previdx;
     for(previdx=0;previdx<localTokenCt;previdx++)
         if(!strcmp(localTokens[previdx],name))break;
+    cdprintf("Previous index (i.e. local index) of this variable is %d",previdx);
+    
     if(previdx==localTokenCt)throw WTF;
     // got it. Now set this as a closure.
-    //    printf("Converting %s into closure\n",name);
     if((1<<previdx) & localsClosed){
-        //        printf("%s is already closed\n",name);
+                cdprintf("%s is already closed",name);
         return; // it's already converted.
     }
     
@@ -1082,6 +1093,8 @@ void CompileContext::convertToClosure(const char *name){
     localsClosed |= 1<<previdx; // set it to be closed
     
     int localIndex = localIndices[previdx];
+    cdprintf("Local index is currently %d",localIndex);
+    cdprintf("Closure list count is %d",closureListCt);
     
     /*  old code, see comment below for an explanation
        
@@ -1097,90 +1110,122 @@ void CompileContext::convertToClosure(const char *name){
     
     // create a new entry in the closure table for this codeblock,
     // whose index is the current closure.
+    cdprintf("addClosureListEnt 1");
     addClosureListEnt(cb,closureCt++);
     // but there may be closures here already, so set the local
     // index for the closures to the most recent entry in that table.
+    cdprintf("local index %d set to %d",previdx,closureListCt-1);
     localIndices[previdx] = closureListCt-1;
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
-//        printf("Beginning scan to convert local %d into closure %d\n",
-//               localIndex,localIndices[previdx]);
+        cdprintf("Beginning scan to convert local %d into closure %d",
+               localIndex,localIndices[previdx]);
     for(int i=0;i<compileCt;i++,inst++){
-//                char buf[1024];
-//                printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
+                char buf[1024];
+                cdprintf("   %s  %d",inst->getDetails(buf,1024),inst->d.i);
         if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSUREGET;
-//                        printf("Rehashing to %d\n",localIndices[previdx]);
+                        cdprintf("Rehashing to %d",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
         if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSURESET;
-//                        printf("Rehashing to %d\n",localIndices[previdx]);
+                        cdprintf("Rehashing to %d",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
     }
-//        printf("Ending scan\n");
+        cdprintf("Ending scan");
     
     // now decrement all indices of locals greater than this.
     // Firstly do this in the table.
     
-    //    printf("Now decrementing subsequent tokens\n");
+        cdprintf("Now decrementing subsequent tokens");
     for(int i=0;i<localTokenCt;i++){
-        //        printf("Token %d : %s\n",i,localTokens[i]);
+               cdprintf("Token %d : %s",i,localTokens[i]);
         if(!isClosed(i) && localIndices[i]>localIndex){
             localIndices[i]--;
-            //            printf("  decremented to %d\n",localIndices[i]);
+                        cdprintf("  decremented to %d",localIndices[i]);
         }
     }
     
     // Then do it in the code generated thus far.
     
     inst = compileBuf;
-    //    printf("Now decrementing local accesses in generated code\n");
+        cdprintf("Now decrementing local accesses in generated code");
     for(int i=0;i<compileCt;i++,inst++){
-        //        char buf[1024];
-        //        printf("   %s  %d\n",inst->getDetails(buf,1024),inst->d.i);
+                char buf[1024];
+                cdprintf("scanning instruction   %s  %d",inst->getDetails(buf,1024),inst->d.i);
         if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
            inst->d.i > localIndex){
             inst->d.i--;
-            //            printf("  decremented to %d\n",inst->d.i);
+                        cdprintf("  decremented to %d",inst->d.i);
         }
     }
+    cdprintf("Exiting convertToClosure()");
 }
 
 int CompileContext::findOrCreateClosure(const char *name){
     // first, scan all functions above this for a local variable.
     int localIndexInParent=-1;
+    // this is the context which actually contains the data within its block.
     CompileContext *parentContainingVariable;
     
-    //    printf("Making closure list. Looking for %s\n",name);
+    cdprintf("---------------- findOrCreateClosure: Looking for %s",name);
     for(parentContainingVariable=parent;parentContainingVariable;
         parentContainingVariable=parentContainingVariable->parent){
-        //        printf("   Looking in %p\n",parentContainingVariable);
+                cdprintf("   Looking in %p",parentContainingVariable);
         if((localIndexInParent = parentContainingVariable->getLocalToken(name))>=0){
+            cdprintf("FOUND AT LOCAL INDEX %d",localIndexInParent);
             // got it. If not already, turn it into a closure (which will add it to
             // the closure table of that function)
-            //            printf("     Got it.\n");
             if(!parentContainingVariable->isClosed(localIndexInParent)){
-                //                printf("     Got it, not closed, closing.\n");
+                                cdprintf("     Got it, not closed, closing.");
                 parentContainingVariable->convertToClosure(name);
+            } else {
+                cdprintf("     Got it and already closed.");
             }
+                
             break;
         }
     }
-    if(localIndexInParent<0)return -1; // didn't find it
+    if(localIndexInParent<0)
+    {
+        cdprintf("returning, not found");
+        return -1; // didn't find it
+    }
+    cdprintf("Local index in parent is %d",localIndexInParent);
     
-    // get the index within the closure block
+    // get the index within the closure block.
+    
+    // CRASH 12/8/17 
+    // This appears to be where it's going wrong - this is actually the local index
+    // in the closure TABLE, not the block. We probably need to dereference again.
     localIndexInParent = parentContainingVariable->getLocalIndex(localIndexInParent);
+    // localIndexInParent is now the index in the containing *table*, not the *block*
+    // (which is what we need).
+    // so let's try to dereference from the closure table into the block in that context.
+    cdprintf("Local index in table of parent is %d",localIndexInParent);
+    ClosureListEnt *e = parentContainingVariable->getClosureListEntByIdx(localIndexInParent);
+    localIndexInParent = e->i;
+    
+    parentContainingVariable->dumpClosureList();
+    
+    
+    cdprintf("Local index (in context %p) in closure block is %d",
+           parentContainingVariable,localIndexInParent);
+    
     
     // scan the closure table to see if we have this one already
     int nn=0;
     for(ClosureListEnt *p=closureList;p;p=p->next,nn++){
+        cdprintf("Scanning table for %p/%d - got %p/%d",
+               parentContainingVariable->cb,localIndexInParent,p->c,p->i);
         if(p->c == parentContainingVariable->cb && p->i == localIndexInParent)
             return nn;
     }
     // if not, add it.
+    cdprintf("addClosureListEnt 2");
     return addClosureListEnt(parentContainingVariable->cb,localIndexInParent);
 }
 
@@ -1246,6 +1291,8 @@ void Angort::feed(const char *buf){
     ipException = NULL;
     resetStop();
     callingInstance=this;
+    
+//    printf("FEED STARTING: %s\n",buf);
     
     if(printLines)
         printf("%d >>> %s\n",lineNumber,buf);
@@ -1652,9 +1699,9 @@ void Angort::feed(const char *buf){
                 break;
             case T_DOUBLEANGLEOPEN:
             case T_OPREN:// open lambda
-                //                printf("---Pushing: context is %p[cb:%p], ",context,context->cb);
+//                                printf("---Pushing: current context is %p[cb:%p], ",context,context->cb);
                 pushCompileContext();
-                //                printf("lambda context is %p[cb:%p]\n",context,context->cb);
+//                                printf("pushing into new lambda context  %p[cb:%p]\n",context,context->cb);
                 break;
             case T_CPREN: // close lambda and stack a code literal
                 {
@@ -1666,12 +1713,14 @@ void Angort::feed(const char *buf){
                     
                     // set the codeblock up
                     lambdaContext->cb->setFromContext(lambdaContext);
-//                                        lambdaContext->dump();//snark
+//                    printf("End of lambda context.\n");
+                    //                                        lambdaContext->dump();//snark
                     
                     // here, we compile LITERALCODE word with a codeblock created
                     // from the context.
                     
                     compile(OP_LITERALCODE)->d.cb = lambdaContext->cb;
+//                    lambdaContext->dump();
                     lambdaContext->reset(NULL,&tok);
                 }
                 break;
@@ -1884,6 +1933,7 @@ void Angort::feed(const char *buf){
                                                 tok.getstring());
             }
         }
+//        printf("------------ FEED ENDING: %s\n",buf);
     } catch(Exception e){
         clearAtEndOfFeed();
         throw e; // and rethrow
@@ -1919,15 +1969,7 @@ void Angort::clearAtEndOfFeed(){
     currClosure.clr();
 }    
 
-void Angort::disasm(const char *name){
-    int idx = names.get(name);
-    if(idx<0)
-        throw RUNT(EX_NOTFOUND,"unknown function");
-    Value *v = names.getVal(idx);
-    if(v->t != Types::tCode)
-        throw RUNT(EX_NOTFUNC,"not a function");
-    
-    const CodeBlock *cb = v->v.cb;
+void Angort::disasm(const CodeBlock *cb){
     const Instruction *ip = cb->ip;
     const Instruction *base = ip;
     for(;;){
@@ -1936,6 +1978,17 @@ void Angort::disasm(const char *name){
         printf("\n");
         if(opcode == OP_END)break;
     }
+}
+
+void Angort::disasm(const char *name){
+    int idx = names.get(name);
+    if(idx<0)
+        throw RUNT(EX_NOTFOUND,"unknown function");
+    Value *v = names.getVal(idx);
+    if(v->t != Types::tCode)
+        throw RUNT(EX_NOTFUNC,"not a function");
+    
+    disasm(v->v.cb);
 }
 
 const char *Instruction::getDetails(char *buf,int len) const{

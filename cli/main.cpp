@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <readline/readline.h>
@@ -109,7 +110,14 @@ void addDirToSearchPath(const char *data){
     free((void *)path);
 }
 
+void sigh(int s){
+    printf("Signal %d recvd, exiting\n",s);
+    exit(1);
+}
+
 int main(int argc,char *argv[]){
+    
+    signal(SIGSEGV,sigh);
     
     extern void setArgumentList(int argc,char *argv[]);
     

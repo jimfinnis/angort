@@ -18,13 +18,13 @@ Closure::Closure(Closure *p) : GarbageCollected() {
 }
 
 void Closure::init(const CodeBlock *c){
-//    printf("creating closure %p, parent %p\n",this,parent);
+    cb = c;
+    
+//    printf("creating closure %p for codeblock %p, parent closure %p\n",this,cb,parent);
     
 //    printf("Chain:\n");
 //    for(Closure *qq=parent;qq;qq=qq->parent)
 //        printf("  - %p\n",qq);
-    
-    cb = c;
     
     if(cb->closureBlockSize)
         block = new Value[cb->closureBlockSize];
