@@ -202,7 +202,7 @@ int main(int argc,char *argv[]){
     // then read lines from input
     
     a->assertDebug=true;
-    printf("Angort version %s (c) Jim Finnis 2012-2016\nUse '??word' to get help on a word.\n",
+    printf("Angort version %s (c) Jim Finnis 2012-2017\nUse '??word' to get help on a word.\n",
            a->getVersion());
     
     // set up the autocomplete function

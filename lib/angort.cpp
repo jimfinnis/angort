@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "2.9.1"
+#define ANGORT_VERSION "2.9.2"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -1198,7 +1198,7 @@ int CompileContext::findOrCreateClosure(const char *name){
     
     // get the index within the closure block.
     
-    // CRASH 12/8/17 
+    // CRASH 120817 
     // This appears to be where it's going wrong - this is actually the local index
     // in the closure TABLE, not the block. We probably need to dereference again.
     localIndexInParent = parentContainingVariable->getLocalIndex(localIndexInParent);
