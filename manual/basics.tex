@@ -1,0 +1,240 @@
+\clearpage
+    \section{Getting started: immediate mode}
+This section will describe the basic concepts behind the language,
+such as reverse Polish notation and the stack, and introduce
+using the language in immediate mode.   
+
+\subsection{Immediate mode}
+In immediate mode, each line of Angort is compiled and run straight
+away. This is how the Angort executable starts when it is not
+given an Angort script's filename on the command line. Angort will also
+drop back to this mode if a script completes without \texttt{quit} 
+being called.
+
+Running the interpreter without a command line will give a prompt:
+\begin{v}
+1|0>
+\end{v}
+The two numbers are the number of garbage-collectable objects in the
+system and the number of items on the stack, respectively.
+The interpreter is in ``immediate mode'', as opposed to ``compilation
+mode'' --- any text entered will be compiled to bytecode and run when
+enter is pressed,
+rather than being added to a function definition.
+
+\subsection{Reverse Polish notation and the stack}
+\index{stack}
+Angort is a stack-based language:
+there is a single stack containing
+values, and most functions change the contents
+of the stack in some way. For example,
+\begin{v}
+3
+\end{v}
+by itself will just put the value 3 on the stack. Then
+\begin{v}
+.
+\end{v}
+will pop the value from the top of the stack and print it.
+\begin{v}
+3 4 + .
+\end{v}
+will push 3 and 4 onto the stack, then add them together replacing them
+with 7, and then print the 7. This kind of notation is often
+referred to as \textbf{reverse Polish notation} (RPN) as opposed to the more common
+\textbf{infix} notation. More complex expressions are built 
+out of sequences of operations on the stack. For example, the expression
+\[
+\sin(5+32+\sqrt{43 \times 12})
+\]
+would be written as
+\begin{v}
+43 12 * sqrt 32 + 5 + sin
+\end{v}
+is a little difficult at first, but rapidly becomes second
+nature\footnote{Most old calculators work using RPN, and quite a few
+of the more powerful programmables still do.}
+
+\subsection{Words and functions}
+\index{word}
+Most of the Angort language consists of functions which each perform
+a single, isolated task -- there is very little syntax. Even common
+``syntactic'' keywords like \texttt{if} (for conditions), \texttt{[]} 
+(for creating lists) and \texttt{+} (for addition) are just functions
+(albeit written in C++). Most things in Angort are just identifiers
+which compile to runnable code, including functions you have defined
+yourself. I will sometimes refer to these as 
+``words'' (after the original Forth usage), and sometimes as ``functions''
+(to reflect more modern usage). There is no real distinction, although
+I tend to use ``word'' for more basic, builtin operations.
+
+\subsection{Running scripts}
+\todo{write this}
+
+\subsection{Types and literals}
+Angort is a dynamically typed language, with type coercion (weak typing).
+The following types are available:
+\indw{range}\indw{frange}\indw{[}\indw{]}
+\begin{center}
+\begin{tabular}{|l|p{2.7in}|l|}\hline
+\textbf{Name} & \textbf{Definition} & \textbf{Example of literal} \\ \hline
+None & The nil object, specifying ``no value'' & \texttt{none} \\
+Integer & 32 or 64-bit integers depending on architecture & \texttt{5045} \\
+Long & depends on architecture & \texttt{5045l,32L,0ffx, 45ao, 10111b, 3200ffffhl} \\
+Float & 32-bit floats & \texttt{54.0} \\
+Double & 64-bit floats & \texttt{54.0l,32.2L} \\
+String & Strings of characters & \texttt{"Hello there"} \\
+Symbol & Single-word strings, internally stored as integers and
+generally used as hash keys & \texttt{`foo} \\
+Code& Blocks of Angort code, anonymous functions & \texttt{( dup * 1 + )}\\
+Integer range & 
+A range of integers between two values with optional step &
+\texttt{0 4 range}\footnotemark[1]\\
+Float range & A range of floats between two values with 
+step& \texttt{0 4 0.1 frange}\\
+List & A array/list of values\footnotemark[2] & \texttt{[1,2,"foo"]} \\
+Hash & A map of values to values implemented as a hash table, where
+keys can strings, symbols, integers or floats & \texttt{[\% `foo 1, "fish" "fish"]} \\
+\hline
+\end{tabular}
+\end{center}
+\footnotetext[1]{This is actually a call to the \texttt{range} function which takes two integers to create a range.}
+\footnotetext[2]{Stored internally as an
+automatically resized array rather than a linked list.}
+``Code'' above actually conflates two types internally --- codeblocks,
+which have no environment; and closures, which consist of a codeblock and
+some stored variables. They appear identical to the user.
+There are some other types used internally, such as the
+types for iterators and deleted objects in a hash.
+
+Integers can also have a base character, `b', `x'/`h', `o' or `d', which
+goes before the optional 'l' for 'long.' \textbf{Note that} all numbers
+must start with a digit, so a leading zero will be required for some 
+hex numbers (e.g. `0ffh' not `ffh').
+
+\todo{heredocs}
+
+\clearpage
+\subsubsection{Coercions}
+\begin{itemize}
+\item Integers and floats are coerced to strings in string contexts.
+\item In binary operations, if one of the operands is a float, both are coerced to floats:
+\begin{v}
+1|0> 1 2 / .
+0
+1|0> 1.0 2 / .
+0.500000
+\end{v}
+\item In certain binary operations (currently just ``+'') if one of the operands
+is a string, both will be coerced to strings.
+\item \todo{more... longs and doubles, notably, and what 
+happens when you can't}
+\end{itemize}
+
+\subsection{Defining new functions}
+New functions are defined with code of the form
+\begin{v}
+:functionname ... ;
+\end{v}
+A simple example is:
+\begin{v}
+:square dup *;
+\end{v}
+indw{dup}
+This will define a function \texttt{square} which will duplicate
+the value on top of the stack, multiply the top two values
+(effectively squaring the number\footnote{This will produce
+an error if the value is not a number.}) and exit, leaving the
+squared number on the stack. This can then be used thus:
+\begin{v}
+3 square 4 square + .
+\end{v}
+which will print 25, i.e. $3^2+4^2$.
+While defining a function, Angort is is compilation mode --- functions will
+be converted to bytecode but added to the definition of the new function
+rather than executed immediately. Function definitions can therefore span
+more than one line:
+\begin{lstlisting}
+:factorial |x:|
+    ?x 1 = if
+        1
+    else
+        ?x ?x 1 - factorial *
+    then
+\end{lstlisting}
+\todo{Mention how immediate and script mode work with definitions}
+
+
+\subsubsection{Word parameters and local variables}
+Until now, all the code has been perfectly valid Forth\footnote{With
+the exception of the factorial function, which uses local variables
+and recursion.}. However, the manipulation of
+stack required in Forth is a challenge (and modern computers
+have a little more memory), so Angort has a system of named
+parameters and local variables. These can be defined by
+putting a special block of the form
+\begin{v}
+|param1,param2,param3... : local1,local2,local3|
+\end{v}
+after the function name in the definition. Locals and parameters are
+exactly the same internally, but the values of parameters are popped
+off the stack when the new function is called. 
+
+
+Once defined, locals (and parameters) can be read (i.e. pushed onto
+the stack) using a question mark followed by the variable name.
+Similarly, a local is written (i.e. a value popped off the stack and
+stored in the local) by using an exclamation mark. For example,
+\begin{lstlisting}
+:pointless |x,y:z|
+    ?x ?y + !z
+;
+\end{lstlisting}
+will read the two arguments into the locals $x$ and $y$, add them,
+store the result in the local $z$, and then exit, throwing everything away.
+Note that a function with parameters but no locals is defined by leaving
+the part after the colon empty:
+\begin{lstlisting}
+:magnitude |x,y:|
+    ?x dup *
+    ?y dup * +
+    sqrt
+;
+\end{lstlisting}
+while leaving the part before the colon empty will define a function with
+locals but no parameters:
+\begin{lstlisting}
+:countToTen |:count|
+    0!count
+    {
+        ?count 1+ dup !count
+        dup .
+        10 = ifleave
+    }
+;
+\end{lstlisting}
+\todo{Types in param lists. Returning values.}
+     
+\subsubsection{Word documentation strings and stack pictures}
+\label{stackpic}
+Following the locals and parameters (or just the function name if there
+are none) there may be a function documentation string. It has the form
+\begin{v}
+:"(before -- after) what the function does"
+\end{v}
+The section in brackets is known as a \emph{stack picture,}\footnote{Or sometimes
+a \emph{stackflow symbol}.} and describes
+the action of the function on the stack. The part before the hyphen
+shows the part of the stack removed by the function, and the part after
+shows its replacement. For example:
+\begin{lstlisting}
+:dist |x1,y1,x2,y2:|
+    :"(x1 y1 x2 y2 -- distance) calculate the distance between two points"
+    ?x1 ?x2 - abs dup *     # this is (x1-x2)^2
+    ?y1 ?y2 - abs dup *     # this is (y1-y2)^2
+    + sqrt                  # sum them, and find the root
+;
+\end{lstlisting}
+Note that the ``after'' part of the stack picture often doesn't refer to a named variable ---
+it's just a label for the value left behind on the stack.
+

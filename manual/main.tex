@@ -17,6 +17,8 @@
 
 \newcommand{\indw}[1]{\index{#1@\texttt{#1}}}
 
+\newcommand{\todo}[1]{ {\color{red}{#1}} }
+
 \makeatletter
 \lst@Key{stringsprefix}\relax{\lst@DefActive\lst@stringsprefix{#1}}
 \global\let\lst@stringsprefix\@empty
@@ -78,6 +80,9 @@ morestring=[b]"
     fontsize=\small,xleftmargin=15pt}
 
 \tableofcontents
+\lstset{style=ang}
+\input{intro}
+\input{basics}
 \input{body}
 
 \printindex
