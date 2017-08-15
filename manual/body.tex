@@ -1,6 +1,9 @@
 
+\section{Flow control}
+\todo{Note how flow control needs to be inside functions if multilined,
+and how to get round this}
 
-\section{Conditions}
+\subsection{Conditions}
 \indw{if}
 \indw{then}
 \indw{else}
@@ -41,7 +44,7 @@ number is even
 number is odd
 \end{v}
 Conditions can be nested.
-\section{Case blocks}
+\subsection{Case blocks}
 \indw{case}
 \indw{otherwise}
 \indw{cases}
@@ -78,7 +81,7 @@ An example:
 This function will print an appropriate message for integers from 0 to 7,
 and ``It's something else'' for any other value.
 
-\section{Loops}
+\subsection{Loops}
 \index{loops}
 \indw{each}
 \def\opencurlybrace{\{}
@@ -92,7 +95,7 @@ iterator loops, which loop over a collection (i.e. a hash or list) or
 a range. Both are delimited with curly brackets \verb+{}+, but iterator loops
 use the \texttt{each} word before the opening brace.
 
-\subsection{Infinite loops}
+\subsubsection{Infinite loops}
 \index{loop!infinite}
 Any \texttt{leave} word will break out of an infinite loop:
 \begin{lstlisting}
@@ -123,7 +126,7 @@ The function above could be written tersely as
 Loops can be nested, and the \texttt{leave} words will jump out of the
 innermost loop in which they appear.
 
-\subsection{Iterator loops}
+\subsubsection{Iterator loops}
 \indw{i}\index{loop!iterator}
 Iterator loops loop over an \emph{iterable} value. These are currently ranges,
 hashes and lists. They are delimited by curly braces like infinite loops,
