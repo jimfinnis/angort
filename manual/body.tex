@@ -1,302 +1,9 @@
 
-\section{Flow control}
-\todo{Note how flow control needs to be inside functions if multilined,
-and how to get round this}
 
-\subsection{Conditions}
-\indw{if}
-\indw{then}
-\indw{else}
-These have the form:
-\begin{v}
-<condition> if <runs if true> then
-\end{v}
-The word \texttt{if} pops the item off the top of the stack,
-and jumps forward to just after the corresponding \texttt{then} if it is false (zero).
-There is also a two way branch:
-\begin{v}
-<condition> if <runs if true> else <runs if false> then
-\end{v}
-This works the same way, except that the \texttt{if} jumps to after the
-\texttt{else} if the top value is false, and \texttt{else} jumps forward
-to just after \texttt{then}. This is shown in the figure below:
-\begin{center}
-\includegraphics[width=5in]{ifthen.pdf}
-\end{center}
-Here is a code example, printing whether a number is even or odd:
-\begin{lstlisting}
-:evenodd 
-    # Get the number on the stack modulo 2, and use
-    # whether it is zero or not as the condition.
-    2 % if
-        "number is odd"     # stack this string if there is a remainder
-    else
-        "number is even"    # stack this string if remainder is zero
-    then                    # end the conditional
-    .                       # print the top of the stack
-;
-\end{lstlisting}
-We can run this with various values:
-\begin{v}
-1|0> 4 evenodd
-number is even
-1|0> 3 evenodd
-number is odd
-\end{v}
-Conditions can be nested.
-\subsection{Case blocks}
-\indw{case}
-\indw{otherwise}
-\indw{cases}
-In order to avoid testing if..else..then constructions where a number of
-different, mutually exclusive cases need to be tested, the ``case block''
-structure is provided, which emulates the ``elsif'' construction in other
-languages.
-
-Case blocks begin with \texttt{cases}, and each case consists
-of 
-\begin{v}
-    <condition> if <action> case
-\end{v}
-The case block must end, after the final case, with
-\begin{v}
-    <default action> otherwise
-\end{v}
-An example:
-\begin{lstlisting}
-:test |a:|
-    cases
-        ?a 0 = if "It's Zero". case
-        ?a 1 = if "It's One". case
-        ?a 2 = if "It's Two". case
-        ?a 3 = if "It's Three". case
-        ?a 4 = if "It's Four". case
-        ?a 5 = if "It's Five". case
-        ?a 6 = if "It's Six". case
-        ?a 7 = if "It's Seven". case
-        "It's something else".   otherwise
-    
-;
-\end{lstlisting}
-This function will print an appropriate message for integers from 0 to 7,
-and ``It's something else'' for any other value.
-
-\subsection{Loops}
-\index{loops}
-\indw{each}
-\def\opencurlybrace{\{}
-\def\closecurlybrace{\{}
-\indw{\opencurlybrace}
-\indw{\closecurlybrace}
-\indw{leave}\indw{ifleave}
-There are two kinds of loops in Angort --- infinite loops,
-which must be broken out of using \texttt{leave} or \texttt{ifleave}; and
-iterator loops, which loop over a collection (i.e. a hash or list) or
-a range. Both are delimited with curly brackets \verb+{}+, but iterator loops
-use the \texttt{each} word before the opening brace.
-
-\subsubsection{Infinite loops}
-\index{loop!infinite}
-Any \texttt{leave} word will break out of an infinite loop:
-\begin{lstlisting}
-:foo |:counter|         # a local variable "counter", no parameters
-    0 !counter          # set counter to zero
-    {                   # start loop
-        ?counter.       # print the counter
-        ?counter 1+     # increment the counter
-        !counter        # and store it back
-        ?counter 100=   # is it equal to 100?
-        if leave then   # if so, leave the loop
-    }
-;
-\end{lstlisting}
-This will count from 0 to 99. The sequence
-\begin{v}
-if leave then
-\end{v}
-is so common that it is coded to a special word of its own, and can be written
-as 
-\begin{v}
-ifleave
-\end{v}
-The function above could be written tersely as
-\begin{lstlisting}
-:foo |:c| 0!c {?c. ?c 1+ !c ?c 100= ifleave};
-\end{lstlisting}
-Loops can be nested, and the \texttt{leave} words will jump out of the
-innermost loop in which they appear.
-
-\subsubsection{Iterator loops}
-\indw{i}\index{loop!iterator}
-Iterator loops loop over an \emph{iterable} value. These are currently ranges,
-hashes and lists. They are delimited by curly braces like infinite loops,
-but are preceded by the 
-\texttt{each} word. This pops the iterable off the stack and makes an
-iterator out of it, over which the loop runs. The iterator exists for as 
-long as the loop does, and is destroyed when the loop completes. Again, iterator
-loops can be nested (and can be nested with infinite loops). With an iterator
-loop, the counting example can be rewritten as:
-\begin{lstlisting}
-:foo
-    0 100 range         # stack a range from 0-99 (see below)
-    each {              # start the iterator loop
-        i               # push the current item in the iterator
-        .               # print it
-    }                   # end of loop
-;
-\end{lstlisting}
-Note that range end value is exclusive --- that is, it is the first value which
-is \emph{not} in the range --- so the above example, specified as
-\texttt{0 99 range}, actually counts from 0 to 99. 
-This looks somewhat odd with integer ranges, but serves to prevent float ranges
-relying on equality tests.
-\begin{lstlisting}
-:foo
-    0 10 0.09 frange    # float range from 0-10 in steps of 0.09
-    each {i.}           # print them
-\end{lstlisting}
-will print about 9.990008 as its final value.
-
-Although we've not covered lists and hashes yet, it's useful to know that we can
-iterate over the values in a list. For example
-\begin{lstlisting}
-[1,2,3,4,5] each {i.}
-\end{lstlisting}
-will print the numbers from 1 to 5. Similarly, we can iterate over the keys 
-of a hash:
-\begin{lstlisting}
-[% "foo" "bar", "baz" "qux"] each {i.}
-\end{lstlisting}
-will print the hash's keys: ``foo'' and ``bar''. 
-
-\subsubsection{Nested iterator loops}
-\label{nestit}
-Each loop has its own iterator, even if they come from the same iterable:
-\begin{lstlisting}
-:foo |:r|
-    0 10 range !r           # store a range
-    ?r each {               # outer loop
-        i.                  # print value of outer loop iterator
-        ?r each {           # inner loop
-            i.              # print value of inner loop iterator
-        }
-    }
-;
-\end{lstlisting}
-The range here is used twice, generating two separate iterators with
-their own current value.
-
-\indw{j}\indw{k}
-While the word \texttt{i} retrieves the iterator value inside the current
-loop, inside nested iterator loops it is often useful to get the value
-in outer loops. This can be done with the \texttt{j} and \texttt{k} words,
-to get the outer and next outer iterator values:
-\begin{lstlisting}
-:foo |:r|
-    0 10 range !r           # store a range
-    ?r each {               # outer loop
-        ?r each {           # inner loop
-            i j +           # print sum of inner and outer iterators
-        }
-    }
-;
-\end{lstlisting}
-
-\subsection{The state of the stack inside a loop}
-Note that the iterator is not kept on the normal stack --- it is popped
-off when the loop starts and kept inside a special stack. The same
-applies to infinite loops: no loop state is kept on the stack. This 
-leaves the stack free for manipulation:
-\begin{lstlisting}
-# sum all the integers from 0 to x
-:sumto |x:|
-    0               # stack an accumulator
-    0 ?x 1+ range   # stack a range from 0 to x inclusive
-    each {          # stack an iterator, then pop it onto the iterator stack
-        i           # get current iterator value
-        +           # add it to the accumulator
-    }               # end loop
-;                   # finish and return the accumulator
-\end{lstlisting}
-
-\subsection{Words to create ranges}
-\indw{range|textbf}\indw{frange|textbf}\indw{srange|textbf}
-There are three words to create a range on the stack:
-\begin{center}
-\begin{tabular}{|l|l|p{4in}|}\hline
-\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
-range & (x y -- range) & create an integer range over the interval $[x,y)$ with a step of 1; i.e. a range from $x$ to $y-1$ inclusive.\\
-srange & (x y s -- range) &  create an integer range over the interval $[x,y)$ with a step of $s$\\
-frange & (x y s -- range) &  create an float range over the interval $[x,y)$ with a step of $s$\\
-\hline
-\end{tabular}
-\end{center}
-See Section~\ref{stackpic} for how stack pictures define the parameters
-and return values for a function.
-
-\subsection{Explicit iterators}
-\indw{mkiter}\indw{icur}\indw{inext}\indw{idone}\indw{ifirst}
-It's sometimes necessary to use iterators manually instead of creating
-them automatically with "each" and getting the values using "i" in an
-iterator loop.
-To do this, we have the following words:
-\begin{center}
-\begin{tabular}{|l|l|p{4in}|}\hline
-\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
-mkiter & (iterable -- iterator) & create an iterator\\
-icur & (iterable -- item) & get the current item\\
-inext & (iterable --) & advance the iterator\\
-idone & (iterable -- bool) & return 1 if the iterator is on the last item\\
-ifirst & (iterable --) & reset the iterator to the start\\
-\hline
-\end{tabular}
-\end{center}
-
-
-You might need this when you want to iterate over
-two collections in parallel, for example in implementing the "zipWith"
-function. This function takes two collections, and runs a binary function on
-pairs of items, each from one of the collections, returning a list:
-
-\begin{v}
-    ["foo","bar"] ["fish","zing"] (+) zipWith each{i.}
-\end{v}
-\noindent would print
-\begin{v}
-    foofish
-    barzing
-\end{v}
-This could be implemented by using an index to go over both lists:
-
-\begin{lstlisting}
-    :zipWith |a,b,f:|
-        []
-        0 ?a len ?b len min range each {
-            i ?a get 
-            i ?b get ?f call ,
-        }
-;
-\end{lstlisting}
-but a more elegant solution might be:
-\begin{lstlisting}
-    :zipWith |a,b,f:iter|
-        ?b mkiter !iter
-        []
-        ?a each {
-            ?iter idone ifleave
-            i ?iter icur ?f@,
-            ?iter inext 
-        }
-    ;
-\end{lstlisting}
-Here, we use an each loop to iterate over list a, and an explicit
-iterator to iterate over list b.
-
-
-\section{Globals}
+\section{Global variables}
 \indw{global}
 Global variables are defined in two ways. The ``polite'' way is to use the 
-\texttt{global} keyword, which creates a new global of the same following
+\texttt{global} keyword, which creates a new global of the name following
 it, initially holding the nil value \texttt{none}:
 \begin{v}
 1|0> global foo
@@ -314,14 +21,32 @@ name, a global is created with the initial \texttt{none} value:
 1|0> ?Foo.
 5
 \end{v}
-Globals, unlike locals, do not require a \texttt{?} or \texttt{!} sigil.
-If used ``bare'', their value will be stacked, unless they contain
+Globals, unlike locals, do not require a \texttt{?} sigil to be read:
+if the name is used ``bare'', their value will be stacked just as if the name
+was preceded with \texttt{?}, unless they contain
 an anonymous function. In this case, the function is run (see
 Section~\ref{globdetails} below). It is, however, good practice to use
-the sigil.
+the sigil. Writing to a global is done using the familiar \texttt{!} sigil.
 
-Finally, using a ``bare'' global containing a none value will not stack
-that value.
+Finally, accessing a global using its name without a sigil
+will do nothing if it contains None,
+while accessing it with the \texttt{?} will stack the None:
+\begin{v}
+1|0 > 10!A
+1|0 > ?A.
+10
+1|0 > A.
+10
+1|0 > none!A
+1|0 > A.
+  from [dot] <stdin>:5/2
+Error: stack underflow in stack 'main'
+Last line input: A.
+1|0 > ?A.
+NONE
+1|0 > 
+\end{v}
+
 
 \section{Constants}
 \indw{const}
@@ -382,7 +107,7 @@ cannot be. This can be useful in package development.
 
 \subsection{``import as'' semantics}
 This is also useful when you want to import only certain names from
-a library. Consider the \texttt{vector2d} library, which contains
+a plugin library (Section~\ref{library}). Consider the \texttt{vector2d} library, which contains
 the functions \texttt{vector2d\$x} and \texttt{vector2d\$y}. These
 are cumbersome, so we could import just these in their short forms
 as
@@ -391,7 +116,9 @@ as
 ?vector2d$y const y
 \end{lstlisting}
 Using the \texttt{?} ensures that we get the function itself, rather
-than trying to run it.
+than trying to run it\footnote{In reality we would probably use
+the optional list parameter to \texttt{import}, as described in
+Section~\ref{packages}}.
 
 \subsection{Forward declarations (deferred declarations)}
 \index{forward declaration}
@@ -408,8 +135,8 @@ global foo      # define a global called ``foo'' (null-valued)
 \section{Lists}
 \index{lists}\indw{[|textbf}\indw{]|textbf}
 Angort lists are actually array based, with the array resizing automatically
-once certain thresholds are passed (similar to a Java ArrayList).
-A list is defined by enclosing Angort expressions in square
+once certain thresholds are passed (similar to a C++ vector or Java ArrayList).
+A list is created by enclosing Angort expressions in square
 brackets and separating them by commas:
 \begin{v}
 []              # the empty list
@@ -470,6 +197,21 @@ without popping that list. This means we can write code to do a list copy:
     }
 ;                   # finish and return the list on the stack          
 \end{lstlisting}
+This syntax allows us to create a form of list comprehension:
+\begin{lstlisting}
+[] [1,2,3,4] each {i dup * dup 2 % if , else drop then}
+\end{lstlisting}
+will create the list $[1,9]$: the squares of the numbers but only 
+if they are odd. It does this by squaring the number, duplicating and
+testing to see if it is nonzero modulo 2, and if so appending it to the list,
+otherwise dropping it. 
+In reality, we would probably use the \texttt{map} and
+\texttt{filter} words with anonymous functions:
+\begin{lstlisting}
+[1,2,3,4] (dup *) map (2 %) filter
+\end{lstlisting}
+
+
 
 \section{Symbols}
 \index{symbols}\indw{`}
@@ -815,72 +557,6 @@ in \texttt{exceptsymbs.h}. To throw your own exception, use \\
 
 \section{More built-in words}
 
-\subsection{Stack manipulation}
-\index{stack!manipulation}
-There exist a number of words whose sole purpose is to manipulate
-the stack. These words, and their stack pictures, are given in the table
-below.
-\indw{dup}\indw{drop}\indw{swap}\indw{over}
-\begin{center}
-\begin{tabular}{|l|p{4in}|}\hline
-\textbf{name} & \textbf{stack picture}\\ \hline
-dup & (a -- a a)\\
-drop & (a --)\\
-swap & (a b -- b a)\\
-over & (a b -- a b a)\\
-\hline
-\end{tabular}
-\end{center}
-Note that this is a much smaller set than the set of Forth stack
-words, which includes \texttt{rot}, \texttt{roll}, \texttt{nip} and \texttt{tuck}.
-The local variable system makes such complex operations unnecessary.
-
-\subsection{Binary operators}
-\indw{arithmetic}\indw{binary operations}
-In the following operations, these conversions take place:
-\begin{itemize}
-\item If one of the operands is a string, the other will be converted to a string. Only "+" and comparison operators will be valid.
-\item If one of the operands is a float and the other is an integer, the integer will be converted to a float and the result will be a float.
-\item The comparison operators will do identity checks on objects (lists, ranges etc.), not deep comparisons.
-\item The comparison functions actually return integers, with non-zero indicating falsehood.
-\end{itemize}
-\indw{and}\indw{or}
-\indw{band}\indw{bor}\indw{bxor}
-\begin{center}
-\begin{tabular}{|l|l|p{4in}|}\hline
-\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
-+    & (a b -- a+b)&\\
--    & (a b -- a-b)&\\
-$*$    & (a b -- a*b)& ints are coerced to floats if one operand is an int, but not otherwise. ``string int *'' produces
-a repeated string, but not ``int string *''.\\
-/    & (a b -- a/b)&\\
-\%    & (a b -- a\%b) & remainder ("mod") operator\\
-$>$    & (a b -- a$>$b)& string comparison works as expected\\
-$<$    & (a b -- a$<$b)& string comparison works as expected\\
-=    & (a b -- a=b)& equality test: string comparison works as expected\\
-!=   & (a b -- a!=b)& inequality test: string comparison works as expected\\
-and & (a b -- a$\wedge$b) & binary and -- inputs are coerced to integers, nonzero is true\\
-or & (a b -- a$\vee$b) & binary or  -- inputs are coerced to integers, nonzero is true\\
-band & (a b -- a \& b) & bitwise AND \\
-bor & (a b -- a $|$ b) & bitwise OR \\
-bxor & (a b -- a $\sim$ b) & bitwise XOR \\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{Unary operators}
-\indw{bnot}\indw{not}\indw{neg}\indw{abs}
-\begin{center}
-\begin{tabular}{|l|l|p{4in}|}\hline
-\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
-not & (a -- !a) & logical negation of a boolean\\
-neg & (a -- -a) & arithmetic negation of float or integer\\
-abs & (a -- $|\textrm{a}|$) & absolute value\\
-isnone & (a -- bool) & true if value is \texttt{none} \\
-bnot & (a -- !b) & bitwise not\\    
-\hline
-\end{tabular}
-\end{center}
 
 \section{Getting help}
 \indw{??}\indw{help}
@@ -905,6 +581,7 @@ io$open: (path mode -- fileobj) open a file, modes same as fopen()
 
 
 \section{Namespaces and packages}
+\label{packages}
 \indw{package}\indw{require}\index{namespaces}
 \index{packages}
 \def\dollarsign{\$}\indw{\dollarsign}
@@ -997,6 +674,7 @@ definition, the fully specified name can be used. This is in the form
 if you have overriden the \texttt{p} function, you can use \verb+std$p+.
 
 \section{Plugin libraries (currently Linux only)}
+\label{library}
 \indw{library}\index{libraries}
 These are shared libraries which can be loaded into Angort. They communicate
 with Angort via a simplified interface, and are easy to write in C++ (see

@@ -10,7 +10,6 @@ away. This is how the Angort executable starts when it is not
 given an Angort script's filename on the command line. Angort will also
 drop back to this mode if a script completes without \texttt{quit} 
 being called.
-
 Running the interpreter without a command line will give a prompt:
 \begin{v}
 1|0>
@@ -51,7 +50,7 @@ would be written as
 \begin{v}
 43 12 * sqrt 32 + 5 + sin
 \end{v}
-is a little difficult at first, but rapidly becomes second
+This is a little difficult at first, but rapidly becomes second
 nature\footnote{Most old calculators work using RPN, and quite a few
 of the more powerful programmables still do.}
 
@@ -60,8 +59,9 @@ of the more powerful programmables still do.}
 Most of the Angort language consists of functions which each perform
 a single, isolated task -- there is very little syntax. Even common
 ``syntactic'' keywords like \texttt{if} (for conditions), \texttt{[]} 
-(for creating lists) and \texttt{+} (for addition) are just functions
-(albeit written in C++). Most things in Angort are just identifiers
+(for creating lists) and \texttt{+} (for addition) operate primarily through
+stack operations.
+Most things in Angort are just identifiers
 which compile to runnable code, including functions you have defined
 yourself. I will sometimes refer to these as 
 ``words'' (after the original Forth usage), and sometimes as ``functions''
@@ -76,7 +76,7 @@ Angort is a dynamically typed language, with type coercion (weak typing).
 The following types are available:
 \indw{range}\indw{frange}\indw{[}\indw{]}
 \begin{center}
-\begin{tabular}{|l|p{2.7in}|l|}\hline
+\begin{tabular}{|l|p{2.7in}|p{2in}|}\hline
 \textbf{Name} & \textbf{Definition} & \textbf{Example of literal} \\ \hline
 None & The nil object, specifying ``no value'' & \texttt{none} \\
 Integer & 32 or 64-bit integers depending on architecture & \texttt{5045} \\
@@ -140,7 +140,7 @@ A simple example is:
 \begin{v}
 :square dup *;
 \end{v}
-indw{dup}
+\indw{dup}
 This will define a function \texttt{square} which will duplicate
 the value on top of the stack, multiply the top two values
 (effectively squaring the number\footnote{This will produce
@@ -149,7 +149,8 @@ squared number on the stack. This can then be used thus:
 \begin{v}
 3 square 4 square + .
 \end{v}
-which will print 25, i.e. $3^2+4^2$.
+which will print 25, i.e. $3^2+4^2$. Note that leaving values behind
+on the stack on exiting a function is how we return values in Angort.
 While defining a function, Angort is is compilation mode --- functions will
 be converted to bytecode but added to the definition of the new function
 rather than executed immediately. Function definitions can therefore span
@@ -162,6 +163,9 @@ more than one line:
         ?x ?x 1 - factorial *
     then
 \end{lstlisting}
+This example uses recursion and the Angort \texttt{if..else..then} construction.
+This looks a little odd to programmers not familiar with Forth -- please
+see Section~\ref{conditions} for more details.
 \todo{Mention how immediate and script mode work with definitions}
 
 
@@ -213,6 +217,9 @@ locals but no parameters:
     }
 ;
 \end{lstlisting}
+Here, the curly brackets enclose a loop, which is exited by the
+\texttt{ifleave} instruction when the stack top value is 10. See
+Section~\ref{loops} for more details.
 \todo{Types in param lists. Returning values.}
      
 \subsubsection{Word documentation strings and stack pictures}
@@ -235,6 +242,95 @@ shows its replacement. For example:
     + sqrt                  # sum them, and find the root
 ;
 \end{lstlisting}
-Note that the ``after'' part of the stack picture often doesn't refer to a named variable ---
-it's just a label for the value left behind on the stack.
+Note that the names in the picture are not necessarily those of variables:
+they are single word descriptions of values. Typically these will be variable
+names for the ``before'' part, but not for the ``after'' part (since
+the return values are simply what's left on the stack).
 
+To print the documentation for a word, enter \texttt{??wordname} at
+the prompt. This will also work for most built-in Angort functions,
+but not all\footnote{This is because most Angort functions compile
+to calls to C++ functions, which can have descriptions. Simpler operations,
+such as \texttt{if..then..else}, loop markers, arithmetic and the ``.'' print operator, compile directly to bytecode opcodes.
+These cannot have descriptions.}. It will also work for any functions
+inside C++ plugin libraries (see Section~\ref{library}). For example:
+\begin{v}
+Angort version 2.9.2 (c) Jim Finnis 2012-2017
+Use '??word' to get help on a word.
+1|0 > ??redir
+redir: (filename --) open a new file and redirect output to it.
+ For more complex file output, use the IO library. On fail, throws
+ ex$failed.
+1|0 > 
+\end{v}
+
+
+\section{Basic built-in words}
+\subsection{Stack manipulation}
+\index{stack!manipulation}
+There exist a number of words whose sole purpose is to manipulate
+the stack. These words, and their stack pictures, are given in the table
+below.
+\indw{dup}\indw{drop}\indw{swap}\indw{over}
+\begin{center}
+\begin{tabular}{|l|p{4in}|}\hline
+\textbf{name} & \textbf{stack picture}\\ \hline
+dup & (a -- a a)\\
+drop & (a --)\\
+swap & (a b -- b a)\\
+over & (a b -- a b a)\\
+\hline
+\end{tabular}
+\end{center}
+Note that this is a much smaller set than the set of Forth stack
+words, which includes \texttt{rot}, \texttt{roll}, \texttt{nip} and \texttt{tuck}.
+The local variable system makes such complex operations unnecessary.
+
+\subsection{Binary operators}
+\indw{arithmetic}\indw{binary operations}
+In the following operations, these conversions take place:
+\begin{itemize}
+\item If one of the operands is a string, the other will be converted to a string. Only ``+'', ``*''  and comparison operators will be valid.
+\item If one of the operands is a long and the other is an integer, the integer will be converted to a long and the result will be a long.
+\item If one of the operands is a float and the other is an integer or long, that will be converted to a float and the result will be a float.
+\item If one of the operands is a double and the other is an integer, long, or float, that will will be converted to a double and the result will be a double.
+\item The comparison operators will do identity checks on objects (lists, ranges etc.), not deep comparisons.
+\item The comparison functions actually return integers, with non-zero indicating falsehood.
+\end{itemize}
+\indw{and}\indw{or}
+\indw{band}\indw{bor}\indw{bxor}
+\begin{center}
+\begin{tabular}{|l|l|p{4in}|}\hline
+\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
++    & (a b -- a+b)&\\
+-    & (a b -- a-b)&\\
+$*$    & (a b -- a*b)& ints are coerced to floats if one operand is an int, but not otherwise. ``string int *'' produces
+a repeated string, but not ``int string *''.\\
+/    & (a b -- a/b)&\\
+\%    & (a b -- a\%b) & integer remainder ("mod") operator\\
+$>$    & (a b -- a$>$b)& string comparison works as expected\\
+$<$    & (a b -- a$<$b)& string comparison works as expected\\
+=    & (a b -- a=b)& equality test: string comparison works as expected\\
+!=   & (a b -- a!=b)& inequality test: string comparison works as expected\\
+and & (a b -- a$\wedge$b) & binary and -- inputs are coerced to integers, nonzero is true\\
+or & (a b -- a$\vee$b) & binary or  -- inputs are coerced to integers, nonzero is true\\
+band & (a b -- a \& b) & bitwise AND \\
+bor & (a b -- a $|$ b) & bitwise OR \\
+bxor & (a b -- a $\sim$ b) & bitwise XOR \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Unary operators}
+\indw{bnot}\indw{not}\indw{neg}\indw{abs}
+\begin{center}
+\begin{tabular}{|l|l|p{4in}|}\hline
+\textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
+not & (a -- !a) & logical negation of a boolean\\
+neg & (a -- -a) & arithmetic negation of float or integer\\
+abs & (a -- $|\textrm{a}|$) & absolute value\\
+isnone & (a -- bool) & true if value is \texttt{none} \\
+bnot & (a -- !b) & bitwise not\\    
+\hline
+\end{tabular}
+\end{center}
