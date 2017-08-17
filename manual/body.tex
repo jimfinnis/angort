@@ -379,10 +379,8 @@ representing that function (and any closure created) onto the stack. This can
 then be called with \texttt{call}  (which can be abbreviated to ``\texttt{@}'')
 \indw{call}\indw{"@}
 Such functions may have parameters and local variables.
-
 For example, this is a function to run a function over a range of numbers,
 printing the result:
-
 \begin{lstlisting}
 :over1to10 |func:|
     1 10 range each { i ?func@ . } ;
@@ -396,6 +394,64 @@ or more simply
 \begin{v}
     (dup *) over1to10
 \end{v}
+
+\subsection{Recursion}
+Recursion is normally achieved by calling the function by name within
+its own definition:
+\begin{lstlisting}
+:factorial |x:|
+    ?x 1 = if 1 else ?x ?x 1 - factorial * then;
+\end{lstlisting}
+This is not possible in an anonymous function. To achieve recursion
+in anonymous functions, use the
+\texttt{recurse} keyword to make the recursive call:
+\begin{lstlisting}
+1 10 range (|x:| ?x 1 = if 1 else ?x ?x 1 - recurse * then) map
+"," intercalate.
+\end{lstlisting}
+will print the factorials of the first 10 natural numbers. See below
+for how \texttt{map} performs a function on each member of an iterable
+to produce a list, and for how \texttt{intercalate} builds a string
+out of a list by joining string representations of its members with
+a separator.
+\subsubsection{A warning}
+Angort has a limited return stack size of 256 frames. Recursive algorithms
+may run out of stack. Also, Angort may not be suitable for expressing
+very complex recursive functions. Consider for example the quicksort algorithm:
+this can be implemented as
+\begin{lstlisting}
+:qs |l:p| 
+    ?l len 1 <= if 
+        ?l 
+    else 
+        ?l pop !p 
+        ?l (?p <) filter qs 
+        [?p] + 
+        ?l (?p >=) filter qs + 
+    then;
+\end{lstlisting}
+but running it on a large number of items will be very slow. Try
+\begin{lstlisting}
+[] 0 100000 each {rand 200000 %,} qs
+\end{lstlisting}
+This generates a list of 100000 integers in the range $[0,199999]$ and
+sorts them. On my laptop it takes about 7 seconds -- a long time for
+such a simple task.
+This is because the algorithm recurses deeply and widely,
+and each recursion constructs 
+three lists (a new single-item list for the pivot and two lists
+using a filter) and pastes them together, constructing a temporary 
+list on the way. This is very inefficient.
+In contrast, using the built in \texttt{sort} word takes only 0.25s:
+\begin{lstlisting}
+[] 0 100000 each {rand 200000 %,} sort
+\end{lstlisting}
+This is still slow, because the internal comparison operator
+needs to perform typechecking on each pair of elements it compares
+so that integers and floats in the same list will be compared
+correctly. However, it is a big improvement because the \texttt{libc} 
+\texttt{qsort} function is being used.
+
 
 \subsection{Words for dealing with functions}
 \indw{map}\indw{reduce}\indw{filter}\indw{zipWith}
