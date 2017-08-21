@@ -94,22 +94,28 @@ inside the top-level Angort directory):
 \begin{v}
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 sudo make install
 \end{v}
 This is for a Linux machine
-with CMake and the \texttt{readline} development libraries. The standard
-interpreter will then be installed in \texttt{cli/angortcli}. A set
-of plugin libraries can also be downloaded from
+with CMake and the \texttt{readline} development libraries. The
+interpreter will then be installed, typically as \texttt{/usr/local/bin/angort}. 
+A small set of Angort libraries (i.e. libraries written in Angort) will also be installed
+into \texttt{/usr/local/share/angort}.
+
+A set
+of native C++ plugin libraries can also be downloaded from
 \url{https://github.com/jimfinnis/angortplugins}. Once Angort has
 been installed, these can be built and installed with
 \begin{v}
 ./buildall
 sudo ./install
 \end{v}
+They will also be installed into \texttt{/usr/local/share/angort}.
 Using \texttt{reallybuildall} will attempt to build extra libraries
 which require additional packages, such a a CURL interface, SDL
-graphics support and JACK MIDI support.
+graphics support and JACK MIDI support. Many of these have been written for
+somewhat esoteric purposes as I have needed them.
 
 

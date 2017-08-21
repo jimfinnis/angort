@@ -48,7 +48,7 @@ number is odd
 Conditions can be nested.
 
 
-\subsection{Multi-line flow control}
+\subsection{Multi-line flow control and ``slugs''}
 \label{multilineflow}
 It is important to note that Angort processes input on a line-by-line
 basis when not defining a function, both within a script and in immediate
@@ -82,9 +82,10 @@ the above can be written
     then
 )@
 \end{lstlisting}
-
-
-
+In informal conversations I have taken to referring to anonymous
+functions which are called immediately as ``slugs,'' both from
+the typesetting terminology and from the visual appearance
+of \texttt{(....)@}.
 
 
 \subsection{Case blocks}
@@ -165,11 +166,13 @@ is so common that it is coded to a special word of its own, and can be written
 as 
 \begin{lstlisting}
 ifleave
-\end{lstlisting }
+\end{lstlisting}
 The function above could be written tersely as
 \begin{lstlisting}
 (|:c| 0!c {?c. ?c 1+ !c ?c 100= ifleave)@;
 \end{lstlisting}
+This is still using a slug because we require the local variable
+provided by the anonymous function.
 Loops can be nested, and the \texttt{leave} words will jump out of the
 innermost loop in which they appear.
 

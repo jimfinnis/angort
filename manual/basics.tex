@@ -54,22 +54,41 @@ This is a little difficult at first, but rapidly becomes second
 nature\footnote{Most old calculators work using RPN, and quite a few
 of the more powerful programmables still do.}
 
+\subsection{Running scripts}
+Scripts are traditionally\footnote{A somewhat unusual word to use when
+there is currently only one user of the language.} given the extension
+\texttt{.ang}, but this appears nowhere in the codebase. To run a script,
+create a file of Angort function definitions and commands and pass it as
+an argument to the \texttt{angort} command. Each line will be parsed
+and run in order, unless it is a function definition in which case the
+compilation will occur at the end of the definition.
+
+Note that each line of Angort (outside a function) is parsed and run
+immediately. This means that multiline flow control constructs (such as loops
+and \texttt{if..then}) will not work unless they are inside a function.
+This is easily solved by using anonymous functions, as described in Section~\ref{multilineflow}.
+
+At the end of a script, control will drop into immediate mode. This is often useful
+when Angort is used to provide a domain-specific control language: the script sets up
+a large number of commands and perhaps initialises native C++ libraries, and then
+waits for the user's commands. If this is not required, terminate the script with
+the \texttt{quit} command. This will cause Angort to exit with the return code 0.
+
 \subsection{Words and functions}
 \index{word}
-Most of the Angort language consists of functions which each perform
+Most of the Angort language consists of words which each perform
 a single, isolated task -- there is very little syntax. Even common
 ``syntactic'' keywords like \texttt{if} (for conditions), \texttt{[]} 
 (for creating lists) and \texttt{+} (for addition) operate primarily through
-stack operations.
-Most things in Angort are just identifiers
-which compile to runnable code, including functions you have defined
-yourself. I will sometimes refer to these as 
-``words'' (after the original Forth usage), and sometimes as ``functions''
-(to reflect more modern usage). There is no real distinction, although
-I tend to use ``word'' for more basic, builtin operations.
+stack operations, although \texttt{if} does some more complex things at compile time
+(such as calculating jump offsets). Code in Angort largely consists of many of these words
+chained together to perform a task. These words can be combined into user-defined
+functions.
 
-\subsection{Running scripts}
-\todo{write this}
+In general, I will use ``word'' to refer to a single Angort built-in token,
+particularily if it compiles to a single opcode; while ``function'' will refer
+to user-defined functions. However, I may vary -- there is no real distinction, since
+an Angort function call is itself a single opcode.
 
 \subsection{Types and literals}
 Angort is a dynamically typed language, with type coercion (weak typing).
@@ -111,6 +130,8 @@ Integers can also have a base character, `b', `x'/`h', `o' or `d', which
 goes before the optional 'l' for 'long.' \textbf{Note that} all numbers
 must start with a digit, so a leading zero will be required for some 
 hex numbers (e.g. `0ffh' not `ffh').
+
+\todo{Checking and getting types (isnone, isnumber, iscallable, type)}
 
 \todo{heredocs}
 
@@ -167,7 +188,7 @@ more than one line:
 This example uses recursion and the Angort \texttt{if..else..then} construction.
 This looks a little odd to programmers not familiar with Forth -- please
 see Section~\ref{conditions} for more details.
-\todo{Mention how immediate and script mode work with definitions}
+\todo{Mention how immediate and script mode work with definitions. Add parameter typing.}
 
 
 \subsubsection{Word parameters and local variables}
@@ -335,3 +356,14 @@ bnot & (a -- !b) & bitwise not\\
 \hline
 \end{tabular}
 \end{center}
+
+\subsubsection{Input and output}
+\todo{Increase the meaning!}
+\begin{itemize}
+\item dot, p, nl
+\item errp, errnl
+\item redir, endredir
+\item rawp, x
+\item format
+\end{itemize}
+
