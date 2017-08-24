@@ -1,22 +1,87 @@
 \section{Introduction}
 Angort\footnote{The name is an entirely random pair of syllables,
 it has no significance.}
-is a stack-based concatenative programming language with some
-functional features. The language has grown from a simple Forth-like
-core over time, and has been used primarily for robot control on
-an ExoMars rover locomotion prototype.
+is a stack-based concatenative programming language, based on the
+venerable Forth, with some
+extra features. These include:
+\begin{itemize}
+\item higher order functions with full lexical closure;
+\item lists and hashes (dictionaries) with garbage collection;
+\item native C++ plugin architecture.
+\end{itemize}
+Here are some examples. First, the familiar recursive
+quicksort algorithm:
+\begin{lstlisting}
+:qs |l:p| 
+    ?l len 1 <= if
+        # length <= 1 returns the list itself
+        ?l 
+    else 
+        # otherwise remove the first item as the pivot
+        ?l pop !p 
+        # quicksort the list of items less than the pivot
+        ?l (?p <) filter qs 
+        # add the pivot to that list
+        [?p] + 
+        # quicksort the list of items greater than the pivot
+        # and add it.
+        ?l (?p >=) filter qs + 
+    then;
+\end{lstlisting}
+\clearpage
+Next, a program to read a CSV file and print the sums of all
+the columns:
+\begin{lstlisting}
+# load the CSV plugin but do not import the symbols into the
+# default namespace, so we have to access them with csv$...
+`csv library drop
 
-This is an extremely brief introduction to the language. It may
-be useful for readers unfamiliar with this style of programming
-to look into Forth, which is an older, more primitive (but faster and
-smaller) language from which much of the syntax of Angort was
-borrowed.
+# load the CSV file - creates a CSV reader object which will read
+# into a list of hashes where all columns are floats, and uses it
+# to read the file into the global CSV.
 
-It combines the power and ease of a modern dynamic language with
-the convenience of a Forth-like language for controlling robots in
-real time. For example, on our rover we have the following definitions
-in the startup file:
+[% `types "f" ] csv$make "magic.log" csv$read !CSV
 
+# make a list of keys from the first item in CSV.
+[] ?CSV fst each {i,} !Keys
+
+# create a "slug" (an anonymous function which runs immediately,
+# to provide local variables and multiline flow control)
+# with a local variable i.
+(|:i|
+    # for each key, store the iterator value in "i" so it's
+    # accessible within a closure
+    ?Keys each { i!i
+        # create a list consisting of
+        [i, # the iterator (i.e. key name)
+         # and the sum of the key's values, done by using map/reduce:
+         # the map extracts the key's values, the reduce performs the sum.
+         0 ?CSV (?i swap get) map (+) reduce
+         ]
+        # format the list and print it.
+        "%s %f" format.
+    }
+)@ quit # run the slug and quit
+\end{lstlisting}
+
+Angort combines the power and ease of a modern dynamic language with
+the convenience of a Forth-like language, and has currently been used
+in many applications including:
+\begin{itemize}
+\item building command/control/monitoring environments for robotic
+systems;
+\item scripting experiment runs for neural networks;
+\item writing fairly complex data analysis tools;
+\item generating visualisations of neural networks and other data;
+\item algorithmically generated music;
+\item simple 2D games.
+\end{itemize}
+\clearpage  
+Because the interpreter is interactive and upon completion
+of a script drops back to a command interface, it is very useful
+for building domain-specific control languages. For example, 
+our ExoMars locomotion prototype is controlled with Angort, and
+its script includes the following definitions:
 \begin{lstlisting}
 # define a constant "wheels" holding a range from 1-6 inclusive
 
@@ -49,7 +114,6 @@ range 1 7 const wheels
 ;
 
 # define a function to stop the rover by setting all speeds to zero
-
 :s 0 d;
 
 \end{lstlisting}
@@ -66,6 +130,8 @@ it respectively. We can also directly type things like:
 wheels each { i dactual .}
 \end{v}
 which will print the actual speeds of all the wheels.
+
+\subsection{Functional programming}
 It's also possible to perform some functional programming with
 anonymous functions:
 \begin{v}
