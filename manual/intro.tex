@@ -5,27 +5,32 @@ is a stack-based concatenative programming language, based on the
 venerable Forth, with some
 extra features. These include:
 \begin{itemize}
-\item higher order functions with full lexical closure;
+\item variables and function parameters
+\item higher order functions with (nearly) full lexical closure;
 \item lists and hashes (dictionaries) with garbage collection;
 \item native C++ plugin architecture.
 \end{itemize}
 Here are some examples. First, the familiar recursive
 quicksort algorithm:
 \begin{lstlisting}
-:qs |l:p| 
-    ?l len 1 <= if
-        # length <= 1 returns the list itself
-        ?l 
+# Colon at the start of a line introduces a named function definition.
+# This function has one parameter "lst" and one local variable "piv".
+:qs |lst:piv| 
+    # if length of list is <=1...
+    ?lst len 1 <= if
+        # return the list itself
+        ?lst 
     else 
         # otherwise remove the first item as the pivot
-        ?l pop !p 
+        ?lst pop !piv
         # quicksort the list of items less than the pivot
-        ?l (?p <) filter qs 
+        ?lst (?piv <) filter qs 
         # add the pivot to that list
-        [?p] + 
+        [?piv] + 
         # quicksort the list of items greater than the pivot
         # and add it.
-        ?l (?p >=) filter qs + 
+        ?lst (?piv >=) filter qs + 
+        # resulting list is left on the stack, and so returned.
     then;
 \end{lstlisting}
 \clearpage
@@ -38,7 +43,7 @@ the columns:
 
 # load the CSV file - creates a CSV reader object which will read
 # into a list of hashes where all columns are floats, and uses it
-# to read the file into the global CSV.
+# to read the file into the global "CSV".
 
 [% `types "f" ] csv$make "magic.log" csv$read !CSV
 
@@ -52,8 +57,8 @@ the columns:
     # for each key, store the iterator value in "i" so it's
     # accessible within a closure
     ?Keys each { i!i
-        # create a list consisting of
-        [i, # the iterator (i.e. key name)
+        # create a pair consisting of the iterator (i.e. key name)
+        [i, 
          # and the sum of the key's values, done by using map/reduce:
          # the map extracts the key's values, the reduce performs the sum.
          0 ?CSV (?i swap get) map (+) reduce
@@ -65,8 +70,8 @@ the columns:
 \end{lstlisting}
 
 Angort combines the power and ease of a modern dynamic language with
-the convenience of a Forth-like language, and has currently been used
-in many applications including:
+the convenience of a Forth-like language, and has been used
+in various applications including:
 \begin{itemize}
 \item building command/control/monitoring environments for robotic
 systems;
@@ -89,15 +94,12 @@ range 1 7 const wheels
 
 # define a new function "d" with a single parameter "speed"
 
-:d [speed:]
-
+:d |speed:|
     # set a help text for this function
-
     :"(speed --) set speed of all drive motors"
-    
+
     # for each wheel, set the required speed to the value
     # of the parameter
-    
     wheels each {
         ?speed i!drive
     }
@@ -105,7 +107,7 @@ range 1 7 const wheels
 
 # slightly more complex function for steering
 
-:t [angle:]
+:t |angle:|
     :"(angle --) turn front wheels one way, back wheels opposite way"
     
     ?angle dup 1!steer 2!steer
@@ -115,7 +117,6 @@ range 1 7 const wheels
 
 # define a function to stop the rover by setting all speeds to zero
 :s 0 d;
-
 \end{lstlisting}
 Once these words are defined we can steer the robot in real time with
 commands like:

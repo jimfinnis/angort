@@ -848,48 +848,48 @@ Prints internal debugging data.
 {
     Value *p[2];
     a->popParams(p,"nn");
-    int x = p[0]->toInt();
-    int y = p[1]->toInt();
-    a->pushInt(x|y);
+    int x = p[0]->toLong();
+    int y = p[1]->toLong();
+    a->pushLong(x|y);
 }
 %word band (a b -- a&b) bitwise and
 {
     Value *p[2];
     a->popParams(p,"nn");
-    int x = p[0]->toInt();
-    int y = p[1]->toInt();
-    a->pushInt(x&y);
+    int x = p[0]->toLong();
+    int y = p[1]->toLong();
+    a->pushLong(x&y);
 }
 %word bxor (a b -- a^b) bitwise xor
 {
     Value *p[2];
     a->popParams(p,"nn");
-    int x = p[0]->toInt();
-    int y = p[1]->toInt();
-    a->pushInt(x^y);
+    int x = p[0]->toLong();
+    int y = p[1]->toLong();
+    a->pushLong(x^y);
 }
 %word bnot (a -- ~a) bitwise not
 {
     Value *p;
     a->popParams(&p,"n");
-    int x = p->toInt();
-    a->pushInt(~x);
+    int x = p->toLong();
+    a->pushLong(~x);
 }
 %word shiftleft (a b -- a<<b) bitshift left
 {
     Value *p[2];
     a->popParams(p,"nn");
-    int x = p[0]->toInt();
-    int y = p[1]->toInt();
-    a->pushInt(x<<y);
+    int x = p[0]->toLong();
+    int y = p[1]->toLong();
+    a->pushLong(x<<y);
 }
 %word shiftright (a b -- a>>b) bitshift right
 {
     Value *p[2];
     a->popParams(p,"nn");
-    int x = p[0]->toInt();
-    int y = p[1]->toInt();
-    a->pushInt(x>>y);
+    int x = p[0]->toLong();
+    int y = p[1]->toLong();
+    a->pushLong(x>>y);
 }
 
 %word read (-- s|none) read line from stdin
