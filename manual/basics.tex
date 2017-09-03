@@ -336,9 +336,9 @@ $<$    & (a b -- a$<$b)& string comparison works as expected\\
 !=   & (a b -- a!=b)& inequality test: string comparison works as expected\\
 and & (a b -- a$\wedge$b) & binary and -- inputs are coerced to integers, nonzero is true\\
 or & (a b -- a$\vee$b) & binary or  -- inputs are coerced to integers, nonzero is true\\
-band & (a b -- a \& b) & bitwise AND \\
-bor & (a b -- a $|$ b) & bitwise OR \\
-bxor & (a b -- a $\sim$ b) & bitwise XOR \\
+band & (a b -- a \& b) & bitwise AND -- inputs coerced to long, output is long \\
+bor & (a b -- a $|$ b) & bitwise OR -- inputs coerced to long, output is long \\
+bxor & (a b -- a $\sim$ b) & bitwise XOR -- inputs coerced to long, output is long \\
 \hline
 \end{tabular}
 \end{center}
@@ -352,18 +352,74 @@ not & (a -- !a) & logical negation of a boolean\\
 neg & (a -- -a) & arithmetic negation of float or integer\\
 abs & (a -- $|\textrm{a}|$) & absolute value\\
 isnone & (a -- bool) & true if value is \texttt{none} \\
-bnot & (a -- !b) & bitwise not\\    
+bnot & (a -- !b) & bitwise not --  input coerced to long, output is long \\
 \hline
 \end{tabular}
 \end{center}
 
-\subsubsection{Input and output}
-\todo{Increase the meaning!}
+\subsection{Basic input and output}
+This section covers simple input and output over the standard IO streams.
+for file IO, the \texttt{io} library is required. Output can be redirected
+to a file with the \texttt{redir} word, however.
+
+\subsubsection{Simple input}
+To read a line from standard input (i.e. the keyboard unless Angort
+has been redirected) use \texttt{read}:
+\begin{lstlisting}
+(|:s|
+    {
+        read !s
+        ?s "quit" = ifleave
+        ?s toint dup* .
+    }
+)@ quit
+\end{lstlisting}
+This will convert each line to an integer and print its square,
+unless ``quit'' is entered, which will terminate the program.
+Note that \texttt{read} will not add the trailing newline character.
+
+\subsubsection{Simple output}
+Three words cover most output situations:
 \begin{itemize}
-\item dot, p, nl
-\item errp, errnl
-\item redir, endredir
-\item rawp, x
-\item format
+\item the ``dot'' word, written as ``.'', will pop the stack and print
+the value followed by a newline. This is shown in many of the examples
+above. The value is converted to a string for printing using a method
+internal to the type.
+\item The \texttt{p} word will do the same, but without the newline.
+\item The \texttt{nl} word will just print a newline.
 \end{itemize}
+
+\subsubsection{Output to stderr}
+To output to the standard error stream, use the \texttt{errp} word
+to print a value without the newline, and \texttt{errnl} to print just
+a newline. There is no direct equivalent to ``.'', but this is achieved
+with the sequence \texttt{errp errnl}.
+
+\subsubsection{Output redirection}
+The \texttt{redir} word takes the name of a file. All subsequent output
+using ``.'', \texttt{p} and \texttt{nl} will be redirected to this file.
+The \texttt{endredir} word will end the redirection. Performing another
+\texttt{redir} while a redirect is active will have the same result
+as \texttt{endredir ``filename'' redir}. There is no notion of a
+stack of file redirection.  
+
+\subsubsection{Special output}
+Several words exist for special output:
+\begin{itemize}
+\item \texttt{x} pops and prints a value as a hex integer.
+\item \texttt{rawp} pops and prints a value as a raw hex value. This will
+be the underlying value stored in the value union. It is occasionally
+useful for debugging.
+\end{itemize}
+Neither of these words print a trailing newline.
+
+\subsubsection{Formatted output}
+A version of the C \texttt{printf} formatted print exists, under the
+name \texttt{format}.
+This takes a list of values (see Section~\ref{lists}) and a format string:
+\begin{lstlisting}
+[1,"hello"] "%20d: %s" format.
+\end{lstlisting}
+While it is not a full implementation, all but the more unusual formatting
+options are supported.
 
