@@ -192,6 +192,7 @@ see Section~\ref{conditions} for more details.
 
 
 \subsubsection{Word parameters and local variables}
+\index{parameters}\index{variables!local}
 Until now, all the code has been perfectly valid Forth\footnote{With
 the exception of the factorial function, which uses local variables
 and recursion.}. However, the manipulation of
@@ -252,7 +253,8 @@ are none) there may be a function documentation string. It has the form
 :"(before -- after) what the function does"
 \end{v}
 The section in brackets is known as a \emph{stack picture,}\footnote{Or sometimes
-a \emph{stackflow symbol}.} and describes
+a \emph{stackflow symbol} -- the concept is borrowed from Forth and the literature
+varies.} and describes
 the action of the function on the stack. The part before the hyphen
 shows the part of the stack removed by the function, and the part after
 shows its replacement. For example:
@@ -272,7 +274,8 @@ the return values are simply what's left on the stack).
 To print the documentation for a word, enter \texttt{??wordname} at
 the prompt. This will also work for most built-in Angort functions,
 but not all\footnote{This is because most Angort functions compile
-to calls to C++ functions, which can have descriptions. Simpler operations,
+to calls to C++ functions stored as ``native'' values,
+which can have descriptions. Simpler operations,
 such as \texttt{if..then..else}, loop markers, arithmetic and the ``.'' print operator, compile directly to bytecode opcodes.
 These cannot have descriptions.}. It will also work for any functions
 inside C++ plugin libraries (see Section~\ref{library}). For example:
@@ -309,15 +312,16 @@ words, which includes \texttt{rot}, \texttt{roll}, \texttt{nip} and \texttt{tuck
 The local variable system makes such complex operations unnecessary.
 
 \subsection{Binary operators}
-\indw{arithmetic}\indw{binary operations}
-In the following operations, these conversions take place:
+\index{arithmetic!binary operators}
+In the following operations
 \begin{itemize}
+\item Booleans are represented by integers: nonzero is true, zero is false.
 \item If one of the operands is a string, the other will be converted to a string. Only ``+'', ``*''  and comparison operators will be valid.
 \item If one of the operands is a long and the other is an integer, the integer will be converted to a long and the result will be a long.
 \item If one of the operands is a float and the other is an integer or long, that will be converted to a float and the result will be a float.
 \item If one of the operands is a double and the other is an integer, long, or float, that will will be converted to a double and the result will be a double.
 \item The comparison operators will do identity checks on objects (lists, ranges etc.), not deep comparisons.
-\item The comparison functions actually return integers, with non-zero indicating falsehood.
+\item The comparison functions return booleans-as-integers, as described above.
 \end{itemize}
 \indw{and}\indw{or}
 \indw{band}\indw{bor}\indw{bxor}
@@ -327,13 +331,13 @@ In the following operations, these conversions take place:
 +    & (a b -- a+b)&\\
 -    & (a b -- a-b)&\\
 $*$    & (a b -- a*b)& ints are coerced to floats if one operand is an int, but not otherwise. ``string int *'' produces
-a repeated string, but not ``int string *''.\\
+a repeated string, but ``int string *'' is invalid.\\
 /    & (a b -- a/b)&\\
 \%    & (a b -- a\%b) & integer remainder ("mod") operator\\
-$>$    & (a b -- a$>$b)& string comparison works as expected\\
-$<$    & (a b -- a$<$b)& string comparison works as expected\\
-=    & (a b -- a=b)& equality test: string comparison works as expected\\
-!=   & (a b -- a!=b)& inequality test: string comparison works as expected\\
+$>$    & (a b -- a$>$b)& string comparison works as expected, collections (lists and hashes) are invalid.\\
+$<$    & (a b -- a$<$b)& string comparison works as expected, collections are invalid.\\
+=    & (a b -- a=b)& string comparison checks for equality, not identity. Collection comparison (lists and hashes) test for identity only (i.e. true if the two operands are references to the same collection).\\
+!=   & (a b -- a!=b)& see ``='' above.\\
 and & (a b -- a$\wedge$b) & binary and -- inputs are coerced to integers, nonzero is true\\
 or & (a b -- a$\vee$b) & binary or  -- inputs are coerced to integers, nonzero is true\\
 band & (a b -- a \& b) & bitwise AND -- inputs coerced to long, output is long \\
@@ -344,11 +348,12 @@ bxor & (a b -- a $\sim$ b) & bitwise XOR -- inputs coerced to long, output is lo
 \end{center}
 
 \subsection{Unary operators}
+\index{arithmetic!unary operators}
 \indw{bnot}\indw{not}\indw{neg}\indw{abs}
 \begin{center}
 \begin{tabular}{|l|l|p{4in}|}\hline
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
-not & (a -- !a) & logical negation of a boolean\\
+not & (a -- !a) & logical negation of a boolean (i.e. an integer)\\
 neg & (a -- -a) & arithmetic negation of float or integer\\
 abs & (a -- $|\textrm{a}|$) & absolute value\\
 isnone & (a -- bool) & true if value is \texttt{none} \\
@@ -358,11 +363,13 @@ bnot & (a -- !b) & bitwise not --  input coerced to long, output is long \\
 \end{center}
 
 \subsection{Basic input and output}
+\index{input/output!simple}
 This section covers simple input and output over the standard IO streams.
 for file IO, the \texttt{io} library is required. Output can be redirected
 to a file with the \texttt{redir} word, however.
 
 \subsubsection{Simple input}
+\indw{read}
 To read a line from standard input (i.e. the keyboard unless Angort
 has been redirected) use \texttt{read}:
 \begin{lstlisting}
@@ -381,21 +388,23 @@ Note that \texttt{read} will not add the trailing newline character.
 \subsubsection{Simple output}
 Three words cover most output situations:
 \begin{itemize}
-\item the ``dot'' word, written as ``.'', will pop the stack and print
+\indw{.}\item the ``dot'' word, written as ``.'', will pop the stack and print
 the value followed by a newline. This is shown in many of the examples
 above. The value is converted to a string for printing using a method
 internal to the type.
-\item The \texttt{p} word will do the same, but without the newline.
-\item The \texttt{nl} word will just print a newline.
+\indw{p}\item The \texttt{p} word will do the same, but without the newline.
+\indw{nl}\item The \texttt{nl} word will just print a newline.
 \end{itemize}
 
 \subsubsection{Output to stderr}
+\index{input/output!to stderr}\indw{errp}\indw{errnl}
 To output to the standard error stream, use the \texttt{errp} word
 to print a value without the newline, and \texttt{errnl} to print just
 a newline. There is no direct equivalent to ``.'', but this is achieved
 with the sequence \texttt{errp errnl}.
 
 \subsubsection{Output redirection}
+\index{input/output!redirection}\indw{redir}\indw{endredir}
 The \texttt{redir} word takes the name of a file. All subsequent output
 using ``.'', \texttt{p} and \texttt{nl} will be redirected to this file.
 The \texttt{endredir} word will end the redirection. Performing another
@@ -406,14 +415,14 @@ stack of file redirection.
 \subsubsection{Special output}
 Several words exist for special output:
 \begin{itemize}
-\item \texttt{x} pops and prints a value as a hex integer.
-\item \texttt{rawp} pops and prints a value as a raw hex value. This will
-be the underlying value stored in the value union. It is occasionally
-useful for debugging.
+\index{input/output!hexadecimal}\indw{x}\item \texttt{x} pops and prints a value as a hex integer.
+\index{input/output!raw value}\indw{rawp}\item \texttt{rawp} pops and prints a value as a raw hex value. This will
+be the underlying value stored in the value union. It is occasionally useful for debugging.
 \end{itemize}
 Neither of these words print a trailing newline.
 
 \subsubsection{Formatted output}
+\index{input/output!formatted}\indw{format}
 A version of the C \texttt{printf} formatted print exists, under the
 name \texttt{format}.
 This takes a list of values (see Section~\ref{lists}) and a format string:
@@ -423,3 +432,79 @@ This takes a list of values (see Section~\ref{lists}) and a format string:
 While it is not a full implementation, all but the more unusual formatting
 options are supported.
 
+
+\section{Global variables}
+\indw{global}\index{variables!global}
+Global variables are defined in two ways. The ``polite'' way is to use the 
+\texttt{global} keyword, which creates a new global of the name following
+it, initially holding the nil value \texttt{none}:
+\begin{v}
+1|0> global foo
+1|0> ?foo.
+NONE
+1|0> 5!foo
+1|0> ?foo.
+5
+\end{v}
+The other way to define globals is simply to access a variable whose
+name begins with a capital letter. If no global or local exists with that
+name, a global is created with the initial \texttt{none} value:
+\begin{v}
+1|0> 5 !Foo
+1|0> ?Foo.
+5
+\end{v}
+Globals, unlike locals, do not require a \texttt{?} sigil to be read:
+if the name is used ``bare'', their value will be stacked just as if the name
+was preceded with \texttt{?}, unless they contain
+an anonymous function. In this case, the function is run (see
+Section~\ref{globdetails} below). It is, however, good practice to use
+the sigil. Writing to a global is done using the familiar \texttt{!} sigil.
+
+Finally, accessing a global using its name without a sigil
+will do nothing if it contains None,
+while accessing it with the \texttt{?} will stack the None:
+\begin{v}
+1|0 > 10!A
+1|0 > ?A.
+10
+1|0 > A.
+10
+1|0 > none!A
+1|0 > A.
+  from [dot] <stdin>:5/2
+Error: stack underflow in stack 'main'
+Last line input: A.
+1|0 > ?A.
+NONE
+1|0 > 
+\end{v}
+
+
+\section{Constants}
+\indw{const}\index{constants}
+Constants are similar to globals, but with the following differences:
+\begin{itemize}
+\item they are defined and set using the \texttt{const} keyword ---
+this will pop a value off the stack and set the new constant to that value;
+\item they can never be redefined or written to.
+\end{itemize}
+Here are some examples which might be found at the start of a maths
+package:
+\begin{lstlisting}
+3.1415927 const pi
+2.7182818 const e
+
+180 pi/   const radsToDegsRatio
+pi 180/   const degsToRadsRatio
+
+:degs2rads
+    :"(degs -- rads) convert degrees to radians"
+    degsToRadsRatio*
+;
+
+:rads2degs
+    :"(rads -- degs) convert radians to degrees"
+    radsToDegsRatio*
+;
+\end{lstlisting}

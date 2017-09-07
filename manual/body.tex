@@ -1,81 +1,5 @@
 
 
-\section{Global variables}
-\indw{global}
-Global variables are defined in two ways. The ``polite'' way is to use the 
-\texttt{global} keyword, which creates a new global of the name following
-it, initially holding the nil value \texttt{none}:
-\begin{v}
-1|0> global foo
-1|0> ?foo.
-NONE
-1|0> 5!foo
-1|0> ?foo.
-5
-\end{v}
-The other way to define globals is simply to access a variable whose
-name begins with a capital letter. If no global or local exists with that
-name, a global is created with the initial \texttt{none} value:
-\begin{v}
-1|0> 5 !Foo
-1|0> ?Foo.
-5
-\end{v}
-Globals, unlike locals, do not require a \texttt{?} sigil to be read:
-if the name is used ``bare'', their value will be stacked just as if the name
-was preceded with \texttt{?}, unless they contain
-an anonymous function. In this case, the function is run (see
-Section~\ref{globdetails} below). It is, however, good practice to use
-the sigil. Writing to a global is done using the familiar \texttt{!} sigil.
-
-Finally, accessing a global using its name without a sigil
-will do nothing if it contains None,
-while accessing it with the \texttt{?} will stack the None:
-\begin{v}
-1|0 > 10!A
-1|0 > ?A.
-10
-1|0 > A.
-10
-1|0 > none!A
-1|0 > A.
-  from [dot] <stdin>:5/2
-Error: stack underflow in stack 'main'
-Last line input: A.
-1|0 > ?A.
-NONE
-1|0 > 
-\end{v}
-
-
-\section{Constants}
-\indw{const}
-Constants are similar to globals, but with the following differences:
-\begin{itemize}
-\item they are defined and set using the \texttt{const} keyword ---
-this will pop a value off the stack and set the new constant to that value;
-\item they can never be redefined or written to.
-\end{itemize}
-Here are some examples which might be found at the start of a maths
-package:
-\begin{lstlisting}
-3.1415927 const pi
-2.7182818 const e
-
-180 pi/   const radsToDegsRatio
-pi 180/   const degsToRadsRatio
-
-:degs2rads
-    :"(degs -- rads) convert degrees to radians"
-    degsToRadsRatio*
-;
-
-:rads2degs
-    :"(rads -- degs) convert radians to degrees"
-    radsToDegsRatio*
-;
-\end{lstlisting}
-
 
 
 \section{The true nature of function definitions}
@@ -272,7 +196,7 @@ If we run this on the hash $H$ defined above, we get
 foo:   the foo string
 bar:   the bar string
 \end{v}
-\indw{jval}{kval}
+\indw{ival}\indw{jval}\indw{kval}
 We can nest iterator loops for hashes too, as we did with lists.
 Just as \texttt{i}, \texttt{j} and \texttt{k} get the inner, next outer
 and next outer loop keys (see Sec.~\ref{nestit}), \texttt{ival},\texttt{jval} and \texttt{kval} get

@@ -1,10 +1,12 @@
 
 \section{Flow control}
+\index{flow control}
 This section of the manual will describe how Angort handles conditional
 code and loops. There are also several idioms using anonymous functions
 which can be used for flow control, which will be described briefly.
 
 \subsection{Conditions}
+\index{conditions}
 \label{conditions}
 \indw{if}
 \indw{then}
@@ -49,6 +51,7 @@ Conditions can be nested.
 
 
 \subsection{Multi-line flow control and ``slugs''}
+\index{slugs}
 \label{multilineflow}
 It is important to note that Angort processes input on a line-by-line
 basis when not defining a function, both within a script and in immediate
@@ -127,7 +130,7 @@ and ``It's something else'' for any other value.
 
 \subsection{Loops}
 \label{loops}
-\index{loops}
+\index{loop}
 \indw{each}
 \def\opencurlybrace{\{}
 \def\closecurlybrace{\{}
@@ -229,6 +232,7 @@ will print the hash's keys: ``foo'' and ``bar'', while
 \begin{lstlisting}
 [% "foo" "bar", "baz" "qux"] each {i p "=" p ival.}
 \end{lstlisting}
+\indw{ival}
 will print ``key=value'' for each entry. Here, \texttt{ival} gets the value
 (as opposed to the key)
 of the current pair in the iterator, 
@@ -266,6 +270,7 @@ to get the outer and next outer iterator values:
     }
 )@  
 \end{lstlisting}
+\indw{jval}\indw{kval}
 The \texttt{jval} and \texttt{kval}
 words also exist to get a hash iterator value for two outer iterator loops.
 
