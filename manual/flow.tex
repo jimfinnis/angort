@@ -281,7 +281,7 @@ off when the loop starts and kept inside a special stack. The same
 applies to infinite loops: no loop state is kept on the stack. This 
 leaves the stack free for manipulation:
 \begin{lstlisting}
-# sum all the integers from 0 to x
+# sum all the integers from 0 to x inclusive    
 :sumto |x:|
     0               # stack an accumulator
     0 ?x 1+ range   # stack a range from 0 to x inclusive
@@ -291,6 +291,13 @@ leaves the stack free for manipulation:
     }               # end loop
 ;                   # finish and return the accumulator
 \end{lstlisting}
+Note that this isn't actually how you'd do it: \texttt{reduce} is
+more efficient:
+\begin{lstlisting}
+:sumto |x:| 0 0 ?x 1+ range (+) reduce;
+\end{lstlisting}
+This more functional style of programming is dealt with in
+Section~\ref{functional}.
 
 \subsection{Words to create ranges}
 \indw{range|textbf}\indw{frange|textbf}\indw{srange|textbf}
@@ -346,10 +353,12 @@ This could be implemented by using an index to go over both lists:
 
 \begin{lstlisting}
     :zipWith |a,b,f:|
-        []
+        [] # stack an empty list
         0 ?a len ?b len min range each {
-            i ?a get 
-            i ?b get ?f call ,
+            i ?a get # get from first list
+            i ?b get # get from second list
+            ?f call # call the function
+            , # and append to the list
         }
 ;
 \end{lstlisting}
@@ -359,9 +368,11 @@ but a more elegant solution might be:
         ?b mkiter !it
         []
         ?a each {
-            ?it idone ifleave
-            i ?it icur ?f@,
-            ?it inext 
+            ?it idone ifleave # exit if explicit iterator done
+            i # get loop iterator value
+            ?it icur # get explicit iterator value
+            ?f@, # call the function and append to the list
+            ?it inext # advance the explicit iterator
         }
     ;
 \end{lstlisting}
