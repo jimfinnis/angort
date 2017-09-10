@@ -8,6 +8,14 @@
 #include "hash.h"
 #include "opcodes.h"
 
+#include <wchar.h>
+#include <wctype.h>
+
+inline int wstrlen(const char *s){
+    return mbstowcs(NULL,s,0);
+}
+
+
 using namespace angort;
 
 namespace angort {
@@ -70,31 +78,93 @@ util$show instead, from the util package.
     }
 }
 
-%wordargs head li (coll n -- list) get the first n items of a list
-Get the first n items of a list into a new list - returns a list
-even if the length requested is 1. (See also "fst".)
+%wordargs head vi (coll/str n -- list) get the first n items/chars of a list or string
+If a list, get the first n items into a new list - returns a list even if the length
+requested is 1. (See also "fst".) In the case of a string, returns the first n characters.
 {
-    Value r;
-    ArrayList<Value> *list = Types::tList->set(&r);
-    for(int i=0;i<p1;i++){
-        if(i==p0->count())break;
-        list->append()->copy(p0->get(i));
+    if(p0->t == Types::tList){
+        ArrayList<Value> *in = Types::tList->get(p0);
+        Value r;
+        ArrayList<Value> *list = Types::tList->set(&r);
+        for(int i=0;i<p1;i++){
+            if(i==in->count())break;
+            list->append()->copy(in->get(i));
+        }
+        a->pushval()->copy(&r);
+    } else {
+        const StringBuffer &b = p0->toString();
+        const char *strin = b.get();
+        
+        if(p1<=0){
+            a->pushString("");
+            return;
+        }
+        int len = wstrlen(strin);
+    
+        // this is how many chars we convert
+        p1 = p1<len ? p1 : len;
+    
+        // convert that many characters
+        wchar_t *s = (wchar_t *)alloca((p1+1)*sizeof(wchar_t));
+        int rv = mbstowcs(s,strin,p1);
+        if(rv<0){
+            a->pushNone();
+            return;
+        }
+        // terminate
+        s[p1]=0;
+    
+        // now convert back
+        int l2 = wcstombs(NULL,s,0)+1;
+        char *s2 = (char *)alloca(l2);
+        wcstombs(s2,s,p1);
+        a->pushString(s2);
     }
-    a->pushval()->copy(&r);
 }
 
-%wordargs tail li (coll n -- list) get the last n items of a list
-Get the last n items of a list into a new list - returns a list
-even if the length requested is 1. (See also "last".)
+%wordargs tail vi (coll n -- list) get the last n items of a list
+If a list, get the last n items into a new list - returns a list even if the length
+requested is 1. (See also "last".) In the case of a string, returns the last n chars.
 {
-    Value r;
-    ArrayList<Value> *list = Types::tList->set(&r);
-    int start = p0->count()-p1;
-    if(start<0)start=0;
-    for(int i=start;i<p0->count();i++){
-        list->append()->copy(p0->get(i));
+    if(p0->t == Types::tList){
+        ArrayList<Value> *in = Types::tList->get(p0);
+        Value r;
+        ArrayList<Value> *list = Types::tList->set(&r);
+        int start = in->count()-p1;
+        if(start<0)start=0;
+        for(int i=start;i<in->count();i++){
+            list->append()->copy(in->get(i));
+        }
+        a->pushval()->copy(&r);
+    } else {
+        const StringBuffer &b = p0->toString();
+        const char *strin = b.get();
+        if(p1<=0){
+            a->pushString("");
+            return;
+        }
+        int len = wstrlen(strin);
+    
+        // this is how many chars we convert
+        p1 = p1<len ? p1 : len;
+    
+        // we need to convert the entire string
+        wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+        int rv = mbstowcs(s,strin,len);
+        if(rv<0){
+            a->pushNone();
+            return;
+        }
+    
+        // work out the start 
+        int start = len-p1;
+    
+        // now convert back
+        int l2 = wcstombs(NULL,s+start,0)+1;
+        char *s2 = (char *)alloca(l2);
+        wcstombs(s2,s+start,p1);
+        a->pushString(s2);
     }
-    a->pushval()->copy(&r);
 }
 
 %wordargs splitlist li (coll n -- [list,list]) split list into two lists of [n,count-n] items

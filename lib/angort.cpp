@@ -919,9 +919,9 @@ void Angort::endDefine(CompileContext *c){
 void Angort::compileParamsAndLocals(){
     
     if(!isDefining() && !inSubContext())
-        throw SyntaxException("cannot use [] outside a word definition or code literal.");
+        throw SyntaxException("cannot use |..| outside a word definition or code literal.");
     if(context->getCodeSize()!=0)
-        throw SyntaxException("[] must be come first in a word definition or code literal");
+        throw SyntaxException("|..| must come first in a word definition or code literal");
     
     int paramct=0; // number of params to pop
     // we start parsing params, then switch
