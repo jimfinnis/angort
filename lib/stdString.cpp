@@ -265,35 +265,4 @@ inline int wstrlen(const char *s){
         wcstombs(s2,s,rv-p1+1);
         a->pushString(s2);
     }
-        
-}
-
-%wordargs lastn si (str count -- str) get first n characters
-{
-    if(p1<=0){
-        a->pushString("");
-        return;
-    }
-    int len = wstrlen(p0);
-    
-    // this is how many chars we convert
-    p1 = p1<len ? p1 : len;
-    
-    // we need to convert the entire string
-    wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
-    int rv = mbstowcs(s,p0,len);
-    if(rv<0){
-        a->pushNone();
-        return;
-    }
-    
-    // work out the start 
-    int start = len-p1;
-    
-    // now convert back
-    int l2 = wcstombs(NULL,s+start,0)+1;
-    char *s2 = (char *)alloca(l2);
-    wcstombs(s2,s+start,p1);
-    a->pushString(s2);
-    
-}
+}        
