@@ -106,7 +106,7 @@ requested is 1. (See also "fst".) In the case of a string, returns the first n c
     
         // convert that many characters
         wchar_t *s = (wchar_t *)alloca((p1+1)*sizeof(wchar_t));
-        int rv = mbstowcs(s,strin,p1);
+        int rv = mbstowcs(s,strin,p1+1);
         if(rv<0){
             a->pushNone();
             return;
@@ -117,7 +117,7 @@ requested is 1. (See also "fst".) In the case of a string, returns the first n c
         // now convert back
         int l2 = wcstombs(NULL,s,0)+1;
         char *s2 = (char *)alloca(l2);
-        wcstombs(s2,s,p1);
+        wcstombs(s2,s,l2);
         a->pushString(s2);
     }
 }
@@ -150,7 +150,7 @@ requested is 1. (See also "last".) In the case of a string, returns the last n c
     
         // we need to convert the entire string
         wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
-        int rv = mbstowcs(s,strin,len);
+        int rv = mbstowcs(s,strin,len+1);
         if(rv<0){
             a->pushNone();
             return;
@@ -162,7 +162,7 @@ requested is 1. (See also "last".) In the case of a string, returns the last n c
         // now convert back
         int l2 = wcstombs(NULL,s+start,0)+1;
         char *s2 = (char *)alloca(l2);
-        wcstombs(s2,s+start,p1);
+        wcstombs(s2,s+start,l2);
         a->pushString(s2);
     }
 }
