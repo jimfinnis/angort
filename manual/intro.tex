@@ -82,8 +82,9 @@ systems;
 \item simple 2D games.
 \end{itemize}
 \clearpage  
-Because the interpreter is interactive and upon completion
-of a script drops back to a command interface, it is very useful
+\subsection{Creating control languages}
+Because the interpreter is interactive and drops back to a command prompt
+upon completion of a script, it is very useful
 for building domain-specific control languages. For example, 
 our ExoMars locomotion prototype is controlled with Angort, and
 its script includes the following definitions:
@@ -131,6 +132,10 @@ it respectively. We can also directly type things like:
 wheels each { i dactual .}
 \end{v}
 which will print the actual speeds of all the wheels.
+In the examples given so far, functions such as \texttt{dactual},
+\texttt{!drive} and \texttt{?drive} are links to native C++ code: it
+is very easy to interface Angort with C++.
+
 
 \subsection{Functional programming}
 It's also possible to perform some functional programming with
@@ -148,10 +153,6 @@ or even:
 \end{v}
 to print the sum of the squares of the first 1000 integers.
 As can be seen, Angort is a very terse language.
-
-In the examples given so far, functions such as \texttt{dactual},
-\texttt{!drive} and \texttt{?drive} are links to native C++ code: it
-is very easy to interface Angort with C++.
 
 \subsection{Downloading and building Angort}
 Angort can be downloaded from \url{https://github.com/jimfinnis/angort} .

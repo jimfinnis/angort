@@ -6,13 +6,15 @@ using the language in immediate mode.
 
 \subsection{Immediate mode}
 In immediate mode, each line of Angort is compiled and run straight
-away. This is how the Angort executable starts when it is not
-given an Angort script's filename on the command line. Angort will also
-drop back to this mode if a script completes without \texttt{quit} 
+away. It is the default mode of the Angort interpreter, even with script
+files as we will see below.
+Angort will be in
+this mode when a script completes without \texttt{quit} 
 being called.
-Running the interpreter without a command line will give a prompt:
+In immediate mode, when a script has not been provided on the command
+line or a script has completed without quitting, Angort shows a prompt like this:
 \begin{v}
-1|0>
+1|0 >
 \end{v}
 The two numbers are the number of garbage-collectable objects in the
 system and the number of items on the stack, respectively.
@@ -50,6 +52,8 @@ would be written as
 \begin{v}
 43 12 * sqrt 32 + 5 + sin
 \end{v}
+which can be read as ``multiply 43 and 12, find the square root,
+add 32, add 5, find the sine.''
 This is a little difficult at first, but rapidly becomes second
 nature\footnote{Most old calculators work using RPN, and quite a few
 of the more powerful programmables still do.}
@@ -59,16 +63,20 @@ Scripts are traditionally\footnote{A somewhat unusual word to use when
 there is currently only one user of the language.} given the extension
 \texttt{.ang}, but this appears nowhere in the codebase. To run a script,
 create a file of Angort function definitions and commands and pass it as
-an argument to the \texttt{angort} command. Each line will be parsed
-and run in order, unless it is a function definition in which case the
-compilation will occur at the end of the definition.
+an argument to the \texttt{angort} command. Angort will still run
+the script in immediate mode: each line will be parsed
+and run in order. If a function definition is encounted, Angort will switch
+to compilation mode for the duration of the function.
 
-Note that each line of Angort (outside a function) is parsed and run
+Again, in immediate mode (i.e. outside a function) each line of Angort
+is parsed and run
 immediately. This means that multiline flow control constructs (such as loops
 and \texttt{if..then}) will not work unless they are inside a function.
 This is easily solved by using anonymous functions, as described in Section~\ref{multilineflow}.
 
-At the end of a script, control will drop into immediate mode. This is often useful
+At the end of a script, Angort will be in immediate mode and will ask for
+more lines, with
+the prompt described above. This is often useful
 when Angort is used to provide a domain-specific control language: the script sets up
 a large number of commands and perhaps initialises native C++ libraries, and then
 waits for the user's commands. If this is not required, terminate the script with
@@ -105,7 +113,7 @@ Double & 64-bit floats & \texttt{54.0l,32.2L} \\
 String & Strings of characters & \texttt{"Hello there"} \\
 Symbol & Single-word strings, internally stored as integers and
 generally used as hash keys & \texttt{`foo} \\
-Code& Blocks of Angort code, anonymous functions & \texttt{( dup * 1 + )}\\
+Code& Anonymous and named functions & \texttt{( dup * 1 + ),} \texttt{?myfunction} \\
 Integer range & 
 A range of integers between two values with optional step &
 \texttt{0 4 range}\footnotemark[1]\\
@@ -136,23 +144,7 @@ hex numbers (e.g. `0ffh' not `ffh').
 \todo{heredocs}
 
 \clearpage
-\subsubsection{Coercions}
-\begin{itemize}
-\item Integers and floats are coerced to strings in string contexts.
-\item In binary operations, if one of the operands is a float, both are coerced to floats:
-\begin{v}
-1|0> 1 2 / .
-0
-1|0> 1.0 2 / .
-0.500000
-\end{v}
-\item In certain binary operations (currently just ``+'') if one of the operands
-is a string, both will be coerced to strings.
-\item \todo{more... longs and doubles, notably, and what 
-happens when you can't}
-\end{itemize}
-
-\subsection{Defining new functions}
+\section{Defining new functions}
 New functions are defined with code of the form
 \begin{v}
 :functionname ... ;
@@ -191,9 +183,9 @@ see Section~\ref{conditions} for more details.
 \todo{Mention how immediate and script mode work with definitions. Add parameter typing.}
 
 
-\subsubsection{Word parameters and local variables}
+\subsection{Word parameters and local variables}
 \index{parameters}\index{variables!local}
-Until now, all the code has been perfectly valid Forth\footnote{With
+Until now, most of the code has been perfectly valid Forth\footnote{With
 the exception of the factorial function, which uses local variables
 and recursion.}. However, the manipulation of
 stack required in Forth is a challenge (and modern computers
@@ -245,7 +237,7 @@ Here, the curly brackets enclose a loop, which is exited by the
 Section~\ref{loops} for more details.
 \todo{Types in param lists. Returning values.}
      
-\subsubsection{Word documentation strings and stack pictures}
+\subsection{Word documentation strings and stack pictures}
 \label{stackpic}
 Following the locals and parameters (or just the function name if there
 are none) there may be a function documentation string. It has the form
@@ -261,9 +253,9 @@ shows its replacement. For example:
 \begin{lstlisting}
 :dist |x1,y1,x2,y2:|
     :"(x1 y1 x2 y2 -- distance) calculate the distance between two points"
-    ?x1 ?x2 - abs dup *     # this is (x1-x2)^2
-    ?y1 ?y2 - abs dup *     # this is (y1-y2)^2
-    + sqrt                  # sum them, and find the root
+    ?x1 ?x2 - dup *     # this is (x1-x2)^2
+    ?y1 ?y2 - dup *     # this is (y1-y2)^2
+    + sqrt              # sum them, and find the root
 ;
 \end{lstlisting}
 Note that the names in the picture are not necessarily those of variables:
@@ -384,6 +376,12 @@ has been redirected) use \texttt{read}:
 This will convert each line to an integer and print its square,
 unless ``quit'' is entered, which will terminate the program.
 Note that \texttt{read} will not add the trailing newline character.
+
+The construction used here -- putting the code inside \texttt{( ... )@} --
+allows local variables and control structures which extend over more than one line to
+be used outside a named function. It simply creates an anonymous
+function (with the brackets) and runs it immediately (with the \texttt{@} 
+symbol). This is dealt with in more detail in Section~\ref{multilineflow}.
 
 \subsubsection{Simple output}
 Three words cover most output situations:
