@@ -91,34 +91,36 @@ to user-defined functions. However, I may vary -- there is no real distinction, 
 an Angort function call is itself a single opcode.
 
 \subsection{Types and literals}
+\label{types}
 Angort is a dynamically typed language, with type coercion (weak typing).
 The following types are available:
 \indw{range}\indw{frange}\indw{[}\indw{]}
 \begin{center}
-\begin{tabular}{|l|p{2.7in}|p{2in}|}\hline
-\textbf{Name} & \textbf{Definition} & \textbf{Example of literal} \\ \hline
-None & The nil object, specifying ``no value'' & \texttt{none} \\
-Integer & 32 or 64-bit integers depending on architecture & \texttt{5045} \\
-Long & depends on architecture & \texttt{5045l,32L,0ffx, 45ao, 10111b, 3200ffffhl} \\
-Float & 32-bit floats & \texttt{54.0} \\
-Double & 64-bit floats & \texttt{54.0l,32.2L} \\
-String & Strings of characters & \texttt{"Hello there"} \\
+\begin{tabular}{|l|p{2.5in}|l|p{1.5in}|}\hline
+\textbf{Name} & \textbf{Definition} & \textbf{Hashable\footnotemark[1]} & \textbf{Example of literal} \\ \hline
+None & The nil object, specifying ``no value'' & N & \texttt{none} \\
+Integer & 32 or 64-bit integers depending on architecture & Y & \texttt{5045} \\
+Long & depends on architecture & Y & \texttt{5045l,32L,0ffx, 45ao, 10111b, 3200ffffhl} \\
+Float & 32-bit floats & Y & \texttt{54.0} \\
+Double & 64-bit floats & Y & \texttt{54.0l,32.2L} \\
+String & Strings of characters & Y & \texttt{"Hello there"} \\
 Symbol & Single-word strings, internally stored as integers and
-generally used as hash keys & \texttt{`foo} \\
-Code& Blocks of Angort code, anonymous functions & \texttt{( dup * 1 + )}\\
+generally used as hash keys & Y & \texttt{`foo} \\
+Code& Blocks of Angort code, anonymous functions & N & \texttt{( dup * 1 + )}\\
 Integer range & 
-A range of integers between two values with optional step &
-\texttt{0 4 range}\footnotemark[1]\\
+A range of integers between two values with optional step & Y & 
+\texttt{0 4 range}\footnotemark[2]\\
 Float range & A range of floats between two values with 
-step& \texttt{0 4 0.1 frange}\\
-List & A array/list of values\footnotemark[2] & \texttt{[1,2,"foo"]} \\
+step& Y & \texttt{0 4 0.1 frange}\\
+List & A array/list of values\footnotemark[3] & N & \texttt{[1,2,"foo"]} \\
 Hash & A map of values to values implemented as a hash table, where
-keys can strings, symbols, integers or floats & \texttt{[\% `foo 1, "fish" "fish"]} \\
+keys can strings, symbols, integers or floats & N & \texttt{[\% `foo 1, "fish" "fish"]} \\
 \hline
 \end{tabular}
 \end{center}
-\footnotetext[1]{This is actually a call to the \texttt{range} function which takes two integers to create a range.}
-\footnotetext[2]{Stored internally as an
+\footnotetext[1]{Indicates that values of this type may be used as keys in a hash (see Sec.~\ref{hashes}).}
+\footnotetext[2]{This is actually a call to the \texttt{range} function which takes two integers to create a range.}
+\footnotetext[3]{Stored internally as an
 automatically resized array rather than a linked list.}
 ``Code'' above actually conflates two types internally --- codeblocks,
 which have no environment; and closures, which consist of a codeblock and

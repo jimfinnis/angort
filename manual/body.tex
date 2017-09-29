@@ -144,11 +144,14 @@ Symbols are single-word strings which are stored in an optimised form for easy
 and quick comparison (they are turned into unique integers
 internally). They are specified by using a backtick (\texttt{`}) in front of
 the word. They're most useful as keys in hashes, covered in the next section.
+Examples are \texttt{`foo}, \texttt{`bar}. Symbols can be used
+wherever strings are used.
 
 \section{Hashes}
+\label{hashes}
 \index{hashes}
-Hashes are like Python dictionaries: they allow data be stored using keys of any hashable type (integers, floats,
-strings, symbols -- anything except hashes and lists). Hashes are created
+Hashes are like Python dictionaries: they allow data be stored using keys of any hashable type (see table in Sec.~\ref{types}).
+Hashes are created
 using a similar syntax to the list initialiser, but with a \texttt{\%} after
 the closing brace and data in key,value pairs\footnote{This is a somewhat
 awkward syntax, but all the other bracket types were used elsewhere.}:
@@ -205,8 +208,11 @@ the inner, next outer and next outer loop values with hashes.
 
 \subsection{Shortcut symbol get and set}
 \indw{`}\index{hashes!shortcut set/get}
-There is a syntactic sugar for retrieving the value of a key in
-a hash where the key is a literal symbol. Instead of using
+There is ``syntactic sugar'' for retrieving the value of a key in
+a hash where the key is a literal symbol. 
+The syntax is \verb+?`key+ , meaning
+``get the value for \emph{key} in the hash on the stack,'' and so has the stack picture \texttt{(hash -- value)}.
+Therefore, instead of using
 \begin{v}
 `foo ?H get
 \end{v}
@@ -216,7 +222,8 @@ we can use
 \end{v}
 This has been added because this is by far the most common use-case.
 We also have the same ability to set a value in a hash with a literal
-symbol:
+symbol, using the syntax \verb+!`key+. This has the stack picture \texttt{(value hash --)}.
+Thus we can do
 \begin{v}
 96 ?H!`temperature
 \end{v}
@@ -224,7 +231,6 @@ instead of
 \begin{v}
 96 `temperature ?H set
 \end{v}
-
 \subsection{Words for hashes}
 Hashes can also use many of the same words as lists:
 \indw{[\%}\indw{,}\indw{set}\indw{get}\indw{remove}\indw{in}
@@ -314,7 +320,7 @@ printing the result:
 With this defined, we can now use it to show the squares of those
 numbers:        
 \begin{v}
-    (|x:| ?x ?x *) over1to10
+    (|x:| ?x dup *) over1to10
 \end{v}
 or more simply
 \begin{v}
@@ -341,8 +347,9 @@ to produce a list, and for how \texttt{intercalate} builds a string
 out of a list by joining string representations of its members with
 a separator.
 \subsubsection{A warning}
-Angort has a limited return stack size of 256 frames. Recursive algorithms
-may run out of stack. Also, Angort may not be suitable for expressing
+Angort has a limited return stack size of 256 frames, and because of the nature
+of the language there is no tail call optimisation. Recursive algorithms
+may therefore run out of stack. Also, Angort may not be suitable for expressing
 very complex recursive functions. Consider for example the quicksort algorithm:
 this can be implemented as
 \begin{lstlisting}
@@ -474,21 +481,32 @@ private copies:
 
 \end{lstlisting}
 
-\subsubsection{Objects with delegates and private members using hashes and closures}
-\index{objects}\index{delegates}
-Languages like C\# have a ``delegate'' type, which consists of
-the pointer to an object and a method to be called inside that
-object, as a single entity. 
+\subsubsection{Iterators are not stored in closures}
+Notice that in the \texttt{mklistoffunctions} example above we did not write
+\begin{lstlisting}
+:mklistoffunctions
+    []
+    0 10 range each {
+        (i),
+    }
+;
+\end{lstlisting}
+and instead used a local variable \emph{x} to store the iterator value. This is because
+the values of loop iterators such as \texttt{i} are not true variables, and thus are not
+stored in the closure. Iterators must be stored in local variables if they are to be used
+in an anonymous function created in their loop's context.
 
-We can emulate the same thing in Angort by creating objects as
+\subsubsection{Objects with methods and private members using hashes and closures}
+\index{objects}\index{delegates}
+We can emulate objects in Angort by creating objects as
 hashes, with methods as functions closing over the local variables
 in the creating function:
 
 \begin{lstlisting}
 # create a rectangle object as a hash, with delegates to draw it
-:mkrectangle |x,y,w,h:this|
+:mkrectangle |x,y,w,h:|
     [%
-        # a delegate to draw the rectangle - this
+        # a member to draw the rectangle - this
         # will create a closure over x,y,w,h.
         
         `draw (?x ?y ?w ?h graphics$drawrect),
@@ -510,12 +528,38 @@ in the creating function:
 20 20 ?R?`move@
 ?R?`draw@
 \end{lstlisting}
-\index{private member}
+Values such as \verb+?R?`move+ are actually closer to C\# ``delegates'', in that they 
+contain information on the object (actually a closure), and the method to perform.
+
+\index{private and public members}
 This also provides a ``private member'' mechanism: if a value is defined
 in a closure in the function which creates the hash, rather than in
 the hash itself, that value will only be visible to functions defined
-in the hash.
+in the hash. Public member variables can be implemented by storing the hash
+itself as a local variable called (say) \texttt{this}, and accessing it inside
+the methods. Using this technique, the above could be written as 
+\begin{lstlisting}
+# create a rectangle object as a hash, with delegates to draw it
+:mkrectangle |x,y,w,h:this|
+    [% dup !this # store the hash itself in the closure
+        # set the member values
+        `x ?x,
+        `y ?y,
+        `w ?w,
+        `h ?h,
+        
+        `draw (?this?`x ?this?`y 
+            ?this?`w ?this?`h graphics$drawrect),
+        
+        `move (|dx,dy:| 
+            ?this?`x ?dx + !this?`x
+            ?this?`y ?dy + !this?`y
+        )
+    ]
+;   
+\end{lstlisting}
 
+\todo{Look at how to do inheritance, particularly using members in the superclass.}
 
 \section{Exceptions}
 Exception handling is done with a \texttt{try}/\texttt{catch}/\texttt{endtry} 
