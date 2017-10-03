@@ -80,4 +80,6 @@
 #define EX_NOMEM                       "ex$nomem"
 // cannot modify iterated list
 #define EX_MODITER                     "ex$moditer"
+// not a numeric value
+#define EX_NOTNUMBER                   "ex$notnumber"
 #endif /* __EXCEPTSYMBS_H */

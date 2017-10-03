@@ -68,6 +68,14 @@ bool IntegerType::equalForHashTable(Value *a,Value *b) const {
     return a->toInt() == b->toInt();
 }
 
+void IntegerType::absolute(Value *dest,Value *src) const {
+    int v = src->toInt();
+    set(dest,v<0?-v:v);
+}
+
+void IntegerType::negate(Value *dest,Value *src) const {
+    set(dest,-src->toInt());
+}
 
 
 }

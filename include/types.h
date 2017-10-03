@@ -158,6 +158,16 @@ public:
     }
         
     
+    /// negate a value of this type - src and dest can be the same.
+    /// Default is to throw exception.
+    virtual void negate(Value *dest,Value *src) const {
+        throw RUNT(EX_NOTNUMBER,"not a numeric value in 'neg'");
+    }
+    /// find abs value of this type - src and dest can be the same
+    /// Default is to throw exception.
+    virtual void absolute(Value *dest,Value *src) const {
+        throw RUNT(EX_NOTNUMBER,"not a numeric value in 'abs'");
+    }
     
     
     /// increment the reference count, default does nothing

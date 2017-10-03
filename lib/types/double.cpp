@@ -62,6 +62,14 @@ void DoubleType::toSelf(Value *out,const Value *v) const {
     set(out,v->toDouble());
 }
 
+void DoubleType::absolute(Value *dest,Value *src) const {
+    double v = src->toDouble();
+    set(dest,v<0?-v:v);
+}
+
+void DoubleType::negate(Value *dest,Value *src) const {
+    set(dest,-src->toDouble());
+}
 
 
 }

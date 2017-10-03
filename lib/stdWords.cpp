@@ -355,47 +355,15 @@ Shortcut for asserting that two integer values are equal.
 %word abs (x --) absolute value
 return the absolute value of a float or int.
 {
-    Value *v = a->popval();
-    if(v->t == Types::tInteger){
-        int i;
-        i = v->toInt();
-        a->pushInt(i<0?-i:i);
-    } else if(v->t == Types::tFloat){
-        float f;
-        f = v->toFloat();
-        a->pushFloat(f<0?-f:f);
-    } else if(v->t == Types::tLong){
-        long l;
-        l = v->toLong();
-        Types::tLong->set(a->pushval(),l<0?-l:l);
-    } else {
-        throw RUNT(EX_TYPE,"bad type for 'abs'");
-    }
+    Value *v = a->stack.peekptr();
+    v->t->absolute(v,v);
 }
 
 %word neg (x --) negate
 Negate an int or float.
 {
-    Value *v = a->popval();
-    if(v->t == Types::tInteger){
-        int i;
-        i = v->toInt();
-        a->pushInt(-i);
-    } else if(v->t == Types::tFloat){
-        float f;
-        f = v->toFloat();
-        a->pushFloat(-f);
-    } else if(v->t == Types::tLong){
-        long l;
-        l = v->toLong();
-        Types::tLong->set(a->pushval(),-l);
-    } else if(v->t == Types::tDouble){
-        double f;
-        f = v->toDouble();
-        Types::tDouble->set(a->pushval(),-f);
-    } else {
-        throw RUNT(EX_TYPE,"bad type for 'neg'");
-    }
+    Value *v = a->stack.peekptr();
+    v->t->negate(v,v);
 }
     
 

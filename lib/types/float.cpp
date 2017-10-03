@@ -68,6 +68,13 @@ void FloatType::toSelf(Value *out,const Value *v) const {
     set(out,v->toFloat());
 }
 
+void FloatType::absolute(Value *dest,Value *src) const {
+    float v = src->toFloat();
+    set(dest,v<0?-v:v);
+}
 
+void FloatType::negate(Value *dest,Value *src) const {
+    set(dest,-src->toFloat());
+}
 
 }

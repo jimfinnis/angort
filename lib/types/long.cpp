@@ -70,5 +70,14 @@ void LongType::toSelf(Value *out,const Value *v) const {
     set(out,v->toLong());
 }
 
+void LongType::absolute(Value *dest,Value *src) const {
+    long v = src->toLong();
+    set(dest,v<0?-v:v);
+}
+
+void LongType::negate(Value *dest,Value *src) const {
+    set(dest,-src->toLong());
+}
+
 
 }

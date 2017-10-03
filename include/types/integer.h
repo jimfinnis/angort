@@ -29,6 +29,8 @@ public:
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b) const;
     
+    virtual void negate(Value *dest,Value *src) const;
+    virtual void absolute(Value *dest,Value *src) const;
     
     virtual int toInt(const Value *v) const;
     virtual long toLong(const Value *v) const;
