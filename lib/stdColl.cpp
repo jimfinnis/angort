@@ -19,6 +19,7 @@ inline int wstrlen(const char *s){
 using namespace angort;
 
 namespace angort {
+// DESTRUCTIVE comparator - damages the stack!
 struct RevStdComparator : public ArrayListComparator<Value> {
     Angort *ang;
     RevStdComparator(Angort *a){
@@ -32,6 +33,7 @@ struct RevStdComparator : public ArrayListComparator<Value> {
     }
 };
 
+// DESTRUCTIVE comparator - damages the stack!
 struct StdComparator : public ArrayListComparator<Value> {
     Angort *ang;
     StdComparator(Angort *a){
@@ -46,6 +48,7 @@ struct StdComparator : public ArrayListComparator<Value> {
 };
 
 
+// DESTRUCTIVE comparator - damages the stack!
 struct FuncComparator : public ArrayListComparator<Value> {
     Value *func;
     Angort *ang;
@@ -100,10 +103,10 @@ requested is 1. (See also "fst".) In the case of a string, returns the first n c
             return;
         }
         int len = wstrlen(strin);
-    
+        
         // this is how many chars we convert
         p1 = p1<len ? p1 : len;
-    
+        
         // convert that many characters
         wchar_t *s = (wchar_t *)alloca((p1+1)*sizeof(wchar_t));
         int rv = mbstowcs(s,strin,p1+1);
@@ -113,7 +116,7 @@ requested is 1. (See also "fst".) In the case of a string, returns the first n c
         }
         // terminate
         s[p1]=0;
-    
+        
         // now convert back
         int l2 = wcstombs(NULL,s,0)+1;
         char *s2 = (char *)alloca(l2);
@@ -144,10 +147,10 @@ requested is 1. (See also "last".) In the case of a string, returns the last n c
             return;
         }
         int len = wstrlen(strin);
-    
+        
         // this is how many chars we convert
         p1 = p1<len ? p1 : len;
-    
+        
         // we need to convert the entire string
         wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
         int rv = mbstowcs(s,strin,len+1);
@@ -155,10 +158,10 @@ requested is 1. (See also "last".) In the case of a string, returns the last n c
             a->pushNone();
             return;
         }
-    
+        
         // work out the start 
         int start = len-p1;
-    
+        
         // now convert back
         int l2 = wcstombs(NULL,s+start,0)+1;
         char *s2 = (char *)alloca(l2);
@@ -181,7 +184,7 @@ first n items in the first list and the remainder in the second list.
     }
     a->pushval()->copy(&r);
 }
-    
+
 
 %word last (coll -- item/none) get last item
 Return the last item of a list or NONE if list is empty.
@@ -209,85 +212,121 @@ inline void getByIndex(Value *c,int idx){
     }
 }
 
-%word min ([a,b...] -- minimum) Find minimum value in iterable
+%word min ([a,b...]|a b -- minimum) Find minimum value in iterable or pair
+This either a single iterable or a pair of values.
 {
-    Value *iterable = a->popval();
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
-    if(iter->isDone())
-        a->pushNone();
-    else {
-        StdComparator cmp(a);
-        iter->first();
-        Value m;
-        m.copy(iter->current());
+    StdComparator cmp(a);
+    Value m;
+    Value *i1 = a->popval(); // pop first item
+    
+    if(i1->t->flags & TF_ITERABLE){
+        // if an iterable just run over those.
+        Iterator<Value *> *iter = i1->t->makeIterator(i1);
         if(iter->isDone())
-            a->pushval()->copy(iter->current());
+            a->pushNone();
         else {
-            for(;!iter->isDone();iter->next()){
-                if(cmp.compare(iter->current(),&m)<0){
-                    m.copy(iter->current());
+            iter->first();
+            m.copy(iter->current());
+            if(iter->isDone())
+                a->pushval()->copy(iter->current());
+            else {
+                for(;!iter->isDone();iter->next()){
+                    if(cmp.compare(iter->current(),&m)<0){
+                        m.copy(iter->current());
+                    }
                 }
             }
         }
-        a->pushval()->copy(&m);
-    }
-    delete iter;
+        delete iter;
+    }else{
+        // if it's not an iterable, we pop TWO items. Sadly comparators
+        // are destructive. I could fix that and I should, but it's
+        // really tedious to fix. This is just an extra copy.
+        m.copy(a->popval());
+        m.copy( (cmp.compare(i1,&m)<0) ? i1 : &m);
+    }        
+    a->pushval()->copy(&m);
 }
 
-%word max ([a,b...] -- maximum) Find maximum value in iterable
+%word max ([a,b...]|a b -- maximum) Find maximum value in iterable or pair
+This either a single iterable or a pair of values.
 {
-    Value *iterable = a->popval();
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
-    if(iter->isDone())
-        a->pushNone();
-    else {
-        StdComparator cmp(a);
-        iter->first();
-        Value m;
-        m.copy(iter->current());
+    StdComparator cmp(a);
+    Value m;
+    Value *i1 = a->popval(); // pop first item
+    
+    if(i1->t->flags & TF_ITERABLE){
+        // if an iterable just run over those.
+        Iterator<Value *> *iter = i1->t->makeIterator(i1);
         if(iter->isDone())
-            a->pushval()->copy(iter->current());
+            a->pushNone();
         else {
-            for(;!iter->isDone();iter->next()){
-                if(cmp.compare(iter->current(),&m)>0){
-                    m.copy(iter->current());
+            iter->first();
+            m.copy(iter->current());
+            if(iter->isDone())
+                a->pushval()->copy(iter->current());
+            else {
+                for(;!iter->isDone();iter->next()){
+                    if(cmp.compare(iter->current(),&m)>0){
+                        m.copy(iter->current());
+                    }
                 }
             }
         }
-        a->pushval()->copy(&m);
-    }
-    delete iter;
+        delete iter;
+    }else{
+        // if it's not an iterable, we pop TWO items. Sadly comparators
+        // are destructive. I could fix that and I should, but it's
+        // really tedious to fix. This is just an extra copy.
+        m.copy(a->popval());
+        int q = cmp.compare(i1,&m);
+        m.copy( q>0 ? i1 : &m);
+    }        
+    a->pushval()->copy(&m);
 }
 
-%word maxf ([a,b...] func -- maximum) Find maximum value in iterable using function
-This uses the supplied function as a comparator to find the maximum
-item in an iterable.
+%word maxf ( ([a,b...]| a b) func -- maximum) Find maximum value in iterable or pair using function
+This uses the supplied function as a comparator to find the maximum item in an iterable or a pair. 
+It takes a function and either a single iterable or a pair of values. There is no corresponding
+minf function, since this can be constructed by negating the output of the function which
+would be passed to maxf.
 {
     Value func;
+    Value m;
     
     func.copy(a->popval());
-    Value *iterable = a->popval();
+    FuncComparator cmp(a,&func);
     
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
-    if(iter->isDone())
-        a->pushNone();
-    else {
-        FuncComparator cmp(a,&func);
-        iter->first();
-        Value m;
-        m.copy(iter->current());
+    // see max and min for how we deal with pairs and iterables
+    // differently
+    Value *i1 = a->popval();
+    
+    if(i1->t->flags & TF_ITERABLE){
+        Iterator<Value *> *iter = i1->t->makeIterator(i1);
         if(iter->isDone())
-            a->pushval()->copy(iter->current());
+            a->pushNone();
         else {
-            for(;!iter->isDone();iter->next()){
-                if(cmp.compare(iter->current(),&m)>0){
-                    m.copy(iter->current());
+            iter->first();
+            m.copy(iter->current());
+            if(iter->isDone())
+                a->pushval()->copy(iter->current());
+            else {
+                for(;!iter->isDone();iter->next()){
+                    if(cmp.compare(iter->current(),&m)>0){
+                        m.copy(iter->current());
+                    }
                 }
             }
         }
-        a->pushval()->copy(&m);
+        delete iter;
+    } else {
+        Value v;
+        v.copy(i1); // to avoid overwrite
+        m.copy(a->popval());
+        int q = cmp.compare(&v,&m);
+        m.copy( q>0 ? &v : &m);
     }
-    delete iter;
+    a->pushval()->copy(&m);
 }
 
 
@@ -330,7 +369,7 @@ Return the 4th item of a list or NONE if not present.
 {
     getByIndex(a->stack.peekptr(),3);
 }
-    
+
 
 %word get (key coll --) get an item from a list or hash
 For a list, get the key'th item (starting from zero). For a hash, look up
@@ -485,8 +524,7 @@ the hash key is used).
 %word filter2 (iter func -- falselist truelist) filter an iterable with a boolean function into two lists
 For each item in an iterable, return two lists of those items for which the
 function returns zero and those for which it returns nonzero. Accepts
-lists, ranges or hashes (in the latter case
-the hash key is used).
+lists, ranges or hashes (in the latter case the hash key is used).
 {
     Value func;
     func.copy(a->popval()); // need a local copy
@@ -502,10 +540,10 @@ the hash key is used).
         Value *v;
         if(a->popval()->toInt())
             v = truelist->append();
-       else
+        else
             v = falselist->append();
         v->copy(iter->current());
-            
+        
     }
     delete iter;
 }

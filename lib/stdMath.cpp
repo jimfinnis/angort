@@ -56,20 +56,6 @@ using namespace angort;
     FN(exp);
 }
 
-%wordargs min2 dd (x y -- min(x,y)) min of two doubles
-{
-    double d;
-    d = (p0<p1)?p0:p1;
-    a->pushDouble(d);
-}
-
-%wordargs max2 dd (x y -- max(x,y)) max of two doubles
-{
-    double d;
-    d = (p0>p1)?p0:p1;
-    a->pushDouble(d);
-}
-
 %word pow (x y -- x^y)
 {
     double y = a->popDouble();
