@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "2.11.1"
+#define ANGORT_VERSION "2.11.2"
 
 #include <stdlib.h>
 #include <sys/types.h>

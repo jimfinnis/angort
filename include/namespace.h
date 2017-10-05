@@ -281,7 +281,8 @@ public:
     
     void list(){
         for(int i=0;i<spaces.count();i++){
-            printf("Namespace %s\n",spaces.getName(i));
+            printf("Namespace %s %s\n",spaces.getName(i),
+                   i==currentIdx ? "(current)":"");
             spaces.getEnt(i)->list();
         }
     }

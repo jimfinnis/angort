@@ -223,13 +223,11 @@ This either a single iterable or a pair of values.
         // if an iterable just run over those.
         Iterator<Value *> *iter = i1->t->makeIterator(i1);
         if(iter->isDone())
-            a->pushNone();
+            m.clr();
         else {
             iter->first();
             m.copy(iter->current());
-            if(iter->isDone())
-                a->pushval()->copy(iter->current());
-            else {
+            if(!iter->isDone()){
                 for(;!iter->isDone();iter->next()){
                     if(cmp.compare(iter->current(),&m)<0){
                         m.copy(iter->current());
@@ -259,13 +257,11 @@ This either a single iterable or a pair of values.
         // if an iterable just run over those.
         Iterator<Value *> *iter = i1->t->makeIterator(i1);
         if(iter->isDone())
-            a->pushNone();
+            m.clr();
         else {
             iter->first();
             m.copy(iter->current());
-            if(iter->isDone())
-                a->pushval()->copy(iter->current());
-            else {
+            if(!iter->isDone()){
                 for(;!iter->isDone();iter->next()){
                     if(cmp.compare(iter->current(),&m)>0){
                         m.copy(iter->current());
@@ -304,13 +300,11 @@ would be passed to maxf.
     if(i1->t->flags & TF_ITERABLE){
         Iterator<Value *> *iter = i1->t->makeIterator(i1);
         if(iter->isDone())
-            a->pushNone();
+            m.clr();
         else {
             iter->first();
             m.copy(iter->current());
-            if(iter->isDone())
-                a->pushval()->copy(iter->current());
-            else {
+            if(!iter->isDone()){
                 for(;!iter->isDone();iter->next()){
                     if(cmp.compare(iter->current(),&m)>0){
                         m.copy(iter->current());
