@@ -796,21 +796,6 @@ void Angort::run(const Instruction *startip){
                     pushInt(plugin(popval()->toString().get()));
                     ip++;    
                     break;
-                case OP_IMPORT:
-                    // the stack will have one of two configurations:
-                    // (int --) will import everything (i.e. add the
-                    // namespace to the "imported namespaces list")
-                    // while (int list --) will only import the listed
-                    // symbols (i.e. copy them into the default space)
-                    if(stack.peekptr()->t==Types::tInteger)
-                        names.import(popInt(),NULL);
-                    else if(stack.peekptr()->t==Types::tList){
-                        ArrayList<Value> *lst = Types::tList->get(stack.popptr());
-                        names.import(popInt(),lst);
-                    } else
-                        throw SyntaxException("expected package list or package in import");
-                    ip++;
-                    break;
                 case OP_DEF:{
                     const StringBuffer& sb = popString();
                     if(names.isConst(sb.get(),false))
@@ -1387,9 +1372,6 @@ void Angort::feed(const char *buf){
                 names.push(idx);
                 break;
             }
-            case T_IMPORT:
-                compile(OP_IMPORT);
-                break;
             case T_LIBRARY:
                 compile(OP_LIBRARY);
                 break;

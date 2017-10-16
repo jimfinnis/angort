@@ -75,7 +75,6 @@ stop    :   T_STOP
 cmp     :   T_CMP
 package :   T_PACKAGE
 require :   T_REQUIRE
-import  :   T_IMPORT
 private :   T_PRIVATE
 public  :   T_PUBLIC
 def : T_DEF

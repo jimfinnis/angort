@@ -202,6 +202,9 @@ Type *Types::tDeleted= &_tDeleted;
 static IntegerType _Int;
 IntegerType *Types::tInteger = &_Int;
 
+static NSIDType _NSID;
+NSIDType *Types::tNSID = &_NSID;
+
 static FloatType _Float;
 FloatType *Types::tFloat = &_Float;
 

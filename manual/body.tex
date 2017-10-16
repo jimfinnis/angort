@@ -29,7 +29,6 @@ In general all functions can be redefined, but a function defined thus:
 \end{lstlisting}
 cannot be. This can be useful in package development.
 
-\subsection{``import as'' semantics}
 This is also useful when you want to import only certain names from
 a plugin library (Section~\ref{library}). Consider the \texttt{vector2d} library, which contains
 the functions \texttt{vector2d\$x} and \texttt{vector2d\$y}. These
@@ -649,18 +648,21 @@ The namespace handle can also be used in other ways:
 \indw{package}\indw{require}\indw{public}\indw{private}
 \indw{names}\indw{import}\indw{ispriv}\indw{isconst}\indw{names}
 \textbf{name} & \textbf{stack picture} & \textbf{side-effects and notes}\\ \hline
-require ``filename'' & (-- handle) & load a package\\
+require ``filename'' & (-- nsid) & load a package\\
+library & (libname -- nsid) & load a native plugin library (see Sec.~\ref{library})\\
+nspace & (name -- nsid) & look up a loaded package or library and return the NSID \\
 package packagename & & directive to start a new namespace \\
 private & & all subsequent names are not exportable from the namespace\\
 public & & all subsequent names are exportable from the namespace (default)\\\hline
-import &(handle --) & import all public definitions from a namespace into the default namespace\\
-import &(handle list --) & import some public definitions from a namespace into the default namespace\\
-names & (handle -- list) & get a list of names in a namespace\\
-ispriv & (handle name -- bool) & return true if a name is private in the namespace\\
-isconst & (handle name -- bool) & return true if a name is constant in the namespace\\
+import &(nsid --) & import all public definitions from a namespace into the default namespace\\
+import &(nsid list --) & import some public definitions from a namespace into the default namespace\\
+names & (nsid -- list) & get a list of names in a namespace\\
+ispriv & (nsid name -- bool) & return true if a name is private in the namespace\\
+isconst & (nsid name -- bool) & return true if a name is constant in the namespace\\
 \hline
 \end{tabular}
 \end{center}
+
 
 \subsubsection{Local packages}
 \index{packages!local}
@@ -686,6 +688,9 @@ stack the package ID.
 \subsection{Namespaces, libraries and modules}
 \index{namespace, default}
 \label{nameslibsmods}
+\todo{This is rubbish -- it might have been true a long time ago,
+but modules no longer exist. However, the second paragraph
+here is still useful.}
 Native functions created by using the shared library plugin system
 are loaded into namespaces, just as described above. However, native
 functions defined using Angort's built-in function registration system
@@ -720,7 +725,7 @@ to the path, you could write
 ?searchpath ":/home/foo/bin" + !searchpath
 \end{v}
 Plugin libraries are loaded using the \texttt{library} word, which
-leaves a namespace handle on the stack so that \texttt{import} can be
+leaves a namespace ID (an \emph{nsid})\index{nsid} on the stack so that \texttt{import} can be
 used, or \texttt{drop} to not import anything. The namespace is
 the library name, which may not be that of the library file --- it's defined
 in the plugin code. For example, to load the standard file IO library
@@ -739,6 +744,31 @@ This means we can do things like
 [`id3, `mpc, `io] each {i library import}
 \end{v}
 to import lists of libraries.
+
+\section{The ``deprecated'' and ``future'' namespaces}
+\todo{No idea if I can get this working with modules}
+Angort is a changing language, and to permit this some functions are
+occasionally moved into the ``deprecated'' namespace when they are obsolete.
+Other functions are added to the ``future'' namespace when they are new
+and break backcompatibility. 
+While both these namespaces are loaded, none of their symbols are imported. 
+Typically, a function might have an
+old version in the deprecated space and a new version in the future space,
+while the default namespace contains a placeholder which gives details
+of the differences between the versions and throws an exception.
+it is up to the user to explicitly import either the deprecated or
+future version.
+
+To do this, we need to import symbols from a namespace which is already
+loaded, which we can do using the \texttt{nspace} function; and then
+use \texttt{import}. For example, if we wish to use \texttt{foo} and
+\texttt{bar} from the future namespace but \texttt{fish} from the deprecated
+namespace, we could use
+\begin{lstlisting}
+`future nspace [`foo,`bar] import
+`deprecated nspace [`fish] import
+\end{lstlisting}
+
 
 \section{Topics missing from this document}
 There are several topics which will be discussed in later versions

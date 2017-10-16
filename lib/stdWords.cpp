@@ -66,9 +66,12 @@ public:
     }
 };
 
+// assumes (nsid name --) on the stack
 static NamespaceEnt *getNSEnt(Angort *a){
     const StringBuffer &s = a->popString();
-    Namespace *ns = a->names.getSpaceByIdx(a->popInt());
+    int nsid = Types::tNSID->get(a->popval());
+    
+    Namespace *ns = a->names.getSpaceByIdx(nsid);
     
     int idx = ns->get(s.get());
     if(idx<0)
@@ -707,13 +710,13 @@ structures which refer to themselves).
     a->gc();
 }
 
-%word nspace (name -- handle) get a namespace by name
-Return a handle for a given namespace. Throws ex$notfound if there
+%word nspace (name -- nsid) get a namespace by name
+Return a namespace ID for a given namespace. Throws ex$notfound if there
 is no such namespace.
 {
     const StringBuffer& name = a->popString();
     Namespace *ns = a->names.getSpaceByName(name.get());
-    a->pushInt(ns->idx);
+    Types::tNSID->set(a->pushval(),ns->idx);
 }
 
 %word nspaces (-- list) return a list of all namespaces in index order
@@ -724,11 +727,11 @@ were created.
     a->names.spaces.appendNamesToList(list);
 }
 
-%word names (handle --) get a list of names from a namespace
+%word names (nsid --) get a list of names from a namespace
 Returns a list of names from a namespace whose handle has been obtained
 with "nspace".
 {
-    int idx = a->popInt();
+    int idx = Types::tNSID->get(a->popval());
     Namespace *ns = a->names.getSpaceByIdx(idx);
     if(!ns)a->pushNone();
     else {
@@ -738,25 +741,25 @@ with "nspace".
 }
 
 
-%word ispriv (handle name -- bool) return true if the definition is private in the namespace
+%word ispriv (nsid name -- bool) return true if the definition is private in the namespace
 Returns true if the identifier is private inside the given namespace, which
-is identified by a handle returned by "nspace".
+is identified by a nsid returned by "nspace".
 {
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isPriv?1:0);
     
 }
-%word isconst (handle name -- bool) return true if the definition is constant in the namespace
+%word isconst (nsid name -- bool) return true if the definition is constant in the namespace
 Returns true if the identifier is modifiable inside the given namespace, which
-is identified by a handle returned by "nspace".
+is identified by a nsid returned by "nspace".
 {
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isConst?1:0);
     
 }
 
-%word lookup (handle name -- value) look up the value of a namespace entity
-Looks up an identifier in a namespace, which is identified by a handle
+%word lookup (nsid name -- value) look up the value of a namespace entity
+Looks up an identifier in a namespace, which is identified by a nsid
 returned by "nspace", and returns its value.
 {
     NamespaceEnt *ent = getNSEnt(a);
@@ -899,7 +902,25 @@ with setfloatformat.
     strcpy(Types::tDouble->formatString,p0);
 }
 
-
+%word import (namespaceint --) or (namespaceint list --) import namespace or namespace members into default space
+The first form will add a namespace to the "imported namespace list",
+so that all members of the namespace will be available without full
+qualification (i.e. without a "$").
+The second form will import copy single values from a namespace
+into the default namespace, making them available without full
+qualification. The idiom for this is typically:
+`libname nspace [`s1,`s2..] import
+{
+    if(a->stack.peekptr()->t==Types::tNSID){
+        int nsid = Types::tNSID->get(a->popval());
+        a->names.import(nsid,NULL);
+    } else if(a->stack.peekptr()->t==Types::tList){
+        ArrayList<Value> *lst = Types::tList->get(a->popval());
+        int nsid = Types::tNSID->get(a->popval());
+        a->names.import(nsid,lst);
+    } else
+        throw SyntaxException("expected package list or package in import");
+}
 
 
 /*%word showclosure (cl --)

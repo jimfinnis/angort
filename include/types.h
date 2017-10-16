@@ -307,6 +307,7 @@ public:
 #include "types/native.h"
 #include "types/long.h"
 #include "types/double.h"
+#include "types/nsid.h"
 
 
 namespace angort {
@@ -352,6 +353,9 @@ struct Types {
     static LongType *tLong;
     /// v.df is a double
     static DoubleType *tDouble;
+    /// the d.i value gives the namespace ID
+    static NSIDType *tNSID;
+    
     
     
     /// v.gc is some unspecified garbage-collected type
