@@ -86,6 +86,9 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
             if(nidx>=0){
                 NamespaceEnt *e = ns->getEnt(nidx);
                 e->isImported=true;
+            } else {
+                throw RUNT(EX_NOTFOUND,"").set("cannot find '%s' in namespace",
+                                            v->toString().get());
             }
         }
     } else {

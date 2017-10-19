@@ -136,6 +136,76 @@ In reality, we would probably use the \texttt{map} and
 \end{lstlisting}
 
 
+\subsection{slice -- getting parts of lists or strings}
+The \texttt{slice} word can be used to extract part of a list or string,
+returning a smaller list or string. The semantics are identical for both
+strings and lists.
+
+At version 3, Angort is in a transition
+phase with two implementations of \texttt{slice}, each with entirely different
+semantics! This is due to the older code being both conceptually wrong
+and buggy, but still in use. 
+
+In the \texttt{future} namespace, \texttt{slice} has similar semantics
+to the Python array slice operator. In the \texttt{deprecated} namespace,
+a crude slice operator is supported which is briefly documented below
+(and has bugs with negative indices). The default implementation of \texttt{slice} will
+throw an exception -- either \texttt{future} or \texttt{deprecated} must
+be imported, for example with
+\begin{lstlisting}
+`future nspace [`slice] import
+\end{lstlisting}
+
+
+\subsubsection{The \texttt{future} implementation}
+This will become the default implementation in Angort 4.x.x, when
+existing code has been corrected. This implementation uses similar
+semantics to Python:
+\begin{itemize}
+\item The stack picture is \texttt{(list/string start end -- out)} where both \texttt{start} and \texttt{end} 
+are zero-based indices. The slice is includes the start and excludes the end,
+so 
+\begin{lstlisting}
+"foo" 0 2 slice.
+\end{lstlisting}
+will print
+\begin{v}
+fo
+\end{v}
+\textbf{A zero end index maps to the length of the sequence.} This means that
+\begin{lstlisting}
+"fooble" 1 0 slice
+\end{lstlisting}
+will print from character 1 to the end of the string:
+\begin{v}
+ooble
+\end{v}
+
+\item Negative indices (or a zero end index as mentioned above) count from the end, so -1 is the last element, -2
+is the penultimate element etc. Thus, 
+\begin{lstlisting}
+"fooble" -4 -1 slice.
+\end{lstlisting}
+will print from the fourth character from the end to just before the last character:
+\begin{v}
+obl
+\end{v}
+\end{itemize}
+    
+
+
+
+
+\subsubsection{The \texttt{deprecated} implementation}
+This is the default implementation for version 2.x.x and lower.
+Here, the stack picture is \texttt{(list/string start len -- out)}: the arguments
+are the zero-based start index and the number of elements in the slice.
+If the length is negative the slice is to the end of the string or list.
+
+The start index may be also be negative, indicating distance from the
+end, but this is bugged for lists.
+
+
 
 \section{Symbols}
 \index{symbols}\indw{`}
@@ -144,7 +214,7 @@ and quick comparison (they are turned into unique integers
 internally). They are specified by using a backtick (\texttt{`}) in front of
 the word. They're most useful as keys in hashes, covered in the next section.
 Examples are \texttt{`foo}, \texttt{`bar}. Symbols can be used
-wherever strings are used.
+most places where strings are used, but cannot be iterated or sliced.
 
 \section{Hashes}
 \label{hashes}

@@ -130,7 +130,8 @@ void StringType::getValue(Value *coll,Value *k,Value *result)const{
     set(result,out);
 }
 
-void StringType::slice(Value *out,Value *coll,int start,int len)const{
+/// deprecated version
+void StringType::slice_dep(Value *out,Value *coll,int start,int len)const{
     const StringBuffer &b = StringBuffer(coll);
     wchar_t *s = b.getWideBuffer(); // allocates memory
     
@@ -166,6 +167,42 @@ void StringType::slice(Value *out,Value *coll,int start,int len)const{
     
     
     free(s); // free the buffer
+}
+
+/// good version
+void StringType::slice(Value *out,Value *coll,int startin,int endin)const{
+    const StringBuffer &b = StringBuffer(coll);
+    wchar_t *s = b.getWideBuffer(); // allocates memory
+    
+    int start,end;
+    int slen = wcslen(s);
+    bool ok = getSliceEndpoints(&start,&end,slen,startin,endin);
+    
+    
+    if(ok){
+        // getWideBuffer will have allocated some data
+        // we can change, so we work out where the slice is
+        // in this buffer and terminate it.
+        s[end]=0;
+        wchar_t *slicebuf = s+start;
+        // slicebuf is now a null-terminated slice inside the wide
+        // buffer.
+        
+        // and now convert back to mbs
+        
+        mbstate_t state;
+        memset(&state,0,sizeof(state));
+        
+        const wchar_t *p = slicebuf;
+        int mblen = wcsrtombs(NULL,&p,0,&state);
+        char *smb = allocate(out,mblen+1,this);
+        p = slicebuf;
+        wcsrtombs(smb,&p,mblen+1,&state); // +1 for the null
+    } else {
+        set(out,"");
+    }
+    
+    free(s); // free the wide buffer
 }
 
 void StringType::clone(Value *out,const Value *in,bool deep)const{

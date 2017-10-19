@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "2.11.2"
+#define ANGORT_VERSION "3.0.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,7 +34,7 @@
 
 
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std),
-LIBNAME(stdmath),LIBNAME(stdenv);
+LIBNAME(stdmath),LIBNAME(stdenv),LIBNAME(future),LIBNAME(deprecated);
 
 namespace angort {
 
@@ -80,6 +80,9 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(stdmath),true);
     registerLibrary(&LIBNAME(stdenv),true);
     
+    // future and deprecated are not imported
+    registerLibrary(&LIBNAME(future),false);
+    registerLibrary(&LIBNAME(deprecated),false);
     
     
     // now the standard package has been imported, set up the
@@ -111,6 +114,17 @@ Angort::~Angort(){
     endredir();
     if(running)
         shutdown();
+}
+
+void Angort::importAllFuture(){
+    Namespace *ns = names.getSpaceByName("future");
+    names.import(ns->idx,NULL);
+    
+}
+
+void Angort::importAllDeprecated(){
+    Namespace *ns = names.getSpaceByName("deprecated");
+    names.import(ns->idx,NULL);
 }
 
 void CompileContext::dump(){

@@ -2,6 +2,8 @@
 # list tests, need expanding
 #
 
+`future nspace [`slice] import
+
 [1,2,3] pop 3= "pop item" assert
 
 [1,2,3,4,5] (2 % 0 =) filter !L
@@ -38,18 +40,23 @@
 
 [1,2,3] [1,2] eq not "listeq3" assert
 
+:sl dup "," intercalate.; # for debugging
+
 [1,2,3,4,5] !L
 ?L 0 3 slice [1,2,3] eq "lslice1" assert
-?L 0 3 slice [1,2,3] eq "lslice2" assert
-?L 1 3 slice [2,3,4] eq "lslice3" assert
-?L 2 3 slice [3,4,5] eq "lslice4" assert
-?L 3 3 slice [4,5] eq "lslice5" assert
-?L 4 3 slice [5] eq "lslice6" assert
-?L 2 -1 slice [3,4,5] eq "lslice7" assert
-?L 5 0 slice [] eq "lslice8" assert
-?L 6 1 slice [] eq "lslice9" assert
-?L 7 1 slice [] eq "lslice10" assert
-?L -1 3 slice [1,2,3] eq "lslice11" assert
+?L 0 0 slice [1,2,3,4,5] eq "lslice2" assert
+?L 1 3 slice [2,3] eq "lslice3" assert
+?L 2 3 slice [3] eq "lslice4" assert
+?L 3 3 slice [] eq "lslice5" assert
+?L 4 3 slice [] eq "lslice6" assert
+?L 2 -1 slice [3,4] eq "lslice7" assert
+?L -3 0 slice [3,4,5] eq "lslice8" assert
+?L 6 0 slice [] eq "lslice9" assert
+?L 5 0 slice [] eq "lslice10" assert
+?L 7 -1 slice [] eq "lslice11" assert
+?L -1 0 slice [5] eq "lslice12" assert
+?L -4 -5 slice [] eq "lslice13" assert
+?L -4 -1 slice [2,3,4] eq "lslice14" assert
 
 # cloning
 

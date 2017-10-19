@@ -571,16 +571,10 @@ Return a slice of a string or list, returning another string or or list,
 given the start and length. Inappropriate types will throw ex$notcoll.
 If length of the iterable  is greater than the length requested, then the
 slice will go to the end. If the start<0 it is counted from the end.
-Empty results will be returned if the requested
-slice does not intersect the iterable.
+Empty results will be returned if the requested slice does not intersect
+the iterable.
 {
-    int len = a->popInt();
-    int start = a->popInt();
-    Value iterable;
-    iterable.copy(a->popval());
-    
-    Value *res = a->pushval();
-    iterable.t->slice(res,&iterable,start,len);
+    throw RUNT(EX_FAILED,"default 'slice' - import future or deprecated");
 }
 
 %word clone (in -- out) construct a shallow copy of a collection

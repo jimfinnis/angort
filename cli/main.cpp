@@ -39,6 +39,8 @@ static void showException(Exception& e){
 
 #define F_CMD 1
 #define F_LOOP 2
+#define F_FUTURE 4
+#define F_DEPRECATED 8
 
 static char *autocomplete_generator(const char *text,int state){
     static int idx;
@@ -139,12 +141,25 @@ int main(int argc,char *argv[]){
     int flags = 0;
     int c;
     opterr=0; // suppress invalid option errors
-    while((c=getopt(argc,argv,"endDl:"))!=-1){
+    while((c=getopt(argc,argv,"endDl:i:"))!=-1){
         switch(c){
         case 'n':flags|=F_LOOP;break;
         case 'e':flags|=F_CMD;break;
         case 'd':a->debug|=1;break;
         case 'D':a->debug|=2;break;
+        case 'i':
+            switch(optarg[0]){
+            case 'f':
+                a->importAllFuture();
+                break;
+            case 'd':
+                a->importAllDeprecated();
+                break;
+            default:
+                printf("should be -if or -id\n");
+                exit(1);
+            }
+            break;
         case 'l':
             a->plugin(optarg);
             break;

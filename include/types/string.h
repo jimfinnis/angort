@@ -46,7 +46,8 @@ public:
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b)const;
-    virtual void slice(Value *out,Value *coll,int start,int len)const;
+    virtual void slice(Value *out,Value *coll,int start,int end)const;
+    virtual void slice_dep(Value *out,Value *coll,int start,int len)const;
     virtual void clone(Value *out,const Value *in,bool deep=false)const;
 
     virtual void toSelf(Value *out,const Value *v) const;

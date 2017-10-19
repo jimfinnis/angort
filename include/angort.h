@@ -1037,6 +1037,11 @@ public:
     /// throw an exception, setting the IP of the handler or NULL
     /// if no handler was found.
     void throwAngortException(int symbol, Value *data);
+    
+    /// import all symbols in the `future namespace
+    void importAllFuture();
+    /// import all symbols in the `deprecated namespace
+    void importAllDeprecated();
 };
 
 

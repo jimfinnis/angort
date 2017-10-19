@@ -49,7 +49,7 @@ add_definitions(-Wall)
 #add_definitions(-g)
 
 add_words_files(stdWords.cpp   stdColl.cpp  stdString.cpp  stdMath.cpp
-stdEnv.cpp)
+stdEnv.cpp future.cpp deprecated.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     cycle.cpp   binop.cpp   plugins.cpp    format.cpp    stringbuf.cpp

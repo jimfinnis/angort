@@ -217,8 +217,44 @@ public:
         throw RUNT(EX_NOTCOLL,"cannot remove from non-collection");
     }
     
-    virtual void slice(Value *out,Value *coll,int start,int len)const{
+    virtual void slice_dep(Value *out,Value *coll,int start,int len)const{
         throw RUNT(EX_NOTCOLL,"cannot get slice of non-collection");
+    }
+    virtual void slice(Value *out,Value *coll,int start,int end)const{
+        throw RUNT(EX_NOTCOLL,"cannot get slice of non-collection");
+    }
+    
+    /// utility function for working out the start/end points of
+    /// a slice given the inputs to the slice function and the
+    /// length of the iterable. Returns false if the resulting slice
+    /// is zero length.
+    /// Semantics - returns the range of items [start,end). If
+    /// an index is -ve (or <=0 for the end index) it counts from the end,
+    /// so -1 is the last character.
+    /// Thus "foobar",start=0,end=-1 will give "fooba".
+    /// This allows start=0,end=0 to give the entire string.
+    inline static bool getSliceEndpoints(int *startPtr,int *endPtr,int len,int start,int end){
+        if(start<0)
+            start+=len;
+        if(end<=0)
+            end+=len;
+    
+        // need to check again; consider consider len=10, start=-11..
+        if(start<0)start=0;
+        if(end<0)return false;
+    
+        // degenerate cases
+        if(start>=len)
+            return false;
+        if(end <= start)
+            return false;
+    
+        // clip - remember end is exclusive!
+        if(end>len)end=len;
+        *startPtr = start;
+        *endPtr = end;
+    
+        return true;
     }
     
     /// generate a shallow or deep copy of the object:

@@ -1,3 +1,5 @@
+`future nspace [`slice] import
+
 "foo" "foo" = "streq" assert
 "foob" "foo" != "streq" assert
 "foo" "bar" + "foobar" = "strconc" assert
@@ -19,16 +21,14 @@ global b
 :qq dup "**"p p "**".;
 
 "abcdefg" !a
-?a -1 4 slice "abcd" =   "slice1" assert
-
 ?a 0 4 slice "abcd" =   "slice1" assert
-?a -1 4 slice "abcd" =   "slice1a" assert
-?a 2 4 slice "cdef" =   "slice2" assert
-?a 4 4 slice "efg" =   "slice3" assert
-?a 6 4 slice "g" =   "slice4" assert
-?a 3 -1 slice "defg" = "slice5" assert
-?a 7 1 slice "" = "slice6" assert
-?a 8 1 slice "" = "slice7" assert
+?a 1 4 slice "bcd" =   "slice2" assert
+?a 1 40 slice "bcdefg" =   "slice3" assert
+?a -3 0 slice "efg" =   "slice4" assert
+?a -4 -2 slice "de" =   "slice5" assert
+?a 2 -2 slice "cde" =   "slice6" assert
+?a 3 2 slice "" = "slice7" assert
+?a -2 -3 slice "" = "slice8" assert
 
 "foo" !A
 ?A clone !B

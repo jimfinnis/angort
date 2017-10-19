@@ -133,7 +133,8 @@ void ListType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     r->list.remove(i);
 }
 
-void ListType::slice(Value *out,Value *coll,int start,int len)const{
+/// deprecated version.
+void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
     
@@ -149,8 +150,25 @@ void ListType::slice(Value *out,Value *coll,int start,int len)const{
             outlist->append()->copy(v);
         }
     }
-    
 }
+
+/// good version
+void ListType::slice(Value *out,Value *coll,int startin,int endin)const{
+    ArrayList<Value> *outlist = set(out);
+    ArrayList<Value> *list = get(coll);
+    
+    int start,end;
+    int listlen = list->count();
+    bool ok = getSliceEndpoints(&start,&end,listlen,startin,endin);
+    
+    if(ok){
+        for(int i=start;i<end;i++){
+            Value *v = list->get(i);
+            outlist->append()->copy(v);
+        }
+    }
+}
+
 void ListType::clone(Value *out,const Value *in,bool deep)const{
     ListObject *p = new ListObject();
     // cast away constness - makeIterator() can't be const
