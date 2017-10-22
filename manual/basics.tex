@@ -141,6 +141,23 @@ goes before the optional 'l' for 'long.' \textbf{Note that} all numbers
 must start with a digit, so a leading zero will be required for some 
 hex numbers (e.g. `0ffh' not `ffh').
 
+\subsection{Booleans}
+Booleans in Angort are represented by integers -- zero is false, non-zero
+is true. However, functions and words which nominally take a boolean value can
+accept any type, which is converted to a boolean thus:
+\begin{itemize}
+\item integers are false if zero, true otherwise
+\item ``none'' values are false
+\item any other type is true
+\end{itemize}
+This avoids the need for such constructions as
+\begin{lstlisting}
+isnone not if "it exists!" then
+\end{lstlisting}
+\textbf{Note:} This feature arrived in version 3.1.0, and may not
+be implemented fully in some plugin libraries. Use integers if in doubt.
+
+
 \todo{Checking and getting types (isnone, isnumber, iscallable, type)}
 
 \todo{heredocs}

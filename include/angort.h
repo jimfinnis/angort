@@ -916,9 +916,14 @@ public:
         stack.pushptr()->clr();
     }
     
+    bool popBool(){
+        return popval()->toBool();
+    }
+    
     int popInt(){
         return Types::tInteger->get(popval());
     }
+    
     float popFloat(){
         return Types::tFloat->get(popval());
     }

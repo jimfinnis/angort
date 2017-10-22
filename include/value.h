@@ -94,6 +94,19 @@ struct Value {
     int toInt() const {
         return t->toInt(this);
     }
+    
+    /// convert to a boolean:
+    /// none is always false
+    /// integers are false if zero
+    /// anything else is true.
+    bool toBool() const {
+        if(isNone())
+            return false;
+        else if(t == Types::tInteger)
+            return toInt()!=0;
+        else
+            return true;
+    }
     long toLong() const {
         return t->toLong(this);
     }

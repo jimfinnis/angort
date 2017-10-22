@@ -295,7 +295,7 @@ Print to stdout the instructions for a named Angort function.
 Assertions will not be printed if this is false. If true,
 both true and false assertions will print.
 {
-    a->assertDebug = a->popInt()!=0;
+    a->assertDebug = a->popBool()!=0;
 }
 
 %word assert (bool desc --) throw exception with string 'desc' if bool is false
@@ -305,7 +305,7 @@ If assertmode has been set to `negated, false assertions will pass (used
 in assertion testing). All prints are to stdout.
 {
     const StringBuffer &desc = a->popString();
-    bool cond = (a->popInt()==0);
+    bool cond = (a->popBool()==0);
     
     if(a->assertNegated){
         cond=!cond;

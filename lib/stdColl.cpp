@@ -507,7 +507,7 @@ the hash key is used).
     for(iter->first();!iter->isDone();iter->next()){
         a->pushval()->copy(iter->current());
         a->runValue(&func);
-        if(a->popval()->toInt()){
+        if(a->popval()->toBool()){
             Value *v = list->append();
             v->copy(iter->current());
         }
@@ -532,7 +532,7 @@ lists, ranges or hashes (in the latter case the hash key is used).
         a->pushval()->copy(iter->current());
         a->runValue(&func);
         Value *v;
-        if(a->popval()->toInt())
+        if(a->popval()->toBool())
             v = truelist->append();
         else
             v = falselist->append();
@@ -654,7 +654,7 @@ in the iterable. For hashes, this will use the key.
     for(iter->first();!iter->isDone();iter->next()){
         a->pushval()->copy(iter->current()); // stack the iterator on top of the accum
         a->runValue(&func); // run the function
-        if(!a->popInt()){
+        if(!a->popBool()){
             rv = 0;
             break;
         }
@@ -678,7 +678,7 @@ in the iterable. For hashes, this will use the key.
     for(iter->first();!iter->isDone();iter->next()){
         a->pushval()->copy(iter->current()); // stack the iterator on top of the accum
         a->runValue(&func); // run the function
-        if(a->popInt()){
+        if(a->popBool()){
             rv = 1;
             break;
         }

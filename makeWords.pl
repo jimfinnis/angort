@@ -150,6 +150,8 @@ while(<>){
                 print "float p$i = _parms[$i]->toFloat();\n"
             }elsif($c eq 'L'){
                 print "long p$i = _parms[$i]->toLong();\n"
+            }elsif($c eq 'b'){
+                print "bool p$i = _parms[$i]->toBool();\n"
             }elsif($c eq 'i'){
                 print "int p$i = _parms[$i]->toInt();\n"
             }elsif($c eq 'd'){

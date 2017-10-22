@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "3.0.0"
+#define ANGORT_VERSION "3.1.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -644,7 +644,7 @@ void Angort::run(const Instruction *startip){
                     if(!ip)goto leaverun;
                     break;
                 case OP_IF:
-                    if(popInt())
+                    if(popBool())
                         ip++;
                     else
                         ip+=ip->d.i;
@@ -669,7 +669,7 @@ void Angort::run(const Instruction *startip){
                     ip+=ip->d.i;
                     break;
                 case OP_IFLEAVE:
-                    if(popInt()){
+                    if(popBool()){
                         loopIterStack.popptr()->clr();
                         loopIterCt--;
                         ip+=ip->d.i;
