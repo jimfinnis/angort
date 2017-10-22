@@ -712,7 +712,7 @@ void Angort::run(const Instruction *startip){
                 }
                 case OP_NOT:
                     a = stack.peekptr();
-                    Types::tInteger->set(a,!a->toInt());
+                    Types::tInteger->set(a,a->toBool()?0:1);
                     ip++;
                     break;
                 case OP_SWAP:

@@ -56,6 +56,19 @@ void Angort::binop(Value *a,Value *b,int opcode){
     if(at->binop(this,opcode,a,b))
         return;
     
+    // deal with booleans separately
+    if(opcode == OP_AND || opcode == OP_OR){
+        bool ab = a->toBool();
+        bool bb = b->toBool();
+        
+        switch(opcode){
+        case OP_AND:
+            pushInt(ab && bb);break;
+        case OP_OR:
+            pushInt(ab || bb);break;
+        }
+        return;
+    }
     
     if(at == Types::tNone ||  bt == Types::tNone){
         /**
@@ -192,12 +205,6 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_NEQUALS:
             cmp=true;
             pushInt(p!=q);break;
-        case OP_AND:
-            cmp=true;
-            pushInt(p&&q);break;
-        case OP_OR:
-            cmp=true;
-            pushInt(p&&q);break;
         case OP_GT:
             cmp=true;
             pushInt(p>q);break;
@@ -247,12 +254,6 @@ void Angort::binop(Value *a,Value *b,int opcode){
         case OP_NEQUALS:
             cmp=true;
             pushInt(p!=q);break;
-        case OP_AND:
-            cmp=true;
-            pushInt(p&&q);break;
-        case OP_OR:
-            cmp=true;
-            pushInt(p&&q);break;
         case OP_GT:
             cmp=true;
             pushInt(p>q);break;
@@ -393,14 +394,6 @@ void Angort::binop(Value *a,Value *b,int opcode){
             p = a->toLong();
             q = b->toLong();
             r = p*q;break;
-        case OP_AND:
-            p = a->toLong();
-            q = b->toLong();
-            r = (p&&q);break;
-        case OP_OR:
-            p = a->toLong();
-            q = b->toLong();
-            r = (p||q);break;
         case OP_GT:
             p = a->toLong();
             q = b->toLong();
@@ -460,14 +453,6 @@ void Angort::binop(Value *a,Value *b,int opcode){
             p = a->toInt();
             q = b->toInt();
             r = p*q;break;
-        case OP_AND:
-            p = a->toInt();
-            q = b->toInt();
-            r = (p&&q);break;
-        case OP_OR:
-            p = a->toInt();
-            q = b->toInt();
-            r = (p||q);break;
         case OP_GT:
             p = a->toInt();
             q = b->toInt();

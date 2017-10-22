@@ -21,7 +21,9 @@ const char *opcodenames[]=
     "leave","dup","litstring","call",
     "litcode","globget","globset","propget",
     "propset","not","equals","nequals",
-    "swap","drop","and","or","gt","lt",
+    "swap","drop",
+    "and","or", // keep boolean binops contiguous
+    "gt","lt",
     "ifleave","SPARE","SPARE","newhash",
     "litsymb","over","closureget","closureset","dot",
     "iterlvifdone","iterstart","cmp","library",
@@ -73,10 +75,12 @@ const char *opcodenames[]=
 
 #define OP_SWAP 28
 #define OP_DROP 29
+
+// boolean binops contiguous
 #define OP_AND	30
 #define OP_OR	31
-#define OP_GT	32
 
+#define OP_GT	32
 #define OP_LT   33
 #define OP_IFLEAVE  34
 #define OP_spareFOR	35
