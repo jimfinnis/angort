@@ -160,10 +160,29 @@ isnone not if "it exists!" then
 \textbf{Note:} This feature arrived in version 3.1.0, and may not
 be implemented fully in some plugin libraries. Use integers if in doubt.
 
+\subsection{Heredoc strings}
+Multi-line strings can be stacked 
+using ``heredoc'' syntax. A heredoc block starts and ends with a marker,
+which is a double hyphen followed by an identifier. Both markers
+must be at the start of a line. Everything between
+the markers, excluding the trailing newline character, will be put into
+a single string on the stack. Here is an example:
+\begin{lstlisting}
+# the heredoc start marker. Markers must be on a line by themselves
+# with no comment or trailing whitespace.
+--FOO
+This is a heredoc, which can contain quotes both 'single' and "double".
+It can even contain apparent heredoc markers, which will be ignored
+if they don't have the same identifier.
+--FOO
+
+# The string is on the stack, so print it.
+.
+\end{lstlisting}
+
+
 
 \todo{Checking and getting types (isnone, isnumber, iscallable, type)}
-
-\todo{heredocs}
 
 \clearpage
 \section{Defining new functions}
