@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "3.1.1"
+#define ANGORT_VERSION "4.0.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -1309,6 +1309,12 @@ void Angort::feed(const char *buf){
     if(hereDocEndString!=NULL){
         if(!strcmp(buf,hereDocEndString)){
             hereDocEndString = NULL;
+            
+            // remove the trailing NL from the heredoc string
+            if(strlen(hereDocString)>0){ // shouldn't happen
+                char *qq = hereDocString+(strlen(hereDocString)-1);
+                if(*qq == '\n')*qq=0;
+            }
             
             // compile and if necessary run the code to stack the string
             compile(OP_LITERALSTRING)->d.s = strdup(hereDocString);

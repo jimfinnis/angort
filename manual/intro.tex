@@ -5,11 +5,41 @@ is a stack-based concatenative programming language, based on the
 venerable Forth, with some
 extra features. These include:
 \begin{itemize}
-\item variables and function parameters
+\item variables and function parameters;
 \item higher order functions with (nearly) full lexical closure;
 \item lists and hashes (dictionaries) with garbage collection;
 \item native C++ plugin architecture.
 \end{itemize}
+\subsection{Rationale and history}
+Angort was initially written out of curiosity, driven by
+my need to understand how high-level constructions 
+such as garbage-collected values and closures worked down at the 
+machine code level. As a veteran assembler and C/C++ programmer,
+I found languages like Python and even Java difficult to ``trust'', in
+a sense, without this understanding.
+
+My first attempt was a language typical of the Algol lineage, Lana.
+While successful, Lana wasn't particularly interesting and so I abandoned
+it. Later, I found I needed a control language for a robotics project:
+the ExoMars rover locomotion prototype, Blodwen. The Blodwen control
+system used a fairly complex C++ API, which was appropriate for 
+many tasks but not for ad-hoc control or experiment scripting.
+My initial instinct was (as always)
+to quickly write an interpreter for a Forth-like language.
+
+As the project progressed, I found the language an interesting platform
+for the high-level features mentioned above. Notably, my final year
+project required a subsumption system \emph{\`{a} la} Brooks, and I found
+this much easier to write in the new language than in C++. Prompted by
+this discovery I continued to work with and add features to the language
+over the next year, and was surprised by how powerful a stack-based
+language with anonymous functions and collections could be.
+As I started my Ph.D. I found working with Angort
+a natural way to script experiments, particularly once I found
+a good set of paradigms for interfacing with C++ code,
+and so continued working with it.
+
+\subsection{Brief examples}
 Here are some examples. First, the familiar recursive
 quicksort algorithm:
 \begin{lstlisting}
@@ -33,6 +63,12 @@ quicksort algorithm:
         # resulting list is left on the stack, and so returned.
     then;
 \end{lstlisting}
+This could be used thus:
+\begin{lstlisting}
+[0,6,2,3,7,8] qs each{i.}
+\end{lstlisting}
+to sort and print the given list of integers.
+
 \clearpage
 Next, a program to read a CSV file and print the sums of all
 the columns:
@@ -63,7 +99,7 @@ the columns:
          # the map extracts the key's values, the reduce performs the sum.
          0 ?CSV (?i swap get) map (+) reduce
          ]
-        # format the list and print it.
+        # format the pair and print it.
         "%s %f" format.
     }
 )@ quit # run the slug and quit
@@ -133,7 +169,10 @@ wheels each { i dactual .}
 \end{v}
 which will print the actual speeds of all the wheels.
 In the examples given so far, functions such as \texttt{dactual},
-\texttt{!drive} and \texttt{?drive} are links to native C++ code: it
+\texttt{!drive} and \texttt{?drive} are links to native C++ code\footnote{The
+latter two functions use \emph{properties}: syntactically
+they look like variable sets and gets but actually cause C++ code to run,
+setting and getting the motor drive speed in the robot.}: it
 is very easy to interface Angort with C++.
 
 
