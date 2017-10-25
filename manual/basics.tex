@@ -97,7 +97,7 @@ In general, I will use ``word'' to refer to a single Angort built-in token,
 particularily if it compiles to a single opcode; while ``function'' will refer
 to user-defined functions. However, I may vary -- there is no real distinction, since
 an Angort function call is itself a single opcode.
-
+\clearpage
 \subsection{Types and literals}
 \label{types}
 Angort is a dynamically typed language, with type coercion (weak typing).
@@ -105,37 +105,40 @@ The following types are available:
 \indw{range}\indw{frange}\indw{[}\indw{]}
 \begin{center}
 \begin{tabular}{|l|p{2.5in}|l|p{1.5in}|}\hline
-\textbf{Name} & \textbf{Definition} & \textbf{Hashable\footnotemark[1]} & \textbf{Example of literal} \\ \hline
-None & The nil object, specifying ``no value'' & N & \texttt{none} \\
-Integer & 32 or 64-bit integers depending on architecture & Y & \texttt{5045} \\
-Long & depends on architecture & Y & \texttt{5045l,32L,0ffx, 45ao, 10111b, 3200ffffhl} \\
-Float & 32-bit floats & Y & \texttt{54.0} \\
-Double & 64-bit floats & Y & \texttt{54.0l,32.2L} \\
-String & Strings of characters & Y & \texttt{"Hello there"}\footnotemark[2] \\
-Symbol & Single-word strings, internally stored as integers and
+\textbf{Name\footnotemark[1]} & \textbf{Definition} & \textbf{Hashable\footnotemark[2]} & \textbf{Example of literal} \\ \hline
+\texttt{none} & The nil object, specifying ``no value'' & N & \texttt{none} \\
+\texttt{integer} & 32 or 64-bit integers depending on architecture & Y & \texttt{5045} \\
+\texttt{long} & depends on architecture & Y & \texttt{5045l,32L,0ffx, 45ao, 10111b, 3200ffffhl} \\
+\texttt{float} & 32-bit floats & Y & \texttt{54.0} \\
+\texttt{double} & 64-bit floats & Y & \texttt{54.0l,32.2L} \\
+\texttt{string} & Strings of characters & Y & \texttt{"Hello there"}\footnotemark[3] \\
+\texttt{symbol} & Single-word strings, internally stored as integers and
 generally used as hash keys & Y & \texttt{`foo} \\
-Code& Anonymous and named functions & N & \texttt{( dup * 1 + ),} \texttt{?myfunction} \\
-Integer range & 
+\emph{Callable}\footnotemark[4] & Angort and C++ functions & N & \texttt{( dup * 1 + ),} \texttt{?myfunction} \\
+\texttt{range} & 
 A range of integers between two values with optional step & Y & 
-\texttt{0 4 range}\footnotemark[3]\\
-Float range & A range of floats between two values with 
+\texttt{0 4 range}\footnotemark[5]\\
+\texttt{frange} & A range of floats between two values with 
 step& Y & \texttt{0 4 0.1 frange}\\
-List & A array/list of values\footnotemark[4] & N & \texttt{[1,2,"foo"]} \\
-Hash & A map of values to values implemented as a hash table, where
+\texttt{list} & A array/list of values\footnotemark[6] & N & \texttt{[1,2,"foo"]} \\
+\texttt{hash} & A map of values to values implemented as a hash table, where
 keys can strings, symbols, integers or floats & N & \texttt{[\% `foo 1, "fish" "fish"]} \\
 \hline
 \end{tabular}
 \end{center}
-\footnotetext[1]{Indicates that values of this type may be used as keys in a hash (see Sec.~\ref{hashes}).}
-\footnotetext[2]{Multi-line strings can be defined using a ``heredoc''
+\footnotetext[1]{This is the name of the type as returned by the \texttt{type} word (see Sec.~\ref{typechecking}).}
+\footnotetext[2]{Indicates that values of this type may be used as keys in a hash (see Sec.~\ref{hashes}).}
+\footnotetext[3]{Multi-line strings can be defined using a ``heredoc''
 similar to those in languages like bash, PHP and Python. See
 Sec.~\ref{heredoc}.}
-\footnotetext[3]{This is actually a call to the \texttt{range} function which takes two integers to create a range.}
-\footnotetext[4]{Stored internally as an
+\footnotetext[4]{Actually conflates three types internally: \texttt{native} for C++ functions;
+\texttt{codeblock}
+for simple Angort functions; and \emph{closure}, whose values consist of a codeblock and
+some stored variables. Check if a value is callable with \indw{iscallable}\texttt{iscallable}.}
+\footnotetext[5]{This is actually a call to the \texttt{range} function which takes two integers to create a range.}
+\footnotetext[6]{Stored internally as an
 automatically resized array rather than a linked list.}
-``Code'' above actually conflates two types internally --- codeblocks,
-which have no environment; and closures, which consist of a codeblock and
-some stored variables. They appear identical to the user.
+
 There are some other types used internally, such as the
 types for iterators and deleted objects in a hash.
 
@@ -151,7 +154,7 @@ accept any type, which is converted to a boolean thus:
 \begin{itemize}
 \item integers are false if zero, true otherwise
 \item ``none'' values are false
-\item any other type is true
+\item values of any other type are true
 \end{itemize}
 This avoids the need for such constructions as
 \begin{lstlisting}
@@ -180,9 +183,21 @@ if they don't have the same identifier.
 .
 \end{lstlisting}
 
-
-
-\todo{Checking and getting types (isnone, isnumber, iscallable, type)}
+\subsection{Retrieving value types}
+\label{typechecking}
+It is possible to retrieve the type of a value, or check that it is
+one of a particular set of types, using the following words:
+\indw{type}\indw{isnumber}\indw{isnone}\indw{iscallable}
+\begin{center}
+\begin{tabular}{|l|p{4in}|l|}\hline
+\textbf{name} & \textbf{description} & \textbf{stack picture}\\ \hline
+type & get name of value's type as a symbol & (val -- symbol)\\
+isnumber & 1 if value's type is numeric, else 0 & (val -- int)\\
+isnone & 1 if value's type is none, else 0 & (val -- int)\\
+iscallable & 1 if value's type is codeblock, closure or native function, else 0 & (val -- int)\\
+\hline
+\end{tabular}
+\end{center}
 
 \clearpage
 \section{Defining new functions}
@@ -203,8 +218,8 @@ squared number on the stack. This can then be used thus:
 \begin{v}
 3 square 4 square + .
 \end{v}
-which will print 25, i.e. $3^2+4^2$. Note that leaving values behind
-on the stack on exiting a function is how we return values in Angort.
+which will print 25, i.e. $3^2+4^2$. \index{return}\textbf{Note that leaving values behind
+on the stack on exiting a function is how we return values in Angort.}
 While defining a function, Angort is is compilation mode --- functions will
 be converted to bytecode but added to the definition of the new function
 rather than executed immediately. Function definitions can therefore span
@@ -221,7 +236,6 @@ more than one line:
 This example uses recursion and the Angort \texttt{if..else..then} construction.
 This looks a little odd to programmers not familiar with Forth -- please
 see Section~\ref{conditions} for more details.
-\todo{Mention how immediate and script mode work with definitions. Add parameter typing.}
 
 
 \subsection{Word parameters and local variables}
@@ -276,8 +290,33 @@ locals but no parameters:
 Here, the curly brackets enclose a loop, which is exited by the
 \texttt{ifleave} instruction when the stack top value is 10. See
 Section~\ref{loops} for more details.
-\todo{Types in param lists. Returning values.}
-     
+
+\subsection{Parameter type checking}
+\index{parameters!type checking}\index{type checking}
+It is possible to specify the type required for each parameter by putting the type name
+after the parameter name, separated by a slash `/' thus:
+\begin{lstlisting}
+:magnitude |x/float,y/float:|
+    ?x dup *
+    ?y dup * +
+    sqrt
+;
+\end{lstlisting}
+If the type of a parameter does not match, Angort will attempt to convert the 
+value to the given type. If this fails, a type mismatch exception will be thrown.
+Note that the attempted conversion can lead to some unexpected results. For example,
+\begin{v}
+"foo" 3 magnitude
+\end{v}
+will work, giving the result 3.0 . This is because the string ``foo'' will be converted
+to a float value of zero. However,
+\begin{v}
+none 3 magnitude
+\end{v}
+will fail because \texttt{none} cannot be converted to any other type.
+For stricter type checking, use the facilities described in
+Sec.~\ref{typechecking}.
+
 \subsection{Word documentation strings and stack pictures}
 \label{stackpic}
 Following the locals and parameters (or just the function name if there
@@ -289,7 +328,8 @@ The section in brackets is known as a \emph{stack picture,}\footnote{Or sometime
 a \emph{stackflow symbol} -- the concept is borrowed from Forth and the literature
 varies.} and describes
 the action of the function on the stack. The part before the hyphen
-shows the part of the stack removed by the function, and the part after
+shows the part of the stack removed by the function, with
+the stack top to the right, and the part after
 shows its replacement. For example:
 \begin{lstlisting}
 :dist |x1,y1,x2,y2:|

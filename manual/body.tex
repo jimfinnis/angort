@@ -676,6 +676,7 @@ io$open: (path mode -- fileobj) open a file, modes same as fopen()
 
 
 \section{Namespaces and packages}
+\todo{This needs much mroe explanation of what namespaces and that actually are}
 \label{packages}
 \indw{package}\indw{require}\index{namespaces}
 \index{packages}
@@ -733,8 +734,37 @@ isconst & (nsid name -- bool) & return true if a name is constant in the namespa
 \end{tabular}
 \end{center}
 
+\subsection{Automatically imported packages}
+All the functions (i.e. words which do not compile directly to bytecode) 
+mentioned so far -- \texttt{p}, \texttt{i}, \texttt{quit} and so on -- belong to a number
+of special packages which are automatically imported when Angort starts. These include
+\texttt{coll} for functions which handle collections, and \texttt{std} for unclassified functions.
+For example, the \texttt{quit} function has the fully qualified name \texttt{std\$quit}.
+User-defined functions are added to the \texttt{user} namespace.
 
-\subsubsection{Local packages}
+Although they are defined as constants, it possible to override these functions. For example the standard function \texttt{p}
+can be overridden by forcing a
+new global in the \texttt{user} namespace:
+\begin{lstlisting}
+global p
+:p "wibble" .;
+\end{lstlisting}
+Once this has been done, we now have two \texttt{p} functions: \texttt{std\$p}, which is
+the standard definition; and \texttt{user\$p}, which is our new function. Because \texttt{user} is
+the ``current'' namespace, i.e. that into which new names are defined, this will be searched
+first on compilation, so unqualified \texttt{p} will be resolved as \texttt{user\$p}, our new function.
+It is still possible to use \texttt{std\$p} by using the fully qualified name. We could also
+define a user function with the same name as a standard function, which uses that standard function,
+by using the fully qualified name:
+\begin{lstlisting}
+global quit
+:quit "Angort is quitting now!". std$quit;
+\end{lstlisting}
+ 
+\todo{properties! Although I might have covered them in the intro a bit}
+
+
+\subsection{Local packages}
 \index{packages!local}
 It is sometimes necessary to create a package inside a script which
 is not included from another script. One example is where the script
@@ -754,25 +784,6 @@ endpackage import
 The \texttt{endpackage} word does the same as the return from a 
 \texttt{require} normally does --- close off the package and
 stack the package ID.
-
-\subsection{Namespaces, libraries and modules}
-\index{namespace, default}
-\label{nameslibsmods}
-\todo{This is rubbish -- it might have been true a long time ago,
-but modules no longer exist. However, the second paragraph
-here is still useful.}
-Native functions created by using the shared library plugin system
-are loaded into namespaces, just as described above. However, native
-functions defined using Angort's built-in function registration system
-are loaded into \emph{modules.} These are very similar to namespaces,
-but are slightly faster\footnote{The pointers to the native functions
-are stored directly rather than being wrapped in Value objects.}. 
-
-Such functions are automatically part of the default namespace, but can
-be overriden by your own functions. If you still wish to use the standard
-definition, the fully specified name can be used. This is in the form
-\verb+module$name+, like that used for libraries or plugins. For example,
-if you have overriden the \texttt{p} function, you can use \verb+std$p+.
 
 \section{Plugin libraries (currently Linux only)}
 \label{library}
@@ -816,11 +827,10 @@ This means we can do things like
 to import lists of libraries.
 
 \section{The ``deprecated'' and ``future'' namespaces}
-\todo{No idea if I can get this working with modules}
 Angort is a changing language, and to permit this some functions are
 occasionally moved into the ``deprecated'' namespace when they are obsolete.
 Other functions are added to the ``future'' namespace when they are new
-and break backcompatibility. 
+and break back-compatibility. 
 While both these namespaces are loaded, none of their symbols are imported. 
 Typically, a function might have an
 old version in the deprecated space and a new version in the future space,
