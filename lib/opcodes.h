@@ -26,7 +26,7 @@ const char *opcodenames[]=
     "gt","lt",
     "ifleave","SPARE","SPARE","newhash",
     "litsymb","over","closureget","closureset","dot",
-    "iterlvifdone","iterstart","cmp","library",
+    "iterlvifdone","iterstart","cmp","SPARE",
     "newlist","appendlist", "SPARE","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse",
     "self","dummycase","le","ge","constexpr",
@@ -96,7 +96,7 @@ const char *opcodenames[]=
 #define OP_ITERLEAVEIFDONE	43
 #define OP_ITERSTART 44
 #define OP_CMP 45
-#define OP_LIBRARY 46
+#define OP_SPARElibrary 46
 
 #define OP_NEWLIST 47
 #define OP_APPENDLIST 48

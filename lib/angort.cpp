@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.0.0"
+#define ANGORT_VERSION "4.0.1"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -803,13 +803,6 @@ void Angort::run(const Instruction *startip){
                     }
                     ip++;
                     break;
-                case OP_LIBRARY:
-                    // load a plugin (a shared library). Will
-                    // push the plugin's namespace ID ready for
-                    // import or list-import
-                    pushInt(plugin(popval()->toString().get()));
-                    ip++;    
-                    break;
                 case OP_DEF:{
                     const StringBuffer& sb = popString();
                     if(names.isConst(sb.get(),false))
@@ -1273,7 +1266,7 @@ void Angort::include(const char *filename,bool isreq){
         // push the idx of the package which was defined. 
         // A bit dodgy since this isn't taking place in
         // a code block..
-        pushInt(idx);
+        Types::tNSID->set(pushval(),idx);
     }
     
     names.setPrivate(false); // and clear the private flag
@@ -1392,9 +1385,6 @@ void Angort::feed(const char *buf){
                 names.push(idx);
                 break;
             }
-            case T_LIBRARY:
-                compile(OP_LIBRARY);
-                break;
             case T_BACKTICK:{
                 char buf[256];
                 if(!tok.getnextidentorkeyword(buf))

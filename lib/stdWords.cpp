@@ -902,6 +902,15 @@ with setfloatformat.
     strcpy(Types::tDouble->formatString,p0);
 }
 
+%wordargs library s (name -- nsid) load a plugin library, returning the namespace ID
+This loads a C++ native library and returns the NSID. Typically the
+next step will be to either drop or import the library. The latter
+will be to mark the library's namespace as imported, so that its
+symbols can be used without a fully-qualified name.
+{
+    Types::tNSID->set(a->pushval(),a->plugin(p0));
+}
+
 %word import (namespaceint --) or (namespaceint list --) import namespace or namespace members into default space
 The first form will add a namespace to the "imported namespace list",
 so that all members of the namespace will be available without full
