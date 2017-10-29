@@ -2,7 +2,7 @@ package svg
 
 # this is a coordinate transformer chain - it's a list
 # of functions which take a x,y pair and return an x,y pair.
-# You can set it with settransformchain, rather than mucking
+# You can set it with setchain, rather than mucking
 # around with SVG transforms. Coordinates transformed this
 # way are added to the SVG directly.
 #

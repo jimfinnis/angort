@@ -397,6 +397,8 @@ or more simply
 \end{v}
 
 \subsection{Recursion}
+\todo{This doesn't really belong here; should it go into a putative
+``debugging and optimisation'' section?}
 Recursion is normally achieved by calling the function by name within
 its own definition:
 \begin{lstlisting}
@@ -463,29 +465,34 @@ correctly. However, it is a big improvement because the \texttt{libc}
 map &(iter func -- list) & apply a function to an iterable, giving a list\\
 reduce & (start iter func -- result) & set an internal value (the accumulator) to "start", then iterate, applying the function (which must take two arguments) to the accumulator and the iterator's value, setting the accumulator to this new value before moving on.\\
 filter & (iter func -- list) & filter an iterable with a boolean function\\
+filter2 & (iter func -- falselist truelist) & filter an iterable with a boolean function, placing true elements and false elements in separate lists\\
 zipWith & (iter iter func -- list) & iterate over both iterables, combining
 the elements with a binary function and putting the results into a list\\
+all & (iterable func -- bool) & true if the function returns true for all
+members of the iterable.\\
+any & (iterable func -- bool) & true if the function returns true for any
+members of the iterable.\\
 \hline
 \end{tabular}
 \end{center}
+\clearpage
 We can now list all the squares of a range of numbers:
-\begin{v}
+\begin{lstlisting}
 0 100 range (dup *) map each {i.}
-\end{v}
-
+\end{lstlisting}
 
 We can also write a function to sum the values in an iterable using
 \texttt{reduce}:
-\begin{v}
-:sum |iter:|
+\begin{lstlisting}
+:sum |itr:|
     0           # the accumulator value starts at zero
-    ?iter       # this is the iterable
+    ?itr        # this is the iterable
     (+)         # and this is the function 
     reduce      # repeatedly add each item to the accumulator,
                 # setting the accumulator to the result. When
                 # finished, return the accumulator.
 ;
-\end{v}
+\end{lstlisting}
 
 
 
@@ -564,71 +571,6 @@ and instead used a local variable \emph{x} to store the iterator value. This is 
 the values of loop iterators such as \texttt{i} are not true variables, and thus are not
 stored in the closure. Iterators must be stored in local variables if they are to be used
 in an anonymous function created in their loop's context.
-
-\subsubsection{Objects with methods and private members using hashes and closures}
-\index{objects}\index{delegates}
-We can emulate objects in Angort by creating objects as
-hashes, with methods as functions closing over the local variables
-in the creating function:
-
-\begin{lstlisting}
-# create a rectangle object as a hash, with delegates to draw it
-:mkrectangle |x,y,w,h:|
-    [%
-        # a member to draw the rectangle - this
-        # will create a closure over x,y,w,h.
-        
-        `draw (?x ?y ?w ?h graphics$drawrect),
-        
-        # another to move it by some amount
-        
-        `move (|dx,dy:| 
-            ?x ?dx + !x
-            ?y ?dy + !y
-        )
-    ]
-;   
-
-# create it
-100 100 10 10 mkrectangle !R
-# draw it
-?R?`draw@
-# move it and redraw
-20 20 ?R?`move@
-?R?`draw@
-\end{lstlisting}
-Values such as \verb+?R?`move+ are actually closer to C\# ``delegates'', in that they 
-contain information on the object (actually a closure), and the method to perform.
-
-\index{private and public members}
-This also provides a ``private member'' mechanism: if a value is defined
-in a closure in the function which creates the hash, rather than in
-the hash itself, that value will only be visible to functions defined
-in the hash. Public member variables can be implemented by storing the hash
-itself as a local variable called (say) \texttt{this}, and accessing it inside
-the methods. Using this technique, the above could be written as 
-\begin{lstlisting}
-# create a rectangle object as a hash, with delegates to draw it
-:mkrectangle |x,y,w,h:this|
-    [% dup !this # store the hash itself in the closure
-        # set the member values
-        `x ?x,
-        `y ?y,
-        `w ?w,
-        `h ?h,
-        
-        `draw (?this?`x ?this?`y 
-            ?this?`w ?this?`h graphics$drawrect),
-        
-        `move (|dx,dy:| 
-            ?this?`x ?dx + !this?`x
-            ?this?`y ?dy + !this?`y
-        )
-    ]
-;   
-\end{lstlisting}
-
-\todo{Look at how to do inheritance, particularly using members in the superclass.}
 
 \section{Exceptions}
 Exception handling is done with a \texttt{try}/\texttt{catch}/\texttt{endtry} 

@@ -41,69 +41,13 @@ the leading item if it contains the string "angort" (i.e. it's
 the name of the interpreter). It then removes the string after
 that (the script name) and returns the result.
 
-Creating a parser:
+Parsing:
 
-    mkparse (optlist arglist -- parser) 
+    opts$mkparse (cmdname optlist arglist -- results) 
 
-Takes options and arguments lists and creates a parser. ?`parse and ?`usage are
-methods available to run the parser, e.g.
-
-    ?OPTS ?ARGS opts$mkparse !P
-    opts$getargs ?P?`parse@
-    
 Results is a hash containing the value of each option and
 argument keyed by name. Any unprocessed args are in remnants.
-See below for how to print the usage on exception.
+An error message will be printed on failure, giving the usage.
 
 
-
-
-require "./opts.ang" drop
-
-(|:p|
-    try
-        [
-         [%
-          `description "blah",
-          `char "x",
-          `name "foo"
-         ],
-         [%
-          `description "blah2",
-          `name "bar",
-          `char "y",
-          `type `string,
-          `default "wob"
-          ],
-         [%
-          `description "z",
-          `name "z",
-          `char "z",
-          `type `integer,
-          `default 3,
-          `required 1
-          ]
-        ]
-
-        [
-         [%
-          `description "the wibble",
-          `name "wibble"
-          ]
-         ]
-        opts$mkparse !p
-        opts$getargs ?p?`parse@
-    catchall
-        drop . # print exception string
-        "progname" ?p?`usage@.
-        quit
-    endtry
-)@
-
-swap
-"Results:".
-util$show.
-"Remnants:".
-util$show.
-quit
 

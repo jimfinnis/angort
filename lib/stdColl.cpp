@@ -639,7 +639,7 @@ Reorders the list using a binary function.
     list->sort(&cmp);
 }
 
-%word all (in func --) true if the function returns true for all items
+%word all (iterable func -- all) true if the function returns true for all items
 Returns true if the unary function provided returns nonzero for all the items
 in the iterable. For hashes, this will use the key.
 {
@@ -663,7 +663,7 @@ in the iterable. For hashes, this will use the key.
     delete iter;
 }
 
-%word any (in func --) true if the function returns true for all items
+%word any (iterable func -- bool) true if the function returns true for all items
 Returns true if the unary function provided returns nonzero for any item
 in the iterable. For hashes, this will use the key.
 {

@@ -1,0 +1,125 @@
+\section{Useful paradigms}
+Angort is a fairly novel language, being an update of stack-based
+languages with collections and functional elements. As such, new
+paradigms for performing familiar tasks must be found, and often
+features of the language allow these tasks to be performed in
+an efficient manner but need to be ``discovered''
+by actually using the language. In this section I hope to show some
+examples of a few useful paradigms I have discovered during development.
+
+
+\subsection{Use of the comma operator for list building}
+A trivial example
+is the list comprehension, a feature whereby a new list can be constructed
+by performing some operation on elements of another. In Python, for example,
+one can obtain the squares of a range of elements using a comprehension thus:
+\begin{lstlisting}[language=Python]
+print [x**2 for x in range(20)]
+\end{lstlisting}
+Naturally one can use \texttt{map} for this in Angort:
+\begin{lstlisting}
+0 20 range (dup *) map "," intercalate.
+\end{lstlisting}
+but I found I had this facility even before the \texttt{map} function
+had been written, simply by using
+the comma outside the normal list context:
+\begin{lstlisting}
+[] 0 20 range each {i dup *,} "," intercalate.
+\end{lstlisting}
+Breaking this down:
+\begin{lstlisting}
+[]          # stack an empty list
+0 20 range  # stack a range from 0-19 inclusive
+each {      # pop and iterate over that range. Empty list is now stack top.
+ i          # push the next element
+ dup *      # square it
+ ,          # append it to the list
+}           # end loop
+
+"," intercalate.      # print the resulting list
+\end{lstlisting}
+In a list context, the stack picture for the comma word is \texttt{(list item -- list)}:
+it appends the item to the list and leaves the list on the stack. While this
+permits the intuitive \texttt{[1,2,3,4]} syntax for list ``literals'', it
+also provides a powerful list-building facility. In a hash context, the
+stack picture is \texttt{(hash value key -- hash)}\footnote{Which context
+is used depends on the type of second item on the stack: if it is a list,
+the list context is used; otherwise the type of the third item is
+checked and the hash context is used if it is a hash. If not, an exception
+is thrown.}. This provides a way to generate hashes:
+\begin{lstlisting}
+[%] 0 20 range each {i i dup*,}
+\end{lstlisting}
+will generate a hash of the squares of the first 20 non-negative integers,
+keyed by the integer.
+
+\subsection{Objects with methods and private members using hashes and closures}
+\index{objects}\index{delegates}
+We can emulate objects in Angort by creating objects as
+hashes, with methods as functions closing over the local variables
+in the creating function:
+
+\begin{lstlisting}
+# create a rectangle object as a hash, with delegates to draw it
+:mkrectangle |x,y,w,h:|
+    [%
+        # a member to draw the rectangle - this
+        # will create a closure over x,y,w,h.
+        # We assume there is a graphics package with
+        # a drawrect function; this is not a part of standard
+        # Angort (although see the SDL plugin in angortplugins).
+        
+        `draw (?x ?y ?w ?h graphics$drawrect),
+        
+        # another to move it by some amount
+        
+        `move (|dx,dy:| 
+            ?x ?dx + !x
+            ?y ?dy + !y
+        )
+    ]
+;   
+
+# create it
+100 100 10 10 mkrectangle !R
+# draw it
+?R?`draw@
+# move it and redraw
+20 20 ?R?`move@
+?R?`draw@
+\end{lstlisting}
+Values such as \verb+?R?`move+ are actually closer to C\# ``delegates'', in that they 
+contain information on the object (actually a closure), and the method to perform.
+\index{private and public members}
+This also provides a ``private member'' mechanism: if a value is defined
+in a closure in the function which creates the hash, rather than in
+the hash itself, that value will only be visible to functions defined
+in the hash.
+
+Public member variables can be implemented by storing the hash
+itself as a local variable called (say) \texttt{this}, and accessing it inside
+the methods. Using this technique, the above could be written as 
+\begin{lstlisting}
+# create a rectangle object as a hash, with delegates to draw it
+:mkrectangle |x,y,w,h:this|
+    [% dup !this # store the hash itself in the closure
+        # set the member values
+        `x ?x,
+        `y ?y,
+        `w ?w,
+        `h ?h,
+        
+        `draw (?this?`x ?this?`y 
+            ?this?`w ?this?`h graphics$drawrect),
+        
+        `move (|dx,dy:| 
+            ?this?`x ?dx + !this?`x
+            ?this?`y ?dy + !this?`y
+        )
+    ]
+;   
+\end{lstlisting}
+
+\todo{Look at how to do inheritance, particularly using members in the superclass.}
+
+
