@@ -146,7 +146,7 @@ phase with two implementations of \texttt{slice}, each with entirely different
 semantics! This is due to the older code being both conceptually wrong
 and buggy, but still in use. 
 
-In the \texttt{future} namespace, \texttt{slice} has similar semantics
+In the \texttt{future} namespace (see , \texttt{slice} has similar semantics
 to the Python array slice operator. In the \texttt{deprecated} namespace,
 a crude slice operator is supported which is briefly documented below
 (and has bugs with negative indices). The default implementation of \texttt{slice} will
@@ -616,24 +616,59 @@ io$open: (path mode -- fileobj) open a file, modes same as fopen()
 1|0 > 
 \end{v}
 
-
-\section{Namespaces and packages}
-\todo{This needs much mroe explanation of what namespaces and that actually are}
-\label{packages}
-\indw{package}\indw{require}\index{namespaces}
-\index{packages}
+\section{Namespaces, libraries and packages}
+\label{namespaces}
+\index{namespaces}
 \def\dollarsign{\$}\indw{\dollarsign}
+All Angort identifiers (apart from the built-in tokens listed in Table~\ref{tab:builtins})
+are stored in a \emph{namespace}. An identifier in a program
+can be either \emph{fully qualified},
+in which case the namespace for the identifier is explicitly given before
+a dollar sign, such as \verb+std$quit+; or it is \emph{unqualified}, in
+which case Angort will scan only the imported namespaces to find it.
+Angort starts with a set of default namespaces, which are imported
+by default. These include
+\begin{itemize}
+\item \texttt{coll} for collection functions,
+\item \texttt{string} for string functions,
+\item \texttt{math} for mathematical functions,
+\item \texttt{env} for system environment functions (command line arguments,
+environment variables etc.),
+\item \texttt{coll} for collection handling functions,
+\item \texttt{user} for names defined by the user.
+\end{itemize}
+Others may be added. Since these namespaces are imported, the user
+does not need to enter the fully qualified name. As noted above in Sec.~\ref{futdep},
+the \texttt{future} and \texttt{deprecated} namespaces are not imported.
+A namespace can be imported by using a command of the form
+\begin{lstlisting}
+`mynamespace nspace import
+\end{lstlisting}
+or to only import some names
+\begin{lstlisting}
+`mynamespace [`name1,`name2 ..] import
+\end{lstlisting}
+See below for more ways to manipulate namespaces.
+
+
+\subsection{Packages}
+\label{packages}
+\indw{package}\indw{require}
+\index{packages}
+It is possible to define a new namespace using the \texttt{package}
+directive, typically done inside a separate file.
 Build a package by putting the \texttt{package} directive at the start
-of a file along with the package name, e.g.
+of the file along with the package name, e.g.
 \begin{v}
 package wibble
 \end{v}
-and including that file with \texttt{require} instead of the usual \texttt{include.} 
+and include that file with \texttt{require} instead of the usual \texttt{include.} 
 
 This will cause a new namespace to be created where \texttt{package} is 
 invoked, and all subsequent definitions until the end of the file will
 be put into that namespace. On return from the file, \texttt{require} will
-put an integer handle for that namespace on the stack. All the globals,
+\index{NSID}\index{namespace identifier}\index{namespaces!identifiers}
+put a namespace identifer (or NSID) on the stack. All the globals,
 constants and functions defined in the package are available by prefixing
 the name with the package name and a dollar sign:
 \begin{v}
@@ -644,7 +679,8 @@ not the name of the file!
 
 \subsection{Importing packages into the default space}
 \indw{import}
-With this handle on the stack, we can import the namespace --- either
+With the NSID returned by \texttt{require} 
+n the stack, we can import the namespace --- either
 all of it or part of it. The \texttt{import} word takes two forms:
 \begin{v}
 require "wibble.ang" import
@@ -653,9 +689,13 @@ will import all the public names defined in the package, while
 \begin{v}
 require "wibble.ang" [`foo, `bar] import
 \end{v}
-will only import the given names --- in this case, \texttt{foo} and \texttt{bar}.
-
-The namespace handle can also be used in other ways:
+will only import the given names --- in this case, \texttt{foo} and \texttt{bar}. If we do not wish
+to import the package at all we can do
+\begin{v}
+require "foo.ang" drop
+\end{v}
+to discard the NSID.
+The namespace identifier can also be used in other ways:
 \begin{center}
 \begin{tabular}{|l|l|p{3in}|}\hline
 \indw{package}\indw{require}\indw{public}\indw{private}
@@ -676,15 +716,20 @@ isconst & (nsid name -- bool) & return true if a name is constant in the namespa
 \end{tabular}
 \end{center}
 
-\subsection{Automatically imported packages}
-All the functions (i.e. words which do not compile directly to bytecode) 
-mentioned so far -- \texttt{p}, \texttt{i}, \texttt{quit} and so on -- belong to a number
-of special packages which are automatically imported when Angort starts. These include
-\texttt{coll} for functions which handle collections, and \texttt{std} for unclassified functions.
-For example, the \texttt{quit} function has the fully qualified name \texttt{std\$quit}.
-User-defined functions are added to the \texttt{user} namespace.
+\subsection{Loading and importing libraries}
+C++ plugin libraries -- which are dealt with more fully in Sec.~\ref{libraries} -- are
+imported in a similar way using the \texttt{library} function:
+\texttt{`io library import} 
+will load the IO library and import all its functions. Note the difference, however:
+because \texttt{require} is a directive dealt with by the compiler, the name of the package
+follows the keyword. The word \texttt{library} is an actual function, which requires a string
+on the stack, so the library name (string or symbol) precedes \texttt{library}.
+This loads the library and returns the NSID for importing (or dropping).
 
-Although they are defined as constants, it possible to override these functions. For example the standard function \texttt{p}
+\subsection{Overriding functions in default namespaces}
+Although they are defined as constants, it possible to override the definitions of functions defined
+in default imported namespaces
+like \texttt{std\$p} and \texttt{std\$quit}. For example the standard function \texttt{p}
 can be overridden by forcing a
 new global in the \texttt{user} namespace:
 \begin{lstlisting}
@@ -769,6 +814,7 @@ This means we can do things like
 to import lists of libraries.
 
 \section{The ``deprecated'' and ``future'' namespaces}
+\label{futdep}
 Angort is a changing language, and to permit this some functions are
 occasionally moved into the ``deprecated'' namespace when they are obsolete.
 Other functions are added to the ``future'' namespace when they are new

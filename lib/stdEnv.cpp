@@ -24,7 +24,7 @@ void setArgumentList(int argc,char *argv[]){
     }
 }
               
-%name stdenv
+%name env
 
 %word args (-- list) get command line arguments
 {

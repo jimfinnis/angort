@@ -11,7 +11,9 @@ using namespace angort;
 // macro for helping generate unary float functions
 #define FN(f) a->pushDouble(f(a->popDouble()))
 
-%name stdmath
+%name math
+
+
 
 %wordargs atan2 dd (y x -- atan2(y,x))
 {

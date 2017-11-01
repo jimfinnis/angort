@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.0.1"
+#define ANGORT_VERSION "4.0.2"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,7 +34,7 @@
 
 
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std),
-LIBNAME(stdmath),LIBNAME(stdenv),LIBNAME(future),LIBNAME(deprecated);
+LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated);
 
 namespace angort {
 
@@ -77,8 +77,8 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(std)); // already imported by default.
     registerLibrary(&LIBNAME(coll),true);
     registerLibrary(&LIBNAME(string),true);
-    registerLibrary(&LIBNAME(stdmath),true);
-    registerLibrary(&LIBNAME(stdenv),true);
+    registerLibrary(&LIBNAME(math),true);
+    registerLibrary(&LIBNAME(env),true);
     
     // future and deprecated are not imported
     registerLibrary(&LIBNAME(future),false);
