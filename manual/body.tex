@@ -592,7 +592,7 @@ in \texttt{exceptsymbs.h}. To throw your own exception, use \\
 \end{lstlisting}
 
 
-\section{More built-in words}
+
 
 
 \section{Getting help}
@@ -624,7 +624,7 @@ All Angort identifiers (apart from the built-in tokens listed in Table~\ref{tab:
 are stored in a \emph{namespace}. An identifier in a program
 can be either \emph{fully qualified},
 in which case the namespace for the identifier is explicitly given before
-a dollar sign, such as \verb+std$quit+; or it is \emph{unqualified}, in
+a dollar sign, such as \verb+std$quit+; or \emph{unqualified}, in
 which case Angort will scan only the imported namespaces to find it.
 Angort starts with a set of default namespaces, which are imported
 by default. These include
@@ -675,7 +675,9 @@ the name with the package name and a dollar sign:
 package$name
 \end{v}
 Note that the package name is that given to the \texttt{package} directive,
-not the name of the file!
+not the name of the file! Angort returns to defining things in the \texttt{user} namespace
+at the end of the file (but see \texttt{endpackage} below in Sec.~\ref{localpack} if we want to go back to the \texttt{user}
+namespace before then).
 
 \subsection{Importing packages into the default space}
 \indw{import}
@@ -717,7 +719,7 @@ isconst & (nsid name -- bool) & return true if a name is constant in the namespa
 \end{center}
 
 \subsection{Loading and importing libraries}
-C++ plugin libraries -- which are dealt with more fully in Sec.~\ref{libraries} -- are
+C++ plugin libraries -- which are dealt with more fully in Sec.~\ref{library} -- are
 imported in a similar way using the \texttt{library} function:
 \texttt{`io library import} 
 will load the IO library and import all its functions. Note the difference, however:
@@ -752,6 +754,7 @@ global quit
 
 
 \subsection{Local packages}
+\label{localpack}
 \index{packages!local}
 It is sometimes necessary to create a package inside a script which
 is not included from another script. One example is where the script
@@ -801,19 +804,17 @@ and import it, we would write
 \begin{v}
 `io library import
 \end{v}
-\textbf{Note that} unlike package loading with \texttt{require},
+Again,\textbf{Note that} unlike package loading with \texttt{require},
 the library name comes first.
 This is because \texttt{library} is an instruction which is compiled and
 then run, rather than a compiler directive which is acted on
-at compile time.
-
-This means we can do things like
+at compile time. This means we can do things like
 \begin{v}
 [`id3, `mpc, `io] each {i library import}
 \end{v}
 to import lists of libraries.
 
-\section{The ``deprecated'' and ``future'' namespaces}
+\subsection{The ``deprecated'' and ``future'' namespaces}
 \label{futdep}
 Angort is a changing language, and to permit this some functions are
 occasionally moved into the ``deprecated'' namespace when they are obsolete.

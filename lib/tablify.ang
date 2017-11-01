@@ -1,0 +1,42 @@
+#
+# Used to generate a LaTeX symbol table from the output
+# of the token table generator ./gentoks
+#
+
+
+`io library drop
+`future nspace [`slice] import
+
+"wordlist2" "r" io$open dup isnone if "not found". quit then
+io$readfilestr "\n" split !L
+
+5 const COLS
+
+"\\begin{tabular}{"
+"|" "l|" COLS *  + + "}\\hline" +.
+
+:doline
+    (|a:| 
+        cases
+        ?a "" = if "" case
+        ?a "+" = if "\\verb-+-" case
+        "\\verb+" ?a + "+" + otherwise) map
+    " & " intercalate "\\\\" + .
+;
+
+(|:tmp|
+    []!tmp
+    {
+        ?L len 5 < ifleave
+        ?L shift ?tmp push
+        ?tmp len COLS = if
+            ?tmp doline
+            [] !tmp
+        then
+    }
+    ?L ["","","","",""] + 0 5 slice doline
+)@
+
+"\\hline\\end{tabular}". quit
+
+

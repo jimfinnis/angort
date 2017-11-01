@@ -19,8 +19,6 @@
 *d<<    :   T_DOUBLEANGLEOPEN
 *d>>    :   T_DOUBLEANGLECLOSE
 *d??    :   T_DOUBLEQUERY
-*d<:    :   T_OPENEXPR
-*d:>    :   T_CLOSEEXPR
 
 # characters, which return the token immediately and do not
 # require trailing space
@@ -49,11 +47,9 @@
 *c&     :   T_AMPERSAND
 *c|     :   T_PIPE
 *c%     :   T_PERC
-*c^     :   T_CARET
 *c`     :   T_BACKTICK
 
 
-for	:   T_FOR
 if	:   T_IF
 then	:   T_THEN
 else	:   T_ELSE

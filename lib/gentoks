@@ -10,6 +10,8 @@ import os
 # Will also generate hkwords, containing keyword highlighting commands
 # for microemacs.
 
+# See tablify.ang for generating a LaTeX table.
+
 infile = sys.argv[1]
 outfile = sys.argv[2]
 
@@ -28,24 +30,30 @@ with open(sys.argv[1]) as f:
             cppout.write("namespace angort {\n");
             cppout.write("TokenRegistry %s[] = {\n" % outfile)
             
-            with open("wordslist","w") as wordsout:
-                with open("hkwords","w") as hkout:  
-                    content = f.readlines() 
+            with open("wordlist","w") as wordsout:
+                with open("wordlist2","w") as wordsout2:
+                    with open("hkwords","w") as hkout:  
+                        content = f.readlines() 
 
-                    ct=0
-                    for x in content:
-                        print("--> "+x.strip())
-                        if ':' in x:
-                            val,name = x.rsplit(':',1)
-                            val = val.strip()
-                            name = name.strip()
-                            cppout.write("\t{\"%s\", %s},\n" % (val,name))
-                            hout.write("#define\t%s\t%d\n" % (name,ct))
-                            if val[0]!='*':
-                                hkout.write(gethkline(val))
-                                wordsout.write(val+",")
-                            ct+=1
-                    cppout.write("{NULL,-10}\n");
-                    cppout.write("};\n\n")
-                    cppout.write("} // end namespace\n")
+                        ct=0
+                        for x in content:
+                            print("--> "+x.strip())
+                            if ':' in x:
+                                val,name = x.rsplit(':',1)
+                                val = val.strip()
+                                name = name.strip()
+                                cppout.write("\t{\"%s\", %s},\n" % (val,name))
+                                hout.write("#define\t%s\t%d\n" % (name,ct))
+                                if val[0]!='*':
+                                    hkout.write(gethkline(val))
+                                    wordsout.write(val+",")
+                                    wordsout2.write(val+"\n")
+                                else:
+                                    if(val[1]=='d' or val[1]=='c'):
+                                        wordsout2.write(val[2:]+"\n")
+                                ct+=1
+                        cppout.write("{NULL,-10}\n");
+                        cppout.write("};\n\n")
+                        cppout.write("} // end namespace\n")
+
             hout.write("}\n");
