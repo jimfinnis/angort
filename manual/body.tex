@@ -590,6 +590,16 @@ in \texttt{exceptsymbs.h}. To throw your own exception, use \\
 \begin{lstlisting}
 "Can't open file: " ?fn + `badfile throw 
 \end{lstlisting}
+To catch all exceptions, use the \texttt{catchall} word:
+\begin{lstlisting}
+try
+    ...
+catch:symbol1,symbol2...
+    ...
+catchall
+    ...
+endtry
+\end{lstlisting}
 
 
 
