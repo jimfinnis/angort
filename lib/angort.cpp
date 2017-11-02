@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.0.2"
+#define ANGORT_VERSION "4.0.3"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -1678,17 +1678,28 @@ void Angort::feed(const char *buf){
                 }
                 break;
             }
-            case T_GLOBAL:
+            case T_GLOBAL:{
                 if(tok.getnext()!=T_IDENT)
                     throw SyntaxException(NULL)
                       .set("expected an identifier, got %s",tok.getstring());
                 
+                // get superindex of name if it exists
                 // "false" here so we don't look in imported namespaces!
+                int superindex = names.get(tok.getstring(),false);
                 
-                if(names.isConst(tok.getstring(),false))
-                    throw AlreadyDefinedException(tok.getstring());
-                names.add(tok.getstring());
+                // if the name exists, that's fine if it's not constant.
+                if(superindex>=0){
+                    if(names.getEnt(superindex)->isConst){
+                        throw AlreadyDefinedException(tok.getstring());
+                    }
+                    // it's defined but not constant, ignore the
+                    // global keyword so we don't redefine it.
+                } else {
+                    // name doesn't exists, make it.
+                    names.add(tok.getstring());
+                }
                 break;
+            }
             case T_DOUBLEANGLEOPEN:
             case T_OPREN:// open lambda
 //                                printf("---Pushing: current context is %p[cb:%p], ",context,context->cb);

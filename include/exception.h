@@ -131,7 +131,7 @@ public:
 class AlreadyDefinedException : public Exception {
 public:
     AlreadyDefinedException(const char *name) : Exception(EX_DEFINED,NULL){
-        set("'%s' is already defined in this namespace");
+        set("'%s' is already defined in this namespace",name);
     }
 };
 

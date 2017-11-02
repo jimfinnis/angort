@@ -42,11 +42,19 @@ none none = not "noneeq3" assert
 1 none != "noneeq2" assert 
 
 
+# change in 4.0.3 - you can issue "global" on an already defined global
+# and it will have no effect, provided the global is not const
 global s
 global t
 5 !t
 global t
-?t isnone "multiple global define" assert
+?t 5 = "multiple global define" assert
+
+# check that globalling a const will error.
+# 1 const constchk 
+# The compiler will throw an error if this works, and that's fatal
+# at the moment.
+# global constchk
 
 5 !t
 2 !s
