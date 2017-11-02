@@ -152,9 +152,10 @@ none "txtoattr" def # forward declare
     [] tag) mkgen
 
 `circle (|x,y,r,s:p,q|
-    ?x ?r + ?y ?r + runchain !p !q
+    # this circle size recalc won't work for ellipses.
+    ?x ?r + ?y runchain !p !q
     ?x ?y runchain !x !y
-    ?p ?x - dup* ?q ?y - dup * sqrt !r
+    ?p ?x - dup* ?q ?y - dup * + sqrt !r
     
     "circle" [% `cx ?x,
               `cy ?y,
