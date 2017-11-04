@@ -24,14 +24,14 @@ const char *opcodenames[]=
     "swap","drop",
     "and","or", // keep boolean binops contiguous
     "gt","lt",
-    "ifleave","SPARE","SPARE","newhash",
+    "ifleave","localinc","localdec","newhash",
     "litsymb","over","closureget","closureset","dot",
-    "iterlvifdone","iterstart","cmp","SPARE",
-    "newlist","appendlist", "SPARE","loopstart","stop",
+    "iterlvifdone","iterstart","cmp","globalinc",
+    "newlist","appendlist", "globaldec","loopstart","stop",
     "hashgetsymb","hashsetsymb","import","def","recurse",
     "self","dummycase","le","ge","constexpr",
     "yield","try","endtry","throw","litdouble",
-    "litlong"
+    "litlong","closureinc","closuredec"
     
 };
 
@@ -83,8 +83,8 @@ const char *opcodenames[]=
 #define OP_GT	32
 #define OP_LT   33
 #define OP_IFLEAVE  34
-#define OP_spareFOR	35
-#define OP_spareFORJUMP	36
+#define OP_LOCALINC	35
+#define OP_LOCALDEC	36
 #define OP_NEWHASH	37
 
 #define OP_LITERALSYMB	38
@@ -96,11 +96,11 @@ const char *opcodenames[]=
 #define OP_ITERLEAVEIFDONE	43
 #define OP_ITERSTART 44
 #define OP_CMP 45
-#define OP_SPARElibrary 46
+#define OP_GLOBALINC 46
 
 #define OP_NEWLIST 47
 #define OP_APPENDLIST 48
-#define OP_sparexxxxxxxx 49
+#define OP_GLOBALDEC 49
 #define OP_LOOPSTART 50
 #define OP_STOP 51
 
@@ -123,4 +123,7 @@ const char *opcodenames[]=
 #define OP_LITDOUBLE 66
 
 #define OP_LITLONG 67
+#define OP_CLOSUREINC 68
+#define OP_CLOSUREDEC 69
+
 #endif /* __OPCODES_H */

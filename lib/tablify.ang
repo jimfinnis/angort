@@ -20,6 +20,7 @@ io$readfilestr "\n" split !L
         cases
         ?a "" = if "" case
         ?a "+" = if "\\verb-+-" case
+        ?a "!+" = if "\\verb-!+-" case
         "\\verb+" ?a + "+" + otherwise) map
     " & " intercalate "\\\\" + .
 ;

@@ -16,6 +16,8 @@
 *d>=    :   T_GE
 *d?`    :   T_HASHGETSYMB
 *d!`    :   T_HASHSETSYMB
+*d!+    :   T_INCREMENT
+*d!-    :   T_DECREMENT
 *d<<    :   T_DOUBLEANGLEOPEN
 *d>>    :   T_DOUBLEANGLECLOSE
 *d??    :   T_DOUBLEQUERY

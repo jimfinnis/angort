@@ -160,6 +160,7 @@ loop:
     for(int i=0;i<digraphct;i++){
         if(p[0] == digraphtable[i].c1 && p[1] == digraphtable[i].c2){
             current=p+2;
+            dprintf("got digraph - %c%c [%d]",p[0],p[1],digraphtable[i].token);
             return digraphtable[i].token;
         }
     }

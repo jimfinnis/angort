@@ -77,4 +77,8 @@ void FloatType::negate(Value *dest,Value *src) const {
     set(dest,-src->toFloat());
 }
 
+void FloatType::increment(Value *v,int step) const {
+    v->v.f += step;
+}
+
 }

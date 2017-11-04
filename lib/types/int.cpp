@@ -78,4 +78,8 @@ void IntegerType::negate(Value *dest,Value *src) const {
 }
 
 
+void IntegerType::increment(Value *v,int step) const {
+    v->v.i += step;
+}
+
 }

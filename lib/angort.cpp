@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.0.3"
+#define ANGORT_VERSION "4.1.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -187,12 +187,17 @@ void Angort::showop(const Instruction *ip,const Instruction *base){
     case OP_GLOBALDO:
     case OP_GLOBALSET:
     case OP_GLOBALGET:
+    case OP_GLOBALINC:
+    case OP_GLOBALDEC:
         printf("(idx %s)",names.getName(ip->d.i));
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
+    case OP_CLOSUREDEC:
     case OP_LOCALSET:
     case OP_LOCALGET:
+    case OP_LOCALINC:
+    case OP_LOCALDEC:
         printf("(idx %d)",ip->d.i);break;
     case OP_PROPSET:
     case OP_PROPGET:
@@ -246,8 +251,8 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     if(!cb->ip)
         throw RUNT(EX_DEFCALL,"call to a word with a deferred definition");
     
-//        printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
-//        printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
+    //        printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
+    //        printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
     // allocate true locals (stack locals)
     locals.alloc(cb->locals - cb->closureBlockSize);
     
@@ -279,15 +284,15 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         
         
         if(cb->localsClosed & (1<<i)){
-//                        printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
+            //                        printf("Param %d is closed: %s, into closure %d\n",i,paramval->toString().get(),*pidx);
             clos->map[*pidx]->copy(valptr);
         } else {
-//                        printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
+            //                        printf("Param %d is open: %s, into local %d\n",i,paramval->toString().get(),*pidx);
             locals.store(*pidx,valptr);
         }
     }
     stack.drop(cb->params);
-//        if(clos)clos->show("VarStorePostParams");
+    //        if(clos)clos->show("VarStorePostParams");
     
     
     // do the push
@@ -304,7 +309,7 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
     else
         currClosure.clr();
     
-//        printf("PUSHED closure %s\n",currClosure.toString().get());
+    //        printf("PUSHED closure %s\n",currClosure.toString().get());
     
     f->loopIterCt=loopIterCt;
     loopIterCt=0;
@@ -513,8 +518,8 @@ void Angort::run(const Instruction *startip){
                     // as in globaldo, here we construct a 
                     // closure if required and stack that instead.
                     if(cb->closureBlockSize || cb->closureTableSize){
-//                        printf("OP_LITERALCODE running - creating a closure. Blocksize is %d, tablesize is %d\n",
-//                               cb->closureBlockSize,cb->closureTableSize);
+                        //                        printf("OP_LITERALCODE running - creating a closure. Blocksize is %d, tablesize is %d\n",
+                        //                               cb->closureBlockSize,cb->closureTableSize);
                         Closure *cl = new Closure(currClosure.v.closure); // 1st stage of setup
                         Types::tClosure->set(a,cl);
                         a->v.closure->init(cb); // 2nd stage of setup
@@ -537,10 +542,28 @@ void Angort::run(const Instruction *startip){
                     a->copy(stack.popptr());
                     ip++;
                     break;
+                case OP_CLOSUREINC:
+                    if(currClosure.t != Types::tClosure)throw WTF;
+                    currClosure.v.closure->map[ip->d.i]->increment(1);
+                    ip++;
+                    break;
+                case OP_CLOSUREDEC:
+                    if(currClosure.t != Types::tClosure)throw WTF;
+                    currClosure.v.closure->map[ip->d.i]->increment(-1);
+                    ip++;
+                    break;
                 case OP_GLOBALSET:
                     // SNARK - combine with consts
                     a = popval();
                     names.getVal(ip->d.i)->copy(a);
+                    ip++;
+                    break;
+                case OP_GLOBALINC:
+                    names.getVal(ip->d.i)->increment(1);
+                    ip++;
+                    break;
+                case OP_GLOBALDEC:
+                    names.getVal(ip->d.i)->increment(-1);
                     ip++;
                     break;
                 case OP_PROPGET:
@@ -577,8 +600,8 @@ void Angort::run(const Instruction *startip){
                         if(a->t == Types::tCode){
                             const CodeBlock *cb = a->v.cb;
                             if(cb->closureBlockSize || cb->closureTableSize){
-//                        printf("OP_GLOBALDO running to call a closure - creating the closure. Blocksize is %d, tablesize is %d\n",
-//                               cb->closureBlockSize,cb->closureTableSize);
+                                //                        printf("OP_GLOBALDO running to call a closure - creating the closure. Blocksize is %d, tablesize is %d\n",
+                                //                               cb->closureBlockSize,cb->closureTableSize);
                                 clos = new Closure(NULL); // 1st stage of setup
                                 Types::tClosure->set(&vv,clos);
                                 a = &vv;
@@ -742,6 +765,14 @@ void Angort::run(const Instruction *startip){
                     a->copy(b);
                     ip++;
                     break;
+                case OP_LOCALINC:
+                    locals.get(ip->d.i)->increment(1);
+                    ip++;
+                    break;
+                case OP_LOCALDEC:
+                    locals.get(ip->d.i)->increment(-1);
+                    ip++;
+                    break;
                 case OP_DOT:{
                     a = popval();
                     const StringBuffer &sb = a->toString();
@@ -879,7 +910,7 @@ leaverun:
 }
 
 void Angort::startDefine(const char *name){
-//        printf("---Now defining %s\n",name);
+    //        printf("---Now defining %s\n",name);
     int idx;
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
@@ -898,9 +929,9 @@ void Angort::endDefine(CompileContext *c){
     
     // get the codeblock out of the context and set it up.
     CodeBlock *cb = c->cb;
-//    printf("End of define.\n");
+    //    printf("End of define.\n");
     cb->setFromContext(c);
-//        c->dump(); //snark
+    //        c->dump(); //snark
     Value *wordVal = names.getVal(wordValIdx);
     
     Types::tCode->set(wordVal,cb);
@@ -1060,7 +1091,7 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
 }
 
 void CompileContext::closeAllLocals(){
-        cdprintf("YIELD DETECTED: CLOSING ALL LOCALS");
+    cdprintf("YIELD DETECTED: CLOSING ALL LOCALS");
     for(int i=0;i<localTokenCt;i++){
         convertToClosure(localTokens[i]);
     }
@@ -1077,7 +1108,7 @@ void CompileContext::convertToClosure(const char *name){
     if(previdx==localTokenCt)throw WTF;
     // got it. Now set this as a closure.
     if((1<<previdx) & localsClosed){
-                cdprintf("%s is already closed",name);
+        cdprintf("%s is already closed",name);
         return; // it's already converted.
     }
     
@@ -1111,47 +1142,47 @@ void CompileContext::convertToClosure(const char *name){
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
-        cdprintf("Beginning scan to convert local %d into closure %d",
-               localIndex,localIndices[previdx]);
+    cdprintf("Beginning scan to convert local %d into closure %d",
+             localIndex,localIndices[previdx]);
     for(int i=0;i<compileCt;i++,inst++){
-                char buf[1024];
-                cdprintf("   %s  %d",inst->getDetails(buf,1024),inst->d.i);
+        char buf[1024];
+        cdprintf("   %s  %d",inst->getDetails(buf,1024),inst->d.i);
         if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSUREGET;
-                        cdprintf("Rehashing to %d",localIndices[previdx]);
+            cdprintf("Rehashing to %d",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
         if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
             inst->opcode = OP_CLOSURESET;
-                        cdprintf("Rehashing to %d",localIndices[previdx]);
+            cdprintf("Rehashing to %d",localIndices[previdx]);
             inst->d.i = localIndices[previdx];
         }
     }
-        cdprintf("Ending scan");
+    cdprintf("Ending scan");
     
     // now decrement all indices of locals greater than this.
     // Firstly do this in the table.
     
-        cdprintf("Now decrementing subsequent tokens");
+    cdprintf("Now decrementing subsequent tokens");
     for(int i=0;i<localTokenCt;i++){
-               cdprintf("Token %d : %s",i,localTokens[i]);
+        cdprintf("Token %d : %s",i,localTokens[i]);
         if(!isClosed(i) && localIndices[i]>localIndex){
             localIndices[i]--;
-                        cdprintf("  decremented to %d",localIndices[i]);
+            cdprintf("  decremented to %d",localIndices[i]);
         }
     }
     
     // Then do it in the code generated thus far.
     
     inst = compileBuf;
-        cdprintf("Now decrementing local accesses in generated code");
+    cdprintf("Now decrementing local accesses in generated code");
     for(int i=0;i<compileCt;i++,inst++){
-                char buf[1024];
-                cdprintf("scanning instruction   %s  %d",inst->getDetails(buf,1024),inst->d.i);
+        char buf[1024];
+        cdprintf("scanning instruction   %s  %d",inst->getDetails(buf,1024),inst->d.i);
         if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
            inst->d.i > localIndex){
             inst->d.i--;
-                        cdprintf("  decremented to %d",inst->d.i);
+            cdprintf("  decremented to %d",inst->d.i);
         }
     }
     cdprintf("Exiting convertToClosure()");
@@ -1166,18 +1197,18 @@ int CompileContext::findOrCreateClosure(const char *name){
     cdprintf("---------------- findOrCreateClosure: Looking for %s",name);
     for(parentContainingVariable=parent;parentContainingVariable;
         parentContainingVariable=parentContainingVariable->parent){
-                cdprintf("   Looking in %p",parentContainingVariable);
+        cdprintf("   Looking in %p",parentContainingVariable);
         if((localIndexInParent = parentContainingVariable->getLocalToken(name))>=0){
             cdprintf("FOUND AT LOCAL INDEX %d",localIndexInParent);
             // got it. If not already, turn it into a closure (which will add it to
             // the closure table of that function)
             if(!parentContainingVariable->isClosed(localIndexInParent)){
-                                cdprintf("     Got it, not closed, closing.");
+                cdprintf("     Got it, not closed, closing.");
                 parentContainingVariable->convertToClosure(name);
             } else {
                 cdprintf("     Got it and already closed.");
             }
-                
+            
             break;
         }
     }
@@ -1205,14 +1236,14 @@ int CompileContext::findOrCreateClosure(const char *name){
     
     
     cdprintf("Local index (in context %p) in closure block is %d",
-           parentContainingVariable,localIndexInParent);
+             parentContainingVariable,localIndexInParent);
     
     
     // scan the closure table to see if we have this one already
     int nn=0;
     for(ClosureListEnt *p=closureList;p;p=p->next,nn++){
         cdprintf("Scanning table for %p/%d - got %p/%d",
-               parentContainingVariable->cb,localIndexInParent,p->c,p->i);
+                 parentContainingVariable->cb,localIndexInParent,p->c,p->i);
         if(p->c == parentContainingVariable->cb && p->i == localIndexInParent)
             return nn;
     }
@@ -1227,7 +1258,7 @@ void Angort::endPackageInScript(){
     // see the similar code below in include().
     // pop the namespace stack
     int idx=names.pop();
-    pushInt(idx);
+    Types::tNSID->set(pushval(),idx);
     names.setPrivate(false); // and clear the private flag
 }
 
@@ -1278,13 +1309,96 @@ void Angort::include(const char *filename,bool isreq){
     close(oldDir);
 }
 
+void Angort::constCheck(int name){
+    if(names.getEnt(name)->isConst)
+        throw RUNT(EX_SETCONST,"").set("attempt to set constant %s",tok.getstring());
+ }
+
+void Angort::parseVarAccess(int token){
+    int t,opcode;
+    if(tok.getnext()!=T_IDENT)
+        throw SyntaxException(NULL).set("expected identifier after %s",
+                                        tok.prev().s);
+    if((t = context->getLocalToken(tok.getstring()))>=0){
+        // it's a local variable
+        switch(token){
+        case T_QUESTION:
+            opcode = context->isClosed(t) ? OP_CLOSUREGET : OP_LOCALGET;
+            break;
+        case T_PLING:
+            opcode = context->isClosed(t) ? OP_CLOSURESET : OP_LOCALSET;
+            break;
+        case T_INCREMENT:
+            opcode = context->isClosed(t) ? OP_CLOSUREINC : OP_LOCALINC;
+            break;
+        case T_DECREMENT:
+            opcode = context->isClosed(t) ? OP_CLOSUREDEC : OP_LOCALDEC;
+            break;
+        default:
+            throw WTF;
+        }
+        compile(opcode)->d.i = context->getLocalIndex(t);
+    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
+        // it's a variable defined in a function above
+        switch(token){
+        case T_QUESTION: opcode = OP_CLOSUREGET; break;
+        case T_PLING: opcode = OP_CLOSURESET; break;
+        case T_INCREMENT: opcode = OP_CLOSUREINC;break;
+        case T_DECREMENT: opcode = OP_CLOSUREDEC;break;
+        default: throw WTF;
+        }
+        compile(opcode)->d.i = t;
+    } else if((t = names.get(tok.getstring()))>=0){
+        // it's a global
+        Value *v = names.getVal(t);
+        if(v->t == Types::tProp){
+            switch(token){
+            case T_QUESTION: opcode = OP_PROPGET;break;
+            case T_PLING: opcode = OP_PROPSET;break;
+            case T_INCREMENT:
+            case T_DECREMENT:
+                throw SyntaxException("cannot increment/decrement a property");
+            default:throw WTF;
+            }
+            // it's a property
+            compile(opcode)->d.prop = v->v.property;
+        } else {
+            // it's a global; use it
+            switch(token){
+            case T_QUESTION:opcode = OP_GLOBALGET;break;
+            case T_PLING:constCheck(t);opcode = OP_GLOBALSET;break;
+            case T_INCREMENT:constCheck(t);opcode = OP_GLOBALINC;break;
+            case T_DECREMENT:constCheck(t);opcode = OP_GLOBALDEC;break;
+            default:throw WTF;
+            }
+            compile(opcode)->d.i = t;
+        }
+    } else if(isupper(*tok.getstring())){
+        // if it's upper case, immediately define as a global
+        switch(token){
+        case T_QUESTION:opcode = OP_GLOBALGET;break;
+        case T_PLING:opcode = OP_GLOBALSET;break;
+        case T_INCREMENT:
+        case T_DECREMENT:
+            throw SyntaxException(NULL).set("cannot increment/decrement unset global %s",tok.getstring());
+        default:throw WTF;
+        }
+        compile(opcode)->d.i=
+              findOrCreateGlobal(tok.getstring());
+    } else {
+        throw SyntaxException(NULL)
+              .set("unknown variable: %s",tok.getstring());
+    }
+}
+
+
 void Angort::feed(const char *buf){
     
     ipException = NULL;
     resetStop();
     callingInstance=this;
     
-//    printf("FEED STARTING: %s\n",buf);
+    //    printf("FEED STARTING: %s\n",buf);
     
     if(printLines)
         printf("%d >>> %s\n",lineNumber,buf);
@@ -1605,37 +1719,12 @@ void Angort::feed(const char *buf){
                 break;
                 
             }
+            case T_PLING: 
             case T_QUESTION:
-                {
-                    if(tok.getnext()!=T_IDENT)
-                        throw SyntaxException("expected identifier after ?");
-                    if((t = context->getLocalToken(tok.getstring()))>=0){
-                        // it's a local variable
-                        compile(context->isClosed(t) ? OP_CLOSUREGET : OP_LOCALGET)->d.i=
-                              context->getLocalIndex(t);
-                    } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
-                        // it's a variable defined in a function above
-                        compile(OP_CLOSUREGET)->d.i = t;
-                    } else if((t = names.get(tok.getstring()))>=0){
-                        // it's a global
-                        Value *v = names.getVal(t);
-                        if(v->t == Types::tProp){
-                            // it's a property
-                            compile(OP_PROPGET)->d.prop = v->v.property;
-                        } else {
-                            // it's a global; use it - but don't call it if it's a function
-                            compile(OP_GLOBALGET)->d.i = t;
-                        }
-                    } else if(isupper(*tok.getstring())){
-                        // if it's upper case, immediately define as a global
-                        compile(OP_GLOBALGET)->d.i=
-                              findOrCreateGlobal(tok.getstring());
-                    } else {
-                        throw SyntaxException(NULL)
-                              .set("unknown variable: %s",tok.getstring());
-                    }
-                    break;
-                }
+            case T_INCREMENT:
+            case T_DECREMENT:
+                parseVarAccess(t);
+                break;
             case T_NOTEQUAL:
                 compile(OP_NEQUALS);
                 break;
@@ -1644,38 +1733,6 @@ void Angort::feed(const char *buf){
                 if(!tok.getnextident(buf))
                     throw SyntaxException("expected a symbol after backtick");
                 compile(OP_HASHSETSYMB)->d.i=Types::tSymbol->getSymbol(buf);
-                break;
-            }
-            case T_PLING: {
-                if(tok.getnext()!=T_IDENT)
-                    throw SyntaxException("expected identifier after !");
-                if((t = context->getLocalToken(tok.getstring()))>=0){
-                    // it's a local variable
-                    compile(context->isClosed(t) ? OP_CLOSURESET : OP_LOCALSET)->d.i=
-                          context->getLocalIndex(t);
-                } else if((t=context->findOrCreateClosure(tok.getstring()))>=0){
-                    // it's a variable defined in a function above
-                    compile(OP_CLOSURESET)->d.i = t;
-                } else if((t = names.get(tok.getstring()))>=0){
-                    // it's a global
-                    Value *v = names.getVal(t);
-                    if(v->t == Types::tProp){
-                        // it's a property
-                        compile(OP_PROPSET)->d.prop = v->v.property;
-                    } else {
-                        if(names.getEnt(t)->isConst)
-                            throw RUNT(EX_SETCONST,"").set("attempt to set constant %s",tok.getstring());
-                        // it's a global; use it
-                        compile(OP_GLOBALSET)->d.i = t;
-                    }
-                } else if(isupper(*tok.getstring())){
-                    // if it's upper case, immediately define as a global
-                    compile(OP_GLOBALSET)->d.i=
-                          findOrCreateGlobal(tok.getstring());
-                } else {
-                    throw SyntaxException(NULL)
-                          .set("unknown variable: %s",tok.getstring());
-                }
                 break;
             }
             case T_GLOBAL:{
@@ -1702,9 +1759,9 @@ void Angort::feed(const char *buf){
             }
             case T_DOUBLEANGLEOPEN:
             case T_OPREN:// open lambda
-//                                printf("---Pushing: current context is %p[cb:%p], ",context,context->cb);
+                //                                printf("---Pushing: current context is %p[cb:%p], ",context,context->cb);
                 pushCompileContext();
-//                                printf("pushing into new lambda context  %p[cb:%p]\n",context,context->cb);
+                //                                printf("pushing into new lambda context  %p[cb:%p]\n",context,context->cb);
                 break;
             case T_CPREN: // close lambda and stack a code literal
                 {
@@ -1716,14 +1773,14 @@ void Angort::feed(const char *buf){
                     
                     // set the codeblock up
                     lambdaContext->cb->setFromContext(lambdaContext);
-//                    printf("End of lambda context.\n");
+                    //                    printf("End of lambda context.\n");
                     //                                        lambdaContext->dump();//snark
                     
                     // here, we compile LITERALCODE word with a codeblock created
                     // from the context.
                     
                     compile(OP_LITERALCODE)->d.cb = lambdaContext->cb;
-//                    lambdaContext->dump();
+                    //                    lambdaContext->dump();
                     lambdaContext->reset(NULL,&tok);
                 }
                 break;
@@ -1936,7 +1993,7 @@ void Angort::feed(const char *buf){
                                                 tok.getstring());
             }
         }
-//        printf("------------ FEED ENDING: %s\n",buf);
+        //        printf("------------ FEED ENDING: %s\n",buf);
     } catch(Exception e){
         clearAtEndOfFeed();
         throw e; // and rethrow

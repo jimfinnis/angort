@@ -263,6 +263,11 @@ public:
     /// the same Value.
     virtual void clone(Value *out,const Value *in,bool deep=false) const;
     
+    /// increment or decrement a value
+    virtual void increment(Value *v,int step) const {
+        throw RUNT(EX_TYPE,"cannot increment/decrement this type of value");
+    }
+    
 protected:
     
 };

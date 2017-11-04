@@ -37,6 +37,7 @@ public:
     virtual double toDouble(const Value *v) const;
     virtual float toFloat(const Value *v) const;
     virtual void toSelf(Value *out,const Value *v) const;
+    virtual void increment(Value *v,int step) const;
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;
 };

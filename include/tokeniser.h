@@ -256,7 +256,10 @@ public:
         line=c->line;
         trace=c->trace;
     }        
-              
+    
+    const Token &prev(){
+        return prevval;
+    }
     
 private:
     void dprintf(const char *s,...);

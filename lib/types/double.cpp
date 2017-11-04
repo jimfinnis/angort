@@ -71,5 +71,8 @@ void DoubleType::negate(Value *dest,Value *src) const {
     set(dest,-src->toDouble());
 }
 
+void DoubleType::increment(Value *v,int step) const {
+    v->v.df += step;
+}
 
 }

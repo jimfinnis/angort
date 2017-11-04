@@ -40,6 +40,7 @@ public:
     virtual float toFloat(const Value *v) const;
     virtual double toDouble(const Value *v) const;
     virtual void toSelf(Value *out,const Value *v) const;
+    virtual void increment(Value *v,int step) const;
 
     char formatString[64]; // used for toString()
 

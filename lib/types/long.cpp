@@ -79,5 +79,8 @@ void LongType::negate(Value *dest,Value *src) const {
     set(dest,-src->toLong());
 }
 
+void LongType::increment(Value *v,int step) const {
+    v->v.l += step;
+}
 
 }

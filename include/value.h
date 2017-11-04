@@ -126,6 +126,11 @@ struct Value {
         return t==Types::tNone;
     }
     
+    /// increment or decrement a value (via its type)
+    void increment(int step){
+        t->increment(this,step);
+    }
+    
     /// copy of a reference type (that's a type which refers
     /// to a bit of memory somewhere else, like a STRING or CLOSURE) will just copy the reference
     /// and increment the refct.

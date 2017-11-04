@@ -672,6 +672,13 @@ private:
     
     char lastLine[1024]; //!< last line read
     
+    /// parse various tokens which are followed by a var name
+    /// and have a lot of common code generation code.
+    void parseVarAccess(int token);
+    /// check that the given name (assumed to be the current token,
+    /// tok.getstring(), for error printing), is not constant
+    void constCheck(int name);
+    
     /// add a new instruction to the current compile context
     Instruction *compile(int opcode){
         return context->compile(opcode);
