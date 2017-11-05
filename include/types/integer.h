@@ -16,7 +16,7 @@ class IntegerType : public Type {
 public:
     IntegerType(){
         add("integer","INTG");
-        flags |= TF_NUMBER;
+        makeNumber();
     }
     /// get the value of v as a int
     int get(Value *v) const;

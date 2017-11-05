@@ -17,6 +17,7 @@ class SymbolType : public Type {
 public:
     SymbolType(){
         add("symbol","SYMB");
+        makeStringable();
     }
     
     /// delete all symbols

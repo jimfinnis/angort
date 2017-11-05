@@ -27,16 +27,26 @@ class Type {
     
     static Type *head; //!< head of list of types
     Type *next; //!< linking field of type list
-    
     /// binary operators for which this is a left-hand side, keyed
     /// by right-hand side binopID and opcode.
     IntKeyedHash<BinopFunction> binops;
+protected:
+    /// used in ctor to set appropriate flag and supertype
+    void makeNumber();
+    /// used in ctor to set supertype
+    void makeStringable();
     
 public:
     
     Type(){
         flags=0;
+        supertype = NULL;
     }
+    
+    /// this points to the abstract "supertype" of a type. In the
+    /// case of numbers, this is tNumber; for strings and symbols
+    /// it is tStringable. For others it is NULL.
+    Type *supertype;
     
     /// TF_ flags giving properties (iterable, etc.)
     uint32_t flags;
@@ -268,8 +278,6 @@ public:
         throw RUNT(EX_TYPE,"cannot increment/decrement this type of value");
     }
     
-protected:
-    
 };
 
 /// this is the start of a BlockAllocType piece of data.
@@ -361,6 +369,11 @@ struct Types {
     static NoneType *tNone;
     /// the type object for deleted hash keys
     static Type *tDeleted;
+    
+    /// pseudotype for use in parameter specification
+    static Type *tStringStrict;
+    /// pseudotype for use in parameter specification
+    static Type *tNumber;
     
     /// the d.i value gives the integer value
     static IntegerType *tInteger;

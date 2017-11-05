@@ -269,8 +269,13 @@ const Instruction *Angort::call(const Value *a,const Instruction *returnip){
         Type *tp = cb->paramTypes[i];
         Value *valptr=paramval; // the value we'll actually store
         if(tp){
-            // type check
-            if(tp != paramval->t){
+            if(tp == Types::tNumber || tp == Types::tStringStrict){
+                if(paramval->t->supertype != tp){
+                    throw RUNT(EX_BADPARAM,"").set("Type mismatch: argument %d is %s, expected a %s",
+                                                   i,paramval->t->name,tp->name);
+                }
+            } else if(tp != paramval->t){
+                // type check with possible conversion
                 try {
                     tp->toSelf(&tmpval,paramval);
                 } catch(BadConversionException e){
@@ -972,6 +977,7 @@ void Angort::compileParamsAndLocals(){
                     throw SyntaxException("expected a type in parameter list after /");
                 if(!parsingParams)
                     throw SyntaxException("types only supported on parameters");
+                    
                 typ = Type::getByName(tok.getstring());
                 if(!typ)
                     throw SyntaxException("").set("unknown type in parameter list: %s",tok.getstring());

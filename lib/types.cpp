@@ -35,7 +35,14 @@ double Type::toDouble(const Value *v) const {
 void Type::toSelf(Value *out,const Value *v) const {
     throw BadConversionException(v->t->name,name);
 }
-    
+
+void Type::makeNumber(){
+    flags |= TF_NUMBER;
+    supertype = Types::tNumber;
+}
+void Type::makeStringable(){
+    supertype = Types::tStringStrict;
+}
 
 
 void Type::createIterator(Value *dest,Value *src)const{
@@ -196,6 +203,12 @@ GarbageCollected::~GarbageCollected(){
 static NoneType _tNone;
 NoneType *Types::tNone= &_tNone;
 
+// "pseudotypes" used to identify numbers and strings
+static Type _tNumber;
+Type *Types::tNumber = &_tNumber;
+static Type _tStringStrict;
+Type *Types::tStringStrict = &_tStringStrict;
+
 static Type _tDeleted; // has to be added by hand in createTypes
 Type *Types::tDeleted= &_tDeleted;
 
@@ -252,6 +265,8 @@ IteratorType *Types::tIter = &_Iterator;
 
 void Types::createTypes(){
     tDeleted->add("DELETED","DELE");
+    tStringStrict->add("stringstrict","STXX");
+    tNumber->add("numeric","NUMB");
     
     // because of the undefined execution order of static heap
     // objects, we set up all the type names here rather than in

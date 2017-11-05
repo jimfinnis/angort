@@ -15,6 +15,7 @@ class StringType : public BlockAllocType {
 public:
     StringType() {
         add("string","STRN");
+        makeStringable();
     }
     virtual bool isReference()const{
         return true;

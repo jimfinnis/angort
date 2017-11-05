@@ -20,8 +20,8 @@ class FloatType : public Type {
 public:
     FloatType(){
         add("float","FLOT");
-        flags |= TF_NUMBER;
         strcpy(formatString,"%f");
+        makeNumber();
     }
     /// get the value of v as a float
     float get(Value *v) const ;

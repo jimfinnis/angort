@@ -131,6 +131,31 @@ dup type `string = "paramconv1" assert
 dup type `float = "paramconv3" assert
 20 / 0.75 = "paramconv4" assert
 
+:blob |a/stringstrict,b/numeric:|
+    ?a ?b +;
+
+"foo" 2 blob "foo2" = "paramnum1" assert
+
+(
+    try
+        # try to pass a string to a number expecting thing
+        2 "foo" blob .
+        "shouldn't get here" `failed1 throw
+    catch: ex$badparam
+        `ex$badparam = "paramnum2" assert
+        drop
+    endtry
+    try
+        snark
+        # try to pass a number to a string expecting thing
+        1.0 2  blob 
+       "shouldn't get here" `failed2 throw
+    catch: ex$badparam
+        `ex$badparam = "paramnum3" assert
+        drop
+    endtry
+)@
+
 
     
 

@@ -368,7 +368,14 @@ to a float value of zero. However,
 none 3 magnitude
 \end{v}
 will fail because \texttt{none} cannot be converted to any other type.
-For stricter type checking, use the facilities described in
+
+\subsubsection{Stricter type checking (numbers and strings)}
+If the type specified is \texttt{numeric}, the parameter
+must be one of the numeric types -- no conversion from string types
+is permitted. Specifying \texttt{stringstrict} will specify
+that the parameter must be a string or a symbol; again no conversion
+will be performed.
+For even stricter type checking, use the facilities described in
 Sec.~\ref{typechecking}.
 
 \subsection{Word documentation strings and stack pictures}

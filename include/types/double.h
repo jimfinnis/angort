@@ -18,7 +18,7 @@ class DoubleType : public Type {
 public:
     DoubleType(){
         add("double","DFLT");
-        flags |= TF_NUMBER;
+        makeNumber();
         strcpy(formatString,"%f");
     }
     /// get the value of v as a float
