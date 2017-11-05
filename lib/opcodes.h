@@ -31,7 +31,7 @@ const char *opcodenames[]=
     "hashgetsymb","hashsetsymb","import","def","recurse",
     "self","dummycase","le","ge","constexpr",
     "yield","try","endtry","throw","litdouble",
-    "litlong","closureinc","closuredec"
+    "litlong","closureinc","closuredec","inc"
     
 };
 
@@ -125,5 +125,6 @@ const char *opcodenames[]=
 #define OP_LITLONG 67
 #define OP_CLOSUREINC 68
 #define OP_CLOSUREDEC 69
+#define OP_INC 70
 
 #endif /* __OPCODES_H */

@@ -1,0 +1,41 @@
+1 assertdebug
+1 inc dup 2= "incint" assert type `integer = "incinttype" assert
+1l inc dup 2l = "inclong" assert type `long = "inclongtype" assert
+1.0 inc dup 2.0 = "incfloat" assert type `float = "incfloattype" assert
+1.0l inc dup 2.0l = "incdouble" assert type `double = "incdoubletype" assert
+
+2 dec dup 1= "decint" assert type `integer = "decinttype" assert
+2l dec dup 1l = "declong" assert type `long = "declongtype" assert
+2.0 dec dup 1.0 = "decfloat" assert type `float = "decfloattype" assert
+2.0l dec dup 1.0l = "decdouble" assert type `double = "decdoubletype" assert
+
+1 !T
+!+T ?T dup 2 = "incglobalint" assert type `integer = "incglobalinttype" assert
+!+T ?T dup 3 = "incglobalint2" assert type `integer = "incglobalinttype2" assert
+!-T ?T dup 2 = "decglobalint" assert type `integer = "decglobalinttype" assert
+
+1.0!T
+!+T ?T dup 2.0 = "incglobalfloat" assert type `float = "incglobalfloattype" assert
+!-T ?T dup 1.0 = "decglobalfloat" assert type `float = "decglobalfloattype" assert
+
+(|:q|
+    1 !q
+    !+q ?q dup 2 = "inclocalint" assert type `integer = "inclocalinttype" assert
+    !+q ?q dup 3 = "inclocalint2" assert type `integer = "inclocalinttype2" assert
+    !-q ?q dup 2 = "declocalint" assert type `integer = "declocalinttype" assert
+)@
+
+(|:z|
+    0!z
+    (
+        !+z
+        !+z ?z dup 2 = "incclosint" assert type `integer = "incclosinttype" assert
+        !+z ?z dup 3 = "incclosint2" assert type `integer = "incclosinttype2" assert
+        !-z ?z dup 2 = "decclosint" assert type `integer = "decclosinttype" assert
+    )
+)@@
+        
+    
+
+
+quit

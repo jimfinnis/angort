@@ -16,8 +16,8 @@
 *d>=    :   T_GE
 *d?`    :   T_HASHGETSYMB
 *d!`    :   T_HASHSETSYMB
-*d!+    :   T_INCREMENT
-*d!-    :   T_DECREMENT
+*d!+    :   T_VARINC
+*d!-    :   T_VARDEC
 *d<<    :   T_DOUBLEANGLEOPEN
 *d>>    :   T_DOUBLEANGLECLOSE
 *d??    :   T_DOUBLEQUERY
@@ -91,3 +91,5 @@ catch : T_CATCH
 catchall : T_CATCHALL
 endtry : T_ENDTRY
 throw : T_THROW
+inc : T_INC
+dec : T_DEC

@@ -1,12 +1,16 @@
-:makegen |inc:|
+1 assertdebug
+"Go".
+
+:makegen |increment:|
     (
         |:a| 0!a
         {
             ?a yield
-            ?a ?inc + !a
+            ?a ?increment + !a
         }
     )
 ;
+
 1 makegen const foo
 
 (
@@ -30,7 +34,7 @@
             ?prev ?val != if
                 "changed".
                 ?val !prev
-                ?Ct 1+ !Ct
+                !+Ct
             then
         }
 );

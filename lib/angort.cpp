@@ -492,6 +492,10 @@ void Angort::run(const Instruction *startip){
                     binop(a,b,opcode);
                     ip++;
                     break;
+                case OP_INC:
+                    stack.peekptr()->increment(ip->d.i);
+                    ip++;
+                    break;
                 case OP_LITERALINT:
                     pushInt(ip->d.i);
                     ip++;
@@ -1328,10 +1332,10 @@ void Angort::parseVarAccess(int token){
         case T_PLING:
             opcode = context->isClosed(t) ? OP_CLOSURESET : OP_LOCALSET;
             break;
-        case T_INCREMENT:
+        case T_VARINC:
             opcode = context->isClosed(t) ? OP_CLOSUREINC : OP_LOCALINC;
             break;
-        case T_DECREMENT:
+        case T_VARDEC:
             opcode = context->isClosed(t) ? OP_CLOSUREDEC : OP_LOCALDEC;
             break;
         default:
@@ -1343,8 +1347,8 @@ void Angort::parseVarAccess(int token){
         switch(token){
         case T_QUESTION: opcode = OP_CLOSUREGET; break;
         case T_PLING: opcode = OP_CLOSURESET; break;
-        case T_INCREMENT: opcode = OP_CLOSUREINC;break;
-        case T_DECREMENT: opcode = OP_CLOSUREDEC;break;
+        case T_VARINC: opcode = OP_CLOSUREINC;break;
+        case T_VARDEC: opcode = OP_CLOSUREDEC;break;
         default: throw WTF;
         }
         compile(opcode)->d.i = t;
@@ -1355,8 +1359,8 @@ void Angort::parseVarAccess(int token){
             switch(token){
             case T_QUESTION: opcode = OP_PROPGET;break;
             case T_PLING: opcode = OP_PROPSET;break;
-            case T_INCREMENT:
-            case T_DECREMENT:
+            case T_VARINC:
+            case T_VARDEC:
                 throw SyntaxException("cannot increment/decrement a property");
             default:throw WTF;
             }
@@ -1367,8 +1371,8 @@ void Angort::parseVarAccess(int token){
             switch(token){
             case T_QUESTION:opcode = OP_GLOBALGET;break;
             case T_PLING:constCheck(t);opcode = OP_GLOBALSET;break;
-            case T_INCREMENT:constCheck(t);opcode = OP_GLOBALINC;break;
-            case T_DECREMENT:constCheck(t);opcode = OP_GLOBALDEC;break;
+            case T_VARINC:constCheck(t);opcode = OP_GLOBALINC;break;
+            case T_VARDEC:constCheck(t);opcode = OP_GLOBALDEC;break;
             default:throw WTF;
             }
             compile(opcode)->d.i = t;
@@ -1378,8 +1382,8 @@ void Angort::parseVarAccess(int token){
         switch(token){
         case T_QUESTION:opcode = OP_GLOBALGET;break;
         case T_PLING:opcode = OP_GLOBALSET;break;
-        case T_INCREMENT:
-        case T_DECREMENT:
+        case T_VARINC:
+        case T_VARDEC:
             throw SyntaxException(NULL).set("cannot increment/decrement unset global %s",tok.getstring());
         default:throw WTF;
         }
@@ -1719,10 +1723,12 @@ void Angort::feed(const char *buf){
                 break;
                 
             }
+            case T_INC:compile(OP_INC)->d.i=1;break;
+            case T_DEC:compile(OP_INC)->d.i=-1;break;
             case T_PLING: 
             case T_QUESTION:
-            case T_INCREMENT:
-            case T_DECREMENT:
+            case T_VARINC:
+            case T_VARDEC:
                 parseVarAccess(t);
                 break;
             case T_NOTEQUAL:
