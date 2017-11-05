@@ -22,6 +22,7 @@ macro(add_words_files)
     add_custom_command(
         OUTPUT wordslist
         COMMAND rm wordslist
+        COMMAND rm allwords.tex
         )
     foreach(file ${ARGV})
         add_custom_command(
@@ -30,6 +31,7 @@ macro(add_words_files)
             COMMAND pwd
             COMMAND perl  ../../makeWords.pl  ${CMAKE_SOURCE_DIR}/lib/${file}>${file}.cpp
             COMMAND cat words >>wordslist
+            COMMAND cat words.tex >>allwords.tex
         )
         set(WORDFILELIST ${WORDFILELIST} ${file}.cpp)
     endforeach(file)

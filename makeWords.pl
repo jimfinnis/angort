@@ -218,6 +218,9 @@ while(<>){
             # substitute nice things for LaTeX
             $t =~ s/\$/\\\$/g;
             $t =~ s/\\n/\n/g;
+            $t =~ s/\&/\\&/g;
+            $t =~ s/_/\\_/g;
+            $t =~ s/\^/\\^/g;
             $t =~ s/_/\\_/g;
             # extract the first line.
             ($firstline,$t) = split(/\n/,$t,2);

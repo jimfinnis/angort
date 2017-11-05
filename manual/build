@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# do a bit of section demotion and replace index with indw for the automatic
+# words.
+sed s/\\index/\\indw/g ../build/lib/allwords.tex |\
+    sed s/section\{/subsection\{/g >autowords.tex
 pdflatex main.tex
 makeindex main
 pdflatex main.tex
