@@ -21,7 +21,8 @@ the vertical bar ``\verb+|+'' for delimiting the function local variable definit
 \verb+each+ & \verb+include+ & \verb+stop+ & \verb+cmp+ & \verb+package+\\
 \verb+require+ & \verb+private+ & \verb+public+ & \verb+def+ & \verb+defconst+\\
 \verb+recurse+ & \verb+self+ & \verb+cases+ & \verb+case+ & \verb+otherwise+\\
-\verb+catchall+ & \verb+endtry+ & \verb+throw+ &  & \\
+\verb+sourceline+ & \verb+yield+ & \verb+try+ & \verb+catch+ & \verb+catchall+\\
+\verb+throw+ & \verb+inc+ & \verb+dec+ &  & \\
 \hline\end{tabular}
 \end{center}
 Everything else is either a literal (such as \texttt{35.0} or \verb+"wibble"+),
@@ -322,23 +323,27 @@ Here, the curly brackets enclose a loop, which is exited by the
 \texttt{ifleave} instruction when the stack top value is 10. See
 Section~\ref{loops} for more details.
 
-\subsection{Incrementing and decrementing variables}
+\subsection{Incrementing and decrementing}
 \indw{"!+}\indw{"!-}
-\index{increment}\index{decrement}
-Rather than writing
+\index{increment}\index{decrement}\indw{inc}\indw{dec}
+It is possible to increment and decrement the value on top of the stack
+using the \texttt{inc} and \texttt{dec} words rather than using
+the less efficient \texttt{1+} and \texttt{1-} sequences.
+Additionally, rather than writing
 \begin{lstlisting}
-?var 1+ !var
+?var inc !var
 \end{lstlisting}
-we can use a special shorthand for adding one to a variable:
+we can use a special shorthand for incrementing a variable:
 \begin{lstlisting}
 !+var
 \end{lstlisting}
-As well as being more concise, it produces more efficient code. We can
+As well as being more concise, it again produces more efficient code
+(a single opcode rather than three). We can
 also decrement:
 \begin{lstlisting}
 !-var
 \end{lstlisting}
-
+This works with both locals and globals.
 
 \subsection{Parameter type checking}
 \index{parameters!type checking}\index{type checking}
