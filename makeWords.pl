@@ -106,7 +106,6 @@ sub latexescapes {
 open(WORDSFILE,">words");
 open(WORDSTEXFILE,">words.tex");
 
-
 $waitingforfuncstart=0;
 while(<>){
     chop;
