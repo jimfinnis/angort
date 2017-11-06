@@ -95,8 +95,17 @@ $hasinit=0;
 $hasshutdown=0;
 $shared=0;
 
+sub latexescapes {
+    my($in) = @_;
+    $in =~ s/\$/\\\$/g;
+    $in =~ s/\\n/\n/g;
+    $in =~ s/_/\\_/g;
+    
+}
+
 open(WORDSFILE,">words");
 open(WORDSTEXFILE,">words.tex");
+
 
 $waitingforfuncstart=0;
 while(<>){
@@ -216,9 +225,7 @@ while(<>){
             $waitingforfuncstart=0;
             $t = $descs{$curword};
             # substitute nice things for LaTeX
-            $t =~ s/\$/\\\$/g;
-            $t =~ s/\\n/\n/g;
-            $t =~ s/_/\\_/g;
+            $t = latexescapes($t);
             # extract the first line.
             ($firstline,$t) = split(/\n/,$t,2);
             print WORDSTEXFILE $firstline."\n\n";

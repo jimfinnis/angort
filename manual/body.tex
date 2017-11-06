@@ -417,6 +417,20 @@ for how \texttt{map} performs a function on each member of an iterable
 to produce a list, and for how \texttt{intercalate} builds a string
 out of a list by joining string representations of its members with
 a separator.
+
+The keyword \texttt{self} is occasionally useful: rather than calling
+the containing function recursively, it stacks a reference to the
+function itself. Thus:
+\begin{lstlisting}
+:foo inc self !LastFuncCalled;
+4 foo.
+4 ?LastFuncCalled@.
+\end{lstlisting}
+creates a function \texttt{foo} which, when called, increments the
+value on the stack and also stores a reference to \texttt{foo} in
+the global \texttt{LastFuncCalled}. We then call \texttt{foo},
+and then call whatever is stored in \texttt{LastFuncCalled} -- which will
+be \texttt{foo} again.
 \subsubsection{A warning}
 Angort has a limited return stack size of 256 frames, and because of the nature
 of the language there is no tail call optimisation. Recursive algorithms
