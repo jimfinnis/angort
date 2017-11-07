@@ -22,7 +22,7 @@ inline int wstrlen(const char *s){
 
 %name string
 
-%word stridx (haystack needle -- int) return index if h contains n, else none
+%word stridx (haystack needle -- int) return index if haystack contains needle, else none
 {
     const StringBuffer &needle = a->popString();
     const StringBuffer &haystack = a->popString();
@@ -33,7 +33,7 @@ inline int wstrlen(const char *s){
     else
         a->pushInt(p-haystack.get());
 }
-%word istridx (haystack needle -- int) return index if h contains n, else none
+%word istridx (haystack needle -- int) return index if haystack contains needle, else none
 {
     const StringBuffer &needle = a->popString();
     const StringBuffer &haystack = a->popString();
@@ -58,7 +58,7 @@ inline int wstrlen(const char *s){
 }
         
 
-%word chr (integer -- string) convert integer to ASCII
+%word chr (integer -- string) convert integer to ASCII char (as single-character string)
 {
     Value *s = a->stack.peekptr();
     int i = s->toInt();
@@ -69,7 +69,7 @@ inline int wstrlen(const char *s){
     
 }
 
-%word asc (string -- integer) convert ASCII char to integer
+%word asc (string -- integer) convert first character in string to ASCII integer
 {
     Value *s = a->stack.peekptr();
     const StringBuffer& str = s->toString();
@@ -112,6 +112,9 @@ inline int wstrlen(const char *s){
 }
 
 %word format (list string -- string) string formatting
+Format a string using a subset of printf semantics. The types supported
+are: d, f, g, x, u, s. Precision and width are supported for
+numeric types. The list contains the items to be substituted into the string.
 {
     Value f,l;
     f.copy(a->popval());
@@ -194,7 +197,7 @@ inline int wstrlen(const char *s){
 }
 
 
-%word trunc (string maxlen -- string) truncate a string if required
+%word trunc (string maxlen -- string) truncate a string if longer than maxlen
 {
     wchar_t buf[1024];
     int maxlen = a->popInt();
@@ -212,7 +215,7 @@ inline int wstrlen(const char *s){
     Types::tString->set(v,sbuf);
 }
 
-%word split (string delim -- list) split a string on delimiter
+%word split (string delim -- list) split a string on a single-character delimiter 
 {
     Value *params[2];
     a->popParams(params,"ss");
@@ -241,7 +244,9 @@ inline int wstrlen(const char *s){
     free((void *)buf);
 }
 
-%wordargs substr sii (str start count -- str) get substring, if count<=0 calculate count from end, if start -ve calculate start from end
+%wordargs substr sii (str start count -- str) get a substring.
+If count less than or equal to 0 calculate count from end, 
+if start negative calculate start from end. See also "slice".
 {
     int len = wstrlen(p0);
     if(p1<0)

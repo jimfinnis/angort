@@ -18,16 +18,24 @@ set(WORDFILELIST)
 # The files generated are added to WORDFILELIST, which should then be put
 # into the SOURCES. So, Angort word files should be added with this.
 
+# a problem with this approach is when make -j is used: all the words
+# files are called words.tex, so they overwrite each other. The
+# makeWords.pl script needs modification (each run producing a differently
+# named file) to deal with this but that would break existing build scripts.
+
+# Another problem is that this only works when done from a completely
+# empty build directory - even "make clean" isn't sufficient! No idea why.
+
 macro(add_words_files)
     add_custom_command(
-        OUTPUT wordslist
+        OUTPUT wordslist allwords.tex
         COMMAND rm wordslist
         COMMAND rm allwords.tex
         )
     foreach(file ${ARGV})
         add_custom_command(
             OUTPUT ${file}.cpp
-            DEPENDS ${file}
+            DEPENDS ${file} ${CMAKE_SOURCE_DIR}/makeWords.pl
             COMMAND pwd
             COMMAND perl  ../../makeWords.pl  ${CMAKE_SOURCE_DIR}/lib/${file}>${file}.cpp
             COMMAND cat words >>wordslist

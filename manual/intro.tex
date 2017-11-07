@@ -211,6 +211,12 @@ interpreter will then be installed, typically as \texttt{/usr/local/bin/angort}.
 A small set of Angort libraries (i.e. libraries written in Angort) will also be installed
 into \texttt{/usr/local/share/angort}.
 
+\textbf{Note that} you can normally parallelise the build with
+\texttt{make -j}, but if you wish to rebuild this manual,
+you should run make without the \texttt{-j} from an clean build
+directory. The manual build process uses files generated from the
+C++ which the parallelisation makes rather a mess of.
+
 A set
 of native C++ plugin libraries can also be downloaded from
 \url{https://github.com/jimfinnis/angortplugins}. Once Angort has

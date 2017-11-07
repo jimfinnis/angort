@@ -95,12 +95,22 @@ $hasinit=0;
 $hasshutdown=0;
 $shared=0;
 
+
+
 sub latexescapes {
     my($in) = @_;
+    
+    # we just wrap the entire specstring in verbatim.
     $in =~ s/\$/\\\$/g;
     $in =~ s/\\n/\n/g;
     $in =~ s/_/\\_/g;
-    
+    # find a character not in the string for "verb"
+    if(index($in,"+")<0){$in =~ s/^(\(.*?\))/\\verb+\1+/g;}
+    elsif(index($in,":")<0){$in =~ s/^(\(.*?\))/\\verb:\1:/g;}
+    elsif(index($in,"=")<0){$in =~ s/^(\(.*?\))/\\verb=\1=/g;}
+    elsif(index($in,"-")<0){$in =~ s/^(\(.*?\))/\\verb-\1-/g;}
+    elsif(index($in,"!")<0){$in =~ s/^(\(.*?\))/\\verb!\1!/g;}
+    return $in;
 }
 
 open(WORDSFILE,">words");

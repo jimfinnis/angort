@@ -251,7 +251,7 @@ ex$failed.
     fputc('\n',a->outputStream);
 }
 
-%word errp s ( s -- ) print a string to stdout
+%word errp ( s -- ) print a string to stdout
 {
     const StringBuffer& str = a->popString();
     fputs(str.get(),stderr);
@@ -801,7 +801,7 @@ returned by "nspace", and returns its value.
 }
 
 
-%word endpackage () mark end of package, only when used within a single script
+%word endpackage (-- namespaceID) mark end of package, only when used within a single script
 For packages which are part of a long script, this marks the end. Normally
 the end of a package is marked by the end of the file.
 {
