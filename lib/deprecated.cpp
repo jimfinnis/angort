@@ -28,5 +28,5 @@ the iterable.
     int len = p2;
     
     Value *res = a->pushval();
-    iterable.t->slice(res,&iterable,start,len);
+    iterable.t->slice_dep(res,&iterable,start,len);
 }
