@@ -248,22 +248,18 @@ public:
             start+=len;
         if(end<=0)
             end+=len;
-printf("phase 1 : start=%d end=%d\n",start,end);    
         // need to check again; consider consider len=10, start=-11..
         if(start<0)start=0;
         if(end<0)return false;
-printf("phase 2 : start=%d end=%d\n",start,end);    
     
         // degenerate cases
         if(start>=len)
             return false;
         if(end <= start)
             return false;
-printf("phase 3 : pass\n");
     
         // clip - remember end is exclusive!
         if(end>len)end=len;
-printf("phase 4 : start=%d end=%d\n",start,end);    
         *startPtr = start;
         *endPtr = end;
     
