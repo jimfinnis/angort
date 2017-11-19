@@ -41,7 +41,8 @@ as
 Using the \texttt{?} ensures that we get the function itself, rather
 than trying to run it\footnote{In reality we would probably use
 the optional list parameter to \texttt{import}, as described in
-Section~\ref{packages}}.
+Section~\ref{packages}, although this would leave the functions
+open for redefinition.}.
 
 \subsection{Forward declarations (deferred declarations)}
 \index{forward declaration}
@@ -85,7 +86,7 @@ be stored in variables:
 \end{v}
 Note that the list in $B$ has also changed --- it is the same list,
 just a different reference.
-The following are the words which act on lists, with their stack pictures:
+The following are some words which act on lists, with their stack pictures:
 \indw{[|textbf}\indw{]|textbf}\indw{,|textbf}\indw{get}
 \indw{set}\indw{remove}\indw{shift}\indw{unshift}
 \indw{push}\indw{pop}\indw{in}

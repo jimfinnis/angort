@@ -151,8 +151,7 @@ Any \texttt{leave} word will break out of an infinite loop:
     0 !counter          # set counter to zero
     {                   # start loop
         ?counter.       # print the counter
-        ?counter 1+     # increment the counter
-        !counter        # and store it back
+        !+counter       # increment the counter
         ?counter 100=   # is it equal to 100?
         if leave then   # if so, leave the loop
     }
@@ -172,9 +171,10 @@ ifleave
 \end{lstlisting}
 The function above could be written tersely as
 \begin{lstlisting}
-(|:c| 0!c {?c. ?c 1+ !c ?c 100= ifleave)@;
+(|:c| 0!c {?c. !+c ?c 100= ifleave)@;
 \end{lstlisting}
-This is still using a slug because we require the local variable
+This is still using a slug (see Sec.~\ref{multilineflow})
+because we require the local variable
 provided by the anonymous function.
 Loops can be nested, and the \texttt{leave} words will jump out of the
 innermost loop in which they appear.
