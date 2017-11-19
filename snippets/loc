@@ -1,0 +1,127 @@
+#!/usr/local/bin/angort
+
+# Helpful file locator/scanner DSL. Currently uses locate to generate
+# an initial list from the string given on the command line, then
+# permits one to filter it in various ways. Use "h" for help.
+
+
+[`regex, `sys, `io] each { i library drop}
+
+require "util.ang" drop
+
+# generate the main list - a file list consists of a list of tuples,
+# tuples are [filename,stathash]. Input is a list of filenames.
+:genlist |input:|
+    "Generating master list..".
+    [] ?input each {
+        [i,none], # no stat data initially
+    }
+    nl
+;
+    
+args pop !SearchTerm
+"Running locate...".
+"" [?SearchTerm] "/usr/bin/locate" sys$execpipe "\n"
+split dup pop drop genlist !MasterList
+
+"Found " p ?MasterList len p " files".
+
+# list of filter functions, of the form [descstring,(string -- bool)]
+
+[] !Filters
+
+:mkaddfilter |term:rx|
+    ?term regex$compile !rx
+    (fst ?rx regex$match len);
+
+:mksubfilter |term:rx|
+    ?term regex$compile !rx
+    (fst ?rx regex$match len not);
+
+:mkcontentfilter |term:|
+    (|a:| 
+        "" ["-l",?term,?a fst] 
+        "/bin/grep" 
+        sys$execpipe len
+);
+
+
+:rmfilter |s:|
+    ?s len if
+        ?s toint !s
+        ?s 0 >= ?s ?Filters len < and if
+            ?s ?Filters remove drop
+        then
+    then
+;
+    
+:repchar |char,ct:| "" 0 ?ct range each {?char+};
+
+:runfilters |:oldcur|
+    "Filtering..".
+    ?MasterList ?Filters each {
+        i snd filter
+    } !List
+;
+
+runfilters
+(|gcct,stct,charr:| 
+    [?stct,?MasterList len,?List len,?charr]
+    "%d|master %d|filtered %d %s " format) cli$prompt
+
+############################################################
+# public functions down here
+
+package locpub
+
+:fp |t:| 
+    :"(s -- ) positive filter"
+    ["+" ?t +, ?t mkaddfilter] ?Filters push
+    runfilters;
+:fn |t:| 
+    :"(s -- ) negative filter"
+    ["-" ?t +, ?t mksubfilter] ?Filters push
+    runfilters;
+
+:fc |t:|
+    :"(s -- ) content filter"
+    ["*" ?t +, ?t mkcontentfilter] ?Filters push
+    runfilters;
+
+:fl |:n:|
+    :"list filters"
+    0!n
+    ?Filters each {
+        [?n,?n ?Filters get fst] "%2d) %s" format.
+        ?n 1+ !n
+    }
+;
+
+:frl :"remove the last added filter"
+    ?Filters len if ?Filters pop drop then
+    runfilters
+;
+
+:fr |s/integer:| :"(n --) remove filter N"
+    ?s 0 >= ?s ?Filters len < and if
+        ?s ?Filters remove drop
+    then
+;
+    
+:l
+    :"list filtered files"
+    ?List each {
+        i fst.
+    }
+;
+
+:h 
+    :"show help list"
+    `locpub listhelp;
+
+###################################################
+
+endpackage import
+
+h
+
