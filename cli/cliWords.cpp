@@ -24,5 +24,3 @@ Note that any ANSI escape sequences should be wrapped with characters
 {
     promptCallback.copy(p0);
 }
-
-

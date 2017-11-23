@@ -107,6 +107,7 @@ package locpub
         ?s ?Filters remove drop
         runfilters
     then
+    runfilters
 ;
     
 :l
@@ -114,6 +115,11 @@ package locpub
     ?List each {
         i fst.
     }
+;
+
+:merge :"turn filtered list into new master list"
+    ?MasterList !List
+    [] !Filters
 ;
 
 :h 
