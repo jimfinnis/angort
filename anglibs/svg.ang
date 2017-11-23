@@ -374,10 +374,10 @@ none "txtoattr" def # forward declare
 # shapelist stuff, the next level of abstraction.
 
 :new
+    []!Groups
     []!ShapeList;
 
 new
-[]!Groups
 
 # print the whole shebang to stdout, i.e. the entire shapelist
 
