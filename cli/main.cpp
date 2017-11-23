@@ -117,6 +117,7 @@ void sigh(int s){
     exit(1);
 }
 
+const char *commandLineOptions = "endDl:i:";
 int main(int argc,char *argv[]){
     
     signal(SIGSEGV,sigh);
@@ -141,7 +142,7 @@ int main(int argc,char *argv[]){
     int flags = 0;
     int c;
     opterr=0; // suppress invalid option errors
-    while((c=getopt(argc,argv,"endDl:i:"))!=-1){
+    while((c=getopt(argc,argv,commandLineOptions))!=-1){
         switch(c){
         case 'n':flags|=F_LOOP;break;
         case 'e':flags|=F_CMD;break;
