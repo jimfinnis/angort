@@ -26,7 +26,7 @@ void setArgumentList(int argc,char *argv[]){
               
 %name env
 
-%word args (-- list) get command line arguments
+%word rawargs (-- list) get command line arguments including the angort ones
 {
     Value *v = a->pushval();
     v->copy(&argList);

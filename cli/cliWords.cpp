@@ -10,6 +10,7 @@
 
 using namespace angort;
 
+extern Value strippedArgVal;
 Value promptCallback;
 
 %name cli
@@ -24,3 +25,9 @@ Note that any ANSI escape sequences should be wrapped with characters
 {
     promptCallback.copy(p0);
 }
+
+%word args (-- args) list of arguments, stripped of those handled by Angort
+{
+    a->pushval()->copy(&strippedArgVal);
+}
+    

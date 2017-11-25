@@ -1,3 +1,5 @@
+gccount!BaseGC
+
 [%] !A
 [%] !B
 
@@ -5,14 +7,14 @@
 ?A `foo ?B set
 
 gc
-3 gccount = "cycle1" assert
+?BaseGC 2+ gccount = "cycle1" assert
 
 0 !A
 0 !B
 1 1 1 drop drop drop
 gc
 gccount.
-1 gccount = "cycle2a" assert
+?BaseGC gccount = "cycle2a" assert
 
 
 [%] !A
@@ -20,10 +22,10 @@ gccount.
 [% `bar B, `fod A] !C
 ?C `buz ?A set
 gccount .
-4 gccount = "cycle2b" assert
+?BaseGC 3+ gccount = "cycle2b" assert
 
 gc
-4 gccount = "cycle2c" assert
+?BaseGC 3+ gccount = "cycle2c" assert
 
 0 !A
 0 !B
@@ -31,7 +33,7 @@ gc
 1 1 1 drop drop drop
 gc
 gccount.
-1 gccount = "cycle4" assert
+?BaseGC gccount = "cycle4" assert
 
 # hashes appear to be OK, let's check lists.
 
@@ -40,11 +42,12 @@ gccount.
 ?B ?A push
 ?A each {i.}
 gc
-3 gccount  = "listcyc1" assert
+gccount.
+?BaseGC 2+ gccount  = "listcyc1" assert
 0 !A
 0 !B
 gc
-1 gccount  = "listcyc2" assert
+?BaseGC gccount  = "listcyc2" assert
 
 # lists are good, let's do something with closures AND lists
 
@@ -62,11 +65,11 @@ snark
 
 1 2 3 4 foo
 gccount.
-4 gccount  = "closurecyc1" assert
+?BaseGC 3+ gccount  = "closurecyc1" assert
 0!A
 gc
 gccount.
 
-1 gccount  = "closurecyc2" assert
+?BaseGC gccount  = "closurecyc2" assert
 
 quit
