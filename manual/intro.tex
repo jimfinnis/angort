@@ -194,6 +194,13 @@ to print the sum of the squares of the first 1000 integers.
 As can be seen, Angort is a very terse language.
 
 \subsection{Downloading and building Angort}
+The requirements to build Angort are
+\begin{itemize}
+\item (probably) Linux
+\item the GNU \texttt{readline} library
+\item CMake
+\item Perl (to parse the function definition files)
+\end{itemize}
 Angort can be downloaded from \url{https://github.com/jimfinnis/angort} .
 Once downloaded, it can be built and installed 
 with the following commands (from
@@ -205,8 +212,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 sudo make install
 \end{v}
-This is for a Linux machine
-with CMake and the \texttt{readline} development libraries. The
+The
 interpreter will then be installed, typically as \texttt{/usr/local/bin/angort}. 
 A small set of Angort libraries (i.e. libraries written in Angort) will also be installed
 into \texttt{/usr/local/share/angort}.

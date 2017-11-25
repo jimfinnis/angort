@@ -104,6 +104,7 @@ sub latexescapes {
     $in =~ s/\$/\\\$/g;
     $in =~ s/\\n/\n/g;
     $in =~ s/_/\\_/g;
+    $in =~ s/"\-\-"/"\\verb+--+"/g;
     # find a character not in the string for "verb"
     if(index($in,"+")<0){$in =~ s/^(\(.*?\))/\\verb+\1+/g;}
     elsif(index($in,":")<0){$in =~ s/^(\(.*?\))/\\verb:\1:/g;}
