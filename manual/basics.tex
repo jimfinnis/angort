@@ -234,6 +234,39 @@ iscallable & 1 if value's type is codeblock, closure or native function, else 0 
 \end{center}
 
 \clearpage
+\section{Command line options}
+Angort has the following command line options, each of which must be
+a separate argument: one cannot put multiple boolean switches
+in a single argument. I don't use \texttt{getopt}, and this helps
+with Angort programs parsing their own arguments.
+The arguments handled by Angort (and stripped out by the option handler
+to produce \texttt{args} as described below) are:
+\begin{itemize}
+\item \texttt{-d} : debugging type 1 (show opcodes and stack on each instruction);
+\item \texttt{-D} : debugging type 2 (show tokeniser trace);
+\item \texttt{-lNAME} : load plugin library name -- this is a file;
+in the shared plugin path (see Sec.~\ref{library}) or on a relative path, ending in
+\texttt{.angso}. The \texttt{.angso} suffix which should not be supplied;
+\item \texttt{-if} : import \texttt{future} (see Sec.~\ref{futdep});
+\item \texttt{-id} : import \texttt{deprecated};
+\item \texttt{-e} : execute the first non-option argument as an
+Angort string, rather than loading and running a script;
+\item \texttt{-n} : the first two non-option arguments are two Angort;
+command strings. The first is run once, the second is run repeatedly
+for each line in \texttt{stdin}, with the each line being stacked
+prior to each run;
+\item \texttt{--} : all remaining arguments are skipped, and copied
+into the stripped arguments list (see below).
+\end{itemize}
+All arguments described above (with the natural exception of \texttt{--})
+are copied into the ``stripped argument list.'' This is the list
+which is returned by the \texttt{args} word. To retrieve the raw
+argument list (i.e. \texttt{argv} as passed to \texttt{main()},) use
+the \texttt{env\$rawargs} word.
+
+
+
+\clearpage
 \section{Defining new functions}
 New functions are defined with code of the form
 \begin{v}
@@ -570,7 +603,7 @@ This takes a list of values (see Section~\ref{lists}) and a format string:
 \begin{lstlisting}
 [1,"hello"] "%20d: %s" format.
 \end{lstlisting}
-While it is not a full implementation, all but the more unusual formatting
+While it is not a full implementation, all but the more usual formatting
 options are supported.
 
 
