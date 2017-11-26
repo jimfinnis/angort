@@ -105,6 +105,7 @@ package locpub
 :fr |s/integer:| :"(n --) remove filter N"
     ?s 0 >= ?s ?Filters len < and if
         ?s ?Filters remove drop
+        runfilters
     then
     runfilters
 ;
