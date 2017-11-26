@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -19,6 +18,12 @@ using namespace angort;
 
 extern angort::LibraryDef LIBNAME(cli);
 
+
+// stripped arglist, wrapped by a value. These are linked
+// at the start of main().
+
+Value strippedArgVal;
+static ArrayList<Value> *strippedArgs;
 
 Angort *a;
 
@@ -117,9 +122,7 @@ void sigh(int s){
     exit(1);
 }
 
-const char *commandLineOptions = "endDl:i:";
 int main(int argc,char *argv[]){
-    
     signal(SIGSEGV,sigh);
     
     extern void setArgumentList(int argc,char *argv[]);
@@ -137,53 +140,103 @@ int main(int argc,char *argv[]){
         showException(e);
     }
     
+    // create the stripped arg value.
+    strippedArgs = Types::tList->set(&strippedArgVal);
+    
+    // this sets the RAW argument list; the argument list stripped of
+    // angort-specific stuff is set below.
     setArgumentList(argc,argv);
     
     int flags = 0;
-    int c;
-    opterr=0; // suppress invalid option errors
-    while((c=getopt(argc,argv,commandLineOptions))!=-1){
-        switch(c){
-        case 'n':flags|=F_LOOP;break;
-        case 'e':flags|=F_CMD;break;
-        case 'd':a->debug|=1;break;
-        case 'D':a->debug|=2;break;
-        case 'i':
-            switch(optarg[0]){
-            case 'f':
-                a->importAllFuture();
+    
+    /*
+       we can't use deep command line processing, because of
+       how we might want to process arguments.
+       Consider that the Angort programmer wants
+       an option '-Zfilename', and the user enters '-Zdoofus." Unfortunately
+       Angort will consume the 'd' thinking it's a debug option.
+ 
+       The only option is to not permit option-chaining, so every option
+       must be given its own dash. It's what Python does!
+       
+       What we CAN do is strip out the Angort-specific arguments,
+       and the executable name. The first argument without a dash
+       should always be the program name and this is easy to find.
+     */
+    
+    int nonOptionArgs = 0;
+    char *filename=NULL; // the filename (or -e string)
+    // extra, for looping which has an "init" section.
+    // We might do something like angort -n '0!Ct' '!+Ct ?Ct.'
+    char *extradata = NULL; 
+    for(int i=1;i<argc;i++){
+        char *arg = argv[i];
+        if(*arg == '-'){
+            // it's an option.
+            switch(arg[1]){
+            case '-':
+                // copy ALL remaining arguments into stripped arg list,
+                // ignoring them here
+                for(i++;i<argc;i++)
+                    Types::tString->set(strippedArgs->append(),argv[i]);
                 break;
-            case 'd':
-                a->importAllDeprecated();
+            case 'n':flags|=F_LOOP|F_CMD;break;
+            case 'e':flags|=F_CMD;break;
+            case 'd':a->debug|=1;break;
+            case 'D':a->debug|=2;break;
+            case 'i':
+                switch(arg[2]){
+                case 'f':
+                    a->importAllFuture();
+                    break;
+                case 'd':
+                    a->importAllDeprecated();
+                    break;
+                default:
+                    printf("should be -if or -id\n");
+                    exit(1);
+                }
+                break;
+            case 'l':
+                a->plugin(arg+2);
                 break;
             default:
-                printf("should be -if or -id\n");
-                exit(1);
+                // unrecognised option
+                Types::tString->set(strippedArgs->append(),argv[i]);
+                break;
             }
-            break;
-        case 'l':
-            a->plugin(optarg);
-            break;
-        default:
-            break;
+        } else {
+            // it's an non-option argument to copy over. If it's the
+            // first one, set it as the filename.
+            switch(nonOptionArgs){
+            case 0 :  filename = argv[i];break;
+            case 1:   extradata = argv[i];break;
+            default:break;
+            }
+            nonOptionArgs++;
+            Types::tString->set(strippedArgs->append(),argv[i]);
         }
     }
     
     // either the filename to run or a command (depending on opts)
-    if(argc>optind){
-        const char *data = argv[optind];
+    if(filename){
         try {
             if(flags & F_CMD){
                 if(flags & F_LOOP){
+                    if(!extradata){
+                    printf("-n and -e require init and loop strings\n");
+                    exit(1);
+                    }
+                    a->feed(filename); // do initial part
                     // looping is done with an egregious hack. Rather
                     // than muck around inside Angort, we actually
                     // fake up a function by feeding a colon definition
                     // into Angort. Then, for each line, we stack the
                     // line and then feed a line to run that function.
                     a->feed(":TMPLOOP");
-                    a->feed(data);
+                    a->feed(extradata);
                     a->feed(";");
-                    // then iterate over the file, executing this
+                    // then iterate over stdin, executing this
                     // word for each line
                     while(!feof(stdin)){
                         char *buf=NULL;
@@ -199,16 +252,16 @@ int main(int argc,char *argv[]){
                         if(buf)free(buf);
                     }
                 } else 
-                    a->feed(data);
+                    a->feed(filename);
                 exit(0);
             } else {
-                FILE *f = fopen(data,"r");
+                FILE *f = fopen(filename,"r");
                 if(!f){
-                    printf("cannot open file: %s\n",data);
+                    printf("cannot open file: %s\n",filename);
                     exit(1);
                 }
-                addDirToSearchPath(data);
-                a->fileFeed(data);
+                addDirToSearchPath(filename);
+                a->fileFeed(filename);
             }
         }catch(Exception e){
             showException(e);

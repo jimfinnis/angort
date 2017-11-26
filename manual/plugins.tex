@@ -1,0 +1,470 @@
+\clearpage\section{Writing Angort plugin libraries}
+Angort plugin libraries add C++ functions to Angort. They can also
+add properties (see Sec.~\ref{properties}) and binary operator
+overrides.
+
+Plugins are written in C++, but for convenience this C++ is passed
+through a Perl preprocessor called \texttt{makeWords.pl}. This automatically
+adds code for popping arguments, adding the functions to a special
+array, and initialising the plugin in a special entry point. Let's look
+at a simple "hello world" example.
+
+\lstinputlisting[language=c++]{hello.cpp}
+
+This code will create a plugin with a \texttt{hello} function which
+takes a name and generates a string ``Hello (name), how are you?''
+
+\subsection{Angort internals: values and types}
+\label{typeinternals}
+\index{type!internals}
+All but the most simple plugins require some knowledge of how
+Angort stores and types its values. Every value in Angort is
+a \texttt{Value} object. This is a class containing a union, which
+holds the actual value; and a \texttt{Type} object pointer, defining
+its behaviour. Each Angort type is defined by a singleton
+instance of a subclass of \texttt{Type} -- all the internal types
+are global variables within the \texttt{Types} namespace.
+For example, strings are defined by the \texttt{StringType} object,
+which has \texttt{Types::tString} pointing to its only instance.
+
+In the case of simple types like integers, the type object defines
+accessors to simple members of the \texttt{Value} class' embedded
+union \texttt{d}. Integers, for example, store their data in
+\texttt{d.i} while floats use \texttt{d.f}. Garbage collected types
+all use the \texttt{d.gc} pointer, which points to a
+\texttt{GarbageCollected} object. Thus, lists and hash value
+classes -- and
+many user classes -- inherit \texttt{GarbageCollected}.
+
+All the internal types are declared in \texttt{include/types/} and
+defined in \texttt{lib/types/} should you wish to study them.
+This is all quite complex at first, particularly the behaviour of
+garbage collected objects. It can, however, be boiled down to a few
+principles:
+\begin{itemize}
+\item \texttt{Values} are initialised to \texttt{none}; their union's
+value is irrelevant and their type field points to \texttt{Types::tNone}.
+\item Calling \texttt{clr()} on a \texttt{Value} will decrement its
+reference count and set the type field to \texttt{Types::tNone}.
+\item Each type object contains a method to set a value to a given
+type and initialise it to a value. For example
+\begin{lstlisting}[language=c++]
+Value v;
+Types::tInteger->set(&v,1);
+\end{lstlisting}
+will set the value \texttt{v} to the integer 1.
+Some of these may return a new object: for example, to set a value
+to a list we would call
+\begin{lstlisting}[language=c++]
+Value v;
+ArrayList<Value> *list = Types::tList->set(&v);
+\end{lstlisting}
+which will create a new garbage collected list, set the value's union
+to hold its pointer, set the value's type field to 
+\texttt{Types::tList}, and return the new list object.
+\item Each type object will also contain a \texttt{get()} method
+to return the underlying C++ value of a \texttt{Value}, performing
+conversion if possible. For example,
+\begin{lstlisting}[language=c++]
+int i = Types::tInteger->get(&v);
+\end{lstlisting}
+will try to get the integer value from a \texttt{Value}.
+\item \texttt{Value *Angort::pushval()} will push a new value onto the Angort
+stack and return it. It does this by just returning a pointer to
+the stack top and incrementing that pointer.  It will \emph{not} call \texttt{clr()} on the value.
+\item \texttt{Value *Angort::popval()} will pop the stack, returning a pointer
+to the previous stack top.
+\item There are helper \texttt{Angort::push..()} and
+\texttt{Angort::pop..()} methods for most basic types.
+\item There are \texttt{Value::to..()} helper methods for most
+types to convert and return values. For example, \texttt{toFloat()} will
+attempt to convert to, and return, a C++ float.
+\item Strings are a special case -- popping a string returns a
+\texttt{StringBuffer} object, whose underlying buffer can be fetched
+with \texttt{get()}. This is a UTF-8 string, and \texttt{StringBuffer} 
+has methods for converting to wide characters. A common idiom fetches
+the string buffer as a const reference and calls \texttt{get()} to
+return the underlying buffer:
+\index{StringBuffer class}
+\begin{lstlisting}[language=c++]
+const StringBuffer& s = v->toString();
+...
+printf("%s\n",s.get());
+\end{lstlisting}
+\end{itemize}
+
+There is a small hierarchy of classes which inherit the \texttt{Type} class:
+\texttt{IntegerType} (with the singleton pointer \texttt{Types::tInteger} is
+just a subclass of \texttt{Type}, while \texttt{ListType} and
+\texttt{HashType} inherit \texttt{GCType}, which handles values which
+are garbage-collected.
+
+Summing up the situation for \texttt{Hash} as an example,
+\begin{itemize}
+\item \texttt{HashObject} inherits \texttt{GarbageCollected} and
+wraps a raw \texttt{Hash}: a map from \texttt{Value*} to
+\texttt{Value*}.
+\item \texttt{Types::tHash} points to a singleton instance of
+\texttt{HashType}, which inherits \texttt{GCType}, which inherits
+\texttt{Type}.
+\item This singleton has methods which can create a and
+set a \texttt{Value} to a new \texttt{HashObject},
+and retrieve a \texttt{Hash} from a value (if it is of the correct type, throwing
+an exception otherwise). The \texttt{set()} and \texttt{get()} methods
+deal entirely with the underlying \texttt{Hash}, wrapping and unwrapping
+in \texttt{HashObject}, which exists solely to define an
+interface for garbage collection and iteration.
+\end{itemize}
+While this is all very complex, there are plenty of examples of words
+using these concepts in the Angort source --
+particularly in \texttt{stdWords.cpp}, \texttt{stdString.cpp} and
+\texttt{stdColl.cpp}.
+
+
+
+
+\subsection{Building plugins}
+\index{plugins}
+\index{C++}
+To build the plugin, it needs to be passed through \texttt{makeWords.pl} 
+(which can be found in the Angort source distribution) and compiled and linked as
+a shared library. The steps for the example are:
+\begin{v}
+perl makeWords.pl hello.cpp >hello.plugin.cpp
+g++ -fPIC -c -Wall hello.plugin.cpp
+g++ -shared -Wl,-soname,hello.angso hello.plugin.o
+\end{v}
+The result is \texttt{hello.angso} where \texttt{.angso} is the extension
+required for a plugin.
+
+
+\subsection{Special \% directives}
+The first thing to note is that some lines start with special
+directives beginning with a percent sign. These are handled by
+\texttt{makeWords.pl} and generate extra code inside the \texttt{.plugin.cpp} file.
+
+\subsubsection{The \%name directive}
+This gives the name of the plugin's namespace. This should be unique
+to each plugin. Functions in the plugin will have the fully qualified
+name \verb+namespace$function+, so our example will generate
+\verb+hello$hello+. This generates a namespace block wrapping the rest
+of the output, so we should be careful how we use the C++
+\texttt{namespace} directive afterwards.
+
+\subsubsection{The \%shared directive}
+This says we are making a shared library, and should always be included.
+It exists because \texttt{makeWords.pl} is also used to build the functions
+included in the standard Angort libraries. It adds the special entry
+point required by dynamically loaded plugins to register them with
+Angort.
+
+\subsubsection{The \%init and \%shutdown directives}
+These are used to define functions which the plugin calls when
+it is loaded and unloaded (the latter only occurs when Angort is shut
+down). 
+
+\subsubsection{The \%wordargs and \%word directives}
+These is the most important directives: they define the actual functions
+in the plugin. The \texttt{makeWords.pl} script generates a name
+for the function and a definition, and adds the function to the
+function list for the library.
+
+The \texttt{\%word} directive is used to define a function with no
+arguments, or whose arguments you wish to pop off the stack by hand.
+It has the form:
+\begin{v}
+%word wordname (stack picture) description
+more description..
+more description..
+{
+    c++ code
+}
+\end{v}
+
+If we add a function which has no arguments to our example
+and run it through \texttt{makeWords.pl}, we can see what it does.
+Our function is:
+\begin{lstlisting}[language=c++]
+%word hello2 (-- string) a test
+{
+    a->pushString("hello world");
+}
+\end{lstlisting}
+and the resulting code in \texttt{hello.plugin.cpp} is:
+\begin{lstlisting}[language=c++]
+static void _word__hello2(angort::Angort *a){
+    a->pushString("hello world");
+}
+\end{lstlisting}
+All plugin functions become functions which take a pointer to the
+\texttt{Angort} object, which is always parameter \texttt{a}. Naturally
+this means you must not call any other variable \texttt{a} in your
+plugin. The above code simple pushes a string onto the stack.
+
+The \texttt{\%wordargs} directive is used if the function has arguments,
+and pops them automatically, converting the types, into local variables
+called \texttt{p0}, \texttt{p1} and so on. Consider a definition
+
+\begin{lstlisting}[language=c++]
+%wordargs distance dddd (x1 y1 x2 y2 -- dist)
+{
+    float dx = (p0-p2);
+    float dy = (p1-p3);
+    float dist = sqrt(dx*dx+dy*dy);
+    a->pushDouble(dist);
+}
+\end{lstlisting}
+Here, the \texttt{dddd} indicates the types of the arguments: they
+are all double-precision floating point.
+If a value popped from the stack is not a double,
+Angort will attempt to convert it (see Sec.~\ref{types}).
+Once popped, the distance is calculated and the resulting double
+is pushed. The code generated is
+\begin{lstlisting}[language=c++]
+static void _word__distance(angort::Angort *a)
+{
+Value *_parms[4];
+a->popParams(_parms,"dddd");
+double p0 = _parms[0]->toDouble();
+double p1 = _parms[1]->toDouble();
+double p2 = _parms[2]->toDouble();
+double p3 = _parms[3]->toDouble();
+    float dx = (p0-p2);
+    float dy = (p1-p3);
+    float dist = sqrt(dx*dx+dy*dy);
+    a->pushDouble(dist);
+}
+\end{lstlisting}
+It uses the internal \texttt{popParams} function to pop the parameters
+into an array, typechecking them as it does so, and then creates the
+local variables \texttt{p0, p1}... as discussed above, converting
+to the appropriate types. Then our code follows.
+
+Lists and hashes are rather more complex. In the example below,
+we create a list and add two strings to it:
+\begin{lstlisting}[language=c++]
+%wordargs stringstolist ss (string string -- list) list from two strings
+{
+    Value v;
+    ArrayList<Value> *list = Types::tList->set(&v);
+    Types::tString->set(list->append(),p0);
+    Types::tString->set(list->append(),p1);
+    a->pushval()->copy(&v);
+}
+\end{lstlisting}
+The two parameters \texttt{p0} and \texttt{p1} are popped and
+initialised as \texttt{const char *} by the prologue created
+by \texttt{makeWords.pl}. Then a local \texttt{Value} variable
+is declared,
+and set to hold a new list by a call to the \texttt{set()} method
+of the list type object, \texttt{Types::tList} (see Sec.~\ref{typeinternals}),.
+The new list is stored in the variable \texttt{list.} 
+Then, for each string, a call is made to the list's \texttt{append()} method
+which returns a new \texttt{Value} pointer, and the string type
+object's \texttt{set()} method is used to set this new value to a string.
+Finally, a new value is pushed onto the stack, and \texttt{v} -- the value
+which wraps the list -- is copied into it.
+
+\subsubsection{Important ``gotcha'': overwriting stack values}
+Note that our code above doesn't look like this:
+\begin{lstlisting}[language=c++]
+%wordargs stringstolist ss (string string -- list) list from two strings
+{
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    Types::tString->set(list->append(),p0);
+    Types::tString->set(list->append(),p1);
+}
+\end{lstlisting}
+That is, we don't push a new value onto the stack and start writing
+to it immediately. That's because the following sequence would occur:
+\begin{itemize}
+\item pop the stack into p0 and p1 (in the prologue)
+\item push the stack
+\item set the new stack top to be a list -- overwriting the value
+which was popped into p0, replacing the string pointer with a list
+pointer
+\end{itemize}
+This is why we write our return value into a local variable which
+we push at the end of function.
+
+\clearpage
+\subsubsection{\%wordargs type specification}
+The string immediately following the function name in a \texttt{\%wordargs}
+specification gives the types of the parameters, each by a single
+character. If you want a variadic function, use \texttt{\%word} and
+the Angort \texttt{pop..()} functions to pop the values one by one.
+The type letters are given below.
+\begin{center}
+\begin{tabular}{|l|l|l|} \hline
+Letter & C++ type & notes \\ \hline
+n & \texttt{float} & \\
+L & \texttt{long} & \\
+b & \texttt{bool} & \\
+i & \texttt{integer} & \\
+d & \texttt{double} &\\
+c or v  & \texttt{Value *} & raw Angort value\\
+s or S & \texttt{const char *} & string or symbol \\
+y & \texttt{const char *} & string, symbol or none (NULL)\\
+l & \texttt{ArrayList<Value>*} & list \\
+h & \texttt{Hash *} & hash \\
+A or B & user type (see below) & \\ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection{The \%type directive and user types}
+\index{type!user defined in C++}
+This is used to tell \texttt{makeWords.pl} about a user-defined
+type. It takes three arguments: the name of the type,
+the static global variable containing the type object,
+and the name of the object returned by calling the type object's
+\texttt{get()} method with a \texttt{Value} pointer.
+
+To define a user type, we need to define a type object for it.
+Given that most user types are rather more than simple values,
+this example will cover creating new garbage-collected types.
+Let's consider complex numbers, which require the storage of two
+double-precision values: real and imaginary components.
+Our complex number class will look like this, inheriting
+\texttt{GarbageCollected}:
+\begin{lstlisting}[language=c++]
+class Complex : public GarbageCollected {
+public:
+    double r,i;
+    
+    virtual ~Complex(){}
+    Complex(double _r,double _i){
+        r = _r;
+        i = _i;
+    }
+};
+\end{lstlisting}
+Now we can define the type object:
+\begin{lstlisting}[language=c++]
+class ComplexType : public GCType {
+public:
+    ComplexType(){
+        add("complex","CPLT");
+    }
+    
+    virtual ~ComplexType(){}
+    
+    Complex *get(const Value *v) const {
+        if(v->t!=this)
+            throw RUNT(EX_TYPE,"not a complex number");
+        return (Complex *)(v->v.gc);
+    }
+    
+    void set(Value *v,double r,double i){
+        v->clr();
+        v->t=this;
+        v->v.gc = new Complex(r,i);
+        incRef(v);
+    }
+    
+    virtual const char *toString(bool *allocated,const Value *v) const {
+        char buf[128];
+        Complex *w = get(v);
+        snprintf(buf,128,"%f+%fi",w->r,w->i);
+        *allocated=true;
+        return strdup(buf);
+    }
+};
+\end{lstlisting}
+This code should appear after the \texttt{\%name} and
+\texttt{\%shared} directives.
+The important members here are \texttt{get()}, which ensures the
+passed \texttt{Value} is the right type and returns the underlying
+structure; and \texttt{set()}, which clears the value of any
+previous data, sets the type pointer, initialises a new object
+and increments the reference count. Also of note is
+the constructor, which calls \texttt{add()} to register the type
+with Angort, passing in two unique identifiers -- long and 4-character
+(the latter for quick comparison). Finally, we provide a string conversion
+method -- this type will be automatically converted to a string
+when required.
+
+Now we have our types, we can register them:
+\begin{lstlisting}[language=c++]
+static ComplexType tC;
+%type complex tC Complex
+\end{lstlisting}
+This declares and initialises the singleton type object,
+and registers the type with \texttt{makeWords.pl} under the name
+\texttt{complex}.
+We can now define words which use this type. First, the easy case
+of making a new complex number:
+\begin{lstlisting}[language=c++]
+%wordargs complex dd (r i -- complex)
+{
+    tC.set(a->pushval(),p0,p1);
+}
+\end{lstlisting}
+This just pushes a value, and passes it to our new type object's
+\texttt{set()} method with the parameters (two doubles).
+
+If we want to write a word which takes a complex number as a parameter,
+we need to use the user type facility of \texttt{\%wordargs}. If you
+specify A or B as a type, a user type name or two (comma-separated) should
+follow the specification after a vertical bar. This is the type
+name as given as the first argument of \texttt{\%type}. Here are
+functions to extract the real and imaginary components:
+\begin{lstlisting}[language=c++]
+%wordargs real A|complex (complex -- real part)
+{
+    a->pushDouble(p0->r);
+}
+
+%wordargs img A|complex (complex -- img part)
+{
+    a->pushDouble(p0->i);
+}
+\end{lstlisting}
+
+\clearpage
+\subsubsection{Defining binary operators}
+We can define functions for the binary operators by using
+\texttt{\%binop} and the names of two types, separated by the operator
+name, one of: \texttt{equals}, \texttt{nequals}, \texttt{add}, \texttt{mul},
+\texttt{div}, \texttt{sub}, \texttt{and}, \texttt{or}, \texttt{gt}, 
+\texttt{lt}, \texttt{le}, \texttt{lt}, \texttt{mod}, \texttt{cmp}. 
+The types can be user-defined or internal:
+\begin{lstlisting}[language=c++]
+%binop complex mul complex
+{
+    Complex *l = tC.get(lhs); // use tC to get Complex pointer from Value
+    Complex *r = tC.get(rhs);
+    // calculate result
+    double real = (l->r * r->r) - (l->i * r->i);
+    double img = (l->r * r->i) + (l->i * r->r);
+    // push new complex.
+    tC.set(a->pushval(),real,img);
+}
+
+%binop complex add complex
+{
+    Complex *l = tC.get(lhs);
+    Complex *r = tC.get(rhs);
+    tC.set(a->pushval(),l->r+r->r,l->i+r->i);
+}
+
+%binop complex add double
+{
+    Complex *l = tC.get(lhs);
+    float r = rhs->toDouble();
+    tC.set(a->pushval(),l->r+r,l->i);
+}
+// there would be more down here!
+\end{lstlisting}
+Note that binop functions take two \texttt{Value} pointers; no
+automatic parameter unwrapping \emph{\'a la} \texttt{\%wordargs} is
+done. Also note that the type handling in binops is quite strict:
+with the above definitions
+\begin{v}
+4 5 complex 1.0d + .
+\end{v}
+will work, but
+\begin{v}
+4 5 complex 1 + .
+\end{v}
+will not, because there is no registered binary operator which
+takes a complex number and an integer.

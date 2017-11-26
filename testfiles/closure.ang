@@ -1,3 +1,4 @@
+
 1 assertdebug
 # takes x, makes a function which adds x to the argument y
 :makeadder |x:| (|y:| ?x ?y +) ;
@@ -28,8 +29,10 @@ global t
 1 !t # overwrite 
 gccount.
 dumpframe
-gccount 1 = "closuregc0" assert # GC count should be one here, for arg list
 
+gccount 2 = "closuregc0" assert # GC count should be one here, for arg lists
+
+gccount !BaseGC
 
 # OK, nested closure. This is a function which takes two arguments,
 # returning a function which takes two arguments which returns a function
@@ -62,7 +65,7 @@ gccount 1 = "closuregc0" assert # GC count should be one here, for arg list
 1 !t # clear the "t" variable to drop the reference
 
 # if you write a closure over a closure, the total gc count should not increment
-1 gccount = "closure over closure gc" assert
+2 ?BaseGC = "closure over closure gc" assert
 
 
 # in this case, there was a problem when a closure which was only referred to
@@ -93,8 +96,7 @@ mkcounter !a
 mkcounter !b
 
 "GCCOUNT=" p gccount p nl
-
-5 gccount = "stacked closure GC count" assert
+?BaseGC 4+ gccount = "stacked closure GC count" assert
 
 ?a@ 1 = "mutclosa1" assert
 ?a@ 2 = "mutclosa2" assert
@@ -167,6 +169,6 @@ mkcounter !b
 clear
 ct.
 "GCCOUNT=" p gccount p nl
-1 gccount = "GC count clear at end of closure tests" assert
+?BaseGC gccount = "GC count clear at end of closure tests" assert
 
 quit

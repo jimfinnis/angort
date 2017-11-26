@@ -26,7 +26,9 @@ void setArgumentList(int argc,char *argv[]){
               
 %name env
 
-%word args (-- list) get command line arguments
+%word rawargs (-- list) get command line arguments without stripping
+This retrieves the full command line arguments passed to main(), without
+doing the stripping of Angort-specific arguments performed by std$args.
 {
     Value *v = a->pushval();
     v->copy(&argList);

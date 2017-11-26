@@ -1,8 +1,18 @@
 #!/bin/bash
 
+# these are all the files with builtin words
+ws="../lib/stdWords.cpp ../lib/stdColl.cpp ../lib/stdString.cpp ../lib/stdMath.cpp ../lib/stdEnv.cpp \
+     ../lib/future.cpp ../lib/deprecated.cpp ../cli/cliWords.cpp"
+
+rm -f words.tex allwords.tex
+for i in $ws; do
+    perl ../makeWords.pl $i >/dev/null
+    cat words.tex >>allwords.tex
+done
+
 # do a bit of section demotion and replace index with indw for the automatic
 # words.
-sed s/\\\\index/\\\\indw/g ../build/lib/allwords.tex |\
+sed s/\\\\index/\\\\indw/g allwords.tex |\
     sed s/section\{/subsection\{/g >autowords.tex
 pdflatex main.tex
 makeindex main

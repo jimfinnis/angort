@@ -1,8 +1,10 @@
+gccount !BaseGC
+
 #single range, totalling up
 0 
 1 11 range each { i + }
 55 = "range1" assert
-1 gccount = "range1gc" assert # leave only arglist
+?BaseGC gccount = "range1gc" assert # leave only arglist
 
 0
 0 0  range each { 1 +}
@@ -13,7 +15,7 @@
 :mkrange 1 11 range ;
 0 mkrange each { mkrange each {i j * + }}
 3025 = "range2"  assert
-1 gccount = "range2gc" assert
+?BaseGC gccount = "range2gc" assert
 
 # reiteration on a stored range
 global t
@@ -21,7 +23,7 @@ global t
 0 ?t each {i +} 
 15 = "range3" assert
 gccount .
-2 gccount = "range3gc" assert # ?t holds a range
+?BaseGC 1+ gccount = "range3gc" assert # ?t holds a range
 
 # smoke test to screw up the stack
 0 
@@ -31,15 +33,15 @@ gccount .
 # then try the stored range again
 0 ?t each {i +} 
 15 = "range5" assert
-2 gccount = "range5gc" assert # ?t holds a range
+?BaseGC 1+ gccount = "range5gc" assert # ?t holds a range
 
 # finally, try to iterate over the same range nested.
 mkrange !t
 0 ?t each {?t each {i j * +}}
 3025 = "range6"  assert
-2 gccount = "range6gc" assert
+?BaseGC 1+ gccount = "range6gc" assert
 0 !t
-1 gccount = "range6gc2" assert
+?BaseGC gccount = "range6gc2" assert
 
 # float range
 
@@ -62,5 +64,6 @@ mkrange !t
 100 ?R in not "rangein4" assert
 101 ?R in not "rangein4" assert
 
-
+0!R
+?BaseGC gccount = "range6gc3" assert
 quit

@@ -735,8 +735,8 @@ package packagename & & directive to start a new namespace \\
 private & & all subsequent names are not exportable from the namespace\\
 public & & all subsequent names are exportable from the namespace (default)\\\hline
 import &(nsid --) & import all public definitions from a namespace into the default namespace\\
-import &(nsid list --) & import some public definitions from a namespace into the default namespace\\
-names & (nsid -- list) & get a list of names in a namespace\\
+import &(nsid symbollist --) & import some public definitions from a namespace into the default namespace\\
+names & (nsid -- symbollist) & get a list of names in a namespace\\
 ispriv & (nsid name -- bool) & return true if a name is private in the namespace\\
 isconst & (nsid name -- bool) & return true if a name is constant in the namespace\\
 \hline

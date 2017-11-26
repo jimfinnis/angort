@@ -5,6 +5,7 @@
 \setlength{\oddsidemargin}{10.6mm}
 \setlength{\evensidemargin}{10.6mm}
 \setlength{\headheight}{15.2pt}
+\usepackage[T1]{fontenc}
 \usepackage{listings}
 \usepackage{amssymb}
 \usepackage{makeidx}
@@ -88,8 +89,16 @@ morestring=[b]"
 \input{flow}
 \input{body}
 \input{paradigms}
+\input{plugins}
 
-\section{Automatic word documentation}
+\clearpage
+\section{Standard function documentation}
+This section contains automatically generated documentation
+for all words in the standard imported namespaces, i.e. those
+which are compiled into Angort and do not require fully qualified
+named with \verb+$+ in them. It also includes words in the
+\texttt{future} and \texttt{deprecated} namespaces.
+
 \input{autowords}
 
 
