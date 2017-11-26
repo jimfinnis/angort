@@ -25,13 +25,30 @@ static void formatUnsignedInt(char *s,unsigned int i,int width,int precision, bo
     sprintf(s,format,i);
 }
 
+static void formatSignedLong(char *s,long i,int width,int precision, bool zeropad, bool negpad){
+    char format[32];
+    sprintf(format,"%%%s%dld",zeropad?"0":"",negpad?-width:width);
+    sprintf(s,format,i);
+}
+
+static void formatUnsignedLong(char *s,unsigned long i,int width,int precision, bool zeropad, bool negpad){
+    char format[32];
+    sprintf(format,"%%%s%dlu",zeropad?"0":"",negpad?-width:width);
+    sprintf(s,format,i);
+}
+
 static void formatHexInt(char *s,unsigned int i,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     sprintf(format,"%%%s%dx",zeropad?"0":"",negpad?-width:width);
     sprintf(s,format,i);
 }
+static void formatHexLong(char *s,unsigned long i,int width,int precision, bool zeropad, bool negpad){
+    char format[32];
+    sprintf(format,"%%%s%dlx",zeropad?"0":"",negpad?-width:width);
+    sprintf(s,format,i);
+}
 
-static void formatFloat(char *s,float f,int width,int precision, bool zeropad, bool negpad){
+static void formatFloat(char *s,double f,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     if(precision!=-9999)
         sprintf(format,"%%%s%d.%df",zeropad?"0":"",negpad?-width:width,precision);
@@ -40,7 +57,7 @@ static void formatFloat(char *s,float f,int width,int precision, bool zeropad, b
     sprintf(s,format,f);
 }
 
-static void formatFloat2(char *s,float f,int width,int precision, bool zeropad, bool negpad){
+static void formatFloat2(char *s,double f,int width,int precision, bool zeropad, bool negpad){
     char format[32];
     if(precision!=-9999)
         sprintf(format,"%%%s%d.%dg",zeropad?"0":"",negpad?-width:width,precision);
@@ -88,8 +105,8 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
             }
             while(*f && *f!='%' && !isalpha(*f))
                 ;
-            if((*f=='l' || *f=='z') && (f[1]=='d' || f[1]=='u'))
-                ++f;
+            if((*f=='l' || *f=='z') && (f[1]=='d' || f[1]=='u' || f[1]=='x'))
+                ++f; // skip length flag (dealt with in pass 2)
             switch(*f){
             case 'c':
                 iter.next();
@@ -98,14 +115,14 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 size++;
                 break;
             case 'd':case 'u':case 'x':
-                // 20 is enough for a 64bit int
+                // 50 should be plenty
                 iter.next();
-                size+=max(20,width);
+                size+=max(50,width);
                 break;
             case 'f':
             case 'g':
                 iter.next();
-                size+=20; // got to draw the line somewhere.
+                size+=50; // got to draw the line somewhere.
                 break;
             case 's':{
                 const StringBuffer& b = iter.current()->toString();
@@ -132,6 +149,7 @@ expand:
     iter.first();
     for(const char *f = format;*f;f++){
         if(*f=='%'){
+            bool isLong=false;
             bool zeropad=false;
             bool negpad=false;
             const char *p = f++;
@@ -153,9 +171,11 @@ expand:
             }
             while(*f && *f!='%' && !isalpha(*f))
                 f++;
-            // skip length flags
-            if((*f=='l' || *f=='z') && (f[1]=='d' || f[1]=='u'))
+            // length flags
+            if((*f=='l' || *f=='z') && (f[1]=='d' || f[1]=='u' || f[1]=='x')){
+                if(*f=='l')isLong=true;
                 ++f;
+            }
             
             switch(*f){
             case 'c':
@@ -163,27 +183,36 @@ expand:
                 iter.next();
                 break;
             case 'd':
-                formatSignedInt(s,iter.current()->toInt(),width,precision,zeropad,negpad);
+                if(isLong)
+                    formatSignedLong(s,iter.current()->toLong(),width,precision,zeropad,negpad);
+                else
+                    formatSignedInt(s,iter.current()->toInt(),width,precision,zeropad,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;
             case 'u':
-                formatUnsignedInt(s,iter.current()->toInt(),width,precision,zeropad,negpad);
+                if(isLong)
+                    formatUnsignedLong(s,iter.current()->toLong(),width,precision,zeropad,negpad);
+                else
+                    formatUnsignedInt(s,iter.current()->toInt(),width,precision,zeropad,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;
             case 'x':
-                formatHexInt(s,iter.current()->toInt(),width,precision,zeropad,negpad);
+                if(isLong)
+                    formatHexInt(s,iter.current()->toInt(),width,precision,zeropad,negpad);
+                else
+                    formatHexLong(s,iter.current()->toInt(),width,precision,zeropad,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;
             case 'f':
-                formatFloat(s,iter.current()->toFloat(),width,precision,zeropad,negpad);
+                formatFloat(s,iter.current()->toDouble(),width,precision,zeropad,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;
             case 'g':
-                formatFloat2(s,iter.current()->toFloat(),width,precision,zeropad,negpad);
+                formatFloat2(s,iter.current()->toDouble(),width,precision,zeropad,negpad);
                 s+=strlen(s);
                 iter.next();
                 break;
