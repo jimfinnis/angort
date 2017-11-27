@@ -2,7 +2,7 @@ project(ANGORTCLI)
 find_package(Libedit REQUIRED)
 
 include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
-include_directories(${ANGORT_BINARY_DIR}/lib)
+include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
 
 
@@ -30,8 +30,16 @@ macro(add_words_files)
     endforeach(file)
 endmacro(add_words_files)
 
+
 add_words_files(cliWords.cpp)
-set(SOURCE main.cpp basicdeb.cpp ${WORDFILELIST})
+
+add_custom_command(
+    OUTPUT debtoks.cpp debtoks.h
+    DEPENDS debtoks
+    COMMAND python ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/cli/debtoks debtoks)
+
+
+set(SOURCE main.cpp completer.cpp basicdeb.cpp debtoks.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
 

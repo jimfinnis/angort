@@ -611,7 +611,6 @@ struct Frame {
 };
 
 
-
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
@@ -654,7 +653,6 @@ private:
     CompileContext *context;
     
     Tokeniser tok;
-    const Instruction *ip,*wordbase;
     
     /// the index of the word currently being defined
     /// within the current namespace, whose value is set
@@ -739,13 +737,17 @@ private:
     NativeFunc debuggerHook;
     
 public:
+    // annoyingly public to allow debugger access
+    const Instruction *ip,*wordbase;
+    
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
         debuggerHook = f;
     }
     
     /// show an instruction
-    void showop(const Instruction *ip,const Instruction *base=NULL);
+    void showop(const Instruction *ip,const Instruction *base=NULL,
+                const Instruction *curr=NULL);
     
     /// find a global or create one if it doesn't exist;
     /// used for autoglobals.

@@ -52,7 +52,7 @@ long LongType::toLong(const Value *v) const {
 
 const char *LongType::toString(bool *allocated,const Value *v) const {
     char buf[128];
-    snprintf(buf,128,"%ld",v->v.l);
+    snprintf(buf,128,"%ldl",v->v.l);
     *allocated=true;
     return strdup(buf);
 }

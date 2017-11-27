@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.3.1"
+#define ANGORT_VERSION "4.4.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -162,11 +162,13 @@ void Angort::shutdown(){
     running = false;
 }
 
-void Angort::showop(const Instruction *ip,const Instruction *base){
+void Angort::showop(const Instruction *ip,const Instruction *base,
+                    const Instruction *curr){
     if(!base)base=wordbase;
     char buf[128];
     Value tmp;
-    printf("%8p [%s:%d] : %04d : %s (%d) ",
+    printf("%s %8p [%s:%d] : %04d : %s (%d) ",
+           ip == curr ? "* " : "  ",
            base,
 #if SOURCEDATA
            ip->file,ip->line,
@@ -371,7 +373,7 @@ void Angort::dumpStack(const char *s){
     printf("Stack dump for %s\n",s);
     for(int i=0;i<stack.ct;i++){
         const StringBuffer &b = stack.peekptr(i)->toString();
-        printf("  %s\n",b.get());
+        printf("%3d  %s\n",i,b.get());
     }
 }
 

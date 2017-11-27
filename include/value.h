@@ -181,10 +181,8 @@ struct Value {
     }
     
     /// debugging method - dump a value to stdout, using the string
-    /// from toString().
-    void dump(const char *prefix){
-        printf("%s: %s\n",prefix,toString().get());
-    }
+    /// from toString() unless it's a hash or list.
+    void dump(int depth=0);
     
 //private:    
     

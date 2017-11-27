@@ -63,7 +63,7 @@ stdEnv.cpp future.cpp deprecated.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     cycle.cpp   binop.cpp   plugins.cpp    format.cpp    stringbuf.cpp
-    filefind.cpp
+    filefind.cpp value.cpp
     types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
     types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
     types/hashtype.cpp         types/symbol.cpp       types/native.cpp

@@ -1,0 +1,18 @@
+# Tokens for the debugger
+
+# standard symbols
+
+*e      :   T_END
+*s      :   T_STRING
+*i      :   T_IDENT
+*n      :   T_INT
+*f      :   T_FLOAT
+*D      :   T_DOUBLE
+*L      :   T_LONG
+
+*c?     :   T_QUESTION
+
+
+p       :   T_DUMP
+disasm  :   T_DISASM
+frame   :   T_FRAME

@@ -12,6 +12,7 @@
 #include <histedit.h>
 
 #include "angort.h"
+#include "completer.h"
 
 using namespace angort;
 
@@ -46,40 +47,19 @@ static void showException(Exception& e){
 #define F_FUTURE 4
 #define F_DEPRECATED 8
 
-static char *autocomplete_generator(const char *text,int state){
-    static int idx;
-    const char *name;
-    static int len;
-    const char *start = text; // record this for prefixes
-    
-    // skip any the number of ? or ! at the beginning
-    // so ??word and ?/! var will work. I would use
-    // rl_special_prefixes, but it doesn't seem to behave.
-    
-    while(*text && (*text=='!' ||*text=='?'))text++;
-    
-    if(!state){
-        len=strlen(text);
+// autocompletion data generator
+class AngortAutocomplete : public AutocompleteIterator {
+public:
+    virtual void first(){
         a->resetAutoComplete();
     }
-    
-    // return the next name which partially matches
-    while(name = a->getNextAutoComplete()){
-        idx++;
-        if(!strncmp(name,text,len)){
-            if(start!=text){
-                char *ss = (char *)
-                      malloc(strlen(name)+(text-start)+1);
-                memcpy(ss,start,text-start);
-                strcpy(ss+(text-start),name);
-                free((void *)name);
-                return ss;
-            }
-            return (char *)name;
-        }
+    virtual const char *next(){
+        return a->getNextAutoComplete();
     }
-    return NULL;
-}
+};
+    
+
+
 
 const char *getPrompt(){
     extern Value promptCallback;
@@ -288,6 +268,9 @@ int main(int argc,char *argv[]){
     HistEvent ev;
     history(hist,&ev,H_SETSIZE,800);
     el_set(el,EL_HIST,history,hist);
+    
+    AngortAutocomplete angortcompleter;
+    setupAutocomplete(el,&angortcompleter);
     
     if(!hist)
         printf("warning: no history\n");
