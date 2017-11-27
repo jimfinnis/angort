@@ -735,7 +735,15 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
+    /// debugger hook, invoked by the "brk" word
+    NativeFunc debuggerHook;
+    
 public:
+    /// replace the debugger hook
+    void setDebuggerHook(NativeFunc f){
+        debuggerHook = f;
+    }
+    
     /// show an instruction
     void showop(const Instruction *ip,const Instruction *base=NULL);
     
@@ -1054,6 +1062,11 @@ public:
     void importAllFuture();
     /// import all symbols in the `deprecated namespace
     void importAllDeprecated();
+    
+    void invokeDebugger(){
+        if(debuggerHook)
+            (*debuggerHook)(this);
+    }
 };
 
 

@@ -57,6 +57,9 @@ Angort::Angort() {
     names.push(stdNamespace);
     lineNumber=1;
     
+    // no debugger by default; CLI sets this up.
+    debuggerHook = NULL;
+    
     rstack.setName("return");
     loopIterStack.setName("loop iterator");
     contextStack.setName("context");

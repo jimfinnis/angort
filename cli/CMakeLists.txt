@@ -31,7 +31,7 @@ macro(add_words_files)
 endmacro(add_words_files)
 
 add_words_files(cliWords.cpp)
-set(SOURCE main.cpp ${WORDFILELIST})
+set(SOURCE main.cpp basicdeb.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
 

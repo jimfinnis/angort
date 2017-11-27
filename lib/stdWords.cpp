@@ -353,6 +353,11 @@ Shortcut for asserting that two integer values are equal.
     if(a->popInt()!=a->popInt())
         throw RUNT(EX_ASSERT,"assertq failure");
 }
+
+%word brk (--) breakpoint - will invoke the simple debugger if present
+{
+    a->invokeDebugger();
+}
     
 
 %word abs (x --) absolute value

@@ -268,17 +268,23 @@ int main(int argc,char *argv[]){
         }
     }
     
+    // set up debugger
+    extern void basicDebugger(Angort *);
+    a->setDebuggerHook(basicDebugger);
+    
     // then read lines from input
     
     a->assertDebug=true;
     printf("Angort version %s (c) Jim Finnis 2012-2017\nUse '??word' to get help on a word.\n",
            a->getVersion());
     
-    // set up the autocomplete function
-    rl_completion_entry_function = autocomplete_generator;
-    rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
     for(;;){
         const char *prompt = getPrompt(a);
+        
+        // set up the autocomplete function and others
+        rl_completion_entry_function = autocomplete_generator;
+        rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
+        
         char *line = readline(prompt);
         if(!line)break;
         if(*line){
