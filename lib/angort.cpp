@@ -2254,11 +2254,6 @@ void Angort::resetAutoComplete(){
     for(int i=0;tokens[i].word;i++){
         *acList->append()=strdup(tokens[i].word);
     }
-    // then add the default namespace
-    Namespace *ns = names.getSpaceByIdx(stdNamespace);
-    for(int i=0;i<ns->count();i++){
-        *acList->append()=strdup(ns->getName(i));
-    }
     // and finally add the fully qualified name for all namespaces
     // (and unqualified name for imported namespaces)
     char buf[1024];

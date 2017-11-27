@@ -129,8 +129,10 @@ void Completer::printCompletions() {
     int gap=0;
     iter->first();
     while(const char *name = iter->next()){
-        if(strlen(name)>gap)
-            gap=strlen(name);
+        if(!strncmp(name,match,matchlen)){
+            if(strlen(name)>gap)
+                gap=strlen(name);
+        }
     }
     gap++;
     
