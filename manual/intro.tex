@@ -197,7 +197,12 @@ As can be seen, Angort is a very terse language.
 The requirements to build Angort are
 \begin{itemize}
 \item (probably) Linux
-\item the GNU \texttt{readline} library
+\item the BSD \texttt{libedit} library\footnote{I'm not using
+the GNU \texttt{readline} library for two reasons: firstly, it doesn't
+permit multiple instances, which are needed for the integral debugger;
+and secondly it infects software with the GPL and has no linking
+exception.} -- this can be found in the Ubuntu package \texttt{libedit-dev}
+or source at \url{http://thrysoee.dk/editline/} 
 \item CMake
 \item Perl (to parse the function definition files)
 \end{itemize}

@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <histedit.h>
 
 #include "angort.h"
 
@@ -82,7 +81,7 @@ static char *autocomplete_generator(const char *text,int state){
     return NULL;
 }
 
-const char *getPrompt(Angort *a){
+const char *getPrompt(){
     extern Value promptCallback;
     
     static char buf[256];
@@ -121,6 +120,7 @@ void sigh(int s){
     printf("Signal %d recvd, exiting\n",s);
     exit(1);
 }
+
 
 int main(int argc,char *argv[]){
     signal(SIGSEGV,sigh);
@@ -278,24 +278,47 @@ int main(int argc,char *argv[]){
     printf("Angort version %s (c) Jim Finnis 2012-2017\nUse '??word' to get help on a word.\n",
            a->getVersion());
     
+    // start up an editline instance
+    
+    EditLine *el = el_init(argv[0],stdin,stdout,stderr);
+    el_set(el,EL_PROMPT,&getPrompt);
+    el_set(el,EL_EDITOR,"emacs");
+    
+    History *hist = history_init();
+    HistEvent ev;
+    history(hist,&ev,H_SETSIZE,800);
+    el_set(el,EL_HIST,history,hist);
+    
+    if(!hist)
+        printf("warning: no history\n");
+        
     for(;;){
-        const char *prompt = getPrompt(a);
-        
         // set up the autocomplete function and others
-        rl_completion_entry_function = autocomplete_generator;
-        rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
+//        rl_completion_entry_function = autocomplete_generator;
+//        rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
         
-        char *line = readline(prompt);
+        int count;
+        const char *line = el_gets(el,&count);
         if(!line)break;
-        if(*line){
-            add_history(line);
+        if(count>1){ // there's going to be a trailing newline
+            if(hist)
+                history(hist,&ev,H_ENTER,line);
             try {
-                a->feed(line);
+                // annoyingly, editline keeps any trailing newline
+                char *tmp = strdup(line);
+                if(*tmp && tmp[strlen(tmp)-1]=='\n')
+                    tmp[strlen(tmp)-1]=0;
+                a->feed(tmp);
+                free(tmp);
             } catch(Exception e){
                 showException(e);
             }
         }
     }
+    
+    history_end(hist);
+    el_end(el);
+    
     delete a;
     return 0;
 }
