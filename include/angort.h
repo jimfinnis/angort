@@ -735,7 +735,7 @@ private:
     
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
-    
+    bool debuggerNextIP;
 public:
     // annoyingly public to allow debugger access
     const Instruction *ip,*wordbase;
@@ -1065,10 +1065,7 @@ public:
     /// import all symbols in the `deprecated namespace
     void importAllDeprecated();
     
-    void invokeDebugger(){
-        if(debuggerHook)
-            (*debuggerHook)(this);
-    }
+    void invokeDebugger();
 };
 
 

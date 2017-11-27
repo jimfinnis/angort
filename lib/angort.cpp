@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.4.1"
+#define ANGORT_VERSION "4.4.2"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -42,9 +42,19 @@ const char* Angort::getVersion(){
     return ANGORT_VERSION;
 }
 
+void Angort::invokeDebugger(){
+    if(!ip){
+        if(debuggerHook)
+            (*debuggerHook)(this);
+    } else 
+        debuggerNextIP = true;
+}
+
+
 Angort *Angort::callingInstance=NULL;
 
 Angort::Angort() {
+    ip = NULL;
     traceOnException=true;
     running = true;
     outputStream = stdout;
@@ -59,6 +69,7 @@ Angort::Angort() {
     
     // no debugger by default; CLI sets this up.
     debuggerHook = NULL;
+    debuggerNextIP=false;
     
     rstack.setName("return");
     loopIterStack.setName("loop iterator");
@@ -473,6 +484,10 @@ void Angort::run(const Instruction *startip){
                     ret();
                     if(!ip)
                         goto leaverun;
+                }
+                if(debuggerNextIP && debuggerHook){
+                    debuggerNextIP = false;
+                    (*debuggerHook)(this);
                 }
                 
                 int opcode = ip->opcode;
@@ -920,6 +935,7 @@ void Angort::run(const Instruction *startip){
     }
     
 leaverun:
+    ip=NULL;
     catchstack.pop();
 }
 

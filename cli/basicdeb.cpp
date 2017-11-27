@@ -13,6 +13,8 @@
 
 using namespace angort;
 
+bool debuggerBreakHack=false;
+
 // we have our own instance of editline
 static EditLine *el=NULL;
 static History *hist=NULL;
@@ -112,8 +114,10 @@ void basicDebugger(Angort *a){
     
     for(;;){
         int count;
+        debuggerBreakHack=true;
         const char *line = el_gets(el,&count);
         if(!line)break;
+        debuggerBreakHack=false;
         if(count>1){ // trailing newline
             if(hist)
                 history(hist,&ev,H_ENTER,line);

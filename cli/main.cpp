@@ -14,10 +14,26 @@
 #include "angort.h"
 #include "completer.h"
 
+// keep this up to date!
+static const char *copyString="(c) Jim Finnis 2012-2017";
+static const char *usageString=
+"\nUsage: angort [-h] [-n] [-e] [-d] [-D] [-b] [-if] [-in]\n"
+"        [-llib] [-llib]..\n\n"
+"-h    : this string\n"
+"-n    : execute command-line script in loop, requires two args: init\n"
+"        and loop (the latter reads lines from stdin)\n"
+"-e    : execute command-line script\n"
+"-d    : disassemble while running\n"
+"-D    : tokeniser trace\n"
+"-b    : signals cause debugger entry rather than exit\n"
+"-if   : import symbols from future namespace, mutually exclusive with...\n"
+"-if   : import symbols from deprecated namespace\n"
+"-llib : import named library\n"
+;
+
 using namespace angort;
 
 extern angort::LibraryDef LIBNAME(cli);
-
 
 // stripped arglist, wrapped by a value. These are linked
 // at the start of main().
@@ -59,6 +75,7 @@ public:
 };
     
 
+bool debugOnSignal=false;
 
 
 const char *getPrompt(){
@@ -96,19 +113,38 @@ void addDirToSearchPath(const char *data){
     free((void *)path);
 }
 
-void sigh(int s){
-    printf("Signal %d recvd, exiting\n",s);
-    exit(1);
+static EditLine *el=NULL;
+static History *hist=NULL;
+
+void cliShutdown(){
+    if(el){
+        shutdownAutocomplete(el);
+        history_end(hist);
+        el_end(el);
+        el=NULL;
+    }
 }
 
+void sigh(int s){
+    printf("Signal %d recvd, exiting\n",s);
+    if(debugOnSignal)
+        a->invokeDebugger();
+    else {
+        cliShutdown();
+        exit(1);
+    }
+}
 
 int main(int argc,char *argv[]){
     signal(SIGSEGV,sigh);
+    signal(SIGINT,sigh);
     
     extern void setArgumentList(int argc,char *argv[]);
     
     a = new Angort();
     
+    // will register words - including %shutdown, which will run when
+    // angort shuts down normally.
     a->registerLibrary(&LIBNAME(cli),true);
     
     // first, we'll try to include the standard startup
@@ -154,6 +190,11 @@ int main(int argc,char *argv[]){
         if(*arg == '-'){
             // it's an option.
             switch(arg[1]){
+            case 'h':
+                printf("Angort version %s %s\n",a->getVersion(),copyString);
+                puts(usageString);
+                exit(0);
+                break;
             case '-':
                 // copy ALL remaining arguments into stripped arg list,
                 // ignoring them here
@@ -164,6 +205,7 @@ int main(int argc,char *argv[]){
             case 'e':flags|=F_CMD;break;
             case 'd':a->debug|=1;break;
             case 'D':a->debug|=2;break;
+            case 'b':debugOnSignal=true;break;
             case 'i':
                 switch(arg[2]){
                 case 'f':
@@ -248,6 +290,15 @@ int main(int argc,char *argv[]){
         }
     }
     
+    /*
+     * 
+     * After this point, editline is up so will need to be closed down on
+     * exit. cliShutdown() will do this, and a normal angort shutdown will
+     * do that because it will call %shutdown in the library, which will
+     * call cliShutdown().
+     */
+    
+    
     // set up debugger
     extern void basicDebugger(Angort *);
     a->setDebuggerHook(basicDebugger);
@@ -255,16 +306,17 @@ int main(int argc,char *argv[]){
     // then read lines from input
     
     a->assertDebug=true;
-    printf("Angort version %s (c) Jim Finnis 2012-2017\nUse '??word' to get help on a word.\n",
+    printf("Angort version %s %s\nUse '??word' to get help on a word.\n",
+           copyString,
            a->getVersion());
     
     // start up an editline instance
     
-    EditLine *el = el_init(argv[0],stdin,stdout,stderr);
+    el = el_init(argv[0],stdin,stdout,stderr);
     el_set(el,EL_PROMPT,&getPrompt);
     el_set(el,EL_EDITOR,"emacs");
     
-    History *hist = history_init();
+    hist = history_init();
     HistEvent ev;
     history(hist,&ev,H_SETSIZE,800);
     el_set(el,EL_HIST,history,hist);
@@ -282,7 +334,17 @@ int main(int argc,char *argv[]){
         
         int count;
         const char *line = el_gets(el,&count);
-        if(!line)break;
+        // this avoids break happening when we exit the debugger
+        // after a ctrl-c.
+        extern bool debuggerBreakHack;
+        if(debuggerBreakHack)
+            debuggerBreakHack=false;
+        else if(!line)
+            break;
+
+            
+        
+       
         if(count>1){ // there's going to be a trailing newline
             if(hist)
                 history(hist,&ev,H_ENTER,line);
@@ -299,9 +361,6 @@ int main(int argc,char *argv[]){
         }
     }
     
-    history_end(hist);
-    el_end(el);
-    
-    delete a;
+    delete a; // will call cli shutdown, which will close down el.
     return 0;
 }

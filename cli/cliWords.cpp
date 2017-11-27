@@ -13,6 +13,8 @@ using namespace angort;
 extern Value strippedArgVal;
 Value promptCallback;
 
+extern void cliShutdown();
+
 %name cli
 
 %wordargs prompt C (function --) set prompt callback
@@ -33,3 +35,7 @@ not added to this list.
     a->pushval()->copy(&strippedArgVal);
 }
     
+%shutdown
+{
+    cliShutdown();
+}
