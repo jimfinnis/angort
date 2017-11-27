@@ -15,7 +15,7 @@ static History *hist=NULL;
 
 static const char *getprompt(){return "] ";}
 
-static void process(const *char line,Angort *a){
+static void process(const char *line,Angort *a){
 }
 
 
