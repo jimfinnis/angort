@@ -16,3 +16,4 @@
 p       :   T_DUMP
 disasm  :   T_DISASM
 frame   :   T_FRAME
+abort   :   T_ABORT

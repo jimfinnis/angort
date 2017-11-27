@@ -268,13 +268,13 @@ int main(int argc,char *argv[]){
     HistEvent ev;
     history(hist,&ev,H_SETSIZE,800);
     el_set(el,EL_HIST,history,hist);
-    
-    AngortAutocomplete angortcompleter;
-    setupAutocomplete(el,&angortcompleter,"\t\n\"\\'@><=;|&{(?! ");
-    
     if(!hist)
         printf("warning: no history\n");
         
+    
+    AngortAutocomplete completer;
+    setupAutocomplete(el,&completer,"\t\n\"\\'@><=;|&{(?! ");
+    
     for(;;){
         // set up the autocomplete function and others
 //        rl_completion_entry_function = autocomplete_generator;

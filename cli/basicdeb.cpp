@@ -9,6 +9,8 @@
 
 #include <histedit.h>
 
+#include "completer.h"
+
 using namespace angort;
 
 // we have our own instance of editline
@@ -51,19 +53,44 @@ static void process(const char *line,Angort *a){
                 printf("expected ident, not %s\n",tok.getstring());
             }
             break;
+        case T_ABORT:
+            a->stop();
+            break;
         case T_FRAME:
             a->dumpFrame();
+            break;
         default:
             printf("Unknown command\n");
         }
     }
 }
 
+// autocompletion data generator
+class DebuggerAutocomplete : public AutocompleteIterator {
+    int idx;
+public:
+    virtual void first(){
+        idx=0;
+    }
+    virtual const char *next(){
+        while(debtoks[idx].word && debtoks[idx].word[0]=='*')
+            idx++;
+        if(!debtoks[idx].word)return NULL;
+        return debtoks[idx++].word;
+    }
+};
+
+
 }
 void basicDebugger(Angort *a){
     tok.init();
     tok.settokens(debtoks);
     tok.setname("<debugger>");
+    
+    printf("Debugger: TAB-TAB for command list, ctrl-D to exit and continue.\n"
+           "abort to terminate program (remaining in debugger, ?var to query\n"
+           "global variable.\n\n");
+    
     
     HistEvent ev;
     if(!el){
@@ -75,9 +102,12 @@ void basicDebugger(Angort *a){
         hist = history_init();
         history(hist,&ev,H_SETSIZE,800);
         el_set(el,EL_HIST,history,hist);
-    
         if(!hist)
             printf("warning: no history\n");
+        
+        static debugger::DebuggerAutocomplete completer;
+        setupAutocomplete(el,&completer,"\t\n ");
+    
     }
     
     for(;;){
@@ -90,5 +120,6 @@ void basicDebugger(Angort *a){
             debugger::process(line,a);
         }
     }
+    putchar('\r');
 }
 
