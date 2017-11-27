@@ -16,7 +16,10 @@ public:
 
 
 // call after EL_EDITOR set
-void setupAutocomplete(EditLine *el,AutocompleteIterator *i);
+void setupAutocomplete(EditLine *el,AutocompleteIterator *i,
+                       const char *wordBreakChars);
 
+// will delete the editor completion info
+void shutdownAutocomplete(EditLine *el);
 
 #endif /* __COMPLETER_H */

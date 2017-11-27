@@ -270,7 +270,7 @@ int main(int argc,char *argv[]){
     el_set(el,EL_HIST,history,hist);
     
     AngortAutocomplete angortcompleter;
-    setupAutocomplete(el,&angortcompleter);
+    setupAutocomplete(el,&angortcompleter,"\t\n\"\\'@><=;|&{(?! ");
     
     if(!hist)
         printf("warning: no history\n");
