@@ -10,6 +10,7 @@
 #include "cycle.h"
 
 #include <signal.h>
+#include <unistd.h>
 #include <time.h>
 
 using namespace angort;
@@ -171,6 +172,11 @@ Print the values on the stack with a title, using naive string conversion
 identifying the list).
 {
     a->dumpStack(a->popString().get());
+}
+
+%wordargs raisesignal i (sig --) throw a signal
+{
+    kill(getpid(),p0);
 }
 
 %word snark ( ) used during debugging; prints an autoincremented count

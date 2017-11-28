@@ -127,9 +127,9 @@ void cliShutdown(){
 
 void sigh(int s){
     printf("Signal %d recvd, exiting\n",s);
-    if(debugOnSignal)
+    if(debugOnSignal){
         a->invokeDebugger();
-    else {
+    } else {
         cliShutdown();
         exit(1);
     }
@@ -162,6 +162,10 @@ int main(int argc,char *argv[]){
     // this sets the RAW argument list; the argument list stripped of
     // angort-specific stuff is set below.
     setArgumentList(argc,argv);
+    
+    // set up debugger
+    extern void basicDebugger(Angort *);
+    a->setDebuggerHook(basicDebugger);
     
     int flags = 0;
     
@@ -298,10 +302,6 @@ int main(int argc,char *argv[]){
      * call cliShutdown().
      */
     
-    
-    // set up debugger
-    extern void basicDebugger(Angort *);
-    a->setDebuggerHook(basicDebugger);
     
     // then read lines from input
     

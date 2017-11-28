@@ -22,6 +22,17 @@ Tokeniser tok;
 
 static const char *getprompt(){return "] ";}
 
+static const char *usage = 
+"abort         terminate program (remain in debugger)\n"
+"stack         show the stack\n"
+"print <n>     detailed view of stack entry <n>\n"
+"?Var          detailed view of global <Var>\n"
+"disasm        disassemble current function\n"
+"frame         show context frame\n"
+"help          show this string\n"
+;
+
+
 namespace debugger {
 static void disasm(Angort *a){
     const Instruction *ip = a->wordbase;
@@ -37,32 +48,47 @@ static void disasm(Angort *a){
 static void process(const char *line,Angort *a){
     tok.reset(line);
     char buf[256];
+    int i;
     for(;;){
-        switch(tok.getnext()){
-        case T_END:return;
-        case T_DUMP:
-            a->dumpStack("<debug>");
-            break;
-        case T_DISASM:
-            disasm(a);
-            break;
-        case T_QUESTION:
-            if(tok.getnextident(buf)){
-                int idx = a->findOrCreateGlobal(buf);
-                Value *v = a->names.getVal(idx);
-                v->dump();
-            } else {
-                printf("expected ident, not %s\n",tok.getstring());
+        try{
+            switch(tok.getnext()){
+            case T_END:return;
+            case T_HELP:puts(usage);break;
+            case T_STACK:
+                a->dumpStack("<debug>");
+                break;
+            case T_PRINT:
+                i=tok.getnextint();
+                if(i<0){
+                    printf("expected +ve integer stack index\n");
+                } else {
+                    Value *v = a->stack.peekptr(i);
+                    v->dump();
+                }
+                break;
+            case T_DISASM:
+                disasm(a);
+                break;
+            case T_QUESTION:
+                if(tok.getnextident(buf)){
+                    int idx = a->findOrCreateGlobal(buf);
+                    Value *v = a->names.getVal(idx);
+                    v->dump();
+                } else {
+                    printf("expected ident, not %s\n",tok.getstring());
+                }
+                break;
+            case T_ABORT:
+                a->stop();
+                break;
+            case T_FRAME:
+                a->dumpFrame();
+                break;
+            default:
+                printf("Unknown command %s\n",tok.getstring());
             }
-            break;
-        case T_ABORT:
-            a->stop();
-            break;
-        case T_FRAME:
-            a->dumpFrame();
-            break;
-        default:
-            printf("Unknown command\n");
+        } catch(Exception e){
+            printf("Error: %s\n",e.what());
         }
     }
 }
@@ -100,7 +126,7 @@ void basicDebugger(Angort *a){
         el = el_init("angort-debugger",stdin,stdout,stderr);
         el_set(el,EL_PROMPT,&getprompt);
         el_set(el,EL_EDITOR,"emacs");
-    
+        
         hist = history_init();
         history(hist,&ev,H_SETSIZE,800);
         el_set(el,EL_HIST,history,hist);
@@ -109,7 +135,7 @@ void basicDebugger(Angort *a){
         
         static debugger::DebuggerAutocomplete completer;
         setupAutocomplete(el,&completer,"\t\n ");
-    
+        
     }
     
     for(;;){

@@ -13,7 +13,9 @@
 *c?     :   T_QUESTION
 
 
-p       :   T_DUMP
+stack   :   T_STACK
 disasm  :   T_DISASM
 frame   :   T_FRAME
 abort   :   T_ABORT
+print   :   T_PRINT
+help    :   T_HELP
