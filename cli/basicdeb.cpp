@@ -25,7 +25,7 @@ static const char *getprompt(){return "] ";}
 static const char *usage = 
 "abort         terminate program (remain in debugger)\n"
 "stack         show the stack\n"
-"print <n>     detailed view of stack entry <n>\n"
+"<n> print     detailed view of stack entry <n>\n"
 "?Var          detailed view of global <Var>\n"
 "disasm        disassemble current function\n"
 "frame         show context frame\n"
@@ -49,20 +49,25 @@ static void process(const char *line,Angort *a){
     tok.reset(line);
     char buf[256];
     int i;
+    Stack<int,8> stack;
     for(;;){
         try{
             switch(tok.getnext()){
+            case T_INT:
+                stack.push(tok.getint());
+                break;
             case T_END:return;
             case T_HELP:puts(usage);break;
             case T_STACK:
                 a->dumpStack("<debug>");
                 break;
             case T_PRINT:
-                i=tok.getnextint();
+                i=stack.pop();
                 if(i<0){
                     printf("expected +ve integer stack index\n");
                 } else {
                     Value *v = a->stack.peekptr(i);
+                    printf("Type: %s\n",v->t->name);
                     v->dump();
                 }
                 break;
