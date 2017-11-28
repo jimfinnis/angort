@@ -166,6 +166,14 @@ If set to true, unknown identifiers will be converted to symbol values.
     a->barewords = a->popInt()?true:false;
 }
 
+%wordargs show v (v --) show a variable
+This shows more detail than a . or p, for example recursively showing
+lists and hashes.
+{
+    p0->dump();
+}
+
+
 %word dump ( title -- ) dump the stack
 Print the values on the stack with a title, using naive string conversion
 (e.g. all the items in a list will not be printed, just a brief string
