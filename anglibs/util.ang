@@ -35,7 +35,7 @@ public
 ;
 
 
-:show |h:tabs,sht|
+:showAngort |h:tabs,sht|
     :"(val -- str) generate a string representation of a value"
     ?h (|v:|
         ""

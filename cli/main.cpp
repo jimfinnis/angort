@@ -69,8 +69,13 @@ public:
     virtual void first(){
         a->resetAutoComplete();
     }
-    virtual const char *next(){
-        return a->getNextAutoComplete();
+    virtual const char *next(const char *stringstart, int len){
+        const char *s=NULL;
+        do
+            s = a->getNextAutoComplete();
+        while(s && strncmp(s,stringstart,len));
+              
+        return s;
     }
 };
     

@@ -105,8 +105,9 @@ public:
     virtual void first(){
         idx=0;
     }
-    virtual const char *next(){
-        while(debtoks[idx].word && debtoks[idx].word[0]=='*')
+    virtual const char *next(const char *stringstart,int len){
+        while(debtoks[idx].word && (debtoks[idx].word[0]=='*' ||
+              strncmp(stringstart,debtoks[idx].word,len)))
             idx++;
         if(!debtoks[idx].word)return NULL;
         return debtoks[idx++].word;

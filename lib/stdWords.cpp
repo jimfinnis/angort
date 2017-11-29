@@ -368,7 +368,7 @@ Shortcut for asserting that two integer values are equal.
         throw RUNT(EX_ASSERT,"assertq failure");
 }
 
-%word brk (--) breakpoint - will invoke the simple debugger if present
+%word b (--) breakpoint - will invoke the simple debugger
 {
     a->invokeDebugger();
 }

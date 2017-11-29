@@ -67,22 +67,20 @@ bool Completer::complete(){
     iter->first();
     
     int maxmatchlen=0;
-    while(name = iter->next()){
-        if(!strncmp(name,ptr,len)){
-            if(!matchlen){
-                strncpy(match,name,250);
-                match[250]=0;
-                matchlen=maxmatchlen=strlen(match);
-            } else {
-                // look for character count in common with existing
-                // match
-                int i=0;
-                const char *a=match;
-                const char *b=name;
-                while(*a && *b && *a==*b){i++;a++;b++;}
-                if(i<matchlen)matchlen=i;
-                if(strlen(name)>maxmatchlen)maxmatchlen=strlen(name);
-            }
+    while(name = iter->next(ptr,len)){
+        if(!matchlen){
+            strncpy(match,name,250);
+            match[250]=0;
+            matchlen=maxmatchlen=strlen(match);
+        } else {
+            // look for character count in common with existing
+            // match
+            int i=0;
+            const char *a=match;
+            const char *b=name;
+            while(*a && *b && *a==*b){i++;a++;b++;}
+            if(i<matchlen)matchlen=i;
+            if(strlen(name)>maxmatchlen)maxmatchlen=strlen(name);
         }
     }
     
@@ -122,17 +120,15 @@ void Completer::printCompletions() {
     struct winsize ws;
     ioctl(0,TIOCGWINSZ,&ws);
     int linelen = ws.ws_col;
-          
+    
     // first pass - calculate maximum ident length,
     // the gap between things.
     
     int gap=0;
     iter->first();
-    while(const char *name = iter->next()){
-        if(!strncmp(name,match,matchlen)){
-            if(strlen(name)>gap)
-                gap=strlen(name);
-        }
+    while(const char *name = iter->next(match,matchlen)){
+        if(strlen(name)>gap)
+            gap=strlen(name);
     }
     gap++;
     
@@ -140,18 +136,16 @@ void Completer::printCompletions() {
     // second pass - actually print
     iter->first();
     int len = 0;
-    while(const char *name = iter->next()){
-        if(!strncmp(name,match,matchlen)){
-            if(len+gap>linelen){
-                puts(buf);
-                *buf=0;
-                len=0;
-            }
-            memset(buf+len,' ',gap);
-            memcpy(buf+len,name,strlen(name));
-            buf[len+gap]=0;
-            len+=gap;
+    while(const char *name = iter->next(match,matchlen)){
+        if(len+gap>linelen){
+            puts(buf);
+            *buf=0;
+            len=0;
         }
+        memset(buf+len,' ',gap);
+        memcpy(buf+len,name,strlen(name));
+        buf[len+gap]=0;
+        len+=gap;
     }
     puts(buf);
 }

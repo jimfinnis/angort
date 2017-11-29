@@ -11,7 +11,7 @@
 class AutocompleteIterator {
 public:
     virtual void first()=0;
-    virtual const char *next()=0;
+    virtual const char *next(const char *stringstart,int len)=0;
 };
 
 
