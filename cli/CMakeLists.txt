@@ -39,7 +39,7 @@ add_custom_command(
     COMMAND python ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/cli/debtoks debtoks)
 
 
-set(SOURCE main.cpp completer.cpp basicdeb.cpp debtoks.cpp ${WORDFILELIST})
+set(SOURCE main.cpp completer.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
 

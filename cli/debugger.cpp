@@ -1,5 +1,5 @@
 /**
- * @file basicdeb.cpp
+ * @file debugger.cpp
  * @brief Basic debugger, can be replaced with setDebuggerHook()
  *
  */
@@ -24,12 +24,14 @@ static const char *getprompt(){return "] ";}
 
 static const char *usage = 
 "abort         terminate program (remain in debugger)\n"
+"quit          terminate angort completely\n"
 "stack         show the stack\n"
 "<n> print     detailed view of stack entry <n>\n"
 "?Var          detailed view of global <Var>\n"
 "disasm        disassemble current function\n"
 "frame         show context frame\n"
-"help          show this string\n"
+"CTRL-D        exit debugger and continue program (if not aborted)\n"
+"h             show this string\n"
 ;
 
 
@@ -61,6 +63,9 @@ static void process(const char *line,Angort *a){
             case T_STACK:
                 a->dumpStack("<debug>");
                 break;
+            case T_QUIT:
+                delete a;
+                exit(0);
             case T_PRINT:
                 i=stack.pop();
                 if(i<0){

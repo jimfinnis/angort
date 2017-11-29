@@ -18,4 +18,5 @@ disasm  :   T_DISASM
 frame   :   T_FRAME
 abort   :   T_ABORT
 print   :   T_PRINT
-help    :   T_HELP
+quit    :   T_QUIT
+h    :   T_HELP
