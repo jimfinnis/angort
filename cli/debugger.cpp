@@ -104,7 +104,7 @@ static void process(const char *line,Angort *a){
 }
 
 // autocompletion data generator
-class DebuggerAutocomplete : public AutocompleteIterator {
+class DebuggerAutocomplete : public completer::Iterator {
     int idx;
 public:
     virtual void first(){
@@ -144,8 +144,8 @@ void basicDebugger(Angort *a){
         if(!hist)
             printf("warning: no history\n");
         
-        static debugger::DebuggerAutocomplete completer;
-        setupAutocomplete(el,&completer,"\t\n ");
+        static debugger::DebuggerAutocomplete compr;
+        completer::setup(el,&compr,"\t\n ");
         
     }
     

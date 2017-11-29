@@ -11,52 +11,84 @@
 #include <histedit.h>
 #include "completer.h"
 
+#include <map>
+
+namespace completer {
+
 // holds data for this particular completer
 
 class Completer {
-    AutocompleteIterator *iter;
+    Iterator *defaultiter;
     const char *wordBreakChars;
     EditLine *el;
-    int matchlen,wordlen;
     char match[256];
     
+    std::map<int,Iterator *> argiters;
+    
+    // if there's an autocomplete iterator for argc, return it
+    // otherwise return the default
+    Iterator *getIterator(int argc){
+        std::map<int,Iterator *>::iterator it
+              = argiters.find(argc);
+        
+        return (it==argiters.end()) ? defaultiter : it->second;
+    }
     
 public:
-    Completer(EditLine *client, AutocompleteIterator *i,const char *wbc){
+    Completer(EditLine *client, Iterator *i,const char *wbc){
         el = client;
         wordBreakChars = wbc;
-        iter = i;
-        matchlen = 0;
+        defaultiter = i;
+    }
+    
+    void setArgIterator(int i,Iterator *iter){
+        argiters[i] = iter;
     }
     
     bool complete();
     void printCompletions();
+
+// get the completer for this EditLine or null (which should
+// never happen)
+
+    inline static Completer *get(EditLine *el){
+        Completer *d;
+        if(el_get(el,EL_CLIENTDATA,&d))
+            d = NULL;
+        return d;
+    }
 };
 
 
 bool Completer::complete(){
     const LineInfo *lf = el_line(el);
-    const char* ptr;
-    size_t len;
     int res = false;
     
-    matchlen=0;
+    int matchlen=0;
+    
+    // count the argument number
+    int argc=0;
+    for(const char *p=lf->buffer;*p && p!=lf->cursor;p++){
+        if(p==lf->cursor || strchr(wordBreakChars,*p)){
+            argc++;
+        }
+    }
     
     // get the word
-    for (ptr = lf->cursor - 1;
-         !strchr(wordBreakChars,*ptr) &&
-         ptr >= lf->buffer; ptr--)
-        continue;
-    len = lf->cursor - ++ptr;
-    
+    const char *ptr;
+    for(ptr=lf->cursor-1;!strchr(wordBreakChars,*ptr)&&
+        ptr>=lf->buffer;ptr--)continue;
+    size_t len = lf->cursor - ++ptr;
     
     // make sure it's neither too long nor too short
     if(len>256)return false;
-    wordlen = len;
     if(!len)return false;
     
     const char *name;
     const char *start = ptr;
+    
+    // work out which iterator we should use
+    Iterator *iter = getIterator(argc);
     
     // we need to find the shortest valid match, so go through
     // all the options starting with a null string
@@ -103,15 +135,24 @@ bool Completer::complete(){
 void Completer::printCompletions() {
     char buf[1024];
     *buf=0;
+    const LineInfo *lf = el_line(el);
     
-    // don't print completions if we're just at the end
-    // of a word and there are no matches. If we don't
-    // check this, we'd print the entire completion list
-    // (like hitting tab-tab on an empty line)
-    if(wordlen && !matchlen){
-        putchar('\r');
-        return;
+    // count the argument number
+    int argc=0;
+    for(const char *p=lf->buffer;*p && p!=lf->cursor;p++){
+        if(p==lf->cursor || strchr(wordBreakChars,*p)){
+            argc++;
+        }
     }
+    
+    // get the word
+    const char *ptr;
+    for(ptr=lf->cursor-1;!strchr(wordBreakChars,*ptr)&&
+        ptr>=lf->buffer;ptr--)continue;
+    size_t len = lf->cursor - ++ptr;
+    
+    // work out which iterator we should use
+    Iterator *iter = getIterator(argc);
     
     putchar('\n');
     
@@ -126,7 +167,7 @@ void Completer::printCompletions() {
     
     int gap=0;
     iter->first();
-    while(const char *name = iter->next(match,matchlen)){
+    while(const char *name = iter->next(ptr,len)){
         if(strlen(name)>gap)
             gap=strlen(name);
     }
@@ -135,17 +176,17 @@ void Completer::printCompletions() {
     
     // second pass - actually print
     iter->first();
-    int len = 0;
-    while(const char *name = iter->next(match,matchlen)){
-        if(len+gap>linelen){
+    int clen = 0;
+    while(const char *name = iter->next(ptr,len)){
+        if(clen+gap>linelen){
             puts(buf);
             *buf=0;
-            len=0;
+            clen=0;
         }
-        memset(buf+len,' ',gap);
-        memcpy(buf+len,name,strlen(name));
-        buf[len+gap]=0;
-        len+=gap;
+        memset(buf+clen,' ',gap);
+        memcpy(buf+clen,name,strlen(name));
+        buf[clen+gap]=0;
+        clen+=gap;
     }
     puts(buf);
 }
@@ -157,9 +198,7 @@ void Completer::printCompletions() {
 
 static int tabCheckingCharReader(EditLine *el, char *cp)
 {
-    Completer *d;
-    if(el_get(el,EL_CLIENTDATA,&d))
-        d = NULL;
+    Completer *d = Completer::get(el);
     
     int rv;
     static int consecutiveTabCount=0;
@@ -192,7 +231,7 @@ static int tabCheckingCharReader(EditLine *el, char *cp)
     return rv;
 }
 
-void setupAutocomplete(EditLine *el,AutocompleteIterator *i,
+void setup(EditLine *el,Iterator *i,
                        const char *wbc){
     
     // set up a structure; you'll have to call shutdown to delete it
@@ -204,10 +243,17 @@ void setupAutocomplete(EditLine *el,AutocompleteIterator *i,
     el_set(el,EL_GETCFN,tabCheckingCharReader);
 }
 
-void shutdownAutocomplete(EditLine *el){
-    Completer *d;
-    if(el_get(el,EL_CLIENTDATA,&d) || !d)
-        return;
+void shutdown(EditLine *el){
+    Completer *d = Completer::get(el);
     el_set(el,EL_CLIENTDATA,NULL);
-    delete d;
+    el_set(el,EL_GETCFN,EL_BUILTIN_GETCFN);
+    if(d)delete d;
 }
+
+void setArgIterator(EditLine *el,int arg,Iterator *i){
+    Completer *d = Completer::get(el);
+    d->setArgIterator(arg,i);
+}
+
+
+} // namespace

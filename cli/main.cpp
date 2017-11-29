@@ -64,7 +64,7 @@ static void showException(Exception& e){
 #define F_DEPRECATED 8
 
 // autocompletion data generator
-class AngortAutocomplete : public AutocompleteIterator {
+class AngortAutocomplete : public completer::Iterator {
 public:
     virtual void first(){
         a->resetAutoComplete();
@@ -123,7 +123,7 @@ static History *hist=NULL;
 
 void cliShutdown(){
     if(el){
-        shutdownAutocomplete(el);
+        completer::shutdown(el);
         history_end(hist);
         el_end(el);
         el=NULL;
@@ -329,8 +329,8 @@ int main(int argc,char *argv[]){
         printf("warning: no history\n");
         
     
-    AngortAutocomplete completer;
-    setupAutocomplete(el,&completer,"\t\n\"\\'@><=;|&{(?! ");
+    AngortAutocomplete comp;
+    completer::setup(el,&comp,"\t\n\"\\'@><=;|&{(?! ");
     
     for(;;){
         // set up the autocomplete function and others
