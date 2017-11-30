@@ -65,15 +65,19 @@ static void showException(Exception& e){
 
 // autocompletion data generator
 class AngortAutocomplete : public completer::Iterator {
+    const char *strstart;
+    int l;
 public:
-    virtual void first(){
+    virtual void first(const char *stringstart, int len){
+        strstart = stringstart;
+        l = len;
         a->resetAutoComplete();
     }
-    virtual const char *next(const char *stringstart, int len){
+    virtual const char *next(){
         const char *s=NULL;
         do
             s = a->getNextAutoComplete();
-        while(s && strncmp(s,stringstart,len));
+        while(s && strncmp(s,strstart,l));
               
         return s;
     }

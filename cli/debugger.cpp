@@ -105,14 +105,17 @@ static void process(const char *line,Angort *a){
 
 // autocompletion data generator
 class DebuggerAutocomplete : public completer::Iterator {
-    int idx;
+    int idx,l;
+    const char *strstart;
 public:
-    virtual void first(){
+    virtual void first(const char *stringstart,int len){
         idx=0;
+        strstart = stringstart;
+        l = len;
     }
-    virtual const char *next(const char *stringstart,int len){
+    virtual const char *next(){
         while(debtoks[idx].word && (debtoks[idx].word[0]=='*' ||
-              strncmp(stringstart,debtoks[idx].word,len)))
+              strncmp(strstart,debtoks[idx].word,l)))
             idx++;
         if(!debtoks[idx].word)return NULL;
         return debtoks[idx++].word;

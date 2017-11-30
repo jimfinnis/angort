@@ -17,9 +17,28 @@ namespace completer {
 class Iterator {
 public:
     // reset the iterator - next() will get the first item
-    virtual void first()=0;
+    virtual void first(const char *stringstart,int len)=0;
     // get the next item which matches, or NULL.
-    virtual const char *next(const char *stringstart,int len)=0;
+    virtual const char *next()=0;
+    
+    // this is called when TAB is pressed, before anything else.
+    // If it returns nonzero, the entire string is replaced by
+    // the returned value and the returned buffer is deleted.
+    // This is used to put the string into a canonical form
+    // (~user files for example).
+    // This must return an malloced string - it will be freed
+    // by the caller.
+    virtual const char *modString(const char *stringstart,int len){
+        return NULL;
+    }
+    
+    // by default, unambiguous completions have a space added.
+    // This determines whether or not this should happen. Consider
+    // filename completion - a completed file is fine, but a completed
+    // unambiguous directory should pad with a space instead. Therefore
+    // in this case we let the iterator do the padding itself.
+    //
+    virtual bool doSpacePadding(){return true;}
 };
 
 // call after EL_EDITOR has been set in your EditLine, to override

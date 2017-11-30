@@ -63,7 +63,6 @@ public:
 bool Completer::complete(){
     const LineInfo *lf = el_line(el);
     int res = false;
-    
     int matchlen=0;
     
     // count the argument number
@@ -90,16 +89,29 @@ bool Completer::complete(){
     // work out which iterator we should use
     Iterator *iter = getIterator(argc);
     
+    // try to replace the entire word (for tilde replacement in files,
+    // etc)
+    const char *modres = iter->modString(ptr,len);
+    if(modres){
+        // delete the entire word, insert the replacement
+        el_deletestr(el,len);
+        el_insertstr(el,modres);
+        len = strlen(modres); // get the new word length
+        free((void *)modres); // free the result
+        putchar('\r'); // OTHERWISE we get the prompt again.
+        el_set(el,EL_REFRESH);
+    }
+    
     // we need to find the shortest valid match, so go through
     // all the options starting with a null string
     // then as soon as we see a match set to that,
     // then decrease the length if we find subsequent shorter
     // matches.
     
-    iter->first();
+    iter->first(ptr,len);
     
     int maxmatchlen=0;
-    while(name = iter->next(ptr,len)){
+    while(name = iter->next()){
         if(!matchlen){
             strncpy(match,name,250);
             match[250]=0;
@@ -121,8 +133,10 @@ bool Completer::complete(){
         el_deletestr(el,len);
         // if this match is actually the maximum length,
         // it's unambiguous - so we'll add a space. There's
-        // room in the buffer.
-        if(matchlen==maxmatchlen)strcat(match," ");
+        // room in the buffer. We only do this if the selected
+        // iterator returns doSpacePadding() true (the default)
+        if(matchlen==maxmatchlen && iter->doSpacePadding())
+            strcat(match," ");
         if(el_insertstr(el,match)==-1)
             res = false;
         else
@@ -166,8 +180,8 @@ void Completer::printCompletions() {
     // the gap between things.
     
     int gap=0;
-    iter->first();
-    while(const char *name = iter->next(ptr,len)){
+    iter->first(ptr,len);
+    while(const char *name = iter->next()){
         if(strlen(name)>gap)
             gap=strlen(name);
     }
@@ -175,9 +189,9 @@ void Completer::printCompletions() {
     
     
     // second pass - actually print
-    iter->first();
+    iter->first(ptr,len);
     int clen = 0;
-    while(const char *name = iter->next(ptr,len)){
+    while(const char *name = iter->next()){
         if(clen+gap>linelen){
             puts(buf);
             *buf=0;
