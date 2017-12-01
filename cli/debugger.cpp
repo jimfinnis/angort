@@ -8,6 +8,7 @@
 #include "../lib/opcodes.h"
 
 #include <histedit.h>
+#include <signal.h>
 
 #include "completer.h"
 
@@ -23,12 +24,15 @@ Tokeniser tok;
 static const char *getprompt(){return "] ";}
 
 static const char *usage = 
+"quit          exit debugger and continue program\n"
 "abort         terminate program (remain in debugger)\n"
-"quit          terminate angort completely\n"
+"terminate     terminate angort completely\n"
 "stack         show the stack\n"
 "<n> print     detailed view of stack entry <n>\n"
 "?Var          detailed view of global <Var>\n"
 "disasm        disassemble current function\n"
+"b             toggle breakpoint\n"
+"bt            backtrace\n"
 "frame         show context frame\n"
 "CTRL-D        exit debugger and continue program (if not aborted)\n"
 "h             show this string\n"
@@ -36,6 +40,9 @@ static const char *usage =
 
 
 namespace debugger {
+
+static bool exitDebug=false;
+
 static void disasm(Angort *a){
     const Instruction *ip = a->wordbase;
     const Instruction *base = a->wordbase;
@@ -52,9 +59,13 @@ static void process(const char *line,Angort *a){
     char buf[256];
     int i;
     Stack<int,8> stack;
+    a->debuggerStepping=false;
     for(;;){
         try{
             switch(tok.getnext()){
+            case T_BREAK:
+                ((Instruction *)a->ip)->brk= !a->ip->brk;
+                break;
             case T_INT:
                 stack.push(tok.getint());
                 break;
@@ -63,9 +74,22 @@ static void process(const char *line,Angort *a){
             case T_STACK:
                 a->dumpStack("<debug>");
                 break;
+            case T_BACKTRACE:
+                a->printStoredTrace();
+                break;
             case T_QUIT:
+                exitDebug=true;
+                a->debuggerStepping=false;
+                a->debuggerNextIP=false;
+                break;
+            case T_TERMINATE:
                 delete a;
                 exit(0);
+            case T_NEXT:
+                exitDebug=true;
+                a->debuggerStepping=true;
+                a->debuggerNextIP=true;
+                break;
             case T_PRINT:
                 i=stack.pop();
                 if(i<0){
@@ -124,23 +148,39 @@ public:
 
 
 }
+
+
+static void debugSighandler(int s)
+{
+    extern void cliShutdown();
+    el_end(el);
+    cliShutdown();
+    exit(1);
+}
+
 void basicDebugger(Angort *a){
+    
+    signal(SIGSEGV,debugSighandler);
+    signal(SIGINT,debugSighandler);
     tok.init();
     tok.settokens(debtoks);
     tok.setname("<debugger>");
     
-    printf("Debugger: TAB-TAB for command list, ctrl-D to exit and continue.\n"
-           "abort to terminate program (remaining in debugger, ?var to query\n"
-           "global variable.\n\n");
+    if(!a->debuggerStepping){
+        printf("Debugger: TAB-TAB for command list, ctrl-D to exit and continue.\n"
+               "abort to terminate program (remaining in debugger), ?var to query\n"
+               "global variable.\n\n");
+    }
     
+    a->showop(a->ip);putchar('\n');
+    a->printStoredTrace();
     
     HistEvent ev;
-    if(!el){
-        // make our editline if we don't have one
-        el = el_init("angort-debugger",stdin,stdout,stderr);
-        el_set(el,EL_PROMPT,&getprompt);
-        el_set(el,EL_EDITOR,"emacs");
-        
+    // make our editline
+    el = el_init("angort-debugger",stdin,stdout,stderr);
+    el_set(el,EL_PROMPT,&getprompt);
+    el_set(el,EL_EDITOR,"emacs");
+    if(!hist){
         hist = history_init();
         history(hist,&ev,H_SETSIZE,800);
         el_set(el,EL_HIST,history,hist);
@@ -152,7 +192,8 @@ void basicDebugger(Angort *a){
         
     }
     
-    for(;;){
+    debugger::exitDebug=false;
+    while(!debugger::exitDebug){
         int count;
         debuggerBreakHack=true;
         const char *line = el_gets(el,&count);
@@ -165,5 +206,9 @@ void basicDebugger(Angort *a){
         }
     }
     putchar('\r');
+    extern void cliSighandler(int);
+    signal(SIGSEGV,cliSighandler);
+    signal(SIGINT,cliSighandler);
+    el_end(el);
 }
 

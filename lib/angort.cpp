@@ -70,6 +70,7 @@ Angort::Angort() {
     // no debugger by default; CLI sets this up.
     debuggerHook = NULL;
     debuggerNextIP=false;
+    debuggerStepping=false;
     
     rstack.setName("return");
     loopIterStack.setName("loop iterator");
@@ -178,7 +179,12 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
     if(!base)base=wordbase;
     char buf[128];
     Value tmp;
-    printf("%s %8p [%s:%d] : %04d : %s (%d) ",
+    printf("%s%s %8p [%s:%d] : %04d : %s (%d) ",
+#if SOURCEDATA
+           ip->brk ? "B " : "  ",
+#else
+           "  ",
+#endif
            ip == curr ? "* " : "  ",
            base,
 #if SOURCEDATA
@@ -426,7 +432,7 @@ void Angort::ret()
     }
 }
 
-void Angort::throwAngortException(int symbol, Value *data){
+bool Angort::throwAngortException(int symbol, Value *data){
     storeTrace(); // store a trace to print if we need to
     
     // we go up the exception stack, inner (intrafunction) stack
@@ -446,7 +452,7 @@ void Angort::throwAngortException(int symbol, Value *data){
                 pushval()->copy(data);
                 Types::tSymbol->set(pushval(),symbol);
                 ip = wordbase+*offset;
-                return;
+                return true;
             }
             // failing that, look for a catch-all.
             offset = h->ffind(CATCHALLKEY);
@@ -456,7 +462,7 @@ void Angort::throwAngortException(int symbol, Value *data){
                 pushval()->copy(data);
                 Types::tSymbol->set(pushval(),symbol);
                 ip = wordbase+*offset;
-                return;
+                return true;
             }
             // failing THAT, pop another try-catch set off.
         }
@@ -464,7 +470,8 @@ void Angort::throwAngortException(int symbol, Value *data){
         // to return from this function and try again.
         ret();
     }
-    ip=NULL; // no handler found, abort!
+    // no handler found, abort
+    return false;
 }
 
 void Angort::run(const Instruction *startip){
@@ -485,10 +492,6 @@ void Angort::run(const Instruction *startip){
                     if(!ip)
                         goto leaverun;
                 }
-                if(debuggerNextIP && debuggerHook){
-                    debuggerNextIP = false;
-                    (*debuggerHook)(this);
-                }
                 
                 int opcode = ip->opcode;
                 if(debug&1){
@@ -504,7 +507,14 @@ void Angort::run(const Instruction *startip){
                     autoCycleCount = autoCycleInterval;
                     gc();
                 }
-                
+#if SOURCEDATA
+                if(ip->brk)invokeDebugger();
+#endif  
+                if(debuggerNextIP && debuggerHook){
+                    if(!debuggerStepping)
+                        debuggerNextIP = false;
+                    (*debuggerHook)(this);
+                }
                 
                 switch(opcode){
                 case OP_EQUALS:      case OP_ADD:            case OP_MUL:
@@ -515,6 +525,9 @@ void Angort::run(const Instruction *startip){
                     b = popval();
                     a = popval();
                     binop(a,b,opcode);
+                    ip++;
+                    break;
+                case OP_NOP:
                     ip++;
                     break;
                 case OP_INC:
@@ -891,11 +904,14 @@ void Angort::run(const Instruction *startip){
                     if(a->t != Types::tSymbol)
                         throw RUNT(EX_BADTHROW,"throw should throw a symbol");
                     b = popval();
-                    throwAngortException(a->v.i,b);
-                    if(!ip){
-                        // IP has returned NULL, which means we couldn't find an Angort
-                        // handler (to which IP would point otherwise)
+                    
+                    if(!throwAngortException(a->v.i,b)){
+                        // we couldn't find an Angort handler - print msg and reset IP
                         const StringBuffer &sbuf = b->toString();
+                        printf("unhandled throw instruction: %s (%s)\n",
+                                                        Types::tSymbol->getString(a->v.i),sbuf.get());
+                        if(debuggerHook)(*debuggerHook)(this);
+                        ip=NULL;
                         throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s (%s)\n",
                                                         Types::tSymbol->getString(a->v.i),sbuf.get());
                     }
@@ -906,10 +922,14 @@ void Angort::run(const Instruction *startip){
             } catch(Exception e){
                 Value vvv;
                 Types::tString->set(&vvv,e.what());
-                throwAngortException(e.id,&vvv);
-                if(!ip){
+                       
+                if(!throwAngortException(e.id,&vvv)){
+                    printf("Angort exception: %s\n",e.what());
+                    if(debuggerHook)(*debuggerHook)(this);
+                    ip=NULL;
                     throw e;
                 }
+                    
             }
         }
     } catch(Exception e){
@@ -1714,6 +1734,11 @@ void Angort::feed(const char *buf){
             case T_GT:compile(OP_GT);break;
             case T_LE:compile(OP_LE);break;
             case T_GE:compile(OP_GE);break;
+#if SOURCEDATA
+            case T_BRK:compile(OP_NOP)->brk=true;break; // nop breakpoint
+#else
+            case T_BRK:compile(OP_NOP);break; // nop breakpoint
+#endif
             case T_IDENT:
                 {
                     char *s = tok.getstring();
@@ -2217,6 +2242,7 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     
 }
 
+
 void Angort::storeTrace(){
     char buf[1024]; // buffer to write instruction details
     char **ptr; // pointer to list item, itself a pointer
@@ -2262,6 +2288,18 @@ void Angort::printAndDeleteStoredTrace(){
     }
     storedTrace.clear();
 }
+
+void Angort::printStoredTrace(){
+    if(!storedTrace.count()){
+        printf("No stored trace to print (only works with exceptions)\n");
+    } else {
+        ArrayListIterator<char *> iter(&storedTrace);
+        for(iter.first();!iter.isDone();iter.next()){
+            printf("  from %s\n",*iter.current());
+        }
+    }
+}
+
 
 void Angort::resetAutoComplete(){
     // build the new autocomplete list

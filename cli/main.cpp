@@ -17,9 +17,9 @@
 // keep this up to date!
 static const char *copyString="(c) Jim Finnis 2012-2017";
 static const char *usageString=
-"\nUsage: angort [-h] [-n] [-e] [-d] [-D] [-b] [-if] [-in]\n"
+"\nUsage: angort [-?] [-n] [-e] [-d] [-D] [-b] [-if] [-in]\n"
 "        [-llib] [-llib]..\n\n"
-"-h    : this string\n"
+"-?    : this string\n"
 "-n    : execute command-line script in loop, requires two args: init\n"
 "        and loop (the latter reads lines from stdin)\n"
 "-e    : execute command-line script\n"
@@ -134,7 +134,7 @@ void cliShutdown(){
     }
 }
 
-void sigh(int s){
+void cliSighandler(int s){
     printf("Signal %d recvd, exiting\n",s);
     if(debugOnSignal){
         a->invokeDebugger();
@@ -145,8 +145,8 @@ void sigh(int s){
 }
 
 int main(int argc,char *argv[]){
-    signal(SIGSEGV,sigh);
-    signal(SIGINT,sigh);
+    signal(SIGSEGV,cliSighandler);
+    signal(SIGINT,cliSighandler);
     
     extern void setArgumentList(int argc,char *argv[]);
     
@@ -203,7 +203,7 @@ int main(int argc,char *argv[]){
         if(*arg == '-'){
             // it's an option.
             switch(arg[1]){
-            case 'h':
+            case '?':
                 printf("Angort version %s %s\n",a->getVersion(),copyString);
                 puts(usageString);
                 exit(0);

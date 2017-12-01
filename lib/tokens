@@ -93,3 +93,4 @@ endtry : T_ENDTRY
 throw : T_THROW
 inc : T_INC
 dec : T_DEC
+brk : T_BRK

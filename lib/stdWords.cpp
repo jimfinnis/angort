@@ -368,12 +368,6 @@ Shortcut for asserting that two integer values are equal.
         throw RUNT(EX_ASSERT,"assertq failure");
 }
 
-%word brk (--) breakpoint - will invoke the simple debugger
-{
-    a->invokeDebugger();
-}
-    
-
 %word abs (x --) absolute value
 return the absolute value of a float or int.
 {

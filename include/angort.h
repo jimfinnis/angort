@@ -104,6 +104,7 @@ struct Instruction {
 #if SOURCEDATA
     const char *file;
     int line,pos;
+    bool brk;
 #endif
     union {
         int i;
@@ -116,10 +117,6 @@ struct Instruction {
         Property *prop;
         class Value *constexprval;
         IntKeyedHash<int> *catches; // for OP_TRY
-        struct {
-            int l; //!< how many locals in total
-            int p; //!< how many of those are params to pop
-        } locals;
     }d;
 };
 
@@ -408,6 +405,7 @@ public:
         i->file = tokeniser->getname();
         i->line = tokeniser->getline();
         i->pos = tokeniser->getpos();
+        i->brk = false;
 #endif
         return i;
     }
@@ -735,9 +733,10 @@ private:
     
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
-    bool debuggerNextIP;
 public:
     // annoyingly public to allow debugger access
+    bool debuggerNextIP; // stop at the next IP?
+    bool debuggerStepping; // don't clear debuggerNextIP after stop
     const Instruction *ip,*wordbase;
     
     /// replace the debugger hook
@@ -809,6 +808,10 @@ public:
     void printAndDeleteStoredTrace();
     
     ArrayList<char *> storedTrace; //!< the stored trace
+    
+    /// used with storeTrace(), this prints stored trace.
+    /// Only does the printing always.
+    void printStoredTrace();
     
     /// handle binary operations (public; used in comparators)
     void binop(Value *a,Value *b,int opcode);
@@ -1056,9 +1059,11 @@ public:
     const char *appendToSearchPath(const char *path);
     
     
-    /// throw an exception, setting the IP of the handler or NULL
-    /// if no handler was found.
-    void throwAngortException(int symbol, Value *data);
+    /// throw an exception, setting the IP of the handler if one
+    /// is found, otherwise returning leaving it alone. Returns
+    /// true if a handler was set, in which case the caller resets
+    /// IP to NULL, possibly invoking the debugger first.
+    bool throwAngortException(int symbol, Value *data);
     
     /// import all symbols in the `future namespace
     void importAllFuture();
