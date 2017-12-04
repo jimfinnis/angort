@@ -116,10 +116,6 @@ struct Instruction {
         Property *prop;
         class Value *constexprval;
         IntKeyedHash<int> *catches; // for OP_TRY
-        struct {
-            int l; //!< how many locals in total
-            int p; //!< how many of those are params to pop
-        } locals;
     }d;
 };
 

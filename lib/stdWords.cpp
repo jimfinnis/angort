@@ -166,11 +166,14 @@ If set to true, unknown identifiers will be converted to symbol values.
     a->barewords = a->popInt()?true:false;
 }
 
-%wordargs show v (v --) show a variable
+%wordargs show v (v -- s) show a variable into a string
 This shows more detail than a . or p, for example recursively showing
-lists and hashes.
+lists and hashes. It outputs to a string.
 {
-    p0->dump();
+    char *p=NULL;
+    p0->dump(&p);
+    a->pushString(p);
+    free(p);
 }
 
 

@@ -19,7 +19,7 @@ public:
     DoubleType(){
         add("double","DFLT");
         makeNumber();
-        strcpy(formatString,"%fl");
+        strcpy(formatString,"%f");
     }
     /// get the value of v as a float
     double get(Value *v)const;

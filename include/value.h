@@ -180,9 +180,12 @@ struct Value {
         return t->equalForHashTable(this,other);
     }
     
-    /// debugging method - dump a value to stdout, using the string
+    /// debugging method - dump a value to string stream (but I'm
+    /// not using stringstream), using the string
     /// from toString() unless it's a hash or list.
-    void dump(int depth=0);
+    /// str should contain a pointer to a NULL on entry to top level;
+    /// on exit will contain a ptr to string which should be freed.
+    void dump(char **str,int depth=0);
     
 //private:    
     
