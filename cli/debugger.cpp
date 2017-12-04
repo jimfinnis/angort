@@ -95,9 +95,12 @@ static void process(const char *line,Angort *a){
                 if(i<0){
                     printf("expected +ve integer stack index\n");
                 } else {
+                    char *p=NULL;
                     Value *v = a->stack.peekptr(i);
                     printf("Type: %s\n",v->t->name);
-                    v->dump();
+                    v->dump(&p);
+                    printf("%s\n",p);
+                    free(p);
                 }
                 break;
             case T_DISASM:
@@ -105,9 +108,12 @@ static void process(const char *line,Angort *a){
                 break;
             case T_QUESTION:
                 if(tok.getnextident(buf)){
+                    char *p=NULL;
                     int idx = a->findOrCreateGlobal(buf);
                     Value *v = a->names.getVal(idx);
-                    v->dump();
+                    v->dump(&p);
+                    printf("%s\n",p);
+                    free(p);
                 } else {
                     printf("expected ident, not %s\n",tok.getstring());
                 }
