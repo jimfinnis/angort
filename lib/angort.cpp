@@ -909,8 +909,8 @@ void Angort::run(const Instruction *startip){
                         // we couldn't find an Angort handler - print msg and reset IP
                         const StringBuffer &sbuf = b->toString();
                         printf("unhandled throw instruction: %s (%s)\n",
-                                                        Types::tSymbol->getString(a->v.i),sbuf.get());
-                        if(debuggerHook)(*debuggerHook)(this);
+                               Types::tSymbol->getString(a->v.i),sbuf.get());
+                        if(debuggerHook&&ip)(*debuggerHook)(this);
                         ip=NULL;
                         throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s (%s)\n",
                                                         Types::tSymbol->getString(a->v.i),sbuf.get());
@@ -925,7 +925,17 @@ void Angort::run(const Instruction *startip){
                        
                 if(!throwAngortException(e.id,&vvv)){
                     printf("Angort exception: %s\n",e.what());
-                    if(debuggerHook)(*debuggerHook)(this);
+                    // avoids debugger running with null IP when
+                    // run() recurses, which it can because of
+                    // runValue(). The flow here would be:
+                    // - exception thrown
+                    // - debugger entered
+                    // - IP reset
+                    // - rethrow
+                    // - caught in next level of run() up
+                    // - debugger re-entered with null ip
+                        
+                    if(debuggerHook&&ip)(*debuggerHook)(this);
                     ip=NULL;
                     throw e;
                 }

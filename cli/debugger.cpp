@@ -178,8 +178,14 @@ void basicDebugger(Angort *a){
                "global variable.\n\n");
     }
     
-    a->showop(a->ip);putchar('\n');
-    a->printTrace();
+    if(a->ip){
+        a->showop(a->ip);putchar('\n');
+        a->printTrace();
+    }else{
+        printf("No IP - exception?\n");
+        a->printStoredTrace();
+    }
+    
     
     HistEvent ev;
     // make our editline
