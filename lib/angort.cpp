@@ -2242,6 +2242,25 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     
 }
 
+void Angort::printTrace(){
+    char buf[1024]; // buffer to write instruction details
+    // first put the current frame on
+    if(ip)
+        ip->getDetails(buf,1024);
+    else
+        strcpy(buf,"unknown");
+    printf("%s\n",buf);
+    
+    for(int i=0;i<rstack.ct;i++){
+        Frame *p = rstack.peekptr(i);
+        if(p->ip)
+            p->ip->getDetails(buf,1024);
+        else
+            strcpy(buf,"unknown");
+    }
+    printf("%s\n",buf);
+}
+
 
 void Angort::storeTrace(){
     char buf[1024]; // buffer to write instruction details

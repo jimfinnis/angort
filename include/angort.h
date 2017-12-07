@@ -813,6 +813,9 @@ public:
     /// Only does the printing always.
     void printStoredTrace();
     
+    /// prints an immediate trace; doesn't store.
+    void printTrace();
+    
     /// handle binary operations (public; used in comparators)
     void binop(Value *a,Value *b,int opcode);
     

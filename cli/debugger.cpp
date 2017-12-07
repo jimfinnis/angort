@@ -179,7 +179,7 @@ void basicDebugger(Angort *a){
     }
     
     a->showop(a->ip);putchar('\n');
-    a->printStoredTrace();
+    a->printTrace();
     
     HistEvent ev;
     // make our editline
@@ -193,10 +193,10 @@ void basicDebugger(Angort *a){
         if(!hist)
             printf("warning: no history\n");
         
-        static debugger::DebuggerAutocomplete compr;
-        completer::setup(el,&compr,"\t\n ");
         
     }
+    static debugger::DebuggerAutocomplete compr;
+    completer::setup(el,&compr,"\t\n ");
     
     debugger::exitDebug=false;
     while(!debugger::exitDebug){
@@ -205,9 +205,15 @@ void basicDebugger(Angort *a){
         const char *line = el_gets(el,&count);
         if(!line)break;
         debuggerBreakHack=false;
-        if(count>1){ // trailing newline
-            if(hist)
+        if(hist){
+            if(count>1){ // trailing newline
                 history(hist,&ev,H_ENTER,line);
+                debugger::process(line,a);
+            } else {
+                if(history(hist,&ev,H_LAST)>=0)
+                    debugger::process(ev.str,a);
+            }
+        } else {
             debugger::process(line,a);
         }
     }
