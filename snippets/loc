@@ -86,13 +86,11 @@ require "util.ang" drop
 :fnewersecs |t/long:ts|
     :"(n --) filter files newer than n seconds"
     # calculate new timestamp
-    time$gmtime time$tolong dup. ?t - dup. !ts
+    time$gmtime time$tolong ?t - !ts
     
     ["t>" ?t +, (|:a| getstat !a
      ?a if
-         ?a?`mtime p ">" p ?ts p " " p
          ?a?`mtime ?ts >
-         dup.
      else
          0
      then
@@ -107,15 +105,39 @@ require "util.ang" drop
 
 package locpub
 
-:fnewerhours |t/long:|
+:ftype |t:|
+    :"(t --) filter by file type"
+    ["T " ?t +, (|:a| getstat!a 
+     ?a if ?a?`type ?t = else 0 then)] ?Filters push
+    runfilters;
+
+
+:ffiles
+    :"filter for regular files only"
+    "f" ftype;
+
+:fnewerdays |t/float:|
+    :"(n --) filter files newer than n days"
+    ?t 24 * 60 dup * * fnewersecs;
+
+:fnewerhours |t/float:|
     :"(n --) filter files newer than n hours"
     ?t 60 dup * * fnewersecs;
 
-:fnewermins |t/long:|
+:fnewermins |t/float:|
     :"(n --) filter files newer than n minutes"
     ?t 60 * fnewersecs;
 
-    
+
+:fneg |:f,fun|
+    :"negate top filter"
+    ?Filters len if
+        ?Filters fst !f 
+        ?f snd !fun
+        (?fun@ not) 1 ?f set
+    then
+    runfilters
+;
 
 :fp |t:| 
     :"(s -- ) positive filter"
