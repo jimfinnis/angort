@@ -21,11 +21,15 @@ public
 # terminals
 
 "0" seq const rset
-"s" seq const savepos
-"u" seq const restorepos
 
 :setfc colmap 30 + tostr seq;
 :setfbc colmap 30 + tostr 1 seq2;
 :setbc colmap 40 + tostr seq;
 :setcol |f,b:| ?f colmap 30 + ?b colmap 40+ seq2;
+
+:setpos |line,col:| ?CSI ?line + ";" + ?col + "H"+;
+:savepos ?CSI "s"+;
+:restorepos ?CSI "u"+;
     
+:devrep ?CSI "6n" + ;
+

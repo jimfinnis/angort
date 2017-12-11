@@ -5,27 +5,42 @@
 # permits one to filter it in various ways. Use "h" for help.
 
 
-[`regex, `sys, `io] each { i library drop}
+[`time, `regex, `sys, `io] each { i library drop}
+`future nspace [`slice] import
 
 require "util.ang" drop
 
 # generate the main list - a file list consists of a list of tuples,
 # tuples are [filename,stathash]. Input is a list of filenames.
+# The stathash is either a io$stat hash, `nodata (initial value)
+# or `none (we checked and the file doesn't exist)
 :genlist |input:|
     "Generating master list..".
     [] ?input each {
-        [i,none], # no stat data initially
+        [i,`nodata], # no stat data initially
     }
     nl
 ;
+
+# sets the stat data in the file tuple passed in, if it has not
+# been set, and returns it. If the file doesn't exist, sets to none.
+# The initial value is `nodata.
+:getstat |t:|
+    ?t !TMP
+    ?t snd `nodata = if # only stat if not done
+        ?t fst io$stat # might be none
+        1 ?t set
+    then
+    ?t snd
+;
     
-args pop !SearchTerm
-"Running locate...".
-"" [?SearchTerm] "/usr/bin/locate" sys$execpipe "\n"
-split dup pop drop genlist !MasterList
-
-"Found " p ?MasterList len p " files".
-
+:runlocate |term:|
+    "Running locate...".
+    "" [?term] "/usr/bin/locate" sys$execpipe "\n"
+    split dup pop drop genlist !MasterList
+    "Found " p ?MasterList len p " files".
+;
+    
 # list of filter functions, of the form [descstring,(string -- bool)]
 
 [] !Filters
@@ -64,29 +79,105 @@ split dup pop drop genlist !MasterList
     } !List
 ;
 
-runfilters
 (|gcct,stct,charr:| 
     [?stct,?MasterList len,?List len,?charr]
     "%d|master %d|filtered %d %s " format) cli$prompt
+
+:fnewersecs |t/long:ts|
+    :"(n --) filter files newer than n seconds"
+    # calculate new timestamp
+    time$gmtime time$tolong ?t - !ts
+    
+    ["t>" ?t +, (|:a| getstat !a
+     ?a if
+         ?a?`mtime ?ts >
+     else
+         0
+     then
+     )]
+    ?Filters push
+    runfilters
+;
+
+:paginate |l:| # paginate a list, using a vile hack
+    "/tmp/foo" redir
+    ?l each {i.}
+    endredir
+    "more /tmp/foo" sys$system
+;
+    
+
 
 ############################################################
 # public functions down here
 
 package locpub
 
+:ftype |t:|
+    :"(t --) filter by file type"
+    ["T " ?t +, (|:a| getstat!a 
+     ?a if ?a?`type ?t = else 0 then)] ?Filters push
+    runfilters;
+
+
+:ffiles
+    :"filter for regular files only"
+    "f" ftype;
+
+:fnewerdays |t/float:|
+    :"(n --) filter files newer than n days"
+    ?t 24 * 60 dup * * fnewersecs;
+
+:fnewerhours |t/float:|
+    :"(n --) filter files newer than n hours"
+    ?t 60 dup * * fnewersecs;
+
+:fnewermins |t/float:|
+    :"(n --) filter files newer than n minutes"
+    ?t 60 * fnewersecs;
+
+
+:fneg |:f,fun|
+    :"negate top filter"
+    ?Filters len if
+        ?Filters fst !f 
+        ?f snd !fun
+        (?fun@ not) 1 ?f set
+    then
+    runfilters
+;
+
 :fp |t:| 
     :"(s -- ) positive filter"
-    ["+" ?t +, ?t mkaddfilter] ?Filters push
+    ["+ " ?t +, ?t mkaddfilter] ?Filters push
     runfilters;
 :fn |t:| 
     :"(s -- ) negative filter"
-    ["-" ?t +, ?t mksubfilter] ?Filters push
+    ["- " ?t +, ?t mksubfilter] ?Filters push
     runfilters;
 
 :fc |t:|
     :"(s -- ) content filter"
-    ["*" ?t +, ?t mkcontentfilter] ?Filters push
+    ["* " ?t +, ?t mkcontentfilter] ?Filters push
     runfilters;
+
+
+
+
+:sc |:term|
+    :"show matching lines in files for top content filter"
+    ?Filters reverse each {
+        i fst fst "*" = if
+            "Elements matching filter " p i fst p ":".
+            i fst 1 0 slice !term
+            ?List each {
+                " " p i fst p ":" .
+                "" [?term,i fst] "/bin/grep" sys$execpipe.
+            }
+            leave
+        then
+    }
+;
 
 :fl |:n:|
     :"list filters"
@@ -102,33 +193,83 @@ package locpub
     runfilters
 ;
 
+:fclear :"remove all filters"
+    []!Filters runfilters;
+
+
 :fr |s/integer:| :"(n --) remove filter N"
     ?s 0 >= ?s ?Filters len < and if
         ?s ?Filters remove drop
-        runfilters
     then
     runfilters
 ;
+
+:age
+    :"sort files by age"
+    # both generates stat data if not present and removes null items
+    "statting files...".
+    ?List (getstat) filter !List 
+    ?List (|a,b:| 
+        ?a snd?`mtime
+        ?b snd?`mtime -) fsort;
+
+:name
+    :"sort files by name"
+    ?List (|a,b:| ?a fst ?b fst cmp) fsort;
     
-:l
+    
+:merge
+    :"merge filtered results into new master list"
+    ?List !MasterList
+;
+    
+:l |:i|
     :"list filtered files"
+    0!i
+    []
     ?List each {
-        i fst.
+        [?i,i fst] "%4d %s" format,
+        !+i
     }
+    paginate
 ;
 
-:merge :"turn filtered list into new master list"
-    ?MasterList !List
-    [] !Filters
+
+:loc
+    :"(s --) run locate with a new search term and refilter"
+    runlocate runfilters
 ;
 
 :h 
     :"show help list"
     `locpub listhelp;
 
+:r |i,prog:|
+    :"(idx prog --) run a program on an item in the list"
+    try
+        ?prog " " +
+        ?i ?List get fst + dup.
+        sys$system
+    catchall drop
+        "Failed, does item exist?".
+    endtry
+;    
+
+:e
+    :"(idx --) edit a file"
+    "me" r
+;
+    
+
 ###################################################
+
+args pop runlocate runfilters
 
 endpackage import
 
+
 h
+
+    
+
 
