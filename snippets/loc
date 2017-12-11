@@ -99,6 +99,14 @@ require "util.ang" drop
     runfilters
 ;
 
+:paginate |l:| # paginate a list, using a vile hack
+    "/tmp/foo" redir
+    ?l each {i.}
+    endredir
+    "more /tmp/foo" sys$system
+;
+    
+
 
 ############################################################
 # public functions down here
@@ -218,10 +226,12 @@ package locpub
 :l |:i|
     :"list filtered files"
     0!i
+    []
     ?List each {
-        [?i,i fst] "%4d %s" format.
+        [?i,i fst] "%4d %s" format,
         !+i
     }
+    paginate
 ;
 
 
@@ -233,6 +243,23 @@ package locpub
 :h 
     :"show help list"
     `locpub listhelp;
+
+:r |i,prog:|
+    :"(idx prog --) run a program on an item in the list"
+    try
+        ?prog " " +
+        ?i ?List get fst + dup.
+        sys$system
+    catchall drop
+        "Failed, does item exist?".
+    endtry
+;    
+
+:e
+    :"(idx --) edit a file"
+    "me" r
+;
+    
 
 ###################################################
 
