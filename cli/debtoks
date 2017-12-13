@@ -20,7 +20,9 @@ frame   :   T_FRAME
 abort   :   T_ABORT
 print   :   T_PRINT
 quit    :   T_QUIT
-next    :   T_NEXT
+n       :   T_NEXT
+f       :   T_FUNC
+
 h    :   T_HELP
 terminate : T_TERMINATE
 bt : T_BACKTRACE

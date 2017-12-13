@@ -145,8 +145,11 @@ void cliSighandler(int s){
 }
 
 int main(int argc,char *argv[]){
-    signal(SIGSEGV,cliSighandler);
-    signal(SIGINT,cliSighandler);
+    struct sigaction sa;
+    sa.sa_handler = cliSighandler;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV,&sa,NULL);
+    sigaction(SIGINT,&sa,NULL);
     
     extern void setArgumentList(int argc,char *argv[]);
     

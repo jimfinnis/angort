@@ -31,7 +31,9 @@ static const char *usage =
 "<n> print     detailed view of stack entry <n>\n"
 "?Var          detailed view of global <Var>\n"
 "disasm        disassemble current function\n"
-"b             toggle breakpoint\n"
+"b             toggle breakpoint on current IP\n"
+"n             next instruction\n"
+"<string> f    break on named function\n"
 "bt            backtrace\n"
 "frame         show context frame\n"
 "CTRL-D        exit debugger and continue program (if not aborted)\n"
@@ -58,7 +60,7 @@ static void process(const char *line,Angort *a){
     tok.reset(line);
     char buf[256];
     int i;
-    Stack<int,8> stack;
+    Stack<Value,8> stack;
     a->debuggerStepping=false;
     for(;;){
         try{
@@ -67,7 +69,10 @@ static void process(const char *line,Angort *a){
                 ((Instruction *)a->ip)->brk= !a->ip->brk;
                 break;
             case T_INT:
-                stack.push(tok.getint());
+                Types::tInteger->set(stack.pushptr(),tok.getint());
+                break;
+            case T_STRING:
+                Types::tString->set(stack.pushptr(),tok.getstring());
                 break;
             case T_END:return;
             case T_HELP:puts(usage);break;
@@ -90,8 +95,22 @@ static void process(const char *line,Angort *a){
                 a->debuggerStepping=true;
                 a->debuggerNextIP=true;
                 break;
+            case T_FUNC:
+                {
+                    const StringBuffer& b = stack.popptr()->toString();
+                    // find the global
+                    Value *v = a->findOrCreateGlobalVal(b.get());
+                    Instruction *ip;
+                    if(v->t == Types::tCode){
+                        ip = (Instruction*)v->v.cb->ip;
+                    } else if(v->t == Types::tClosure){
+                        ip = (Instruction*)v->v.closure->cb->ip;
+                    } else printf("expected the name of a function\n");
+                    ip->brk = !ip->brk;
+                }
+                break;
             case T_PRINT:
-                i=stack.pop();
+                i=stack.popptr()->toInt();
                 if(i<0){
                     printf("expected +ve integer stack index\n");
                 } else {
@@ -155,19 +174,22 @@ public:
 
 }
 
-
 static void debugSighandler(int s)
 {
     extern void cliShutdown();
-    el_end(el);
-    cliShutdown();
-    exit(1);
+    printf("Signal caught in debugger\n");
+    debugger::exitDebug=true;
+//    el_end(el);
+//    cliShutdown();
+//    exit(1);
 }
 
 void basicDebugger(Angort *a){
-    
-    signal(SIGSEGV,debugSighandler);
-    signal(SIGINT,debugSighandler);
+    struct sigaction sa,oldsa;
+    sa.sa_handler = debugSighandler;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV,&sa,&oldsa);
+    sigaction(SIGINT,&sa,NULL);
     tok.init();
     tok.settokens(debtoks);
     tok.setname("<debugger>");
@@ -224,9 +246,9 @@ void basicDebugger(Angort *a){
         }
     }
     putchar('\r');
-    extern void cliSighandler(int);
-    signal(SIGSEGV,cliSighandler);
-    signal(SIGINT,cliSighandler);
+    
+    sigaction(SIGSEGV,&oldsa,NULL);
+    sigaction(SIGINT,&oldsa,NULL);
     el_end(el);
 }
 
