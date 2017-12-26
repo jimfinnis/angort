@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.4.3 debex"
+#define ANGORT_VERSION "4.4.4"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -939,7 +939,6 @@ void Angort::run(const Instruction *startip){
                     ip=NULL;
                     throw e;
                 }
-                    
             }
         }
     } catch(Exception e){
