@@ -136,8 +136,8 @@ void cliShutdown(){
 
 void cliSighandler(int s){
     printf("Signal %d recvd, exiting\n",s);
-    if(debugOnSignal){
-        a->invokeDebugger();
+    if(debugOnSignal && a->debuggerHook){
+        (*a->debuggerHook)(a);
     } else {
         cliShutdown();
         exit(1);

@@ -26,7 +26,6 @@ require "util.ang" drop
 # been set, and returns it. If the file doesn't exist, sets to none.
 # The initial value is `nodata.
 :getstat |t:|
-    ?t !TMP
     ?t snd `nodata = if # only stat if not done
         ?t fst io$stat # might be none
         1 ?t set
