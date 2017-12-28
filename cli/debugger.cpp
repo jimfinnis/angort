@@ -238,7 +238,7 @@ void basicDebugger(Angort *a){
                 history(hist,&ev,H_ENTER,line);
                 debugger::process(line,a);
             } else {
-                if(history(hist,&ev,H_LAST)>=0)
+                if(history(hist,&ev,H_CURR)>=0)
                     debugger::process(ev.str,a);
             }
         } else {
