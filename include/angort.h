@@ -731,12 +731,12 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
-    /// debugger hook, invoked by the "brk" word
-    NativeFunc debuggerHook;
 public:
     // annoyingly public to allow debugger access
     bool debuggerNextIP; // stop at the next IP?
     bool debuggerStepping; // don't clear debuggerNextIP after stop
+    /// debugger hook, invoked by the "brk" word
+    NativeFunc debuggerHook;
     const Instruction *ip,*wordbase;
     
     /// replace the debugger hook
@@ -1072,8 +1072,6 @@ public:
     void importAllFuture();
     /// import all symbols in the `deprecated namespace
     void importAllDeprecated();
-    
-    void invokeDebugger();
 };
 
 

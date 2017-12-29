@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.4.3 debex"
+#define ANGORT_VERSION "4.4.4 debex"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -41,15 +41,6 @@ namespace angort {
 const char* Angort::getVersion(){
     return ANGORT_VERSION;
 }
-
-void Angort::invokeDebugger(){
-    if(!ip){
-        if(debuggerHook)
-            (*debuggerHook)(this);
-    } else 
-        debuggerNextIP = true;
-}
-
 
 Angort *Angort::callingInstance=NULL;
 
@@ -508,7 +499,10 @@ void Angort::run(const Instruction *startip){
                     gc();
                 }
 #if SOURCEDATA
-                if(ip->brk)invokeDebugger();
+                // breakpoint set on instruction, invoke debugger. This somewhat
+                // clumsy logic is here because SOURCEDATA might conceivably be
+                // false.
+                if(ip->brk)debuggerNextIP=true;
 #endif  
                 if(debuggerNextIP && debuggerHook){
                     if(!debuggerStepping)
@@ -939,7 +933,6 @@ void Angort::run(const Instruction *startip){
                     ip=NULL;
                     throw e;
                 }
-                    
             }
         }
     } catch(Exception e){

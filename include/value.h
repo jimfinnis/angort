@@ -104,6 +104,8 @@ struct Value {
             return false;
         else if(t == Types::tInteger)
             return toInt()!=0;
+        else if(t == Types::tLong)
+            return toLong()!=0L;
         else
             return true;
     }
