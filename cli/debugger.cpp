@@ -71,6 +71,7 @@ static void process(const char *line,Angort *a){
             case T_INT:
                 Types::tInteger->set(stack.pushptr(),tok.getint());
                 break;
+            case T_IDENT:
             case T_STRING:
                 Types::tString->set(stack.pushptr(),tok.getstring());
                 break;
