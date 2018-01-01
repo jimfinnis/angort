@@ -2,60 +2,6 @@
 
 
 
-\section{The true nature of function definitions}
-\label{globdetails}
-Words are actually global variables bound to anonymous functions.
-Given that anonymous functions are written as blocks of Angort
-in brackets (see below), then
-\begin{lstlisting}
-:square |x:| ?x ?x *;
-\end{lstlisting}
-could also be written as
-\begin{lstlisting}
-global square
-(|x:| ?x ?x *) !square
-\end{lstlisting}
-with exactly the same end result. Referring to a global by using the \texttt{?} sigil
-will simply stack its value, whereas referring to it without the sigil
-will check if it is holds a code block or closure and run it if so, otherwise
-stack the value. This is useful in functional programming.
-
-\subsection{Sealed functions}
-\index{const functions}
-Combined with constants, this allows for ``sealed'' function definitions. 
-In general all functions can be redefined, but a function defined thus:
-\begin{lstlisting}
-(|x:| ?x ?x *) const square
-\end{lstlisting}
-cannot be. This can be useful in package development.
-
-This is also useful when you want to import only certain names from
-a plugin library (Section~\ref{library}). Consider the \texttt{vector2d} library, which contains
-the functions \texttt{vector2d\$x} and \texttt{vector2d\$y}. These
-are cumbersome, so we could import just these in their short forms
-as
-\begin{lstlisting}
-?vector2d$x const x
-?vector2d$y const y
-\end{lstlisting}
-Using the \texttt{?} ensures that we get the function itself, rather
-than trying to run it\footnote{In reality we would probably use
-the optional list parameter to \texttt{import}, as described in
-Section~\ref{packages}, although this would leave the functions
-open for redefinition.}.
-
-\subsection{Forward declarations (deferred declarations)}
-\index{forward declaration}
-It's also possible to use this mechanism to define global variables,
-use them as function names, and change their values later. This lets
-us defer function definitions:
-\begin{v}
-global foo      # define a global called ``foo'' (null-valued)
-:bar foo;       # a function which uses it
-
-:foo...;        # actually define foo
-\end{v}
-
 \section{Lists}
 \label{lists}
 \index{lists}\indw{[|textbf}\indw{]|textbf}
@@ -775,9 +721,6 @@ global quit
 :quit "Angort is quitting now!". std$quit;
 \end{lstlisting}
  
-\todo{properties! Although I might have covered them in the intro a bit}
-
-
 \subsection{Local packages}
 \label{localpack}
 \index{packages!local}
@@ -799,6 +742,60 @@ endpackage import
 The \texttt{endpackage} word does the same as the return from a 
 \texttt{require} normally does --- close off the package and
 stack the package ID.
+
+\section{The true nature of function definitions}
+\label{globdetails}
+Words are actually global variables bound to anonymous functions.
+Given that anonymous functions are written as blocks of Angort
+in brackets (see below), then
+\begin{lstlisting}
+:square |x:| ?x ?x *;
+\end{lstlisting}
+could also be written as
+\begin{lstlisting}
+global square
+(|x:| ?x ?x *) !square
+\end{lstlisting}
+with exactly the same end result. Referring to a global by using the \texttt{?} sigil
+will simply stack its value, whereas referring to it without the sigil
+will check if it is holds a code block or closure and run it if so, otherwise
+stack the value. This is useful in functional programming.
+
+\subsection{Sealed functions}
+\index{const functions}
+Combined with constants, this allows for ``sealed'' function definitions. 
+In general all functions can be redefined, but a function defined thus:
+\begin{lstlisting}
+(|x:| ?x ?x *) const square
+\end{lstlisting}
+cannot be. This can be useful in package development.
+
+This is also useful when you want to import only certain names from
+a plugin library (Section~\ref{library}). Consider the \texttt{vector2d} library, which contains
+the functions \texttt{vector2d\$x} and \texttt{vector2d\$y}. These
+are cumbersome, so we could import just these in their short forms
+as
+\begin{lstlisting}
+?vector2d$x const x
+?vector2d$y const y
+\end{lstlisting}
+Using the \texttt{?} ensures that we get the function itself, rather
+than trying to run it\footnote{In reality we would probably use
+the optional list parameter to \texttt{import}, as described in
+Section~\ref{packages}, although this would leave the functions
+open for redefinition.}.
+
+\subsection{Forward declarations (deferred declarations)}
+\index{forward declaration}
+It's also possible to use this mechanism to define global variables,
+use them as function names, and change their values later. This lets
+us defer function definitions:
+\begin{v}
+global foo      # define a global called ``foo'' (null-valued)
+:bar foo;       # a function which uses it
+
+:foo...;        # actually define foo
+\end{v}
 
 \section{Plugin libraries (currently Linux only)}
 \label{library}
@@ -862,26 +859,4 @@ namespace, we could use
 `future nspace [`foo,`bar] import
 `deprecated nspace [`fish] import
 \end{lstlisting}
-
-
-\section{Topics missing from this document}
-\todo{There are several topics which will be discussed in later versions
-of this document}
-\begin{itemize}
-\item recursion
-\item \texttt{def}, \texttt{defconst} and \texttt{setglobal} 
-\item routines (generators) and \texttt{yield}
-\item constant expressions using $<<$ and $>>$
-\item sourceline
-\item exception and signal handling
-\item barewords
-\item many more built-in words
-\item IO handling
-\item wrappers.h for plugins
-\item properties (which look like global variables but invoke Angort code)
-\item embedding an Angort interpreter in other systems
-\end{itemize}
-
-
-
 
