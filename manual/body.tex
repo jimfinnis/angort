@@ -743,6 +743,32 @@ The \texttt{endpackage} word does the same as the return from a
 \texttt{require} normally does --- close off the package and
 stack the package ID.
 
+\subsection{The ``deprecated'' and ``future'' namespaces}
+\label{futdep}
+Angort is a changing language, and to permit this some functions are
+occasionally moved into the ``deprecated'' namespace when they are obsolete.
+Other functions are added to the ``future'' namespace when they are new
+and break back-compatibility. 
+While both these namespaces are loaded, none of their symbols are imported. 
+Typically, a function might have an
+old version in the deprecated space and a new version in the future space,
+while the default namespace contains a placeholder which gives details
+of the differences between the versions and throws an exception.
+it is up to the user to explicitly import either the deprecated or
+future version.
+
+To do this, we need to import symbols from a namespace which is already
+loaded, which we can do using the \texttt{nspace} function; and then
+use \texttt{import}. For example, if we wish to use \texttt{foo} and
+\texttt{bar} from the future namespace but \texttt{fish} from the deprecated
+namespace, we could use
+\begin{lstlisting}
+`future nspace [`foo,`bar] import
+`deprecated nspace [`fish] import
+\end{lstlisting}
+
+
+
 \section{The true nature of function definitions}
 \label{globdetails}
 Words are actually global variables bound to anonymous functions.
@@ -835,28 +861,4 @@ at compile time. This means we can do things like
 [`id3, `mpc, `io] each {i library import}
 \end{v}
 to import lists of libraries.
-
-\subsection{The ``deprecated'' and ``future'' namespaces}
-\label{futdep}
-Angort is a changing language, and to permit this some functions are
-occasionally moved into the ``deprecated'' namespace when they are obsolete.
-Other functions are added to the ``future'' namespace when they are new
-and break back-compatibility. 
-While both these namespaces are loaded, none of their symbols are imported. 
-Typically, a function might have an
-old version in the deprecated space and a new version in the future space,
-while the default namespace contains a placeholder which gives details
-of the differences between the versions and throws an exception.
-it is up to the user to explicitly import either the deprecated or
-future version.
-
-To do this, we need to import symbols from a namespace which is already
-loaded, which we can do using the \texttt{nspace} function; and then
-use \texttt{import}. For example, if we wish to use \texttt{foo} and
-\texttt{bar} from the future namespace but \texttt{fish} from the deprecated
-namespace, we could use
-\begin{lstlisting}
-`future nspace [`foo,`bar] import
-`deprecated nspace [`fish] import
-\end{lstlisting}
 

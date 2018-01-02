@@ -1,0 +1,231 @@
+\section{Optimisation and debugging}
+Angort does not have an optimising compiler: generally, tokens are converted
+directly into instructions. It is theoretically possible to write an
+optimiser but this has not yet been done. However, some tricks are available
+to assist in writing fast code:
+\begin{itemize}
+\item Use constant expressions rather than ``folding'' constants by
+hand (see below).
+\item Use the stack (or locals) to store common subexpressions.
+\item Use debug trace mode, print messages or breakpoints
+to determine which instructions are run most often.
+\item Above all, write the code which must run the fastest as native C++.
+\end{itemize}
+While this last point may seem to defeat the idea of a new language, it
+should be remembered that Angort is not intended as a high-performance
+language like C++.
+
+\subsection{Constant expressions}
+Constant expressions allow the compiler to compile a section of code,
+run it, and insert an instruction which will stack the value it produces.
+They are delimited by angle brackets, $<<$ and $>>$.
+They are useful to ``fold'' long constant expressions into a single value,
+which could be a list, hash or closure as well as a scalar or string.
+For example, we could write the following code:
+\begin{lstlisting}
+:foo
+    0 1000 range each {
+        ["a","b","c","d","e"] each {
+          i j dosomething
+        }
+    };
+\end{lstlisting}
+The problem here is that the inner list of letters is rebuilt
+each time we go around the loop, with the cost of creating the list
+and stacking and appending each item to it. If we ``disassemble'' this function
+into internal Angort instructions
+(which can be done with \texttt{"foo" disasm}, see below) we see this in the generated
+code:
+\begin{v}
+     0x1819ec0 [foo.ang:4] : 0000 : litint (2) (0)
+     0x1819ec0 [foo.ang:4] : 0001 : litint (2) (1000)
+     0x1819ec0 [foo.ang:4] : 0002 : func (4)  (std$range)
+     0x1819ec0 [foo.ang:4] : 0003 : iterstart (44) 
+     0x1819ec0 [foo.ang:4] : 0004 : iterlvifdone (43) (offset 19)
+     0x1819ec0 [foo.ang:5] : 0005 : newlist (47) 
+     0x1819ec0 [foo.ang:5] : 0006 : litstring (18) (a)
+     0x1819ec0 [foo.ang:5] : 0007 : appendlist (48) 
+     0x1819ec0 [foo.ang:5] : 0008 : litstring (18) (b)
+     0x1819ec0 [foo.ang:5] : 0009 : appendlist (48) 
+     0x1819ec0 [foo.ang:5] : 0010 : litstring (18) (c)
+     0x1819ec0 [foo.ang:5] : 0011 : appendlist (48) 
+     0x1819ec0 [foo.ang:5] : 0012 : litstring (18) (d)
+     0x1819ec0 [foo.ang:5] : 0013 : appendlist (48) 
+     0x1819ec0 [foo.ang:5] : 0014 : litstring (18) (e)
+     0x1819ec0 [foo.ang:5] : 0015 : appendlist (48) 
+     0x1819ec0 [foo.ang:5] : 0016 : iterstart (44) 
+     0x1819ec0 [foo.ang:5] : 0017 : iterlvifdone (43) (offset 5)
+     0x1819ec0 [foo.ang:6] : 0018 : func (4)  (std$i)
+     0x1819ec0 [foo.ang:6] : 0019 : func (4)  (std$j)
+     0x1819ec0 [foo.ang:6] : 0020 : globaldo (5) (user$something)
+     0x1819ec0 [foo.ang:7] : 0021 : jump (15) (offset -4)
+     0x1819ec0 [foo.ang:8] : 0022 : jump (15) (offset -18)
+     0x1819ec0 [foo.ang:9] : 0023 : end (1) 
+\end{v}
+Note the \texttt{newlist} followed by \texttt{litstring/appendlist} pairs.
+These take time, and this gets much worse with a longer list. It is possible
+to deal with this by generating the list and putting it in a variable:
+\begin{lstlisting}
+:foo |:lst|
+    ["a","b","c","d","e"] !lst
+    0 1000 range each {
+        ?lst each {
+          i j dosomething
+        }
+    };
+\end{lstlisting}
+which generates the code:
+\begin{lstlisting}
+     0x1da2ec0 [foo.ang:4] : 0000 : newlist (47) 
+     0x1da2ec0 [foo.ang:4] : 0001 : litstring (18) (a)
+     0x1da2ec0 [foo.ang:4] : 0002 : appendlist (48) 
+     0x1da2ec0 [foo.ang:4] : 0003 : litstring (18) (b)
+     0x1da2ec0 [foo.ang:4] : 0004 : appendlist (48) 
+     0x1da2ec0 [foo.ang:4] : 0005 : litstring (18) (c)
+     0x1da2ec0 [foo.ang:4] : 0006 : appendlist (48) 
+     0x1da2ec0 [foo.ang:4] : 0007 : litstring (18) (d)
+     0x1da2ec0 [foo.ang:4] : 0008 : appendlist (48) 
+     0x1da2ec0 [foo.ang:4] : 0009 : litstring (18) (e)
+     0x1da2ec0 [foo.ang:4] : 0010 : appendlist (48) 
+     0x1da2ec0 [foo.ang:4] : 0011 : localset (8) (idx 0)
+     0x1da2ec0 [foo.ang:5] : 0012 : litint (2) 
+     0x1da2ec0 [foo.ang:5] : 0013 : litint (2) 
+     0x1da2ec0 [foo.ang:5] : 0014 : func (4)  (std$range)
+     0x1da2ec0 [foo.ang:5] : 0015 : iterstart (44) 
+     0x1da2ec0 [foo.ang:5] : 0016 : iterlvifdone (43) (offset 9)
+     0x1da2ec0 [foo.ang:6] : 0017 : localget (7) (idx 0)
+     0x1da2ec0 [foo.ang:6] : 0018 : iterstart (44) 
+     0x1da2ec0 [foo.ang:6] : 0019 : iterlvifdone (43) (offset 5)
+     0x1da2ec0 [foo.ang:7] : 0020 : func (4)  (std$i)
+     0x1da2ec0 [foo.ang:7] : 0021 : func (4)  (std$j)
+     0x1da2ec0 [foo.ang:7] : 0022 : globaldo (5) (idx dosomething)
+     0x1da2ec0 [foo.ang:8] : 0023 : jump (15) (offset -4)
+     0x1da2ec0 [foo.ang:9] : 0024 : jump (15) (offset -8)
+     0x1da2ec0 [foo.ang:10] : 0025 : end (1) 
+\end{lstlisting}
+This is much better: the list is generated and stored before the loop
+starts at offset 0015, so it is only generated once per function call.
+However, we can improve on this for both legibility and speed using
+a constant expression:
+\begin{lstlisting}
+:foo
+    0 1000 range each {
+        <<["a","b","c","d","e"]>> each {
+          i j dosomething
+        }
+    }
+;
+\end{lstlisting}
+This is the same as the original code, but with angle brackets around
+the code which makes the list. Here's the disassembly:
+\begin{lstlisting}
+     0x13a1410 [foo.ang:4] : 0000 : litint (2) 
+     0x13a1410 [foo.ang:4] : 0001 : litint (2) 
+     0x13a1410 [foo.ang:4] : 0002 : func (4)  (std$range)
+     0x13a1410 [foo.ang:4] : 0003 : iterstart (44) 
+     0x13a1410 [foo.ang:4] : 0004 : iterlvifdone (43) (offset 9)
+     0x13a1410 [foo.ang:5] : 0005 : constexpr (61) 
+     0x13a1410 [foo.ang:5] : 0006 : iterstart (44) 
+     0x13a1410 [foo.ang:5] : 0007 : iterlvifdone (43) (offset 5)
+     0x13a1410 [foo.ang:6] : 0008 : func (4)  (std$i)
+     0x13a1410 [foo.ang:6] : 0009 : func (4)  (std$j)
+     0x13a1410 [foo.ang:6] : 0010 : globaldo (5) (idx dosomething)
+     0x13a1410 [foo.ang:7] : 0011 : jump (15) (offset -4)
+     0x13a1410 [foo.ang:8] : 0012 : jump (15) (offset -8)
+     0x13a1410 [foo.ang:9] : 0013 : end (1) 
+\end{lstlisting}
+Here, we are no longer generating the list at all -- it has already
+been generated \emph{at compile time.} Instead, we compile a single
+\texttt{constexpr} instruction to push the list onto the stack.
+Here's what happens when we encounter a $<<$ during compilation:
+\begin{enumerate}
+\item Store the current compile context and begin a new one, as if we 
+were compiling a new function.
+\item Compile code until we reach a $>>$ sequence.
+\item Run the code we just compiled.
+\item Pop a value from the top of the stack.
+\item Restore the original compile context.
+\item Compile a \texttt{constexpr} instruction containing the value
+we just popped off the stack.
+\end{enumerate}
+The most important thing to realise about constant expressions is that
+they break lexical scope: they cannot access any of the variables of
+the functions in which they are embedded. This is because they are not
+actually part of those functions: they are a completely separate piece of
+code run at compile time, long before any containing function ever
+runs. Thus the following code is invalid:
+\begin{lstlisting}
+:foo |:a|
+    2!a
+    << 2 ?a * >> # invalid
+;
+\end{lstlisting}
+because the local variable \texttt{a} is not in the scope of the constant
+expression. Although the function contains the expression lexically, it
+is not a true part of the function. Globals (provided they are created
+before the constant expression) are fine, because Angort compiles and
+runs each line at a time (outside functions).
+\begin{lstlisting}
+2 !A
+:foo
+    <<3 ?A *>>. # valid - A exists when this compiles
+;   
+\end{lstlisting}
+
+\subsection{Using constant expressions in closures}
+We often write functions to create other functions. For example,
+consider an exponential smoothing function of the form
+\[
+y_t = \beta x_t + (1-\beta)y_{t-1}
+\]
+We can write a function to generate a smoother:
+\begin{lstlisting}
+:mksmoother |beta:y|
+0!y
+    (|x:| ?beta ?x * 1.0 ?beta - ?y * + dup !y)
+;   
+\end{lstlisting}
+which we can then use:
+\begin{lstlisting}
+0.1 mksmoother !F
+{ read tofloat ?F@ . }
+\end{lstlisting}
+but this requires us to create a variable for each smoother,
+which could become awkward if we need to create a large number of them
+and would separate their creation from where they are used. Let's imagine
+we are dealing with many streams of interleaved input, each of which
+should be smoothed separately and perhaps with a different constant:
+\begin{lstlisting}
+0.1 mksmoother !F1
+0.12 mksmoother !F2
+0.3 mksmoother !F3
+0.1 mksmoother !F4
+(
+    { 
+        read tofloat ?F1@.
+        read tofloat ?F2@.
+        read tofloat ?F3@.
+        read tofloat ?F4@.
+    }
+)@
+\end{lstlisting}
+Instead, we could create the smoothers using constant expressions:
+\begin{lstlisting}
+(
+    { 
+        read tofloat <<0.1 mksmoother>>@.
+        read tofloat <<0.12 mksmoother>>@.
+        read tofloat <<0.3 mksmoother>>@.
+        read tofloat <<0.1 mksmoother>>@.
+    }
+)@
+\end{lstlisting}
+which is much neater. Constant expressions have many creative uses!
+
+
+\subsection{Tracing and disassembling}
+\todo{tracing}
+
+
+\subsection{The debugger}
+\todo{debugger}
