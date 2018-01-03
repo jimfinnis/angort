@@ -125,41 +125,4 @@ void HashType::clone(Value *out,const Value *in,bool deep)const{
     incRef(out);
 }
 
-
-const char *HashType::toString(bool *allocated,const Value *v) const {
-    // first, does the hash contain the toString symbol key?
-    
-    static int symbKey=-1;
-    if(symbKey<0)
-        symbKey = Types::tSymbol->getSymbol("toString");
-    
-    Value k;
-    Types::tSymbol->set(&k,symbKey);
-    
-    Hash *h = v->v.hash->hash;
-    if(h->find(&k)){
-        // is it a function?
-        Value *outval = h->getval();
-        if(outval->t->isCallable()){
-            Angort *a = Angort::getCallingInstance();
-            // Yes, so call the function and get the returned value
-            a->pushval()->copy(v);
-            // have to turn debugging off during this to avoid
-            // infinite recursion
-            int olddeb = a->debug;
-            a->debug=0;
-            a->runValue(outval);
-            outval = a->popval();
-            a->debug=olddeb;
-            return outval->t->toString(allocated,outval);
-        } else {
-            // if not, just turn it into a string and use that
-            return outval->t->toString(allocated,outval);
-        }
-    }
-        
-    // otherwise, do the default operation
-    return Type::toString(allocated,v);
-}
-
 }

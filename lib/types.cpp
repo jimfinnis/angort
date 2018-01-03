@@ -98,7 +98,7 @@ void Type::registerBinop(Type *rhs, int opcode, BinopFunction f){
     *ptr = f;
 }
 
-bool Type::binop(Angort *a,int opcode,Value *lhs,Value *rhs){
+bool Type::binop(Runtime *a,int opcode,Value *lhs,Value *rhs){
     // have to cast away the constness because getBinop can't be const.
     BinopFunction *f = const_cast<Type *>(lhs->t)->getBinop(rhs->t,opcode);
     if(!f)

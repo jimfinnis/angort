@@ -44,7 +44,7 @@ static void addHashToHash(Hash *h,Hash *h2){
  * is incremented by the caller.
  */
 
-void Angort::binop(Value *a,Value *b,int opcode){
+void Runtime::binop(Value *a,Value *b,int opcode){
     
     const Type *at = a->getType();
     const Type *bt = b->getType();

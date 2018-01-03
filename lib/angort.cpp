@@ -42,13 +42,33 @@ const char* Angort::getVersion(){
     return ANGORT_VERSION;
 }
 
-Angort *Angort::callingInstance=NULL;
-
-Angort::Angort() {
+Runtime::Runtime(Angort *angort,const char *_name){
+    static int idcounter=0;
+    id = idcounter++;
+    ang = angort;
+    name = _name;
     ip = NULL;
     traceOnException=true;
-    running = true;
     outputStream = stdout;
+    debuggerNextIP=false;
+    debuggerStepping=false;
+    rstack.setName("return");
+    loopIterStack.setName("loop iterator");
+    stack.setName("main");
+    catchstack.setName("catchstack");
+    trace=false;
+    emergencyStop=false;
+    assertDebug=false;
+    assertNegated=false;
+    loopIterCt=0;
+    autoCycleCount = ang->autoCycleInterval;
+}
+
+Runtime::~Runtime(){
+    endredir();
+}
+
+Angort::Angort() {
     Types::createTypes();
     // create and set default namespace
     stdNamespace = names.create("std");
@@ -57,17 +77,15 @@ Angort::Angort() {
     // and that's the namespace we're working in
     names.push(stdNamespace);
     lineNumber=1;
+    running = true;
     
     // no debugger by default; CLI sets this up.
     debuggerHook = NULL;
-    debuggerNextIP=false;
-    debuggerStepping=false;
     
-    rstack.setName("return");
-    loopIterStack.setName("loop iterator");
     contextStack.setName("context");
-    stack.setName("main");
-    catchstack.setName("catchstack");
+    
+    // initialise the default runtime.
+    run = new Runtime(this,"default");
     
     // initialise the search path to the environment variable ANGORTPATH
     // if it exists, otherwise to the default.
@@ -89,7 +107,7 @@ Angort::Angort() {
     // future and deprecated are not imported
     registerLibrary(&LIBNAME(future),false);
     registerLibrary(&LIBNAME(deprecated),false);
-    
+    tokeniserTrace=false;
     
     // now the standard package has been imported, set up the
     // user package into which their words are defined.
@@ -98,15 +116,10 @@ Angort::Angort() {
     names.import(userNamespace,NULL);
     names.push(userNamespace);
     
-    debug=false;
     printLines=false;
-    emergencyStop=false;
-    assertDebug=false;
-    assertNegated=false;
     wordValIdx=-1;
     barewords=false;
-    autoCycleCount = autoCycleInterval = AUTOGCINTERVAL;
-    loopIterCt=0;
+    autoCycleInterval = AUTOGCINTERVAL;
     hereDocString = hereDocEndString = NULL;
     
     /// create the default, root compilation context
@@ -117,9 +130,7 @@ Angort::Angort() {
 }
 
 Angort::~Angort(){
-    endredir();
-    if(running)
-        shutdown();
+    shutdown();
 }
 
 void Angort::importAllFuture(){
@@ -145,27 +156,29 @@ void CompileContext::dump(){
                localIndices[i]);
     }
     printf("Disassembly:\n");
-    Angort::getCallingInstance()->disasm(cb);
+    ang->disasm(cb);
     
 }
 
 
 void Angort::shutdown(){
-    ArrayListIterator<LibraryDef *>iter(libs);
+    if(running){
+        ArrayListIterator<LibraryDef *>iter(libs);
     
-    for(iter.first();!iter.isDone();iter.next()){
-        LibraryDef *lib = *(iter.current());
-        NativeFunc shutdownFunc = lib->shutdownfunc;
-        if(shutdownFunc)
-            (*shutdownFunc)(this);
+        for(iter.first();!iter.isDone();iter.next()){
+            LibraryDef *lib = *(iter.current());
+            NativeFunc shutdownFunc = lib->shutdownfunc;
+            if(shutdownFunc)
+                (*shutdownFunc)(run);
+        }
+    
+        Type::clearList();
+        SymbolType::deleteAll();
+        running = false;
     }
-    
-    Type::clearList();
-    SymbolType::deleteAll();
-    running = false;
 }
 
-void Angort::showop(const Instruction *ip,const Instruction *base,
+void Runtime::showop(const Instruction *ip,const Instruction *base,
                     const Instruction *curr){
     if(!base)base=wordbase;
     char buf[128];
@@ -189,7 +202,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
     switch(ip->opcode){
     case OP_FUNC:
         Types::tNative->set(&tmp,ip->d.func);
-        printf(" (%s)",names.getNameByValue(&tmp,buf,128));
+        printf(" (%s)",ang->names.getNameByValue(&tmp,buf,128));
         break;
     case OP_JUMP:
     case OP_LEAVE:
@@ -202,7 +215,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
     case OP_GLOBALGET:
     case OP_GLOBALINC:
     case OP_GLOBALDEC:
-        printf("(%s)",names.getFQN(ip->d.i));
+        printf("(%s)",ang->names.getFQN(ip->d.i));
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
@@ -215,7 +228,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
     case OP_PROPSET:
     case OP_PROPGET:
         Types::tProp->set(&tmp,ip->d.prop);
-        printf(" (name %s)",names.getNameByValue(&tmp,buf,128));
+        printf(" (name %s)",ang->names.getNameByValue(&tmp,buf,128));
         break;
     case OP_LITERALSTRING:
         printf("(%s)",ip->d.s);
@@ -244,7 +257,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
     
 }
 
-const Instruction *Angort::call(const Value *a,const Instruction *returnip){
+const Instruction *Runtime::call(const Value *a,const Instruction *returnip){
     const CodeBlock *cb;
     const Type *t;
     
@@ -377,7 +390,7 @@ void CodeBlock::setFromContext(CompileContext *con){
     used=true;
 }
 
-void Angort::runValue(const Value *v){
+void Runtime::runValue(const Value *v){
     if(!emergencyStop){
         const Instruction *oldbase=wordbase;
         const Instruction *previp = ip;
@@ -389,7 +402,7 @@ void Angort::runValue(const Value *v){
     //    locals.pop(); 
 }
 
-void Angort::dumpStack(const char *s){
+void Runtime::dumpStack(const char *s){
     printf("Stack dump for %s\n",s);
     for(int i=0;i<stack.ct;i++){
         const StringBuffer &b = stack.peekptr(i)->toString();
@@ -397,7 +410,7 @@ void Angort::dumpStack(const char *s){
     }
 }
 
-void Angort::ret()
+void Runtime::ret()
 {
     // pop the appropriate number of iterator frames
     try{
@@ -435,7 +448,7 @@ void Angort::ret()
     }
 }
 
-bool Angort::throwAngortException(int symbol, Value *data){
+bool Runtime::throwAngortException(int symbol, Value *data){
     storeTrace(); // store a trace to print if we need to
     
     // we go up the exception stack, inner (intrafunction) stack
@@ -477,9 +490,8 @@ bool Angort::throwAngortException(int symbol, Value *data){
     return false;
 }
 
-void Angort::run(const Instruction *startip){
+void Runtime::run(const Instruction *startip){
     ip=startip;
-    ipException = NULL;
     
     Value *a, *b, *c;
     wordbase = ip;
@@ -497,7 +509,7 @@ void Angort::run(const Instruction *startip){
                 }
                 
                 int opcode = ip->opcode;
-                if(debug&1){
+                if(trace){
                     showop(ip,wordbase);
                     printf(" ST [%d] : ",stack.ct);
                     for(int i=0;i<stack.ct;i++){
@@ -506,8 +518,9 @@ void Angort::run(const Instruction *startip){
                     }
                     printf("\n");
                 }
-                if(autoCycleInterval>0 && !--autoCycleCount){
-                    autoCycleCount = autoCycleInterval;
+                // only the default thread does cycle GC
+                if(!id && ang->autoCycleInterval>0 && !--autoCycleCount){
+                    autoCycleCount = ang->autoCycleInterval;
                     gc();
                 }
 #if SOURCEDATA
@@ -516,10 +529,10 @@ void Angort::run(const Instruction *startip){
                 // false.
                 if(ip->brk)debuggerNextIP=true;
 #endif  
-                if(debuggerNextIP && debuggerHook){
+                if(debuggerNextIP && ang->debuggerHook){
                     if(!debuggerStepping)
                         debuggerNextIP = false;
-                    (*debuggerHook)(this);
+                    (*ang->debuggerHook)(this);
                 }
                 
                 switch(opcode){
@@ -603,15 +616,15 @@ void Angort::run(const Instruction *startip){
                 case OP_GLOBALSET:
                     // SNARK - combine with consts
                     a = popval();
-                    names.getVal(ip->d.i)->copy(a);
+                    ang->names.getVal(ip->d.i)->copy(a);
                     ip++;
                     break;
                 case OP_GLOBALINC:
-                    names.getVal(ip->d.i)->increment(1);
+                    ang->names.getVal(ip->d.i)->increment(1);
                     ip++;
                     break;
                 case OP_GLOBALDEC:
-                    names.getVal(ip->d.i)->increment(-1);
+                    ang->names.getVal(ip->d.i)->increment(-1);
                     ip++;
                     break;
                 case OP_PROPGET:
@@ -638,7 +651,7 @@ void Angort::run(const Instruction *startip){
                     ip++;
                     break;
                 case OP_GLOBALDO:
-                    a = names.getVal(ip->d.i);
+                    a = ang->names.getVal(ip->d.i);
                     if(a->t->isCallable()){
                         Closure *clos;
                         Value vv;
@@ -682,7 +695,7 @@ void Angort::run(const Instruction *startip){
                     break;
                 case OP_GLOBALGET:
                     // like the above but does not run a codeblock
-                    a = names.getVal(ip->d.i);
+                    a = ang->names.getVal(ip->d.i);
                     b = stack.pushptr();
                     b->copy(a);
                     ip++;
@@ -884,10 +897,10 @@ void Angort::run(const Instruction *startip){
                     break;
                 case OP_DEF:{
                     const StringBuffer& sb = popString();
-                    if(names.isConst(sb.get(),false))
+                    if(ang->names.isConst(sb.get(),false))
                         throw AlreadyDefinedException(sb.get());
-                    int idx = ip->d.i ? names.addConst(sb.get()):names.add(sb.get());
-                    names.getVal(idx)->copy(popval());
+                    int idx = ip->d.i ? ang->names.addConst(sb.get()):ang->names.add(sb.get());
+                    ang->names.getVal(idx)->copy(popval());
                     ip++;
                     break;
                 }
@@ -916,7 +929,7 @@ void Angort::run(const Instruction *startip){
                         const StringBuffer &sbuf = b->toString();
                         printf("unhandled throw instruction: %s (%s)\n",
                                Types::tSymbol->getString(a->v.i),sbuf.get());
-                        if(debuggerHook&&ip)(*debuggerHook)(this);
+                        if(ip && ang->debuggerHook)(*ang->debuggerHook)(this);
                         ip=NULL;
                         throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s (%s)\n",
                                                         Types::tSymbol->getString(a->v.i),sbuf.get());
@@ -941,8 +954,13 @@ void Angort::run(const Instruction *startip){
                     // - caught in next level of run() up
                     // - debugger re-entered with null ip
                         
-                    if(debuggerHook&&ip)(*debuggerHook)(this);
+                    if(ip&&ang->debuggerHook)(*ang->debuggerHook)(this);
+                    // set IP and runtime
+                    e.ip = ip;
+                    e.run = this;
+                    // clear IP here
                     ip=NULL;
+                    // and rethrow.
                     throw e;
                 }
             }
@@ -951,8 +969,9 @@ void Angort::run(const Instruction *startip){
         // this is called when the outer handler throws
         // an error, i.e. the error was not handled by an
         // Angort try-catch block.
-        // store the exception details
-        ipException = ip;
+        // set IP and runtime
+        e.ip = ip;
+        e.run = this;
         // clear the catchstack, but push another empty entry on there
         catchstack.clear();
         catchstack.pushptr()->clear();
@@ -1324,7 +1343,7 @@ void Angort::endPackageInScript(){
     // see the similar code below in include().
     // pop the namespace stack
     int idx=names.pop();
-    Types::tNSID->set(pushval(),idx);
+    Types::tNSID->set(run->pushval(),idx);
     names.setPrivate(false); // and clear the private flag
 }
 
@@ -1363,7 +1382,7 @@ void Angort::include(const char *filename,bool isreq){
         // push the idx of the package which was defined. 
         // A bit dodgy since this isn't taking place in
         // a code block..
-        Types::tNSID->set(pushval(),idx);
+        Types::tNSID->set(run->pushval(),idx);
     }
     
     names.setPrivate(false); // and clear the private flag
@@ -1460,9 +1479,8 @@ void Angort::parseVarAccess(int token){
 
 void Angort::feed(const char *buf){
     
-    ipException = NULL;
-    resetStop();
-    callingInstance=this;
+    // clear exception data in default thread only
+    run->resetStop();
     
     //    printf("FEED STARTING: %s\n",buf);
     
@@ -1473,7 +1491,7 @@ void Angort::feed(const char *buf){
         context->reset(NULL,&tok);
     
     strcpy(lastLine,buf);
-    tok.settrace((debug&2)?true:false);
+    tok.settrace(tokeniserTrace);
     tok.reset(buf);
     // the tokeniser will reset its idea of the line number,
     // because we reset it at the start of all input.
@@ -1494,7 +1512,9 @@ void Angort::feed(const char *buf){
             free(hereDocString);
             hereDocString=NULL;
             if(!isDefining() && !inSubContext()){
-                compile(OP_END);run(context->getCode());
+                compile(OP_END);
+                // run in default runtime
+                run->run(context->getCode());
                 clearAtEndOfFeed();
             }
         }
@@ -1875,24 +1895,25 @@ void Angort::feed(const char *buf){
                     // now we actually run that codeblock
                     Value *vv = new Value();
                     Types::tCode->set(vv,lambdaContext->cb);
-                    runValue(vv);
+                    run->runValue(vv);
                     
                     // we don't need the codeblock any more (note,
                     // if we ever GC codeblocks this will free twice)
                     delete lambdaContext->cb;
                     lambdaContext->reset(NULL,&tok);
                     // get the value that codeblock had
-                    vv->copy(popval());
+                    vv->copy(run->popval());
                     compile(OP_CONSTEXPR)->d.constexprval=vv;
                 }
                 break;
             case T_END:
                 // just return if we're still defining
+                // otherwise run the buffer we just made
+                // in the default runtime!
                 if(!isDefining() && !inSubContext()){
                     context->checkStacksAtEnd(); // check dangling constructs
-                    // otherwise run the buffer we just made
                     compile(OP_END);
-                    run(context->getCode());
+                    run->run(context->getCode());
                     clearAtEndOfFeed();
                 }
                 lineNumber++;
@@ -2075,18 +2096,7 @@ void Angort::feed(const char *buf){
 }
 
 
-
-void Angort::clearAtEndOfFeed(){
-    //    printf("Clearing at end of feed\n");
-    // make sure we tidy up any state
-    contextStack.clear(); // clear the context stack
-    context = contextStack.pushptr();
-    context->reset(NULL,&tok); // reset the old context
-    wordValIdx=-1;
-    // make sure the return stack gets cleared otherwise
-    // really strange things can happen on the next processed
-    // line
-    
+void Runtime::clearAtEOF(){
     while(!rstack.isempty()){
         rstack.popptr()->clear();
         catchstack.pop();
@@ -2102,12 +2112,27 @@ void Angort::clearAtEndOfFeed(){
     currClosure.clr();
 }    
 
+
+void Angort::clearAtEndOfFeed(){
+    //    printf("Clearing at end of feed\n");
+    // make sure we tidy up any state
+    contextStack.clear(); // clear the context stack
+    context = contextStack.pushptr();
+    context->reset(NULL,&tok); // reset the old context
+    wordValIdx=-1;
+    // make sure the return stack gets cleared otherwise
+    // really strange things can happen on the next processed
+    // line
+    
+    run->clearAtEOF();
+}    
+
 void Angort::disasm(const CodeBlock *cb){
     const Instruction *ip = cb->ip;
     const Instruction *base = ip;
     for(;;){
         int opcode = ip->opcode;
-        showop(ip++,base);
+        run->showop(ip++,base);
         printf("\n");
         if(opcode == OP_END)break;
     }
@@ -2144,7 +2169,8 @@ const char *Angort::getSpec(const char *s){
 void Angort::list(){
     names.list();
 }
-void Angort::dumpFrame(){
+
+void Runtime::dumpFrame(){
     printf("Frame data:\n");
     printf("  Curclosure: %s\n",currClosure.toString().get());
     printf("  Ret stack:\n");
@@ -2234,7 +2260,7 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     *libs->append() = lib;
     
     if(lib->initfunc){
-        (*lib->initfunc)(this);
+        (*lib->initfunc)(run);
     }
     
     // register the binops AFTER we init the function, so the
@@ -2257,7 +2283,7 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     
 }
 
-void Angort::printTrace(){
+void Runtime::printTrace(){
     char buf[1024]; // buffer to write instruction details
     // first put the current frame on
     if(ip)
@@ -2277,7 +2303,7 @@ void Angort::printTrace(){
 }
 
 
-void Angort::storeTrace(){
+void Runtime::storeTrace(){
     char buf[1024]; // buffer to write instruction details
     char **ptr; // pointer to list item, itself a pointer
     
@@ -2305,7 +2331,7 @@ void Angort::storeTrace(){
     }
 }
 
-void Angort::printAndDeleteStoredTrace(){
+void Runtime::printAndDeleteStoredTrace(){
     if(traceOnException){
         if(!storedTrace.count()){
             printf("No stored trace to print\n");
@@ -2323,7 +2349,7 @@ void Angort::printAndDeleteStoredTrace(){
     storedTrace.clear();
 }
 
-void Angort::printStoredTrace(){
+void Runtime::printStoredTrace(){
     if(!storedTrace.count()){
         printf("No stored trace to print (only works with exceptions)\n");
     } else {

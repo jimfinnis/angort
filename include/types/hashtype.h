@@ -48,7 +48,6 @@ public:
     virtual void setValue(Value *coll,Value *k,Value *v)const;
     virtual void getValue(Value *coll,Value *k,Value *result)const;
     virtual int getCount(Value *coll)const;
-    virtual const char *toString(bool *allocated, const Value *v) const;
     virtual void removeAndReturn(Value *coll,Value *k,Value *result)const;
     virtual void slice(Value *out,Value *coll,int start,int len)const{
         throw RUNT("ex$nocol","cannot get slice of hash");

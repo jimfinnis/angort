@@ -29,19 +29,21 @@ namespace angort {
 
 class AutoGCProperty: public Property {
 private:
-    Angort *a;
+    Runtime *run;
 public:
-    AutoGCProperty(Angort *_a){
-        a = _a;
+    AutoGCProperty(Runtime *_a){
+        run = _a;
     }
     
     virtual void postSet(){
-        a->autoCycleInterval = v.toInt();
-        a->autoCycleCount = a->autoCycleInterval;
+        run->globalLock();
+        run->ang->autoCycleInterval = v.toInt();
+        run->autoCycleCount = run->ang->autoCycleInterval;
+        run->globalUnlock();
     }
     
     virtual void preGet(){
-        Types::tInteger->set(&v,a->autoCycleInterval);
+        Types::tInteger->set(&v,run->ang->autoCycleInterval);
     }
 };
 
@@ -51,8 +53,8 @@ class SearchPathProperty : public Property {
 private:
     Angort *a;
 public:
-    SearchPathProperty(Angort *_a){
-        a = _a;
+    SearchPathProperty(Runtime *_a){
+        a = _a->ang;
     }
     
     virtual void postSet(){
@@ -68,11 +70,11 @@ public:
 };
 
 // assumes (nsid name --) on the stack
-static NamespaceEnt *getNSEnt(Angort *a){
+static NamespaceEnt *getNSEnt(Runtime *a){
     const StringBuffer &s = a->popString();
     int nsid = Types::tNSID->get(a->popval());
     
-    Namespace *ns = a->names.getSpaceByIdx(nsid);
+    Namespace *ns = a->ang->names.getSpaceByIdx(nsid);
     
     int idx = ns->get(s.get());
     if(idx<0)
@@ -157,13 +159,13 @@ SIGHUP (1).
 %word version ( -- version ) version number
 Return the Angort version number as an string.
 {
-    a->pushString(a->getVersion());
+    a->pushString(a->ang->getVersion());
 }
 
 %word barewords (v --) turn bare words on or off
 If set to true, unknown identifiers will be converted to symbol values.
 {
-    a->barewords = a->popInt()?true:false;
+    a->ang->barewords = a->popInt()?true:false;
 }
 
 %wordargs show v (v -- s) show a variable into a string
@@ -284,13 +286,15 @@ ex$failed.
 Typically used to terminate an Angort program, which would normally
 drop back to the interpreter.
 {
-    a->shutdown();
+    //todo threads - might cause problems if threads survive
+    a->ang->shutdown();
     exit(0);
 }
 
 %word abort ( s -- ) exit with return code 1 and an error message to stderr
 {
-    a->shutdown();
+    //todo threads - might cause problems if threads survive
+    a->ang->shutdown();
     fprintf(stderr,"%s\n",a->popString().get());
     exit(1);
 }
@@ -299,13 +303,16 @@ drop back to the interpreter.
 If true, every instruction executed will print to stdout along
 with a stack dump. Slows down the program!
 {
-    a->debug = a->popInt();
+    a->trace = a->popInt()!=0;
 }
 
 %word disasm (name -- ) disassemble word
 Print to stdout the instructions for a named Angort function.
 {
-    a->disasm(a->popString().get());
+    //todo threads - might cause weirdness if invoked in another thread, so
+    //turning it off there
+    a->checkzerothread();
+    a->ang->disasm(a->popString().get());
 }
 
 %word assertdebug (bool --) turn assertion printout on/off
@@ -330,7 +337,7 @@ in assertion testing). All prints are to stdout.
     }
     if(cond){
         if(a->assertDebug)printf("Assertion failed: %s\n",desc.get());
-        throw AssertException(desc.get(),a->getLineNumber());
+        throw AssertException(desc.get(),a->ang->getLineNumber());
     } else if(a->assertDebug)
         printf("Assertion passed: %s\n",desc.get());
 }
@@ -346,7 +353,7 @@ If the current stack count does not match that stored by the last
 "chkstart", throw an ex$assert exception.
 {
     if(a->stack.ct!=stackcheck)
-        throw AssertException("stack check failed",a->getLineNumber());
+        throw AssertException("stack check failed",a->ang->getLineNumber());
     
 }
 
@@ -415,8 +422,8 @@ Returns the total number of garbage collected objects in the system.
 %wordargs getglobal s (string -- val) get a global by name
 Gets the value of a global variable by name.
 {
-    int id = a->findOrCreateGlobal(p0);
-    Value *v = a->names.getVal(id);
+    int id = a->ang->findOrCreateGlobal(p0);
+    Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
     if(v->t == Types::tProp){
         v->v.property->preGet();
@@ -424,13 +431,13 @@ Gets the value of a global variable by name.
         v->v.property->postGet();
     }
     else
-        a->pushval()->copy(a->names.getVal(id));
+        a->pushval()->copy(a->ang->names.getVal(id));
 }
 %wordargs setglobal vs (val string -- val) set a global by name
 Sets the value of a global variable by name.
 {
-    int id = a->findOrCreateGlobal(p1);
-    Value *v = a->names.getVal(id);
+    int id = a->ang->findOrCreateGlobal(p1);
+    Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
     if(v->t == Types::tProp){
         v->v.property->preSet();
@@ -438,7 +445,7 @@ Sets the value of a global variable by name.
         v->v.property->postSet();
     }
     else
-        a->names.getVal(id)->copy(p0);
+        a->ang->names.getVal(id)->copy(p0);
 }
 
 
@@ -672,14 +679,14 @@ globals will survive).
 %word list (--) List everything
 List the names registered in all namespaces.
 {
-    a->list();
+    a->ang->list();
 }
 
 %word help (s --) get help on a word or native function
 This is the same as "??name".
 {
     const StringBuffer &name = a->popString();
-    const char *s = a->getSpec(name.get());
+    const char *s = a->ang->getSpec(name.get());
     if(!s)s="no help found";
     printf("%s: %s\n",name.get(),s);
 }
@@ -688,7 +695,7 @@ This is the same as "??name".
 List all words in a given namespace, showing the help texts for all
 of them.
 {
-    Namespace *s = a->names.getSpaceByName(a->popString().get());
+    Namespace *s = a->ang->names.getSpaceByName(a->popString().get());
     for(int i=0;i<s->count();i++){
         NamespaceEnt *e = s->getEnt(i);
         if(!e->isPriv){
@@ -731,7 +738,7 @@ Return a namespace ID for a given namespace. Throws ex$notfound if there
 is no such namespace.
 {
     const StringBuffer& name = a->popString();
-    Namespace *ns = a->names.getSpaceByName(name.get());
+    Namespace *ns = a->ang->names.getSpaceByName(name.get());
     Types::tNSID->set(a->pushval(),ns->idx);
 }
 
@@ -740,7 +747,7 @@ Returns a list names of all namespaces, in the order in which they
 were created.
 {
     ArrayList<Value> *list=Types::tList->set(a->pushval());
-    a->names.spaces.appendNamesToList(list);
+    a->ang->names.spaces.appendNamesToList(list);
 }
 
 %word names (nsid --) get a list of names from a namespace
@@ -748,7 +755,7 @@ Returns a list of names from a namespace whose handle has been obtained
 with "nspace".
 {
     int idx = Types::tNSID->get(a->popval());
-    Namespace *ns = a->names.getSpaceByIdx(idx);
+    Namespace *ns = a->ang->names.getSpaceByIdx(idx);
     if(!ns)a->pushNone();
     else {
         ArrayList<Value> *list=Types::tList->set(a->pushval());
@@ -821,7 +828,8 @@ returned by "nspace", and returns its value.
 For packages which are part of a long script, this marks the end. Normally
 the end of a package is marked by the end of the file.
 {
-    a->endPackageInScript();
+    a->checkzerothread();
+    a->ang->endPackageInScript();
 }
 
 
@@ -924,7 +932,8 @@ next step will be to either drop or import the library. The latter
 will be to mark the library's namespace as imported, so that its
 symbols can be used without a fully-qualified name.
 {
-    Types::tNSID->set(a->pushval(),a->plugin(p0));
+    
+    Types::tNSID->set(a->pushval(),a->ang->plugin(p0));
 }
 
 %word import (namespaceint --) or (namespaceint list --) import namespace or namespace members into default space
@@ -936,13 +945,14 @@ into the default namespace, making them available without full
 qualification. The idiom for this is typically:
 `libname nspace [`s1,`s2..] import
 {
+    a->checkzerothread();
     if(a->stack.peekptr()->t==Types::tNSID){
         int nsid = Types::tNSID->get(a->popval());
-        a->names.import(nsid,NULL);
+        a->ang->names.import(nsid,NULL);
     } else if(a->stack.peekptr()->t==Types::tList){
         ArrayList<Value> *lst = Types::tList->get(a->popval());
         int nsid = Types::tNSID->get(a->popval());
-        a->names.import(nsid,lst);
+        a->ang->names.import(nsid,lst);
     } else
         throw SyntaxException("expected package list or package in import");
 }
@@ -958,7 +968,7 @@ qualification. The idiom for this is typically:
 %shared
 %init
 {
-    a->registerProperty("autogc",new angort::AutoGCProperty(a));
-    a->registerProperty("searchpath",new angort::SearchPathProperty(a));
+    a->ang->registerProperty("autogc",new angort::AutoGCProperty(a));
+    a->ang->registerProperty("searchpath",new angort::SearchPathProperty(a));
 }
     

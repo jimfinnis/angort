@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 namespace angort {
-void Angort::popParams(Value **out,const char *spec,const Type *type0,
+void Runtime::popParams(Value **out,const char *spec,const Type *type0,
                        const Type *type1) {
     
     const char *p = spec;

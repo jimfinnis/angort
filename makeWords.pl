@@ -149,7 +149,7 @@ while(<>){
         $curword=$word;
         print WORDSFILE "$word,";
         print WORDSTEXFILE "\\index{$libname\\\$$word}\\subsection{$word}\n";
-        print "static void _word__$word"."(angort::Angort *a)\n";
+        print "static void _word__$word"."(angort::Runtime *a)\n";
         # output a function def and opening curly bracket,
         # and the initial arg fetch
         print "{\nValue *_parms[".length($args)."];\n";
@@ -208,7 +208,7 @@ while(<>){
         print WORDSFILE "$word,";
         print WORDSTEXFILE "\\index{$libname\\\$$word}\\subsection{$word}\n";
         # output a function def and opening curly bracket
-        print "static void _word__$word"."(angort::Angort *a){\n";
+        print "static void _word__$word"."(angort::Runtime *a){\n";
         $waitingforfuncstart=1;
     }elsif($waitingforfuncstart && !/^{/){
             $descs{$curword}.="\\n".$_;
@@ -218,12 +218,12 @@ while(<>){
         $bname = "$lhs"."_$opcode"."_$rhs";
         print "//BINOP : $lhs - $opcode - $rhs = $bname\n";
         push(@binops,$bname);
-        print "static void _binop__$bname(angort::Angort *a,angort::Value *lhs,angort::Value *rhs)\n";
+        print "static void _binop__$bname(angort::Runtime *a,angort::Value *lhs,angort::Value *rhs)\n";
     }elsif(/^%init/){
-        print "static void __init__(angort::Angort *a)\n";
+        print "static void __init__(angort::Runtime *a)\n";
         $hasinit = 1;
     }elsif(/^%shutdown/){
-        print "static void __shutdown__(angort::Angort *a)\n";
+        print "static void __shutdown__(angort::Runtime *a)\n";
         $hasshutdown = 1;
     }elsif(/^%shared/){
         $shared=1;
@@ -293,7 +293,7 @@ EOT
 
 if($shared){
     print <<EOT;
-extern "C" angort::LibraryDef *init(angort::Angort *api){
+extern "C" angort::LibraryDef *init(angort::Runtime *api){
     return &_angortlib_$libname;
 }   
 EOT

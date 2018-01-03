@@ -12,7 +12,7 @@
 
 namespace angort {
 
-typedef void (*NativeFunc)(class Angort *a);
+typedef void (*NativeFunc)(class Runtime *a);
 
 }
 
@@ -264,6 +264,7 @@ public:
     Stack<ArrayList<Catch>,4> catchSetStack; //!< stack for exception compiling
     Catch *curcatch; //!< the catch we're currently working with
     
+    class Angort *ang; //!< must be set by pushCompileContext()
     CompileContext(){
         cstack.setName("compile");
         leaveListStack.setName("leavelist");
@@ -608,17 +609,21 @@ struct Frame {
     }
 };
 
+/// runtime data
 
-/// This is the main Angort class, of which there should be only
-/// one instance.
-
-class Angort {
-    friend struct CodeBlock;
-    friend class AutoGCProperty;
-    friend class SearchPathProperty;
-    static Angort *callingInstance; ///!< set when feed() is called.
+class Runtime {
+    friend class Angort;
+public:
+    
+    Runtime(Angort *angort,const char *name="anon");
+    virtual ~Runtime();
+    
+    const Instruction *ip,*wordbase;
+    Stack<Value,128>stack;
+    bool emergencyStop;
+    int id;
+    const char *name;
 private:
-    bool running; //!< used by shutdown()
     Stack<Frame,RSTACKSIZE> rstack; //!< the return stack
     Value currClosure; //!< the closure block of the current level
     /// how many loop iterators are stacked for loops in this
@@ -632,78 +637,7 @@ private:
     Stack<Stack<IntKeyedHash<int>*,4>,RSTACKSIZE+1> catchstack;
     
     Stack<Value,RSTACKSIZE> loopIterStack; // stack of loop iterators
-    
-    Stack<CompileContext,8> contextStack;
     VarStack locals;
-    
-    ArrayList<LibraryDef *> *libs; //!< list of libraries
-    
-    int stdNamespace; //!< the default "std" namespace index
-    const char *searchPath; //!< colon-separated library search path
-    
-    int autoCycleCount; //!< current auto GC count
-    
-    /// if an exception occurred during run, this will have 
-    /// the last instruction.
-    const Instruction *ipException;
-    
-    /// the current compile context
-    CompileContext *context;
-    
-    Tokeniser tok;
-    
-    /// the index of the word currently being defined
-    /// within the current namespace, whose value is set
-    /// at the end of the definition.
-    int wordValIdx;
-    
-    /// this defines a word with no instructions, and sets
-    /// wordVal to point to the word's value. It's used at 
-    /// the start of a word definition,
-    void startDefine(const char *name);
-    
-    
-    /// define a word from a context - startDefine() must have been called
-    void endDefine(class CompileContext *cb);
-    
-    char lastLine[1024]; //!< last line read
-    
-    /// parse various tokens which are followed by a var name
-    /// and have a lot of common code generation code.
-    void parseVarAccess(int token);
-    /// check that the given name (assumed to be the current token,
-    /// tok.getstring(), for error printing), is not constant
-    void constCheck(int name);
-    
-    /// add a new instruction to the current compile context
-    Instruction *compile(int opcode){
-        return context->compile(opcode);
-    }
-    
-    /// push the current compile context onto the stack and clear the new one
-    void pushCompileContext(){
-        CompileContext *p = context;
-        context = contextStack.pushptr();
-        context->reset(p,&tok);
-    }
-    
-    /// pop a context off the stack, ready to carry on where we left off.
-    /// We also return a pointer to the previous context, so we can reference
-    /// its code. We do not reset it.
-    CompileContext *popCompileContext(){
-        context->checkStacksAtEnd();
-        CompileContext *p = context;
-        contextStack.popptr();
-        context = contextStack.peekptr();
-        return p;
-    }
-    
-    
-    /// compile a [params,locals] block, producing an OP_LOCALS instruction
-    /// and filling the localTokens table with names to be used in this definition.
-    /// Only works in defining mode!
-    void compileParamsAndLocals();
-    
     /// this will push the locals stack
     /// and push the rstack. The new IP
     /// is returned, and the old one is passed in
@@ -714,89 +648,27 @@ private:
     /// called at the end of a block of code,
     /// or by emergency stop invocation. May set the IP to NULL.
     void ret();
-    
-    /// clear all stacks etc.
-    void clearAtEndOfFeed();
-    
-    /// look for a file in the search path. Will attempt to use wordexp
-    /// to do shell expansions of the path if it is available.
-    const char *findFile(const char *name);
-    
-    /// autocomplete state
-    ArrayList<const char *> *acList;
-    int acIndex;
-    
-    /// heredoc end string or null
-    char *hereDocEndString;
-    /// heredoc string being build
-    char *hereDocString;
-    
+
 public:
+    /// global lock manipulation - this is a mutex around everything.
+    /// Must be capable of being nested.
+    void globalLock(){}
+    void globalUnlock(){}
+    
+    class Angort *ang; // main angort object
     // annoyingly public to allow debugger access
     bool debuggerNextIP; // stop at the next IP?
     bool debuggerStepping; // don't clear debuggerNextIP after stop
-    /// debugger hook, invoked by the "brk" word
-    NativeFunc debuggerHook;
-    const Instruction *ip,*wordbase;
+    int autoCycleCount; //!< current auto GC count
     
-    /// replace the debugger hook
-    void setDebuggerHook(NativeFunc f){
-        debuggerHook = f;
-    }
-    
-    /// show an instruction
+     
+    /// show an instruction (might seem weird that it's in Runtime, but it
+    /// uses wordbase).
     void showop(const Instruction *ip,const Instruction *base=NULL,
                 const Instruction *curr=NULL);
-    
-    /// find a global or create one if it doesn't exist;
-    /// used for autoglobals.
-    int findOrCreateGlobal(const char *name){
-        int i = names.get(name);
-        if(i<0)
-            i = names.add(name);
-        return i;
-    }
-    
-    Value *findOrCreateGlobalVal(const char *name){
-        int g = findOrCreateGlobal(name);
-        return names.getVal(g);
-    }
-          
-    
-    /// this is used by external programs which use angort as a 
-    /// library to find/create a global and set it to a string
-    /// value.
-    void setGlobal(const char *name,const char *val){
-        int g = findOrCreateGlobal(name);
-//        printf("Global: %d\n",g);
-        Types::tString->set(names.getVal(g),val);
-    }
-    
-    /// add a plugin (Linux only, uses shared libraries). Returns
-    /// the new namespace ID.
-    int plugin(const char *path);
-    
-    /// if non-neg, GC cycle detect is called after this number of instructions
-    int autoCycleInterval; 
-    
-    /// this returns the top level of angort which was called;
-    /// it's still possible to have multiple angorts running,
-    /// but this is set when feed() is called. It's really ugly.
-    /// but I can see no other way to handle things like HashType::toString()
-    /// except by putting the angort pointer as a parameter everywhere,
-    /// or using a singleton.
-    static Angort *getCallingInstance(){
-        return callingInstance;
-    }
-    
     /// used to run a codeblock - works by doing call() and then run() until exit.
     /// Will not push return stack.
     void runValue(const class Value *v);
-    
-    /// if an exception occurred in a run, this will have the IP.
-    const Instruction *getIPException(){
-        return ipException;
-    }
     
     /// store a stack trace into an arraylist of allocated strings,
     /// which should be deleted. We do this to stash the trace before
@@ -819,32 +691,20 @@ public:
     /// handle binary operations (public; used in comparators)
     void binop(Value *a,Value *b,int opcode);
     
-    
-    /// call this to get the version number.
-    static const char *getVersion();
-    
-    Stack<Value,128>stack;
-    bool emergencyStop;
-    /// if true, unidentified idents will be converted to strings
-    bool barewords;
-    /// debug flags
-    /// 1 - show instructions as they run
-    /// 2 - show parsing in the tokeniser
-    int debug;
+    /// show each instruction as it runs
+    bool trace;
     /// make assertions print statements even when they pass just fine,
     /// used in testing.
     bool assertDebug;
     /// if true, assertion conditions are negated - useful for testing
     /// that something should assert
     bool assertNegated;
-    /// print each line we parse
-    bool printLines;
-    NamespaceManager names; //!< the namespaces are all handled by the namespace manager
+    
     /// print trace on exception in run()
     bool traceOnException;
-    /// stream used for output
-    FILE *outputStream;
     
+    /// stream used for output in redirection
+    FILE *outputStream;
     void endredir(){
         if(outputStream != stdout){
             fclose(outputStream);
@@ -852,23 +712,6 @@ public:
         }
     }
     
-    
-    /// called at the end of a script which contains a package, where that
-    /// package is not included by another script - effectively
-    /// fakes the require return.
-    void endPackageInScript();
-    
-    /// returns true if we are defining a word
-    bool isDefining(){
-        return wordValIdx>=0;
-    }
-    
-    int lineNumber;
-    
-    int getLineNumber(){
-        return lineNumber;
-    }
-        
     /// dump the stack to stdout
     void dumpStack(const char *s);
     
@@ -884,27 +727,17 @@ public:
         return v->v.iter;
     }
     
-    /// clear the entire system
+    /// clear the runtime
     void clear(){
-        names.clear();
         stack.clear();
         locals.clear();
     }          
-    
+        
     /// clear the stack
     void clearStack(){
         stack.clear();
     }
-        
     
-    /// are we in a non-root compile context (i.e. compiling a bracketed
-    /// word?)
-    bool inSubContext(){
-        return contextStack.ct > 1;
-    }
-    const char *getLastLine(){
-        return lastLine;
-    }
     
     /// pop an item and return a pointer to it
     Value *popval(){
@@ -979,6 +812,220 @@ public:
     void popParams(Value **out,const char *spec,const Type *type0=NULL,
                    const Type *type1=NULL);
     
+    /// run until OP_END received and no return stack
+    void run(const Instruction *startip);
+    
+    /// stop any running code (call from a signal handler, or
+    /// code inside a word to terminate loops etc.)
+    void stop(){
+        emergencyStop=true;
+    }
+    
+    /// you'll have to reset the emergency stop when you get
+    /// control back (feed() will do it for you)
+    void resetStop(){
+        emergencyStop=false;
+    }
+    
+    /// throw an exception, setting the IP of the handler if one
+    /// is found, otherwise returning leaving it alone. Returns
+    /// true if a handler was set, in which case the caller resets
+    /// IP to NULL, possibly invoking the debugger first.
+    bool throwAngortException(int symbol, Value *data);
+    
+    /// run the cycle detector
+    void gc(){
+        globalLock();
+        GarbageCollected::gc();
+        globalUnlock();
+    }
+    
+    /// ensure we are in thread zero (the default thread)
+    void checkzerothread(){
+        if(id)throw RUNT("ex$badthread","called from nonzero thread");
+    }
+    
+    /// clear return stack and data at end of feed
+    void clearAtEOF();
+};
+
+
+
+
+/// This is the main Angort class, of which there should be only
+/// one instance.
+
+class Angort {
+    friend struct CodeBlock;
+    friend class Runtime;
+    friend class AutoGCProperty;
+    friend class SearchPathProperty;
+private:
+    bool running; //!< used by shutdown()
+    
+    Stack<CompileContext,8> contextStack;
+    ArrayList<LibraryDef *> *libs; //!< list of libraries
+    
+    int stdNamespace; //!< the default "std" namespace index
+    const char *searchPath; //!< colon-separated library search path
+    
+    /// the current compile context
+    CompileContext *context;
+    
+    Tokeniser tok;
+    
+    /// the index of the word currently being defined
+    /// within the current namespace, whose value is set
+    /// at the end of the definition.
+    int wordValIdx;
+    
+    /// this defines a word with no instructions, and sets
+    /// wordVal to point to the word's value. It's used at 
+    /// the start of a word definition,
+    void startDefine(const char *name);
+    
+    
+    /// define a word from a context - startDefine() must have been called
+    void endDefine(class CompileContext *cb);
+    
+    char lastLine[1024]; //!< last line read
+    
+    /// parse various tokens which are followed by a var name
+    /// and have a lot of common code generation code.
+    void parseVarAccess(int token);
+    /// check that the given name (assumed to be the current token,
+    /// tok.getstring(), for error printing), is not constant
+    void constCheck(int name);
+    
+    /// add a new instruction to the current compile context
+    Instruction *compile(int opcode){
+        return context->compile(opcode);
+    }
+    
+    /// push the current compile context onto the stack and clear the new one
+    void pushCompileContext(){
+        CompileContext *p = context;
+        context = contextStack.pushptr();
+        context->reset(p,&tok);
+        context->ang = this;
+    }
+    
+    /// pop a context off the stack, ready to carry on where we left off.
+    /// We also return a pointer to the previous context, so we can reference
+    /// its code. We do not reset it.
+    CompileContext *popCompileContext(){
+        context->checkStacksAtEnd();
+        CompileContext *p = context;
+        contextStack.popptr();
+        context = contextStack.peekptr();
+        return p;
+    }
+    
+    
+    /// compile a [params,locals] block, producing an OP_LOCALS instruction
+    /// and filling the localTokens table with names to be used in this definition.
+    /// Only works in defining mode!
+    void compileParamsAndLocals();
+    
+    
+    /// clear all stacks etc.
+    void clearAtEndOfFeed();
+    
+    /// look for a file in the search path. Will attempt to use wordexp
+    /// to do shell expansions of the path if it is available.
+    const char *findFile(const char *name);
+    
+    /// autocomplete state
+    ArrayList<const char *> *acList;
+    int acIndex;
+    
+    /// heredoc end string or null
+    char *hereDocEndString;
+    /// heredoc string being build
+    char *hereDocString;
+    
+public:
+    Runtime *run; //!< the default runtime used by the main thread
+    /// debugger hook, invoked by the "brk" word
+    NativeFunc debuggerHook;
+    
+    /// replace the debugger hook
+    void setDebuggerHook(NativeFunc f){
+        debuggerHook = f;
+    }
+    
+    /// find a global or create one if it doesn't exist;
+    /// used for autoglobals.
+    int findOrCreateGlobal(const char *name){
+        int i = names.get(name);
+        if(i<0)
+            i = names.add(name);
+        return i;
+    }
+    
+    Value *findOrCreateGlobalVal(const char *name){
+        int g = findOrCreateGlobal(name);
+        return names.getVal(g);
+    }
+          
+    
+    /// this is used by external programs which use angort as a 
+    /// library to find/create a global and set it to a string
+    /// value.
+    void setGlobal(const char *name,const char *val){
+        int g = findOrCreateGlobal(name);
+//        printf("Global: %d\n",g);
+        Types::tString->set(names.getVal(g),val);
+    }
+    
+    /// add a plugin (Linux only, uses shared libraries). Returns
+    /// the new namespace ID.
+    int plugin(const char *path);
+    
+    /// if non-neg, GC cycle detect is called after this number of instructions
+    int autoCycleInterval; 
+    
+    /// call this to get the version number.
+    static const char *getVersion();
+    
+    /// if true, unidentified idents will be converted to strings
+    bool barewords;
+    bool tokeniserTrace;
+    /// print each line we parse
+    bool printLines;
+    NamespaceManager names; //!< the namespaces are all handled by the namespace manager
+    
+    /// called at the end of a script which contains a package, where that
+    /// package is not included by another script - effectively
+    /// fakes the require return.
+    void endPackageInScript();
+    
+    /// returns true if we are defining a word
+    bool isDefining(){
+        return wordValIdx>=0;
+    }
+    
+    int lineNumber;
+    
+    int getLineNumber(){
+        return lineNumber;
+    }
+        
+    /// clear the entire system - will not clear runtime!
+    void clear(){
+        names.clear();
+    }
+    
+    
+    /// are we in a non-root compile context (i.e. compiling a bracketed
+    /// word?)
+    bool inSubContext(){
+        return contextStack.ct > 1;
+    }
+    const char *getLastLine(){
+        return lastLine;
+    }
+    
     /// function for registering properties
     void registerProperty(const char *name, Property *p, const char *ns=NULL,const char *spec=NULL);
     
@@ -1019,9 +1066,6 @@ public:
     void include(const char *path,bool ispkg);
     
     
-    /// run until OP_END received and no return stack
-    void run(const Instruction *startip);
-    
     /// disassemble a named word
     void disasm(const char *name);
     
@@ -1034,23 +1078,6 @@ public:
     /// get the spec string for a word or native
     const char *getSpec(const char *s);
     
-    /// stop any running code (call from a signal handler, or
-    /// code inside a word to terminate loops etc.)
-    void stop(){
-        emergencyStop=true;
-    }
-    
-    /// you'll have to reset the emergency stop when you get
-    /// control back (feed() will do it for you)
-    void resetStop(){
-        emergencyStop=false;
-    }
-    
-    /// run the cycle detector
-    void gc(){
-        GarbageCollected::gc();
-    }
-    
     /// reset the autocomplete list
     void resetAutoComplete();
     
@@ -1060,13 +1087,6 @@ public:
     /// append a path to the search path, returning the prior
     /// path (which should be freed; the new path is malloced())
     const char *appendToSearchPath(const char *path);
-    
-    
-    /// throw an exception, setting the IP of the handler if one
-    /// is found, otherwise returning leaving it alone. Returns
-    /// true if a handler was set, in which case the caller resets
-    /// IP to NULL, possibly invoking the debugger first.
-    bool throwAngortException(int symbol, Value *data);
     
     /// import all symbols in the `future namespace
     void importAllFuture();

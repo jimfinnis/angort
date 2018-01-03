@@ -82,4 +82,6 @@
 #define EX_MODITER                     "ex$moditer"
 // not a numeric value
 #define EX_NOTNUMBER                   "ex$notnumber"
+// called from non-zero thread
+#define EX_BADTHREAD                   "ex$badthread"
 #endif /* __EXCEPTSYMBS_H */

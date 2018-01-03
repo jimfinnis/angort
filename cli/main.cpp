@@ -41,21 +41,20 @@ extern angort::LibraryDef LIBNAME(cli);
 Value strippedArgVal;
 static ArrayList<Value> *strippedArgs;
 
-Angort *a;
+Runtime *runtime; // default angort runtime
 
 static void showException(Exception& e){
-    printf("Error: %s\n",e.what());
-    const Instruction *ip = a->getIPException();
-    if(ip){
+    printf("Error in thread %d: %s\n",e.run?e.run->id:-1,e.what());
+    if(e.ip){
         printf("Error at:");
-        a->showop(ip);
+        runtime->showop(e.ip);
         printf("\n");
     }else
-          printf("Last line input: %s\n",a->getLastLine());
+          printf("Last line input: %s\n",runtime->ang->getLastLine());
     if(e.fatal)
         exit(1);
     
-    a->clearStack();
+    runtime->clearStack();
 }
 
 #define F_CMD 1
@@ -71,12 +70,12 @@ public:
     virtual void first(const char *stringstart, int len){
         strstart = stringstart;
         l = len;
-        a->resetAutoComplete();
+        runtime->ang->resetAutoComplete();
     }
     virtual const char *next(){
         const char *s=NULL;
         do
-            s = a->getNextAutoComplete();
+            s = runtime->ang->getNextAutoComplete();
         while(s && strncmp(s,strstart,l));
               
         return s;
@@ -92,25 +91,25 @@ const char *getPrompt(){
     
     static char buf[256];
     char pchar=0;
-    if(a->isDefining())
+    if(runtime->ang->isDefining())
         pchar = ':';
-    else if(a->inSubContext())
+    else if(runtime->ang->inSubContext())
         pchar = '*';
     else
         pchar = '>';
     
     if(promptCallback.t->isCallable()){
-        a->pushInt(GarbageCollected::getGlobalCount());
-        a->pushInt(a->stack.ct-1); // -1 because we just pushed the gcount
+        runtime->pushInt(GarbageCollected::getGlobalCount());
+        runtime->pushInt(runtime->stack.ct-1); // -1 because we just pushed the gcount
         buf[0]=pchar;
         buf[1]=0;
-        a->pushString(buf);
-        a->runValue(&promptCallback);
-        strncpy(buf,a->popval()->toString().get(),256);
+        runtime->pushString(buf);
+        runtime->runValue(&promptCallback);
+        strncpy(buf,runtime->popval()->toString().get(),256);
     } else {
         sprintf(buf,"%d|%d %c ",
                 GarbageCollected::getGlobalCount(),
-                a->stack.ct,pchar);
+                runtime->stack.ct,pchar);
     }
     return buf;
 }
@@ -118,7 +117,7 @@ const char *getPrompt(){
 void addDirToSearchPath(const char *data){
     char *path = realpath(data,NULL); // get absolute path
     *strrchr(path,'/')=0; // terminate at last / to get directory
-    free((void *)a->appendToSearchPath(path));
+    free((void *)runtime->ang->appendToSearchPath(path));
     free((void *)path);
 }
 
@@ -135,9 +134,10 @@ void cliShutdown(){
 }
 
 void cliSighandler(int s){
+    //todothread - make this happen in the appropriate thread!
     printf("Signal %d recvd, exiting\n",s);
-    if(debugOnSignal && a->debuggerHook){
-        (*a->debuggerHook)(a);
+    if(debugOnSignal && runtime->ang->debuggerHook){
+        (*runtime->ang->debuggerHook)(runtime);
     } else {
         cliShutdown();
         exit(1);
@@ -153,7 +153,8 @@ int main(int argc,char *argv[]){
     
     extern void setArgumentList(int argc,char *argv[]);
     
-    a = new Angort();
+    Angort *a = new Angort();
+    runtime = a->run;
     
     // will register words - including %shutdown, which will run when
     // angort shuts down normally.
@@ -176,7 +177,7 @@ int main(int argc,char *argv[]){
     setArgumentList(argc,argv);
     
     // set up debugger
-    extern void basicDebugger(Angort *);
+    extern void basicDebugger(Runtime *);
     a->setDebuggerHook(basicDebugger);
     
     int flags = 0;
@@ -219,8 +220,8 @@ int main(int argc,char *argv[]){
                 break;
             case 'n':flags|=F_LOOP|F_CMD;break;
             case 'e':flags|=F_CMD;break;
-            case 'd':a->debug|=1;break;
-            case 'D':a->debug|=2;break;
+            case 'd':runtime->trace=true;break;
+            case 'D':a->tokeniserTrace=true;break;
             case 'b':debugOnSignal=true;break;
             case 'i':
                 switch(arg[2]){
@@ -284,7 +285,7 @@ int main(int argc,char *argv[]){
                             break;
                         else{
                             buf[rv-1]=0;
-                            a->pushString(buf);
+                            runtime->pushString(buf);
                             a->feed("TMPLOOP");
                         }
                         if(buf)free(buf);
@@ -317,7 +318,7 @@ int main(int argc,char *argv[]){
     
     // then read lines from input
     
-    a->assertDebug=true;
+    runtime->assertDebug=true;
     printf("Angort version %s %s\nUse '??word' to get help on a word.\n",
            copyString,
            a->getVersion());

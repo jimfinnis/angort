@@ -45,7 +45,7 @@ namespace debugger {
 
 static bool exitDebug=false;
 
-static void disasm(Angort *a){
+static void disasm(Runtime *a){
     const Instruction *ip = a->wordbase;
     const Instruction *base = a->wordbase;
     for(;;){
@@ -56,7 +56,7 @@ static void disasm(Angort *a){
     }
 }
 
-static void process(const char *line,Angort *a){
+static void process(const char *line,Runtime *a){
     tok.reset(line);
     char buf[256];
     int i;
@@ -99,7 +99,7 @@ static void process(const char *line,Angort *a){
                 {
                     const StringBuffer& b = stack.popptr()->toString();
                     // find the global
-                    Value *v = a->findOrCreateGlobalVal(b.get());
+                    Value *v = a->ang->findOrCreateGlobalVal(b.get());
                     Instruction *ip;
                     if(v->t == Types::tCode){
                         ip = (Instruction*)v->v.cb->ip;
@@ -128,8 +128,8 @@ static void process(const char *line,Angort *a){
             case T_QUESTION:
                 if(tok.getnextident(buf)){
                     char *p=NULL;
-                    int idx = a->findOrCreateGlobal(buf);
-                    Value *v = a->names.getVal(idx);
+                    int idx = a->ang->findOrCreateGlobal(buf);
+                    Value *v = a->ang->names.getVal(idx);
                     v->dump(&p);
                     printf("%s\n",p);
                     free(p);
@@ -184,7 +184,7 @@ static void debugSighandler(int s)
 //    exit(1);
 }
 
-void basicDebugger(Angort *a){
+void basicDebugger(Runtime *a){
     struct sigaction sa,oldsa;
     sa.sa_handler = debugSighandler;
     sigemptyset(&sa.sa_mask);

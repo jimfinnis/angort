@@ -21,8 +21,8 @@ using namespace angort;
 namespace angort {
 // DESTRUCTIVE comparator - damages the stack!
 struct RevStdComparator : public ArrayListComparator<Value> {
-    Angort *ang;
-    RevStdComparator(Angort *a){
+    Runtime *ang;
+    RevStdComparator(Runtime *a){
         ang = a;
     }
     virtual int compare(const Value *a, const Value *b){
@@ -35,8 +35,8 @@ struct RevStdComparator : public ArrayListComparator<Value> {
 
 // DESTRUCTIVE comparator - damages the stack!
 struct StdComparator : public ArrayListComparator<Value> {
-    Angort *ang;
-    StdComparator(Angort *a){
+    Runtime *ang;
+    StdComparator(Runtime *a){
         ang = a;
     }
     virtual int compare(const Value *a, const Value *b){
@@ -51,9 +51,9 @@ struct StdComparator : public ArrayListComparator<Value> {
 // DESTRUCTIVE comparator - damages the stack!
 struct FuncComparator : public ArrayListComparator<Value> {
     Value *func;
-    Angort *ang;
+    Runtime *ang;
     
-    FuncComparator(Angort *a,Value *f){
+    FuncComparator(Runtime *a,Value *f){
         ang = a;
         func = f;
     }

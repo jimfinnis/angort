@@ -24,7 +24,11 @@ extern int getSymbolID(const char *);
 
 class Exception : public std::exception {
 public:
+    const class Runtime *run; // the runtime environment (thread) we were in
+    const class Instruction *ip; // instruction pointer
     Exception(const char *xid,const char *e){
+        run = NULL;
+        ip = NULL;
         id = getSymbolID(xid);
         if(e)
             strncpy(error,e,1024);

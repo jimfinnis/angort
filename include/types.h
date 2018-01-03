@@ -14,7 +14,7 @@ struct Value;
 /// hash owned by the LHS types, indexed by the ID of the RHS types
 /// combined somehow with the binop type.
 
-typedef void (*BinopFunction)(Angort *a,Value *lhs, Value *rhs);
+typedef void (*BinopFunction)(class Runtime *a,Value *lhs, Value *rhs);
 
 #define TF_ITERABLE 1
 #define TF_NUMBER 2
@@ -109,7 +109,7 @@ public:
     
     /// look up and perform a registered binary operation, returning
     /// true if one was found.
-    static bool binop(Angort *a,int opcode,Value *lhs,Value *rhs);
+    static bool binop(Runtime *a,int opcode,Value *lhs,Value *rhs);
     
     /// reset the type list, does not delete anything because
     /// the type objects are static

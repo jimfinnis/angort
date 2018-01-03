@@ -22,10 +22,9 @@ using namespace angort;
 
 inline void showException(Angort *a,Exception& e){
     printf("Error: %s\n",e.what());
-    const Instruction *ip = a->getIPException();
-    if(ip){
+    if(e.ip){
         printf("Error at:");
-        a->showop(ip);
+        a->showop(e.ip);
         printf("\n");
     }else
           printf("Last line input: %s\n",a->getLastLine());
