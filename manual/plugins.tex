@@ -69,13 +69,16 @@ conversion if possible. For example,
 int i = Types::tInteger->get(&v);
 \end{lstlisting}
 will try to get the integer value from a \texttt{Value}.
-\item \texttt{Value *Angort::pushval()} will push a new value onto the Angort
+\item Plugin functions will receive a pointer to a \texttt{Runtime} object
+containing Angort's context for running code, which can be used to manipulate
+values on the stack.
+\item \texttt{Value *Runtime::pushval()} will push a new value onto the Angort
 stack and return it. It does this by just returning a pointer to
 the stack top and incrementing that pointer.  It will \emph{not} call \texttt{clr()} on the value.
-\item \texttt{Value *Angort::popval()} will pop the stack, returning a pointer
+\item \texttt{Value *Runtime::popval()} will pop the stack, returning a pointer
 to the previous stack top.
-\item There are helper \texttt{Angort::push..()} and
-\texttt{Angort::pop..()} methods for most basic types.
+\item There are helper \texttt{Runtime::push..()} and
+\texttt{Runtime::pop..()} methods for most basic types.
 \item There are \texttt{Value::to..()} helper methods for most
 types to convert and return values. For example, \texttt{toFloat()} will
 attempt to convert to, and return, a C++ float.
@@ -192,7 +195,7 @@ Our function is:
 \end{lstlisting}
 and the resulting code in \texttt{hello.plugin.cpp} is:
 \begin{lstlisting}[language=c++]
-static void _word__hello2(angort::Angort *a){
+static void _word__hello2(angort::Runtime *a){
     a->pushString("hello world");
 }
 \end{lstlisting}
@@ -221,7 +224,7 @@ Angort will attempt to convert it (see Sec.~\ref{types}).
 Once popped, the distance is calculated and the resulting double
 is pushed. The code generated is
 \begin{lstlisting}[language=c++]
-static void _word__distance(angort::Angort *a)
+static void _word__distance(angort::Runtime *a)
 {
 Value *_parms[4];
 a->popParams(_parms,"dddd");

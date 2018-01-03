@@ -54,7 +54,16 @@
 2 ?I!`a
 ?I 7 basecheck
 
- 
+
+[% `foo 1, `bar 2] [%`baz 3] + !H
+
+?H len 3 = "hadd1" assert
+?H?`foo 1 = "hadd2" assert
+?H?`bar 2 = "hadd3" assert
+?H?`baz 3 = "hadd4" assert
+
+
+
  
 
 quit
