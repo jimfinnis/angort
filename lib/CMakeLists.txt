@@ -10,6 +10,8 @@ set(CMAKE_CXX_FLAGS "-Woverloaded-virtual")
 
 project(ANGORTLIB)
 
+add_definitions(-pthread)
+
 # would be awesome if these could live in an angort cmake module
 
 set(WORDFILELIST)

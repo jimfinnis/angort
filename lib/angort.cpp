@@ -223,7 +223,11 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
     case OP_GLOBALGET:
     case OP_GLOBALINC:
     case OP_GLOBALDEC:
-        printf("(%s)",ang->names.getFQN(ip->d.i));
+        {
+            char buf[256];
+            ang->names.getFQN(ip->d.i,buf,256);
+            printf("(%s)",buf);
+        }
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:

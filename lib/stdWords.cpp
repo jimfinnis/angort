@@ -346,6 +346,7 @@ static int stackcheck=-1;
 %word chkstart (--) start stack check block (save stack ct)
 Records the stack count, ready for "chkend".
 {
+    a->checkzerothread();
     stackcheck = a->stack.ct;
 }
 %word chkend (--) end stack check block (check stack count agrees with saved)

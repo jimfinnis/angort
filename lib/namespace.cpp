@@ -66,8 +66,7 @@ int NamespaceManager::get(const char *name, bool scanImports){
     return -1; // not found
 }
 
-const char *NamespaceManager::getFQN(int idx){
-    static char buf[256];
+const char *NamespaceManager::getFQN(int idx,char *buf,int len){
     int nsidx = getNamespaceIndex(idx);
     int vidx = getItemIndex(idx);
     
@@ -75,8 +74,8 @@ const char *NamespaceManager::getFQN(int idx){
     const char *nsname = spaces.getName(nsidx);
     const char *vname = ns->getName(vidx);
     
-    snprintf(buf,255,"%s$%s",nsname,vname);
-    buf[255]=0; // make sure terminated
+    snprintf(buf,len,"%s$%s",nsname,vname);
+    buf[len-1]=0; // make sure terminated
     return buf;
 }
 

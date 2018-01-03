@@ -4,6 +4,7 @@ find_package(Libedit REQUIRED)
 include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
 include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
+add_definitions(-pthread)
 
 
 set(WORDFILELIST)

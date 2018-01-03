@@ -161,9 +161,11 @@ numeric types. The list contains the items to be substituted into the string.
     for(i=0;i<padding-len;i++)
         newstr[i]=L' ';
     wcscpy(newstr+i,buf);
-    wcstombs(sbuf,newstr,1023);
     
+    a->ang->globalLock();
+    wcstombs(sbuf,newstr,1023);
     Types::tString->set(v,sbuf);
+    a->ang->globalUnlock();
     free(newstr);
 }
 
@@ -190,9 +192,12 @@ numeric types. The list contains the items to be substituted into the string.
     for(i=0;i<padding-len;i++)
         newstr[len+i]=L' ';
     newstr[padding]=0;
-    wcstombs(sbuf,newstr,1023);
     
+    a->ang->globalLock();
+    wcstombs(sbuf,newstr,1023);
     Types::tString->set(v,sbuf);
+    a->ang->globalUnlock();
+    
     free(newstr);
 }
 
@@ -211,8 +216,10 @@ numeric types. The list contains the items to be substituted into the string.
     
     // might not actually be a string.
     buf[maxlen]=0;
+    a->ang->globalLock();
     wcstombs(sbuf,buf,1023);
     Types::tString->set(v,sbuf);
+    a->ang->globalUnlock();
 }
 
 %word split (string delim -- list) split a string on a single-character delimiter 

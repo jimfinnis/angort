@@ -864,15 +864,6 @@ class Angort {
     friend class SearchPathProperty;
 private:
     
-    // if a thread API is installed, these run the various
-    // thread handling methods using it.
-    inline void globalLock(){
-        if(threadHookObj)threadHookObj->globalLock();
-    }
-    inline void globalUnlock(){
-        if(threadHookObj)threadHookObj->globalUnlock();
-    }
-    
     bool running; //!< used by shutdown()
     ThreadHookObject *threadHookObj;
     
@@ -966,6 +957,15 @@ public:
     void setThreadHookObject(ThreadHookObject *tho){
         threadHookObj = tho;
     }
+    // if a thread API is installed, these run the various
+    // thread handling methods using it.
+    inline void globalLock(){
+        if(threadHookObj)threadHookObj->globalLock();
+    }
+    inline void globalUnlock(){
+        if(threadHookObj)threadHookObj->globalUnlock();
+    }
+    
     
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
