@@ -68,7 +68,14 @@ Runtime::~Runtime(){
     endredir();
 }
 
+void Runtime::gc(){
+    ang->globalLock();
+    GarbageCollected::gc();
+    ang->globalUnlock();
+}    
+
 Angort::Angort() {
+    threadHookObj = NULL;
     Types::createTypes();
     // create and set default namespace
     stdNamespace = names.create("std");

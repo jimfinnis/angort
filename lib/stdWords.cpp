@@ -36,10 +36,10 @@ public:
     }
     
     virtual void postSet(){
-        run->globalLock();
+        run->ang->globalLock();
         run->ang->autoCycleInterval = v.toInt();
         run->autoCycleCount = run->ang->autoCycleInterval;
-        run->globalUnlock();
+        run->ang->globalUnlock();
     }
     
     virtual void preGet(){

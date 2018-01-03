@@ -609,6 +609,17 @@ struct Frame {
     }
 };
 
+
+/// thread hook class - the thread library installs one of these
+/// into Angort using setThreadHookObject()
+
+class ThreadHookObject {
+public:
+    // single global mutex, nestable
+    virtual void globalLock() = 0;
+    virtual void globalUnlock() = 0;
+};
+
 /// runtime data
 
 class Runtime {
@@ -650,11 +661,6 @@ private:
     void ret();
 
 public:
-    /// global lock manipulation - this is a mutex around everything.
-    /// Must be capable of being nested.
-    void globalLock(){}
-    void globalUnlock(){}
-    
     class Angort *ang; // main angort object
     // annoyingly public to allow debugger access
     bool debuggerNextIP; // stop at the next IP?
@@ -834,11 +840,7 @@ public:
     bool throwAngortException(int symbol, Value *data);
     
     /// run the cycle detector
-    void gc(){
-        globalLock();
-        GarbageCollected::gc();
-        globalUnlock();
-    }
+    void gc();
     
     /// ensure we are in thread zero (the default thread)
     void checkzerothread(){
@@ -861,7 +863,18 @@ class Angort {
     friend class AutoGCProperty;
     friend class SearchPathProperty;
 private:
+    
+    // if a thread API is installed, these run the various
+    // thread handling methods using it.
+    inline void globalLock(){
+        if(threadHookObj)threadHookObj->globalLock();
+    }
+    inline void globalUnlock(){
+        if(threadHookObj)threadHookObj->globalUnlock();
+    }
+    
     bool running; //!< used by shutdown()
+    ThreadHookObject *threadHookObj;
     
     Stack<CompileContext,8> contextStack;
     ArrayList<LibraryDef *> *libs; //!< list of libraries
@@ -948,6 +961,11 @@ public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
+    
+    /// set the object we use to manipulate threads
+    void setThreadHookObject(ThreadHookObject *tho){
+        threadHookObj = tho;
+    }
     
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
