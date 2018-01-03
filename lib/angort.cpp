@@ -190,13 +190,14 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
     if(!base)base=wordbase;
     char buf[128];
     Value tmp;
-    printf("%s%s %8p [%s:%d] : %04d : %s (%d) ",
+    printf("%s%s %3d %8p [%s:%d] : %04d : %s (%d) ",
 #if SOURCEDATA
            ip->brk ? "B " : "  ",
 #else
            "  ",
 #endif
            ip == curr ? "* " : "  ",
+           id,
            base,
 #if SOURCEDATA
            ip->file,ip->line,
