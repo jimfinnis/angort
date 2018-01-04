@@ -69,6 +69,7 @@ const	:   T_CONST
 over	:   T_OVER
 each	:   T_EACH
 include :   T_INCLUDE
+includeifexists :   T_INCLUDEIFEXISTS
 stop    :   T_STOP
 cmp     :   T_CMP
 package :   T_PACKAGE

@@ -37,18 +37,10 @@ public:
         fatal=false;
     }
     
-    /// a variadic fluent modifier to set a better string with sprintf
-    Exception& set(const char *s,...){
-        va_list args;
-        va_start(args,s);
-        
-        vsnprintf(error,1024,s,args);
-        va_end(args);
-        return *this;
-    }
-    
     /// default ctor
     Exception(const char *xid){
+        run = NULL;
+        ip = NULL;
         fatal=false;
         id = getSymbolID(xid);
         strcpy(error,xid);
@@ -59,9 +51,21 @@ public:
     /// by the destructor. This version considers e to be
     /// a format string, and arg a string argument.
     Exception(const char *xid,const char *e,const char *arg){
+        run = NULL;
+        ip = NULL;
         fatal=false;
         id = getSymbolID(xid);
         snprintf(error,1024,e,arg);
+    }
+    
+    /// a variadic fluent modifier to set a better string with sprintf
+    Exception& set(const char *s,...){
+        va_list args;
+        va_start(args,s);
+        
+        vsnprintf(error,1024,s,args);
+        va_end(args);
+        return *this;
     }
     
     /// return the error string

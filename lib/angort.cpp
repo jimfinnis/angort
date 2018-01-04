@@ -1359,12 +1359,15 @@ void Angort::endPackageInScript(){
     names.setPrivate(false); // and clear the private flag
 }
 
-void Angort::include(const char *filename,bool isreq){
+void Angort::include(const char *filename,bool isreq,bool mightNotExist){
     // find the file
     
     const char *fh = findFile(filename);
-    if(!fh)
-        throw FileNotFoundException(filename);
+    if(!fh){
+        if(!mightNotExist)
+            throw FileNotFoundException(filename);
+        else return;
+    }
     
     int oldDir = open(".",O_RDONLY); // get the FD for the current directory so we can go back
     
@@ -1555,6 +1558,7 @@ void Angort::feed(const char *buf){
             
             int t = tok.getnext();
             switch(t){
+            case T_INCLUDEIFEXISTS:
             case T_INCLUDE:{
                 char buf[1024];
                 // will recurse
@@ -1563,7 +1567,7 @@ void Angort::feed(const char *buf){
                 //                if(tok.getnext()!=T_END)
                 //                    throw SyntaxException("include must be at end of line");
                 
-                include(buf,false);
+                include(buf,false,t==T_INCLUDEIFEXISTS);
                 break;
             }
             case T_REQUIRE:{

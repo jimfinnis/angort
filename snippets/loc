@@ -258,7 +258,8 @@ package locpub
     :"(idx --) edit a file"
     "me" r
 ;
-    
+
+includeifexists "~/.locspecials"
 
 ###################################################
 
@@ -268,7 +269,3 @@ endpackage import
 
 
 h
-
-    
-
-

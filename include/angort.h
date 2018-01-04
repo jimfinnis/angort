@@ -1081,7 +1081,8 @@ public:
     /// file inclusion mechanism - if ispkg is set, the file
     /// should contain a package definition defining a new
     /// namespace, which will be left on the stack.
-    void include(const char *path,bool ispkg);
+    /// If mightNotExist is true and the file isn't there, don't complain.
+    void include(const char *path,bool ispkg,bool mightNotExist=false);
     
     
     /// disassemble a named word
