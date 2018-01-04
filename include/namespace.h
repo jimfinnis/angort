@@ -379,7 +379,8 @@ public:
             return false;
     }
         
-    
+    /// get fully qualified name
+    const char *getFQN(int i);
     
     /// import either all symbols or some symbols from a namespace.
     void import(int nsidx,ArrayList<Value> *lst);

@@ -89,7 +89,9 @@ in the creating function:
 ?R?`draw@
 \end{lstlisting}
 Values such as \verb+?R?`move+ are actually closer to C\# ``delegates'', in that they 
-contain information on the object (actually a closure), and the method to perform.
+contain references to
+both the method to perform and the object which should perform it
+(i.e. the closure).
 \index{private and public members}
 This also provides a ``private member'' mechanism: if a value is defined
 in a closure in the function which creates the hash, rather than in
@@ -120,7 +122,41 @@ the methods. Using this technique, the above could be written as
 ;   
 \end{lstlisting}
 
+
 \todo{Look at how to do inheritance, particularly using members in the superclass.}
+
+
+\subsection{Local static variables}
+It is often useful to create ``static'' variables local to functions --
+local variables which keep their value outside the function's scope.
+In C, we could write a simple counting function like this:
+\begin{lstlisting}[language=c]
+int counter(){
+    static int ct = 0;
+    return ct++;
+}
+\end{lstlisting}
+In Angort, we can easily do the same thing with a ``factory'' function
+to create a closure:
+\begin{lstlisting}
+:mkcounter |:ct|
+    0!ct
+    (?ct !+ct);  
+mkcounter const counter
+\end{lstlisting}
+This is useful if we want to create lots of counters, which would be 
+hard to do from a single counter in C.
+\begin{lstlisting}
+mkcounter const counter1
+mkcounter const counter2
+\end{lstlisting}
+However, if we only need one, creating \texttt{mkcounter} seems wasteful.
+We can do without by using an anonymous factory:
+\begin{lstlisting}
+(|:ct|
+    0!ct
+    (?ct !+ct)) @ const counter
+\end{lstlisting}
 
 
 

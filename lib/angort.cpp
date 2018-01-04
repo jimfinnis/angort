@@ -202,7 +202,7 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
     case OP_GLOBALGET:
     case OP_GLOBALINC:
     case OP_GLOBALDEC:
-        printf("(idx %s)",names.getName(ip->d.i));
+        printf("(%s)",names.getFQN(ip->d.i));
         break;
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
@@ -219,6 +219,18 @@ void Angort::showop(const Instruction *ip,const Instruction *base,
         break;
     case OP_LITERALSTRING:
         printf("(%s)",ip->d.s);
+        break;
+    case OP_LITERALINT:
+        printf("(%d)",ip->d.i);
+        break;
+    case OP_LITERALFLOAT:
+        printf("(%f)",ip->d.f);
+        break;
+    case OP_LITDOUBLE:
+        printf("(%f)",ip->d.df);
+        break;
+    case OP_LITLONG:
+        printf("(%ld)",ip->d.l);
         break;
     case OP_LITERALSYMB:
     case OP_HASHGETSYMB:
