@@ -1,0 +1,35 @@
+
+[`time,`thread,`io] each {i library drop}
+
+:main |:t,threads|
+    [] 0 10 range each {
+        none (|:a| # these threads have no arguments
+            thread$waitrecv !a # but immediately get a message
+            "go".
+            []
+            ?a 1000 * dup 1000+ range each {
+                i 100.0 / sin,
+#                0.01 time$delay
+#                "." p io$stdout io$flush
+            }
+            none thread$send drop # send result to root
+            
+        ) thread$create !t
+        ?t,
+        i ?t thread$send drop # root sends query to thread
+    } !threads
+    
+    
+    # for as many threads as we made, wait for a thread to stop and
+    # get a message
+    ?threads thread$join
+    [] ?threads each { 
+        thread$waitrecv, # and put them into a list.
+    }
+    [] swap (+) reduce show.
+
+;
+
+main
+    
+nl quit

@@ -631,6 +631,7 @@ public:
         
     
     const Instruction *ip,*wordbase;
+    class Thread *thread; // used if a threading library is loaded. NULL for default thread.
     Stack<Value,128>stack;
     bool emergencyStop;
     int id;

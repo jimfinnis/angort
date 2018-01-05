@@ -1,0 +1,22 @@
+
+[`time,`thread,`io] each {i library drop}
+
+:main
+    [] 0 10 range each {
+        i (|a:|
+            "go".
+            []
+            ?a 1000 * dup 1000+ range each {
+                i 100.0 / sin,
+#                0.01 time$delay
+#                "." p io$stdout io$flush
+            }
+        ) thread$create,
+        # list will get returned
+    } dup thread$join (thread$retval) map
+    [] swap (+) reduce 
+    0 swap (+) reduce.;
+
+{main}
+    
+nl quit

@@ -1,0 +1,18 @@
+[`time,`thread,`io] each {i library drop}
+0 !L
+:f |a:|
+    "go".
+    []
+    ?a 150 * dup 150+ range each {
+        0.01 time$delay
+        i 100.0 / sin,
+        "." p io$stdout io$flush
+    }
+    thread$glock
+    ?List + !List
+    thread$unglock
+;
+
+
+0!I { ?I. !+I [] !List [] 0 10 range each { i ?f thread$create,} thread$join}
+quit

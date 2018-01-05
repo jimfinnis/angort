@@ -49,6 +49,7 @@ Runtime::Runtime(Angort *angort,const char *_name){
     id = idcounter++;
     ang = angort;
     name = _name;
+    thread = NULL; // will get changed if we're being created in a thread
     ip = NULL;
     traceOnException=true;
     outputStream = stdout;

@@ -1,0 +1,17 @@
+[`time,`thread,`io] each {i library drop}
+
+[]!List
+
+:f |a:|
+    "go".
+    []
+    ?a 100 * dup 100+ range each {
+        0.01 time$delay
+        i 100.0 / sin,
+        "." p io$stdout io$flush
+    }
+    ?List + !List
+;
+
+[] 0 10 range each { i f}
+nl quit
