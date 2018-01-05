@@ -6,11 +6,10 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-set(CMAKE_CXX_FLAGS "-Woverloaded-virtual")
+set(CMAKE_CXX_FLAGS "-Woverloaded-virtual -pthread")
+set(CMAKE_C_FLAGS "-pthread")
 
 project(ANGORTLIB)
-
-add_definitions(-pthread)
 
 # would be awesome if these could live in an angort cmake module
 

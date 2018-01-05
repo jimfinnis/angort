@@ -65,7 +65,7 @@ struct Value {
     /// decrement reference count and set type to NONE
     void clr(){
         if(t&&t!=Types::tNone){
-            decRef();
+            t->decRef(this);
             t=Types::tNone;
         }
     }

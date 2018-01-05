@@ -42,6 +42,8 @@ const char* Angort::getVersion(){
     return ANGORT_VERSION;
 }
 
+ThreadHookObject *Angort::threadHookObj=NULL;
+
 Runtime::Runtime(Angort *angort,const char *_name){
     static int idcounter=0;
     id = idcounter++;
@@ -75,7 +77,6 @@ void Runtime::gc(){
 }    
 
 Angort::Angort() {
-    threadHookObj = NULL;
     Types::createTypes();
     // create and set default namespace
     stdNamespace = names.create("std");

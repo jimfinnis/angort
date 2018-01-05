@@ -552,7 +552,6 @@ public:
         for(int i=0;i<VBLOCKSIZE;i++){
             vars[i].clr();
         }
-        baseStack.clear();
     }
         
     
@@ -611,7 +610,8 @@ struct Frame {
 
 
 /// thread hook class - the thread library installs one of these
-/// into Angort using setThreadHookObject()
+/// into Angort using setThreadHookObject(). Annoyingly this has
+/// to be global, because it's used in various places if present.
 
 class ThreadHookObject {
 public:
@@ -628,6 +628,7 @@ public:
     
     Runtime(Angort *angort,const char *name="anon");
     virtual ~Runtime();
+        
     
     const Instruction *ip,*wordbase;
     Stack<Value,128>stack;
@@ -865,7 +866,6 @@ class Angort {
 private:
     
     bool running; //!< used by shutdown()
-    ThreadHookObject *threadHookObj;
     
     Stack<CompileContext,8> contextStack;
     ArrayList<LibraryDef *> *libs; //!< list of libraries
@@ -953,16 +953,24 @@ public:
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
     
-    /// set the object we use to manipulate threads
-    void setThreadHookObject(ThreadHookObject *tho){
+    /// the global thread hook object, which may be NULL.
+    /// It's static because it gets used in various places.
+    static ThreadHookObject *threadHookObj;
+    
+    /// set the object we use to manipulate threads. Note it's static.
+    static void setThreadHookObject(ThreadHookObject *tho){
         threadHookObj = tho;
     }
+    
     // if a thread API is installed, these run the various
     // thread handling methods using it.
-    inline void globalLock(){
+    
+    /// lock the global lock (used in quite a few places)
+    inline static void globalLock(){
         if(threadHookObj)threadHookObj->globalLock();
     }
-    inline void globalUnlock(){
+    /// unlock the global lock (used in quite a few places)
+    inline static void globalUnlock(){
         if(threadHookObj)threadHookObj->globalUnlock();
     }
     

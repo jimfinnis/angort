@@ -10,4 +10,4 @@ set(SOURCES main.cpp null.cpp hash.cpp
 
 add_executable(tests ${SOURCES})
 
-target_link_libraries(tests angort)
+target_link_libraries(tests angort pthread)
