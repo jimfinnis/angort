@@ -1024,7 +1024,8 @@ void Angort::startDefine(const char *name){
 void Angort::endDefine(CompileContext *c){
     if(!isDefining())
         throw SyntaxException("not defining a word");
-    
+    // make sure we have no dangling constructs
+    c->checkStacksAtEnd();
     // get the codeblock out of the context and set it up.
     CodeBlock *cb = c->cb;
     //    printf("End of define.\n");

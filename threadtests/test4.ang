@@ -1,35 +1,33 @@
 
 [`time,`thread,`io] each {i library drop}
 
-:main |:t,threads|
-    [] 0 10 range each {
-        none (|:a| # these threads have no arguments
-            thread$waitrecv !a # but immediately get a message
-            "go".
-            []
-            ?a 1000 * dup 1000+ range each {
-                i 100.0 / sin,
-#                0.01 time$delay
-#                "." p io$stdout io$flush
-            }
-            none thread$send # send result to root
-            
-        ) thread$create !t
-        ?t,
-        i ?t thread$send # root sends query to thread
-    } !threads
-    
-    
-    # for as many threads as we made, wait for a thread to stop and
-    # get a message
-    [] ?threads each { 
-        thread$waitrecv, # and put them into a list.
-    }
-    [] swap (+) reduce
-    0 swap (+) reduce.
+# calculate sum of the factorials of the first 10 nonzero ints.
+# Finds each factorial in a thread. This version uses message
+# passing.
 
+# factorial function
+:fac |x:| ?x 1 = if 1 else ?x ?x 1 - fac * then;
+
+:main |:t|
+    # create the threads, producing a list of thread objects
+    [] 1 11 range each {
+        # null thread argument, thread function
+        none (
+            # wait for the message and calculate the factorial
+            thread$waitrecv fac
+            # send the factorial back to the root thread
+            none thread$send
+        ) thread$create !t
+        # send the message (the integer) to the thread
+        i ?t thread$send
+        ?t, # add the thread to the list
+    } 
+    # get a list of results by running waitrecv over the list of threads
+    # Note, waitrecv doesn't actually take arguments, it just gets the
+    # next message. Therefore we drop the argument first.
+    (drop thread$waitrecv) map
+    # use reduce to sum the results
+    0 swap (+) reduce.
 ;
 
-{main}
-    
-nl quit
+main quit

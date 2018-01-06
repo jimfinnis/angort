@@ -13,11 +13,13 @@
 
 [1,2,3,4,5] (2 % 0 =) filter !L
 
+
 2 ?L in "listin1" assert
 4 ?L in "listin2" assert
 1 ?L in not "listin2" assert
 3.0 ?L in not "listin3" assert
 10 ?L in not "listin4" assert
+
 
 # slices
 :eq |x,y:| # quick list equiv check
@@ -74,5 +76,26 @@
 
 1 ?L remove 2 = "lremove" assert
 [1,3] ?L eq "lremove2" assert
+
+
+# map and reduce, also for ranges
+
+[1,2,3,4,5] (dup *) map [1,4,9,16,25] eq "lmap" assert
+1 6 range (dup *) map [1,4,9,16,25] eq "rangemap" assert
+0 5 range () map [0,1,2,3,4] eq "lmapconv" assert
+
+0 6 range () map 0 swap (+) reduce 15 = "lreduce" assert
+
+# filter2
+
+[0,1,2,3,4,5] (2 % 0 =) filter2 !True !False
+?False [1,3,5] eq "filter2a" assert
+?True [0,2,4] eq "filter2b" assert
+
+# zipWith
+
+[0,1,2] [10,20,30] (+) zipWith [10,21,32] eq "zipWith" assert
+
+
 
 quit

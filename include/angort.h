@@ -440,7 +440,7 @@ public:
           
     void checkStacksAtEnd(){
         if(!cstack.isempty())
-            throw SyntaxException("structure left unclosed?");
+            throw SyntaxException("control structure (e.g. 'if') left unclosed?");
     }
         
     

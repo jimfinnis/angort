@@ -450,16 +450,15 @@ Adds an item to the end of a list.
 }
 
 
-%word map (iter func -- list) apply a function to an iterable, giving a list
+%wordargs map Ic (iter func -- list) apply a function to an iterable, giving a list
 For each item in the iterable (list, range  or hash) apply a function,
 creating a new list containing the results. In the case of hashes, the
 hash key is passed to the function.
 {
     Value func;
-    func.copy(a->popval()); // need a local copy
-    Value *iterable = a->popval();
+    func.copy(p1); // need a local copy
     
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    Iterator<Value *> *iter = p0->t->makeIterator(p0);
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
     for(iter->first();!iter->isDone();iter->next()){
@@ -471,17 +470,16 @@ hash key is passed to the function.
     delete iter;
 }
 
-%word reduce (accumulator iter func -- result) perform a (left) fold or reduce on an iterable.
+%wordargs reduce Ic (accumulator iter func -- result) perform a (left) fold or reduce on an iterable.
 Works on lists, ranges or hashes. For each item or hash key, calculate the
 result of the binary function where the first operand is the accumulator
 and the second is the item or key, and set the accumulator to this value.
 Thus, "0 [1,2,3,4] (+) reduce" will sum the values.
 {
     Value func;
-    func.copy(a->popval()); // need a local copy
+    func.copy(p1); // need a local copy
     
-    Value *iterable = a->popval();
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    Iterator<Value *> *iter = p0->t->makeIterator(p0);
     
     // accumulator is already on the stack
     
@@ -492,16 +490,15 @@ Thus, "0 [1,2,3,4] (+) reduce" will sum the values.
     delete iter;
 }
 
-%word filter (iter func -- list) filter an iterable with a boolean function
+%wordargs filter Ic (iter func -- list) filter an iterable with a boolean function
 For each item in an iterable, return a list of those items for which the
 function returns nonzero. Accepts lists, ranges or hashes (in the latter case
 the hash key is used).
 {
     Value func;
-    func.copy(a->popval()); // need a local copy
-    Value *iterable = a->popval();
+    func.copy(p1); // need a local copy
     
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    Iterator<Value *> *iter = p0->t->makeIterator(p0);
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
     for(iter->first();!iter->isDone();iter->next()){
@@ -515,16 +512,15 @@ the hash key is used).
     delete iter;
 }
 
-%word filter2 (iter func -- falselist truelist) filter an iterable with a boolean function into two lists
+%wordargs filter2 Ic (iter func -- falselist truelist) filter an iterable with a boolean function into two lists
 For each item in an iterable, return two lists of those items for which the
 function returns zero and those for which it returns nonzero. Accepts
 lists, ranges or hashes (in the latter case the hash key is used).
 {
     Value func;
-    func.copy(a->popval()); // need a local copy
-    Value *iterable = a->popval();
+    func.copy(p1); // need a local copy
     
-    Iterator<Value *> *iter = iterable->t->makeIterator(iterable);
+    Iterator<Value *> *iter = p0->t->makeIterator(p0);
     ArrayList<Value> *falselist = Types::tList->set(a->pushval());
     ArrayList<Value> *truelist = Types::tList->set(a->pushval());
     

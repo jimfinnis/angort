@@ -1,22 +1,24 @@
 
 [`time,`thread,`io] each {i library drop}
 
-:main
-    [] 0 10 range each {
-        i (|a:|
-            "go".
-            []
-            ?a 1000 * dup 1000+ range each {
-                i 100.0 / sin,
-#                0.01 time$delay
-#                "." p io$stdout io$flush
-            }
-        ) thread$create,
-        # list will get returned
-    } dup thread$join (thread$retval) map
-    [] swap (+) reduce 
-    0 swap (+) reduce.;
+# calculate sum of the factorials of the first 10 nonzero ints.
+# Finds each factorial in a thread.
 
-{main}
-    
-nl quit
+# factorial function
+:fac |x:| ?x 1 = if 1 else ?x ?x 1 - fac * then;
+
+:main
+    # create the threads, producing a list of thread objects
+    [] 1 11 range each {
+        # thread argument, thread function (because this is recursive
+        # I'm not using an anonymous function)
+        i ?fac thread$create,
+    } 
+    # wait for all threads to complete, then get a list of their
+    # results by running retval over the list of threads
+    dup thread$join (thread$retval) map
+    # use reduce to sum the results
+    0 swap (+) reduce.
+;
+
+main quit
