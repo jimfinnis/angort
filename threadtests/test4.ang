@@ -12,24 +12,24 @@
 #                0.01 time$delay
 #                "." p io$stdout io$flush
             }
-            none thread$send drop # send result to root
+            none thread$send # send result to root
             
         ) thread$create !t
         ?t,
-        i ?t thread$send drop # root sends query to thread
+        i ?t thread$send # root sends query to thread
     } !threads
     
     
     # for as many threads as we made, wait for a thread to stop and
     # get a message
-    ?threads thread$join
     [] ?threads each { 
         thread$waitrecv, # and put them into a list.
     }
-    [] swap (+) reduce show.
+    [] swap (+) reduce
+    0 swap (+) reduce.
 
 ;
 
-main
+{main}
     
 nl quit
