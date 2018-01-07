@@ -20,12 +20,40 @@ HashObject::~HashObject(){
     delete hash;
 }
 
+// this is unpleasant, but happened because the underlying iterators don't
+// know about the value to lock it.
+
+class HashObjectIterator : public Iterator<Value *>{
+    HashObject *h;
+    Iterator<Value *> *iter; // the underlying iterator
+public:
+    HashObjectIterator(const HashObject *ho,bool iskeyiterator){
+        h = (HashObject *)ho;
+        h->incRefCt();
+        if(iskeyiterator)iter = new HashKeyIterator(h->hash);
+        else iter = new HashValueIterator(h->hash);
+    }
+    
+    ~HashObjectIterator(){
+        delete iter;
+        if(!h->decRefCt())
+            delete h;
+    }
+    
+    virtual void first() {iter->first();}
+    virtual void next() {iter->next();}
+    virtual bool isDone()const {return iter->isDone();}
+    virtual int index() const {return iter->index();}
+    virtual Value *current() {return iter->current();}
+    
+};
+
 Iterator<Value *> *HashObject::makeValueIterator() const{
-    return hash->createIterator(false);
+    return new HashObjectIterator(this,false);
 }
 
 Iterator<Value *> *HashObject::makeKeyIterator() const {
-    return hash->createIterator(true);
+    return new HashObjectIterator(this,true);
 }
 
 

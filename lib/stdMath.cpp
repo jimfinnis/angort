@@ -1,4 +1,5 @@
 #include <math.h>
+#include <limits.h>
 #include <time.h>
 #include "angort.h"
 
@@ -99,8 +100,7 @@ Sets the random number generator seed. If none, use the timestamp.
         time(&t);
     else
         t = v->toInt();
-    srand(t);
-    srand48(t);
+    srand48_r(t,&a->rnd);
 }
 
 
@@ -108,25 +108,30 @@ Sets the random number generator seed. If none, use the timestamp.
 Stacks an integer random number from 0 to the maximum integer. Typically
 used in "rand N %" to give a number from 0 to N-1.
 {
-    a->pushInt(rand());
+    long r;
+    lrand48_r(&a->rnd,&r);
+    a->pushInt(r & UINT_MAX);
 }
 
 %word frand (-- random double [0.1])
 Uses drand48 to generate a random number from 0 to 1.
 {
-    a->pushDouble(drand48());
+    double r;
+    drand48_r(&a->rnd,&r);
+    a->pushDouble(r);
 }
 
 
 
 
 // Knuth, TAOCP vol2 p.122
-inline double rand_gauss (double mean,double sigma) {
+inline double rand_gauss (Runtime *a,double mean,double sigma) {
     double v1,v2,s;
-    
     do {
-        v1 = drand48()*2-1;
-        v2 = drand48()*2-1;
+        drand48_r(&a->rnd,&v1);
+        v1 = v1*2-1;
+        drand48_r(&a->rnd,&v2);
+        v2 = v2*2-1;
         s = v1*v1 + v2*v2;
     } while ( s >= 1.0 );
     
@@ -138,9 +143,9 @@ inline double rand_gauss (double mean,double sigma) {
 }
 
 // http://azzalini.stat.unipd.it/SN/
-inline double skewnormal(double location,double scale, double shape){
-    double p = rand_gauss(0,1);
-    double q = rand_gauss(0,1);
+inline double skewnormal(Runtime *a,double location,double scale, double shape){
+    double p = rand_gauss(a,0,1);
+    double q = rand_gauss(a,0,1);
     if(q>shape*p)
         p*=-1;
     return location+scale*p;
@@ -149,12 +154,12 @@ inline double skewnormal(double location,double scale, double shape){
 %wordargs normrand nn (mean sigma -- normally distributed random number)
 Generate a normally-distributed random number, as a double.
 {
-    a->pushDouble(rand_gauss(p0,p1));
+    a->pushDouble(rand_gauss(a,p0,p1));
 }
 
 %wordargs skewnormrand nnn (location scale shape -- n) Skew-normal random number
 Generate a skew-normal distributed random number as a double.
 {
-    a->pushDouble(skewnormal(p0,p1,p2));
+    a->pushDouble(skewnormal(a,p0,p1,p2));
 }
 

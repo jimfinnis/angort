@@ -636,6 +636,7 @@ public:
     bool emergencyStop;
     int id;
     const char *name;
+    drand48_data rnd; // this one is GCC specific!
 private:
     Stack<Frame,RSTACKSIZE> rstack; //!< the return stack
     Value currClosure; //!< the closure block of the current level

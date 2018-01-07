@@ -171,8 +171,8 @@ public:
 
 class ParameterTypeException : public Exception {
 public:
-    ParameterTypeException(int paramNo, const char *expected) : Exception(EX_BADPARAM){
-        snprintf(error,1024,"Bad parameter %d, expected %s",paramNo,expected);
+    ParameterTypeException(int paramNo, const char *expected, const char *got) : Exception(EX_BADPARAM){
+        snprintf(error,1024,"Bad parameter %d, expected %s but got %s",paramNo,expected,got);
     }
 };
 

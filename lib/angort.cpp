@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "angort.h"
 #define DEFOPCODENAMES 1
@@ -65,6 +66,10 @@ Runtime::Runtime(Angort *angort,const char *_name){
     assertNegated=false;
     loopIterCt=0;
     autoCycleCount = ang->autoCycleInterval;
+    
+    long t;
+    time(&t);
+    srand48_r(t+id*17,&rnd);
 }
 
 Runtime::~Runtime(){

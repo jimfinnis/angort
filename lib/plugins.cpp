@@ -30,43 +30,43 @@ void Runtime::popParams(Value **out,const char *spec,const Type *type0,
         case 'i':
         case 'L':
             if(!(v->t->flags & TF_NUMBER))
-                throw ParameterTypeException(i,"number");
+                throw ParameterTypeException(i,"number",v->t->name);
             break;
         case 'N':
             if(!(v->t->flags & TF_NUMBER) && v->t!=Types::tNone)
-                throw ParameterTypeException(i,"number or none");
+                throw ParameterTypeException(i,"number or none",v->t->name);
             break;
         case 'y':
             if(v->t != Types::tString && v->t != Types::tSymbol && !v->isNone())
-                throw ParameterTypeException(i,"string");
+                throw ParameterTypeException(i,"string",v->t->name);
             break;
         case 's':
             if(v->t != Types::tString && v->t != Types::tSymbol )
-                throw ParameterTypeException(i,"string");
+                throw ParameterTypeException(i,"string",v->t->name);
             break;
         case 'S':
             if(v->t != Types::tSymbol )
-                throw ParameterTypeException(i,"symbol");
+                throw ParameterTypeException(i,"symbol",v->t->name);
             break;
         case 'c':
             if(v->t != Types::tCode && v->t != Types::tClosure )
-                throw ParameterTypeException(i,"function");
+                throw ParameterTypeException(i,"function",v->t->name);
             break;
         case 'C':
             if(v->t != Types::tCode && v->t != Types::tClosure && v->t != Types::tNone)
-                throw ParameterTypeException(i,"function or none");
+                throw ParameterTypeException(i,"function or none",v->t->name);
             break;
         case 'l':
             if(v->t != Types::tList )
-                throw ParameterTypeException(i,"list");
+                throw ParameterTypeException(i,"list",v->t->name);
             break;
         case 'h':
             if(v->t != Types::tHash )
-                throw ParameterTypeException(i,"hash");
+                throw ParameterTypeException(i,"hash",v->t->name);
             break;
         case 'I':
             if(!(v->t->flags & TF_ITERABLE))
-                throw ParameterTypeException(i,"iterable");
+                throw ParameterTypeException(i,"iterable",v->t->name);
             break;
         case 'a':
         case 'b':
@@ -74,17 +74,17 @@ void Runtime::popParams(Value **out,const char *spec,const Type *type0,
         case 'B':
             tt = (*p=='a' || *p=='A')?type0:type1;
             if(!tt)
-                throw ParameterTypeException(i,"unsupplied special type specified in parameter check");
+                throw ParameterTypeException(i,"unsupplied special type specified in parameter check",v->t->name);
             // if the parameter is T, we don't allow NONE through.
             if(v->t != tt && (!v->isNone() || *p=='a' || *p=='a'))
-                throw ParameterTypeException(i,tt->name);
+                throw ParameterTypeException(i,tt->name,v->t->name);
             break;
                 
         case 'v':
         case '?':
             break;
         default:
-            throw ParameterTypeException(i,"an impossible parameter");
+            throw ParameterTypeException(i,"an impossible parameter",v->t->name);
         }
         out[i--]=v;
         p--;
