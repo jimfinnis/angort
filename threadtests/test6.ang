@@ -1,0 +1,49 @@
+#!/usr/local/bin/angort
+
+`thread library drop
+
+10 !THREADS
+
+######################################## main program
+
+:divide |list,slices:slicesize|
+    ?list len ?slices / !slicesize
+    []
+    0 ?slices range each {
+        ?list ?slicesize i * ?slicesize i 1+ * future$slice,
+    }
+    ?list ?slices ?slicesize * 0 future$slice dup len if, else drop then
+;
+
+
+:mkrange |mn,mx:step|
+    ?mx ?mn - 1000.0 / !step
+    ?mn ?mx ?step frange
+;
+
+:runrange |mn,mx:f,lst| # fails
+    [] # list of threads
+    snark
+    ?mn ?mx mkrange () map ?THREADS divide each {
+        i (|rangeseg:|
+            # thread code
+            0 ?rangeseg each {1+}
+        ) thread$create,
+    }
+    thread$join 
+;
+
+:runrange2 |mn,mx:f,lst,t|
+    [] # list of threads
+    snark
+    ?mn ?mx mkrange () map ?THREADS divide each {
+        none (
+            0  thread$waitrecv each {1+}
+        ) thread$create !t
+        i ?t thread$send
+        ?t,
+    }
+    thread$join
+;
+
+{0.01 4 runrange}
