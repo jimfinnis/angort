@@ -36,7 +36,7 @@ public:
     
     ~HashObjectIterator(){
         delete iter;
-        if(!h->decRefCt())
+        if(h->decRefCt())
             delete h;
     }
     
