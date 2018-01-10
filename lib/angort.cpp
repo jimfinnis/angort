@@ -33,17 +33,17 @@
 /// that catch all exceptions.
 #define CATCHALLKEY 0xdeadbeef
 
-
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std),
 LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated);
 
 namespace angort {
 
+ThreadHookObject *Angort::threadHookObj=NULL;
+
+
 const char* Angort::getVersion(){
     return ANGORT_VERSION;
 }
-
-ThreadHookObject *Angort::threadHookObj=NULL;
 
 Runtime::Runtime(Angort *angort,const char *_name){
     static int idcounter=0;
@@ -65,7 +65,7 @@ Runtime::Runtime(Angort *angort,const char *_name){
     assertDebug=false;
     assertNegated=false;
     loopIterCt=0;
-    autoCycleCount = ang->autoCycleInterval;
+    autoCycleCount = AUTOGCINTERVAL;
     
     long t;
     time(&t);
@@ -77,9 +77,9 @@ Runtime::~Runtime(){
 }
 
 void Runtime::gc(){
-    ang->globalLock();
+    Angort::globalLock();
     GarbageCollected::gc();
-    ang->globalUnlock();
+    Angort::globalUnlock();
 }    
 
 Angort::Angort() {

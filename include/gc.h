@@ -49,6 +49,7 @@ public:
     /// pointer for maintaining container list
     GarbageCollected *prev;
     
+    
     /// increment the refct, throwing an exception if it wraps
     void incRefCt(){
         refct++;

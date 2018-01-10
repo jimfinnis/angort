@@ -44,7 +44,7 @@ const char *Angort::findFile(const char *name){
     path[0]=0;
     
     
-    for(;*p;p=q+1){
+    do{
         q=p;
         while(*q && *q!=':')q++;
         if(q-p<1024){
@@ -74,7 +74,8 @@ const char *Angort::findFile(const char *name){
             }
 #endif
         }
-    }
+        p=q+1;
+    } while(*q);
     return NULL;
 }
 

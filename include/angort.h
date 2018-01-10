@@ -17,6 +17,7 @@ typedef void (*NativeFunc)(class Runtime *a);
 }
 
 #include <stdint.h>
+
 #include "stack.h"
 #include "stringbuf.h"
 #include "tokeniser.h"
@@ -600,6 +601,10 @@ struct Frame {
     /// frame. This number is popped off if the function runs OP_STOP.
     int loopIterCt; 
     
+    ~Frame(){
+        rec.clr();
+        clos.clr();
+    }
     
     void clear(){
         rec.clr();
@@ -856,7 +861,6 @@ public:
 
 
 
-
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
@@ -950,14 +954,15 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
+    /// the global thread hook object, which may be NULL.
+    /// It's static because it gets used in various places.
+    
+    static ThreadHookObject *threadHookObj;
+
 public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
-    
-    /// the global thread hook object, which may be NULL.
-    /// It's static because it gets used in various places.
-    static ThreadHookObject *threadHookObj;
     
     /// set the object we use to manipulate threads. Note it's static.
     static void setThreadHookObject(ThreadHookObject *tho){
@@ -966,6 +971,7 @@ public:
     
     // if a thread API is installed, these run the various
     // thread handling methods using it.
+    
     
     /// lock the global lock (used in quite a few places)
     inline static void globalLock(){
@@ -976,7 +982,7 @@ public:
         if(threadHookObj)threadHookObj->globalUnlock();
     }
     
-    
+
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
         debuggerHook = f;

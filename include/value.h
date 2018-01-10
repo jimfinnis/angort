@@ -53,30 +53,35 @@ struct Value {
     
     /// do not use this on a variable which may already contain a value;
     /// use clr instead.
-    void init(){
+    inline void init(){
         t = Types::tNone;
     }
-        
+    
     
     ~Value(){
         clr();
     }
     
-    /// decrement reference count and set type to NONE
-    void clr(){
+    /// decrement reference count and set type to NONE. 
+    inline void clr(){
         if(t&&t!=Types::tNone){
+            if(GarbageCollected *gc = t->getGC(this)){
+                if(gc->refct<=0)
+                    throw RUNT(EX_WTF,"").set("already del %p/%s, refs=%d\n",gc,t->name,gc->refct);
+            }
             t->decRef(this);
             t=Types::tNone;
         }
+        
     }
     
     /// decrement the reference count and deallocate if zero and is a type with extra stuff
-    void decRef(){
+    inline void decRef(){
         t->decRef(this);
     }
     
     /// increment the reference count
-    void incRef(){
+    inline void incRef(){
         t->incRef(this);
     }
     
@@ -189,7 +194,7 @@ struct Value {
     /// on exit will contain a ptr to string which should be freed.
     void dump(char **str,int depth=0);
     
-//private:    
+    //private:    
     
     /// make sure the string gets copied on assignment
     Value &operator=(const Value &src){

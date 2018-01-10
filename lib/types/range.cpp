@@ -21,7 +21,7 @@ template<> RangeType<float>::RangeType() {
     add("frange","RANF");
 }
 
-template <> void RangeType<float>::set(Value *v, float start,float end,float step){
+template <> void RangeType<float>::set(Value *v, float start,float end,float step)const{
     v->clr();
     v->t = this;
    
@@ -33,16 +33,31 @@ template <> void RangeType<float>::set(Value *v, float start,float end,float ste
     
     incRef(v);
 }
-template <> void RangeType<int>::set(Value *v, int start,int end,int step){
+template <> void RangeType<int>::set(Value *v, int start,int end,int step)const{
     v->clr();
     v->t = this;
    
     Range<int> *r = new Range<int>();
+//    printf("%lu Int range alloc at %p\n",pthread_self(),r);
     r->start = start;
     r->end = end;
     r->step = step;
     v->v.irange = r;
     
+    incRef(v);
+}
+
+template <> void RangeType<float>::set(Value *v,Range<float> *r)const{
+    v->clr();
+    v->t=this;
+    v->v.frange = r;
+    incRef(v);
+}
+
+template <> void RangeType<int>::set(Value *v,Range<int> *r)const{
+    v->clr();
+    v->t=this;
+    v->v.irange = r;
     incRef(v);
 }
 
@@ -53,6 +68,19 @@ template<> bool RangeType<int>::isIn(Value *v,Value *item)const{
         return false;
     return ((i-r->start)%r->step)==0;
 }
+
+template<> void RangeType<float>::clone(Value *out,const Value *in,bool deep)const {
+    Range<float> *i = in->v.frange;
+    Range<float> *r = new Range<float>(*i);
+    set(out,r);
+}
+
+template<> void RangeType<int>::clone(Value *out,const Value *in,bool deep)const {
+    Range<int> *i = in->v.irange;
+    Range<int> *r = new Range<int>(*i);
+    set(out,r);
+}
+
 
 
 // for hash keys, int ranges are equal if their members are equal

@@ -149,6 +149,7 @@ void cliSighandler(int s){
 int main(int argc,char *argv[]){
     struct sigaction sa;
     sa.sa_handler = cliSighandler;
+    memset(&sa,0,sizeof(sa));
     sigemptyset(&sa.sa_mask);
     sigaction(SIGSEGV,&sa,NULL);
     sigaction(SIGINT,&sa,NULL);

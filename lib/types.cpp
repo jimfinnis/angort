@@ -202,6 +202,7 @@ GarbageCollected::~GarbageCollected(){
     Angort::globalLock();
     globalCount--;
     CycleDetector::getInstance()->remove(this);
+    refct=-999; // to mark was deleted properly; snark.
     Angort::globalUnlock();
 }
 

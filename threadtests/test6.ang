@@ -1,49 +1,41 @@
 #!/usr/local/bin/angort
 
 `thread library drop
+`time library drop
 
 10 !THREADS
-
+0!autogc
 ######################################## main program
 
-:divide |list,slices:slicesize|
-    ?list len ?slices / !slicesize
-    []
-    0 ?slices range each {
-        ?list ?slicesize i * ?slicesize i 1+ * future$slice,
-    }
-    ?list ?slices ?slicesize * 0 future$slice dup len if, else drop then
-;
-
-
-:mkrange |mn,mx:step|
-    ?mx ?mn - 1000.0 / !step
-    ?mn ?mx ?step frange
-;
-
-:runrange |mn,mx:f,lst| # fails
-    [] # list of threads
-    snark
-    ?mn ?mx mkrange () map ?THREADS divide each {
-        i (|rangeseg:|
+:runrange |:f,lst| # fails
+    [] 0 10 range each{
+        0 i range (|rangeseg:|
             # thread code
-            0 ?rangeseg each {1+}
+            [ 0 ?rangeseg each {1+}, thread$cur thread$id]
         ) thread$create,
     }
-    thread$join 
+    dup thread$join (thread$retval) map show.
 ;
 
-:runrange2 |mn,mx:f,lst,t|
-    [] # list of threads
-    snark
-    ?mn ?mx mkrange () map ?THREADS divide each {
-        none (
-            0  thread$waitrecv each {1+}
-        ) thread$create !t
-        i ?t thread$send
-        ?t,
-    }
+:runrangenoval |:f,lst| # works - it seems passing in values fails
+    [] 0 10 range each{
+        none (drop
+            # thread code
+            0 0 100 range each {1+}
+        ) thread$create,
+        }
     thread$join
 ;
 
-{0.01 4 runrange}
+:runrange2 |:f,lst,t| # fails!
+    [] 0 10 range each {
+        none (
+            [] 0  thread$waitrecv each {1+}, thread$cur thread$id,
+        ) thread$create !t
+        0 i range ?t thread$send
+        ?t,
+    }
+    dup thread$join (thread$retval) map show.
+;
+
+{runrange}

@@ -19,11 +19,27 @@ template <class T> struct Range : public GarbageCollected {
     virtual Iterator<class Value *> *makeKeyIterator()const{
         return makeValueIterator();
     }
+    
+//    virtual ~Range(){
+//        printf("%lu Delete range at %p\n",pthread_self(),this);
+//    }
+    
+    Range(){
+        start = 0;
+        end = 10;
+        step = 1;
+    }
+    Range(const Range<T>& r){
+        start = r.start;
+        end = r.end;
+        step = r.step;
+    }
 };
 
 template <class T> class RangeType : public GCType {
 public:
-    void set(Value *v,T start,T end,T step);
+    void set(Value *v,T start,T end,T step)const;
+    void set(Value *v,Range<T> *r)const;
     RangeType();
 
     /// get a hash key
@@ -33,6 +49,8 @@ public:
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b)const;
+    
+    virtual void clone(Value *out,const Value *in,bool deep=false)const;
 };
 
 }
