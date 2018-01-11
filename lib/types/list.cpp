@@ -42,10 +42,12 @@ class ListIterator : public Iterator<Value *>{
     
     /// copy the current value into the value
     inline void copyCurrent(){
+        list->list.lock();
         if(isKey)
             Types::tInteger->set(&v,idx);
         else
-            v.copy(list->list.get(idx));
+            v.copy(list->list.getunsafe(idx));
+        list->list.unlock();
     }
     
 public:
@@ -68,24 +70,31 @@ public:
     
     /// set the current value to the first item
     virtual void first(){
+        list->list.lock();
         idx=0;
         if(idx<list->list.count())
             copyCurrent();
         else
             v.clr();
+        list->list.unlock();
     }
     /// set the current value to the next item
     virtual void next(){
+        list->list.lock();
         idx++;
         if(idx<list->list.count())
             copyCurrent();
         else{
             v.clr();
         }
+        list->list.unlock();
     }
     /// return true if we're out of bounds
     virtual bool isDone() const{
-        return idx>=list->list.count();
+        list->list.lock();
+        bool rv = idx>=list->list.count();
+        list->list.unlock();
+        return rv;
     }
     
     /// return the current value
@@ -117,26 +126,47 @@ void ListType::setValue(Value *coll,Value *k,Value *v)const{
 
 void ListType::getValue(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
+    r->list.lock();
     int i = k->toInt();
-    result->copy(r->list.get(i));
+    Value *v = r->list.getunsafe(i);
+    if(v){
+        result->copy(v);
+        r->list.unlock();
+    } else {
+        r->list.unlock();
+        throw RUNT(EX_OUTOFRANGE,"list get out of range");
+    }
 }
 
 int ListType::getCount(Value *coll)const{
     ListObject *r = coll->v.list;
-    return r->list.count();
+    r->list.lock();
+    int rv = r->list.count();
+    r->list.unlock();
+    return rv;
 }
 void ListType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
+    r->list.wlock();
     int i = k->toInt();
-    // will throw if out of range
-    result->copy(r->list.get(i));
-    r->list.remove(i);
+    Value *v = r->list.getunsafe(i);
+    if(v){
+        result->copy(v);
+        r->list.removeunsafe(i);
+        r->list.unlock();
+    } else {
+        r->list.unlock();
+        throw RUNT(EX_OUTOFRANGE,"list get out of range");
+    }
 }
 
 /// deprecated version.
 void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
+    
+    outlist->wlock();
+    list->lock();
     
     int listlen = list->count();
     if(start<0)start=listlen+start;
@@ -146,10 +176,12 @@ void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
         if(len>(listlen-start))
             len = listlen-start;
         for(int i=0;i<len;i++){
-            Value *v = list->get(start+i);
-            outlist->append()->copy(v);
+            Value *v = list->getunsafe(start+i);
+            outlist->appendunsafe()->copy(v);
         }
     }
+    outlist->unlock();
+    list->unlock();
 }
 
 /// good version
@@ -157,31 +189,37 @@ void ListType::slice(Value *out,Value *coll,int startin,int endin)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
     
+    outlist->wlock();
+    list->lock();
+    
     int start,end;
     int listlen = list->count();
     bool ok = getSliceEndpoints(&start,&end,listlen,startin,endin);
     
     if(ok){
         for(int i=start;i<end;i++){
-            Value *v = list->get(i);
-            outlist->append()->copy(v);
+            Value *v = list->getunsafe(i);
+            outlist->appendunsafe()->copy(v);
         }
     }
+    outlist->unlock();
+    list->unlock();
 }
 
 void ListType::clone(Value *out,const Value *in,bool deep)const{
     ListObject *p = new ListObject();
     // cast away constness - makeIterator() can't be const
     // because it modifies refcounts
+    in->v.list->list.lock();
     ListIterator iter(in->v.list,false);
     for(iter.first();!iter.isDone();iter.next()){
-        Value *v = p->list.append();
+        Value *v = p->list.appendunsafe();
         if(deep)
             iter.current()->t->clone(v,iter.current(),true);
         else
             v->copy(iter.current());
     }
-    
+    in->v.list->list.unlock();
     set(out,p);
 }
 

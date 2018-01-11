@@ -56,30 +56,24 @@ private:
         return NULL;
     }
     
-    StringMapEnt<T> *foundEnt;
-        
 public:
     StringMap(){
         head=NULL;
-        foundEnt=NULL;
         size=0;
     }
     
-    // useful for when you have primitives in here, so a NULL return
-    // isn't helpful
-    bool find(const char *key){
-        foundEnt = findent(key);
-        return foundEnt?true:false;
+    // useful for when you have nulls are stored, so a NULL return
+    // isn't helpful.
+    bool find(const char *key,T *out){
+        StringMapEnt<T> *foundEnt = findent(key);
+        if(foundEnt){
+            if(out)
+                *out = foundEnt->value;
+            return true;
+        } else
+            return false;
     }
-    
-    T found(){
-        if(foundEnt)
-            return foundEnt->value;
-        else
-            return 0;
-    }
-    
-    
+        
     T get(const char *key){
         StringMapEnt<T> *p = findent(key);
         if(p)

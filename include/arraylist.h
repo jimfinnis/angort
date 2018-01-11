@@ -5,6 +5,8 @@
 #ifndef __ANGORTARRAYLIST_H
 #define __ANGORTARRAYLIST_H
 
+#include <pthread.h>
+
 // we need placement new, sadly.
 #include <new> 
 
@@ -26,8 +28,11 @@ template <class T> struct ArrayListComparator {
 /// when the list is created or destroyed, however.
 
 template <class T> class ArrayList {
+    pthread_rwlock_t rwlock;
+    
     // because I don't want to rely on c++11 delegated ctors
     void init(int n){ 
+        pthread_rwlock_init(&rwlock,NULL);
         capacity = n;
         baseCapacity = n;
         ct = 0;
@@ -52,13 +57,13 @@ public:
         for(int i=0;i<ct;i++)
             data[i].~T();
         free(data);
-        
+        pthread_rwlock_destroy(&rwlock);
     }
     
     /// add an item to the end of the list, return a pointer to
     /// fill in the item. Runs in O(1) time unless the list needs
     /// resizing.
-    T *append(){
+    T *appendunsafe(){
         reallocateifrequired(ct+1);
         new (data+ct) T(); // inplace construction of new item
         return data+(ct++);
@@ -67,9 +72,13 @@ public:
     /// insert an item before position n, returning a pointer to
     /// fill in the item. Runs in O(n) time unless n==-1, in which
     /// case it's O(1)
-    T *insert(int n=-1){
-        if(n<0 || n>=ct)
-            return append();
+    T *insertunsafe(int n=-1){
+        if(n<0 || n>=ct){
+            reallocateifrequired(ct+1);
+            new (data+ct) T(); // inplace construction of new item
+            pthread_rwlock_unlock(&rwlock);
+            return data+(ct++);
+        }
         reallocateifrequired(ct+1);
         memmove(data+n+1,data+n,(ct-n)*sizeof(T));
         ct++;
@@ -78,9 +87,10 @@ public:
     }
     
     /// remove an item from somewhere in the list in O(n) time
-    bool remove(int n=-1){
-        if(n<0||n>=ct)
+    bool removeunsafe(int n=-1){
+        if(n<0||n>=ct){
             return false;
+        }
         reallocateifrequired(ct-1);
         ct--;
         // destruct the item we're about to remove
@@ -91,17 +101,35 @@ public:
     }
     
     /// get a pointer to the nth item of a list in O(1) time. If n==-1
-    /// will return the last item.
-    T *get(int n){
-        if(n<0||n>=ct)
-            throw RUNT(EX_OUTOFRANGE,"list get out of range");
+    /// will return the last item. This is not thread-safe, 
+    T *getunsafe(int n){
+        if(n<0||n>=ct){
+            return NULL;
+        }
         return data+n;
+    }
+    
+    /// thread-safe get which makes a copy of the data in the list.
+    bool get(int n,T *res){
+        bool rv;
+        pthread_rwlock_rdlock(&rwlock);
+        T *v = getunsafe(n);
+        if(v){
+            *res = *v;
+            rv = true;
+        } else
+            rv = false;
+        
+        pthread_rwlock_unlock(&rwlock);
+        return rv;
     }
     
     /// clear the entire list, does not run
     /// destructors, just sets the size to zero.
     void clear(){
+        pthread_rwlock_wrlock(&rwlock);
         ct=0;
+        pthread_rwlock_unlock(&rwlock);
     }
     
     /// return the size of the list
@@ -116,10 +144,15 @@ public:
     
     /// set a value in the list
     void set(int n,T *v){
-        if(locks)
+        pthread_rwlock_wrlock(&rwlock);
+        if(locks){
+            pthread_rwlock_unlock(&rwlock);
             throw RUNT(EX_MODITER,"cannot modify list as it is iterated");
-        if(n<0)
+        }
+        if(n<0){
+            pthread_rwlock_unlock(&rwlock);
             throw RUNT(EX_OUTOFRANGE,"list set index out of range");
+        }
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
             // initialise the new values!
@@ -129,12 +162,16 @@ public:
             ct=n+1;
         }
         data[n].copy(v);
+        pthread_rwlock_unlock(&rwlock);
     }
     
     /// get a slot to copy a value into
     T *set(int n){
-        if(n<0)
+        pthread_rwlock_wrlock(&rwlock);
+        if(n<0){
+            pthread_rwlock_unlock(&rwlock);
             throw RUNT(EX_OUTOFRANGE,"list set index out of range");
+        }
         if(n>=ct){
             reallocateifrequired(n+10); // allocate a bit more
             // initialise the new values!
@@ -143,14 +180,17 @@ public:
             }
             ct=n+1;
         }
+        pthread_rwlock_unlock(&rwlock);
         return data +n;
     }
     
     /// get the index of an item in the list
     int getIndexOf(T *v){
+        pthread_rwlock_rdlock(&rwlock);
         int n = v-data;
         if(n<0 || n>=ct)
             throw RUNT(EX_OUTOFRANGE,"get index of item returns out of range");
+        pthread_rwlock_unlock(&rwlock);
         return n;
     }
     
@@ -159,6 +199,19 @@ public:
 
     /// number of locks held - these are added by iterators
     int locks;
+
+    // use with getunsafe() to make thread-safe
+    void lock(){
+        pthread_rwlock_rdlock(&rwlock);
+    }
+    // use with getunsafe() to make thread-safe
+    void wlock(){
+        pthread_rwlock_wrlock(&rwlock);
+    }
+    // use with getunsafe() to make thread-safe
+    void unlock(){
+        pthread_rwlock_unlock(&rwlock);
+    }
 
 private:
     
@@ -223,13 +276,13 @@ public:
         return idx;
     }
     virtual T *current() {
-        return list->get(idx);
+        return list->getunsafe(idx);
     }
     
     int getIdx() {
         return idx;
     }
-
+    
 protected:
     int idx;
     ArrayList<T> *list;

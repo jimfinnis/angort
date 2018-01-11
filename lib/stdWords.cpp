@@ -769,25 +769,30 @@ with "nspace".
 Returns true if the identifier is private inside the given namespace, which
 is identified by a nsid returned by "nspace".
 {
+    a->ang->names.lock();
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isPriv?1:0);
+    a->ang->names.unlock();
     
 }
 %word isconst (nsid name -- bool) return true if the definition is constant in the namespace
 Returns true if the identifier is modifiable inside the given namespace, which
 is identified by a nsid returned by "nspace".
 {
+    a->ang->names.lock();
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isConst?1:0);
-    
+    a->ang->names.unlock();
 }
 
 %word lookup (nsid name -- value) look up the value of a namespace entity
 Looks up an identifier in a namespace, which is identified by a nsid
 returned by "nspace", and returns its value.
 {
+    a->ang->names.lock();
     NamespaceEnt *ent = getNSEnt(a);
     a->pushval()->copy(&ent->v);
+    a->ang->names.unlock();
 }
     
 %word tostr (val -- string) convert value to string

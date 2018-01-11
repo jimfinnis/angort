@@ -267,8 +267,8 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
     case OP_LITERALSYMB:
     case OP_HASHGETSYMB:
     case OP_HASHSETSYMB:
-        printf("(%d:%s)",ip->d.i,
-               Types::tSymbol->getString(ip->d.i));
+        Types::tSymbol->getString(ip->d.i,buf);
+        printf("(%d:%s)",ip->d.i,buf);
         break;
     default:break;
     }
@@ -714,9 +714,11 @@ void Runtime::run(const Instruction *startip){
                     break;
                 case OP_GLOBALGET:
                     // like the above but does not run a codeblock
+                    Angort::globalLock();
                     a = ang->names.getVal(ip->d.i);
                     b = stack.pushptr();
                     b->copy(a);
+                    Angort::globalUnlock();
                     ip++;
                     break;
                 case OP_CALL:
@@ -909,8 +911,11 @@ void Runtime::run(const Instruction *startip){
                         } else 
                             throw RUNT(EX_NOTCOLL,"attempt to set value in non-hash or list");
                     } else {
-                        b = Types::tList->get(b)->append();
+                        ArrayList<Value> *ll = Types::tList->get(b);
+                        ll->wlock();
+                        b = Types::tList->get(b)->appendunsafe();
                         b->copy(a);
+                        ll->unlock();
                     }
                     ip++;
                     break;
@@ -946,12 +951,13 @@ void Runtime::run(const Instruction *startip){
                     if(!throwAngortException(a->v.i,b)){
                         // we couldn't find an Angort handler - print msg and reset IP
                         const StringBuffer &sbuf = b->toString();
+                        char sybuf[128];
+                        Types::tSymbol->getString(a->v.i,sybuf);
                         printf("unhandled throw instruction: %s (%s)\n",
-                               Types::tSymbol->getString(a->v.i),sbuf.get());
+                               sybuf,sbuf.get());
                         if(ip && ang->debuggerHook)(*ang->debuggerHook)(this);
                         ip=NULL;
-                        throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s (%s)\n",
-                                                        Types::tSymbol->getString(a->v.i),sbuf.get());
+                        throw RUNT(EX_UNHANDLED,"").set("Angort exception: %s (%s)\n",sybuf,sbuf.get());
                     }
                     break;
                 default:
@@ -2001,14 +2007,14 @@ void Angort::feed(const char *buf){
                     }
                     
                     // create new catch, set start to here
-                    Catch *cat = cp->append();
+                    Catch *cat = cp->appendunsafe();
                     cat->start = context->getCodeSize();
                     context->curcatch = cat;
                     
                     // add the symbols we're catching
                     for(;;){
                         int symbol = Types::tSymbol->getSymbol(tok.getstring());
-                        *cat->symbols.append() = symbol;
+                        *cat->symbols.appendunsafe() = symbol;
                         int tk=tok.getnext();
                         if(tk==T_COMMA){
                             if(tok.getnext()!=T_IDENT)
@@ -2036,10 +2042,10 @@ void Angort::feed(const char *buf){
                         context->curcatch->end = context->getCodeSize();
                         compile(OP_JUMP);
                     }
-                    Catch *cat = cp->append();
+                    Catch *cat = cp->appendunsafe();
                     cat->start = context->getCodeSize();
                     context->curcatch = cat;
-                    *cat->symbols.append() = CATCHALLKEY; //ALL marker
+                    *cat->symbols.appendunsafe() = CATCHALLKEY; //ALL marker
                 }
                 break;
             case T_ENDTRY:
@@ -2280,8 +2286,9 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
         sp->setSpec(id,lib->wordList[i].desc);
     }
     
-    
-    *libs->append() = lib;
+    libs->wlock();
+    *libs->appendunsafe() = lib;
+    libs->unlock();
     
     if(lib->initfunc){
         (*lib->initfunc)(run);
@@ -2340,7 +2347,9 @@ void Runtime::storeTrace(){
         ip->getDetails(buf,1024);
     else
         strcpy(buf,"unknown");
-    ptr = storedTrace.append();
+    
+    storedTrace.wlock();
+    ptr = storedTrace.appendunsafe();
     *ptr = strdup(buf);
     
     
@@ -2350,9 +2359,10 @@ void Runtime::storeTrace(){
             p->ip->getDetails(buf,1024);
         else
             strcpy(buf,"unknown");
-        ptr = storedTrace.append();
+        ptr = storedTrace.appendunsafe();
         *ptr = strdup(buf);
     }
+    storedTrace.unlock();
 }
 
 void Runtime::printAndDeleteStoredTrace(){
@@ -2390,7 +2400,7 @@ void Angort::resetAutoComplete(){
     acList->clear();
     // first, add the tokens
     for(int i=0;tokens[i].word;i++){
-        *acList->append()=strdup(tokens[i].word);
+        *acList->appendunsafe()=strdup(tokens[i].word);
     }
     // and finally add the fully qualified name for all namespaces
     // (and unqualified name for imported namespaces)
@@ -2402,12 +2412,12 @@ void Angort::resetAutoComplete(){
             NamespaceEnt *ent = ns->getEnt(i);
             
             if(ent->isImported)
-                *acList->append()=strdup(ns->getName(i));
+                *acList->appendunsafe()=strdup(ns->getName(i));
             if(!ent->isPriv){
                 strcpy(buf,prefix);
                 strcat(buf,"$");
                 strcat(buf,ns->getName(i));
-                *acList->append()=strdup(buf);
+                *acList->appendunsafe()=strdup(buf);
             }
         }
     }
@@ -2417,7 +2427,8 @@ void Angort::resetAutoComplete(){
 const char *Angort::getNextAutoComplete(){
     for(;;){
         if(acIndex>=acList->count())return NULL;
-        const char *s = *acList->get(acIndex);
+        // should be OK, only used in main thread
+        const char *s = *acList->getunsafe(acIndex);
         acIndex++;
         if(*s != '*')return s;
     }

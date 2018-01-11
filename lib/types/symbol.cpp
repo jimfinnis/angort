@@ -26,17 +26,22 @@ void SymbolType::deleteAll(){
 }
 
 
-const char *SymbolType::get(const Value *v) const {
-    
+const char *SymbolType::getunsafe(const Value *v) const {
     if(v->t == Types::tSymbol){
-        return strings.get(v->v.i)->s;
+        return strings.getunsafe(v->v.i)->s;
     } else
         throw BadConversionException(v->t->name,name);
-          
+}
+
+void SymbolType::get(const Value *v,char *buf128) const {
+    if(v->t == Types::tSymbol){
+        getString(v->v.i,buf128);
+    } else
+        throw BadConversionException(v->t->name,name);
 }
 
 bool SymbolType::exists(const char *s){
-    return locations.find(s);
+    return locations.find(s,NULL);
 }
 
 
@@ -45,20 +50,27 @@ int SymbolType::getSymbol(const char *s){
         throw RUNT("ex$symbol","").set("symbol too long: %s",s);
     
     int n;
-    if(locations.find(s)){
-        n=locations.found();
-    } else {
+    strings.wlock();
+    if(!locations.find(s,&n)){
         n = symbolCtr;
         locations.set(s,symbolCtr++);
         SymbolName *ss = strings.set(n);
         strcpy(ss->s,s);
     }
+    strings.unlock();
     
     return n;
 }
 
-const char *SymbolType::getString(int id){
-    return strings.get(id)->s;
+const char *SymbolType::getunsafeString(int id){
+    return strings.getunsafe(id)->s;
+}
+
+void SymbolType::getString(int id,char *buf128){
+    strings.lock();
+    const char *s = strings.getunsafe(id)->s;
+    strncpy(buf128,s,127);
+    strings.unlock();
 }
 
 void SymbolType::set(Value *v,int i){
@@ -69,8 +81,10 @@ void SymbolType::set(Value *v,int i){
 
 const char *SymbolType::toString(bool *allocated,const Value *v) const {
     char buf[128];
-    strncpy(buf,get(v),128);
+    strings.lock();
+    getString(v->v.i,buf);
     *allocated=true;
+    strings.unlock();
     return strdup(buf);
 }
 
@@ -81,13 +95,15 @@ int SymbolType::toInt(const Value *v) const {
 
 uint32_t SymbolType::getHash(Value *v)const{
     // Fowler-Noll-Vo hash, variant 1a
-    const unsigned char *s = (const unsigned char *)get(v);
+    strings.lock();
+    const unsigned char *s = (const unsigned char *)getunsafe(v);
     uint32_t h = 2166136261U;
     
     while(*s){
         h ^= *s++;
         h *= 16777619U;
     }
+    strings.unlock();
     return h;
 }
 

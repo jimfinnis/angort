@@ -14,14 +14,18 @@ namespace angort {
 /// split it apart and and the items individually.
 
 static void addListOrValueToList(ArrayList<Value> *list,Value *a){
+    list->wlock();
     if(a->getType() == Types::tList){
-        ArrayListIterator<Value> iter(Types::tList->get(a));
-        
+        ArrayList<Value> *inlst = Types::tList->get(a);
+        inlst->lock();
+        ArrayListIterator<Value> iter(inlst);
         for(iter.first();!iter.isDone();iter.next()){
-            list->append()->copy(iter.current());
+            list->appendunsafe()->copy(iter.current());
         }
+        inlst->unlock();
     } else 
-        list->append()->copy(a);
+        list->appendunsafe()->copy(a);
+    list->unlock();
 }    
 
 static void addHashToHash(Hash *h,Hash *h2){

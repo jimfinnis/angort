@@ -29,10 +29,12 @@ public:
     /// return false if the symbol does not exist
     static bool exists(const char *s);
     
-    static const char *getString(int id);
+    static const char *getunsafeString(int id);
+    static void getString(int id,char *buf127);
     
     /// get the string value
-    const char *get(const Value *v) const;
+    const char *getunsafe(const Value *v) const;
+    void get(const Value *v,char *buf128) const;
     
     /// set the symbol from its integer value
     void set(Value *v,int i);

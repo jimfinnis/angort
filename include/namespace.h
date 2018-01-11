@@ -7,6 +7,8 @@
 #ifndef __ANGORTNAMESPACE_H
 #define __ANGORTNAMESPACE_H
 
+#include <pthread.h>
+
 namespace angort {
 
 /// this is a core 'namespace', which is an integer-and-string keyed array of things.
@@ -20,14 +22,17 @@ protected:
     
 public:
     
-    NamespaceBase(int initialSize) : entries(initialSize) {}
+    NamespaceBase(int initialSize) : entries(initialSize) {
+    }
     
     void appendNamesToList(ArrayList<Value> *list){
+        list->lock();
         StringMapIterator<int> iter(&locations);
         for(iter.first();!iter.isDone();iter.next()){
             const char *name = iter.current()->key;
-            Types::tString->set(list->append(),name);
+            Types::tString->set(list->appendunsafe(),name);
         }
+        list->unlock();
     }
     
     virtual int add(const char *name){
@@ -36,15 +41,18 @@ public:
             // throw Exception().set("name already exists in namespace: '%s'",name);
             return idx;
         }
-        T *e = entries.append();
+        entries.wlock();
+        T *e = entries.appendunsafe();
         idx = entries.getIndexOf(e);
         locations.set(name,idx);
+        entries.unlock();
         return idx;
     }
     
+    // the system should be in lock here.
     T *getEnt(int idx){
         try{
-            return entries.get(idx);
+            return entries.getunsafe(idx);
         }catch(Exception e){
             return NULL;
         }
@@ -55,10 +63,11 @@ public:
     }
     
     int get(const char *name){
-        if(!locations.find(name))
+        int f;
+        if(!locations.find(name,&f))
             return -1;
         else
-            return locations.found();
+            return f;
     }
     
     int count(){
@@ -205,6 +214,8 @@ public:
 class NamespaceManager {
 private:
     int currentIdx; //!< the index of the current namespace
+    pthread_rwlock_t rwlock;
+    
     
     Stack<int,8> stack; //!< we maintain a stack of namespaces for when packages include others
     
@@ -245,8 +256,19 @@ public:
         currentIdx=-1; // initially no namespace
         privNames=false;
         stack.setName("names");
+        pthread_rwlock_init(&rwlock,NULL);
     }
     
+    void lock(){
+        pthread_rwlock_rdlock(&rwlock);
+    }
+    void wlock(){
+        pthread_rwlock_wrlock(&rwlock);
+    }
+    void unlock(){
+        pthread_rwlock_unlock(&rwlock);
+    }
+          
     //////////////////// manipulating namespaces /////////////////////
     
     /// create a new idx and return it

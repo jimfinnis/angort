@@ -22,8 +22,11 @@ int NamespaceManager::getFromNamespace(Namespace *sp, const char *name,bool allo
 }
 
 int NamespaceManager::get(const char *name, bool scanImports){
+    lock();
     // does this contain a $?
     const char *dollar;
+    int rv=-1;
+    
     if((dollar=strchr(name,'$'))){
         char buf[32];
         if(dollar-name > 32){
@@ -32,41 +35,48 @@ int NamespaceManager::get(const char *name, bool scanImports){
         strncpy(buf,name,dollar-name);
         buf[dollar-name]=0;
         int spaceidx = spaces.get(buf);
-        if(spaceidx<0)return -1; // no such namespace
-        Namespace *sp = spaces.getEnt(spaceidx);
-        int subidx = sp->get(dollar+1);
-        if(subidx<0)return -1; // no such entry
-        if(!sp->getEnt(subidx)->isPriv)
-            return makeIndex(spaceidx,sp->get(dollar+1));
-        else
-            return -1;
-        
+        if(spaceidx>=0){
+            Namespace *sp = spaces.getEnt(spaceidx);
+            int subidx = sp->get(dollar+1);
+            if(subidx>=0){
+                if(!sp->getEnt(subidx)->isPriv)
+                    rv = makeIndex(spaceidx,sp->get(dollar+1));
+            }
+        }
+        unlock();
+        return rv;
     }
     
     // and this is for names in an unspecified space - 
     // first, scan the current list.
     
     int idx = getFromNamespace(spaces.getEnt(currentIdx),name,true);
-    if(idx>=0)
+    if(idx>=0){
+        unlock();
         return idx;
+    }
     
     // now we scan the "imported namespaces" list
     if(scanImports){
         // we count in reverse, so we look at the most
         // recent namespaces first.
         for(int i=importedNamespaces.count()-1;i>=0;i--){
-            int nsidx = *importedNamespaces.get(i);
+            int nsidx = *importedNamespaces.getunsafe(i);
             Namespace *ns = spaces.getEnt(nsidx);
             // again, only returns public items.
             int idx = getFromNamespace(ns,name);
-            if(idx>=0)
+            if(idx>=0){
+                unlock();
                 return idx;
+            }
         }
     }
+    unlock();
     return -1; // not found
 }
 
 const char *NamespaceManager::getFQN(int idx,char *buf,int len){
+    lock();
     int nsidx = getNamespaceIndex(idx);
     int vidx = getItemIndex(idx);
     
@@ -76,6 +86,7 @@ const char *NamespaceManager::getFQN(int idx,char *buf,int len){
     
     snprintf(buf,len,"%s$%s",nsname,vname);
     buf[len-1]=0; // make sure terminated
+    unlock();
     return buf;
 }
 
@@ -85,9 +96,9 @@ const char *NamespaceManager::getFQN(int idx,char *buf,int len){
 // if such a list exists, only those which are named are so marked.
 
 void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
-    
+    wlock();
     Namespace *ns = spaces.getEnt(nsidx);
-    *importedNamespaces.append() = nsidx;
+    *importedNamespaces.appendunsafe() = nsidx;
     
     if(lst){
         // go through the list, marking those which are considered
@@ -100,6 +111,7 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
                 NamespaceEnt *e = ns->getEnt(nidx);
                 e->isImported=true;
             } else {
+                unlock();
                 throw RUNT(EX_NOTFOUND,"").set("cannot find '%s' in namespace",
                                             v->toString().get());
             }
@@ -111,6 +123,7 @@ void NamespaceManager::import(int nsidx,ArrayList<Value> *lst){
         // be imported
         ns->isImported=true;
     }
+    unlock();
 }
 
 
