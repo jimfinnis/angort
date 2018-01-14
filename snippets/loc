@@ -252,7 +252,12 @@ package locpub
     catchall drop
         "Failed, does item exist?".
     endtry
-;    
+;  
+
+:g |i:|
+    :"(idx --) just get the filename onto the stack"
+    ?i ?List get fst
+;
 
 :e
     :"(idx --) edit a file"

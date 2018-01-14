@@ -267,9 +267,12 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
     case OP_LITERALSYMB:
     case OP_HASHGETSYMB:
     case OP_HASHSETSYMB:
-        printf("(%d:%s)",ip->d.i,
-               Types::tSymbol->getString(ip->d.i));
-        break;
+        {
+            ReadLock l(Types::tSymbol);
+            printf("(%d:%s)",ip->d.i,
+                   Types::tSymbol->getString(ip->d.i));
+            break;
+        }
     default:break;
     }
     tmp.clr();
@@ -944,6 +947,7 @@ void Runtime::run(const Instruction *startip){
                     b = popval();
                     
                     if(!throwAngortException(a->v.i,b)){
+                        ReadLock lock(Types::tSymbol);
                         // we couldn't find an Angort handler - print msg and reset IP
                         const StringBuffer &sbuf = b->toString();
                         printf("unhandled throw instruction: %s (%s)\n",

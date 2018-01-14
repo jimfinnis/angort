@@ -82,3 +82,13 @@ And the "things" are (as far as I can tell)
 It might be an idea to remove `tosymbol` - only the compiler should be
 able to add symbols, really. We could rig it so that `tosymbol` only
 permits existing symbols to be returned.
+
+## It's much worse than that.
+
+Because of course it is. There must be a lot of places where I'm doing
+- access global data
+- make decision on global data
+- modify global data..
+
+all split up like that. The only thing to do is go through the code 
+with a fine-tooth comb.
