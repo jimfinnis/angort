@@ -381,7 +381,7 @@ void Runtime::binop(Value *a,Value *b,int opcode){
         case OP_ADD:
             p = a->toLong();
             q = b->toLong();
-            Types::tLong->set(pushval(),p%q);break;
+            Types::tLong->set(pushval(),p+q);break;
         case OP_SUB:
             p = a->toLong();
             q = b->toLong();
