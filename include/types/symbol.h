@@ -9,7 +9,7 @@
 #ifndef __ANGORTSYMBOL_H
 #define __ANGORTSYMBOL_H
 
-#include "lock.h"
+#include "../lock.h"
 
 namespace angort {
 
