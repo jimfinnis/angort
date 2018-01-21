@@ -83,13 +83,17 @@ void Runtime::gc(){
 }    
 
 Angort::Angort() {
-    Types::createTypes();
-    // create and set default namespace
-    stdNamespace = names.create("std");
-    // import everything from it
-    names.import(stdNamespace,NULL);
-    // and that's the namespace we're working in
-    names.push(stdNamespace);
+    {
+        WriteLock lock(&names);
+        
+        Types::createTypes();
+        // create and set default namespace
+        stdNamespace = names.create("std");
+        // import everything from it
+        names.import(stdNamespace,NULL);
+        // and that's the namespace we're working in
+        names.push(stdNamespace);
+    }
     lineNumber=1;
     running = true;
     
@@ -126,9 +130,12 @@ Angort::Angort() {
     // now the standard package has been imported, set up the
     // user package into which their words are defined.
     
-    int userNamespace = names.create("user");
-    names.import(userNamespace,NULL);
-    names.push(userNamespace);
+    {
+        WriteLock lock(&names);
+        int userNamespace = names.create("user");
+        names.import(userNamespace,NULL);
+        names.push(userNamespace);
+    }
     
     printLines=false;
     wordValIdx=-1;
@@ -148,12 +155,14 @@ Angort::~Angort(){
 }
 
 void Angort::importAllFuture(){
+    WriteLock lock(&names);
     Namespace *ns = names.getSpaceByName("future");
     names.import(ns->idx,NULL);
     
 }
 
 void Angort::importAllDeprecated(){
+    WriteLock lock(&names);
     Namespace *ns = names.getSpaceByName("deprecated");
     names.import(ns->idx,NULL);
 }
@@ -178,14 +187,14 @@ void CompileContext::dump(){
 void Angort::shutdown(){
     if(running){
         ArrayListIterator<LibraryDef *>iter(libs);
-    
+        
         for(iter.first();!iter.isDone();iter.next()){
             LibraryDef *lib = *(iter.current());
             NativeFunc shutdownFunc = lib->shutdownfunc;
             if(shutdownFunc)
                 (*shutdownFunc)(run);
         }
-    
+        
         Type::clearList();
         SymbolType::deleteAll();
         running = false;
@@ -193,7 +202,8 @@ void Angort::shutdown(){
 }
 
 void Runtime::showop(const Instruction *ip,const Instruction *base,
-                    const Instruction *curr){
+                     const Instruction *curr){
+    ReadLock lock(&ang->names);
     if(!base)base=wordbase;
     char buf[128];
     Value tmp;
@@ -636,18 +646,27 @@ void Runtime::run(const Instruction *startip){
                     ip++;
                     break;
                 case OP_GLOBALSET:
-                    // SNARK - combine with consts
-                    a = popval();
-                    ang->names.getVal(ip->d.i)->copy(a);
-                    ip++;
+                    {
+                        WriteLock lock(&ang->names);
+                        // SNARK - combine with consts
+                        a = popval();
+                        ang->names.getVal(ip->d.i)->copy(a);
+                        ip++;
+                    }
                     break;
                 case OP_GLOBALINC:
-                    ang->names.getVal(ip->d.i)->increment(1);
-                    ip++;
+                    {
+                        WriteLock lock(&ang->names);
+                        ang->names.getVal(ip->d.i)->increment(1);
+                        ip++;
+                    }
                     break;
                 case OP_GLOBALDEC:
-                    ang->names.getVal(ip->d.i)->increment(-1);
-                    ip++;
+                    {
+                        WriteLock lock(&ang->names);
+                        ang->names.getVal(ip->d.i)->increment(-1);
+                        ip++;
+                    }
                     break;
                 case OP_PROPGET:
                     ip->d.prop->preGet(); 
@@ -673,54 +692,60 @@ void Runtime::run(const Instruction *startip){
                     ip++;
                     break;
                 case OP_GLOBALDO:
-                    a = ang->names.getVal(ip->d.i);
-                    if(a->t->isCallable()){
-                        Closure *clos;
-                        Value vv;
-                        // here, we construct a closure block for the global if
-                        // required. This results in a new value being created which
-                        // goes into the frame.
-                        if(a->t == Types::tCode){
-                            const CodeBlock *cb = a->v.cb;
-                            if(cb->closureBlockSize || cb->closureTableSize){
-                                //                        printf("OP_GLOBALDO running to call a closure - creating the closure. Blocksize is %d, tablesize is %d\n",
-                                //                               cb->closureBlockSize,cb->closureTableSize);
-                                clos = new Closure(NULL); // 1st stage of setup
-                                Types::tClosure->set(&vv,clos);
-                                a = &vv;
-                                a->v.closure->init(cb);
-                                
-                                /* This earlier code inadvertently set currClosure too soon,
-                                 * before it gets pushed in call(), thus resulting in an incorrect
-                                 * closure being popped in ret(). The above code should be correct.
-                                 * JCF 07/12/14
-                                   clos = new Closure(NULL); // 1st stage of setup
-                                   // if a closure was made, we store it in the current
-                                   // frame.
-                                   Types::tClosure->set(&currClosure,clos);
-                                   a = &currClosure; // and this is the value we call.
-                                   a->v.closure->init(cb); // 2nd stage of setup
-                                 */
+                    {
+                        ReadLock lock(&ang->names);
+                        a = ang->names.getVal(ip->d.i);
+                        if(a->t->isCallable()){
+                            Closure *clos;
+                            Value vv;
+                            // here, we construct a closure block for the global if
+                            // required. This results in a new value being created which
+                            // goes into the frame.
+                            if(a->t == Types::tCode){
+                                const CodeBlock *cb = a->v.cb;
+                                if(cb->closureBlockSize || cb->closureTableSize){
+                                    //                        printf("OP_GLOBALDO running to call a closure - creating the closure. Blocksize is %d, tablesize is %d\n",
+                                    //                               cb->closureBlockSize,cb->closureTableSize);
+                                    clos = new Closure(NULL); // 1st stage of setup
+                                    Types::tClosure->set(&vv,clos);
+                                    a = &vv;
+                                    a->v.closure->init(cb);
+                                    
+                                    /* This earlier code inadvertently set currClosure too soon,
+                                     * before it gets pushed in call(), thus resulting in an incorrect
+                                     * closure being popped in ret(). The above code should be correct.
+                                     * JCF 07/12/14
+                                       clos = new Closure(NULL); // 1st stage of setup
+                                       // if a closure was made, we store it in the current
+                                       // frame.
+                                       Types::tClosure->set(&currClosure,clos);
+                                       a = &currClosure; // and this is the value we call.
+                                       a->v.closure->init(cb); // 2nd stage of setup
+                                     */
+                                }
                             }
+                            // we call this value.
+                            ip = call(a,ip+1);
+                        } else if(a->t == Types::tNone) {
+                            // if it's NONE we drop it
+                            ip++;
+                        } else {
+                            // if not callable we just stack it.
+                            b = stack.pushptr();
+                            b->copy(a);
+                            ip++;
                         }
-                        // we call this value.
-                        ip = call(a,ip+1);
-                    } else if(a->t == Types::tNone) {
-                        // if it's NONE we drop it
-                        ip++;
-                    } else {
-                        // if not callable we just stack it.
+                    }
+                    break;
+                case OP_GLOBALGET:
+                    {
+                        ReadLock lock(&ang->names);
+                        // like the above but does not run a codeblock
+                        a = ang->names.getVal(ip->d.i);
                         b = stack.pushptr();
                         b->copy(a);
                         ip++;
                     }
-                    break;
-                case OP_GLOBALGET:
-                    // like the above but does not run a codeblock
-                    a = ang->names.getVal(ip->d.i);
-                    b = stack.pushptr();
-                    b->copy(a);
-                    ip++;
                     break;
                 case OP_CALL:
                     // easy as this - pass in the value
@@ -918,6 +943,7 @@ void Runtime::run(const Instruction *startip){
                     ip++;
                     break;
                 case OP_DEF:{
+                    WriteLock lock(&ang->names);
                     const StringBuffer& sb = popString();
                     if(ang->names.isConst(sb.get(),false))
                         throw AlreadyDefinedException(sb.get());
@@ -964,7 +990,7 @@ void Runtime::run(const Instruction *startip){
             } catch(Exception e){
                 Value vvv;
                 Types::tString->set(&vvv,e.what());
-                       
+                
                 if(!throwAngortException(e.id,&vvv)){
                     printf("Angort exception: %s\n",e.what());
                     // avoids debugger running with null IP when
@@ -976,7 +1002,7 @@ void Runtime::run(const Instruction *startip){
                     // - rethrow
                     // - caught in next level of run() up
                     // - debugger re-entered with null ip
-                        
+                    
                     if(ip&&ang->debuggerHook)(*ang->debuggerHook)(this);
                     // set IP and runtime
                     e.ip = ip;
@@ -1019,6 +1045,7 @@ leaverun:
 void Angort::startDefine(const char *name){
     //        printf("---Now defining %s\n",name);
     int idx;
+    WriteLock lock(&names);
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
     if((idx = names.get(name))<0)
@@ -1031,6 +1058,7 @@ void Angort::startDefine(const char *name){
 
 
 void Angort::endDefine(CompileContext *c){
+    WriteLock lock(&names);
     if(!isDefining())
         throw SyntaxException("not defining a word");
     // make sure we have no dangling constructs
@@ -1076,7 +1104,7 @@ void Angort::compileParamsAndLocals(){
                     throw SyntaxException("expected a type in parameter list after /");
                 if(!parsingParams)
                     throw SyntaxException("types only supported on parameters");
-                    
+                
                 typ = Type::getByName(tok.getstring());
                 if(!typ)
                     throw SyntaxException("").set("unknown type in parameter list: %s",tok.getstring());
@@ -1364,6 +1392,7 @@ int CompileContext::findOrCreateClosure(const char *name){
 
 
 void Angort::endPackageInScript(){
+    WriteLock lock(&names);
     // see the similar code below in include().
     // pop the namespace stack
     int idx=names.pop();
@@ -1424,9 +1453,11 @@ void Angort::include(const char *filename,bool isreq,bool mightNotExist){
 void Angort::constCheck(int name){
     if(names.getEnt(name)->isConst)
         throw RUNT(EX_SETCONST,"").set("attempt to set constant %s",tok.getstring());
- }
+}
 
 void Angort::parseVarAccess(int token){
+    WriteLock lock(&names);
+    
     int t,opcode;
     if(tok.getnext()!=T_IDENT)
         throw SyntaxException(NULL).set("expected identifier after %s",
@@ -1505,7 +1536,6 @@ void Angort::parseVarAccess(int token){
 
 
 void Angort::feed(const char *buf){
-    
     // clear exception data in default thread only
     run->resetStop();
     
@@ -1596,12 +1626,19 @@ void Angort::feed(const char *buf){
                 break;
             }
             case T_PRIVATE:
-                names.setPrivate(true);
+                {
+                    WriteLock lock(&names);
+                    names.setPrivate(true);
+                }
                 break;
             case T_PUBLIC:
-                names.setPrivate(false);
+                {
+                    WriteLock lock(&names);
+                    names.setPrivate(false);
+                }
                 break;
             case T_PACKAGE:{
+                WriteLock lock(&names);
                 // start a new package.
                 char buf[256];
                 if(!tok.getnextident(buf))
@@ -1622,6 +1659,7 @@ void Angort::feed(const char *buf){
             }
             case T_CONST: // const syntax = <val> const <ident>
                 {
+                    WriteLock lock(&names);
                     if(isDefining())
                         throw SyntaxException("'const' not allowed in a definition");
                     if(tok.getnext()!=T_IDENT)
@@ -1804,6 +1842,7 @@ void Angort::feed(const char *buf){
 #endif
             case T_IDENT:
                 {
+                    WriteLock lock(&names);
                     char *s = tok.getstring();
                     if((t = names.get(s))>=0){
                         // fast option for functions
@@ -1857,6 +1896,7 @@ void Angort::feed(const char *buf){
                 break;
             }
             case T_GLOBAL:{
+                WriteLock lock(&names);
                 if(tok.getnext()!=T_IDENT)
                     throw SyntaxException(NULL)
                       .set("expected an identifier, got %s",tok.getstring());
@@ -2188,6 +2228,7 @@ const char *Instruction::getDetails(char *buf,int len) const{
 }
 
 const char *Angort::getSpec(const char *s){
+    ReadLock lock(&names);
     int idx = names.get(s);
     if(idx<0)
         return NULL;
@@ -2195,6 +2236,7 @@ const char *Angort::getSpec(const char *s){
 }
 
 void Angort::list(){
+    ReadLock lock(&names);
     names.list();
 }
 
@@ -2212,6 +2254,7 @@ void Runtime::dumpFrame(){
 }
 
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
+    WriteLock lock(&names);
     Namespace *sp = names.getSpaceByName(ns?ns:"std",true);
     int i = sp->addConst(name,false);
     sp->setSpec(i,spec);
@@ -2270,6 +2313,7 @@ void Angort::registerBinop(const char *lhsName,const char *rhsName,
 
 
 int Angort::registerLibrary(LibraryDef *lib,bool import){
+    WriteLock lock(&names);
     
     // make the namespace. Multiple imports into the same one
     // are permitted.
@@ -2390,6 +2434,7 @@ void Runtime::printStoredTrace(){
 
 
 void Angort::resetAutoComplete(){
+    ReadLock lock(&names);
     // build the new autocomplete list
     acList->clear();
     // first, add the tokens

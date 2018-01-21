@@ -17,8 +17,14 @@ class Lockable {
     friend class ReadLock;
     friend class WriteLock;
     pthread_rwlock_t lock;
+    const char *lockablename;
+    int writelockct;
 public:
-    Lockable(){
+    const char *getLockableName(){return lockablename;}
+    
+    Lockable(const char *n){
+        writelockct=0;
+        lockablename = n;
         pthread_rwlock_init(&lock,NULL);
     }
     ~Lockable(){
@@ -31,9 +37,11 @@ class ReadLock {
 public:
     ReadLock(const Lockable* _t){
         t = (Lockable *)_t;
+//        printf("READLOCK START on %s %p\n",t->getLockableName(),&t->lock);
         pthread_rwlock_rdlock(&t->lock);
     }
     ~ReadLock(){
+//        printf("READLOCK END on %s %p\n",t->getLockableName(),&t->lock);
         pthread_rwlock_unlock(&t->lock);
     }
 };
@@ -43,10 +51,16 @@ class WriteLock {
 public:
     WriteLock(const Lockable* _t){
         t = (Lockable *)_t;
-        pthread_rwlock_wrlock(&t->lock);
+        if(!t->writelockct)
+            pthread_rwlock_wrlock(&t->lock);
+        t->writelockct++;
+//        printf("WRITELOCK START on %s %p, ct now %d\n",t->getLockableName(),&t->lock,t->writelockct);
     }
     ~WriteLock(){
-        pthread_rwlock_unlock(&t->lock);
+        t->writelockct--;
+//        printf("WRITELOCK END on %s %p, ct now %d\n",t->getLockableName(),&t->lock,t->writelockct);
+        if(!t->writelockct)
+            pthread_rwlock_unlock(&t->lock);
     }
 };
 

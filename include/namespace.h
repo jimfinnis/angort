@@ -7,6 +7,8 @@
 #ifndef __ANGORTNAMESPACE_H
 #define __ANGORTNAMESPACE_H
 
+#include "lock.h"
+
 namespace angort {
 
 /// this is a core 'namespace', which is an integer-and-string keyed array of things.
@@ -200,9 +202,13 @@ public:
  * Deals in "superindices" - a superindex contains both the
  * index of the namespace, and the entry within that namespace.
  * There are methods for assembling and disassembling these.
+ * 
+ * On locks: namespaces use a very coarse lock. The compiler
+ * gets a writelock when it creates symbols, the interpreter
+ * gets readlocks.
  */
 
-class NamespaceManager {
+class NamespaceManager : public Lockable {
 private:
     int currentIdx; //!< the index of the current namespace
     
@@ -241,7 +247,7 @@ public:
     
     
     // the namespace system has room for 4 namespaces initially, but can grow.
-    NamespaceManager() : importedNamespaces(4),spaces(4) {
+    NamespaceManager() : Lockable("namespaces"),importedNamespaces(4),spaces(4) {
         currentIdx=-1; // initially no namespace
         privNames=false;
         stack.setName("names");
