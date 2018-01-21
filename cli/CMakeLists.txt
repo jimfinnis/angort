@@ -4,9 +4,12 @@ find_package(Libedit REQUIRED)
 include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
 include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
-set(CMAKE_CXX_FLAGS "-pthread")
-set(CMAKE_C_FLAGS "-pthread")
-set(CMAKE_EXE_LINKER_FLAGS,"-pthread")
+if(POSIXTHREADS)
+    message("POSIX threads enabled")
+    add_compile_options("-pthread")
+    set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-pthread")
+endif(POSIXTHREADS)
+
 
 set(WORDFILELIST)
 
@@ -45,6 +48,9 @@ set(SOURCE main.cpp completer.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
 
+if(POSIXTHREADS)
+    set_target_properties(angortcli PROPERTIES COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+endif(POSIXTHREADS)
 
 # we change the name of angortcli to angort, so it appears under that
 # latter name in the build directory

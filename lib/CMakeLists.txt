@@ -1,15 +1,19 @@
 cmake_minimum_required(VERSION 2.6)
 
+project(ANGORTLIB)
+
+
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX)
-    
-
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    
+add_compile_options("-Woverloaded-virtual")
 
-set(CMAKE_CXX_FLAGS "-Woverloaded-virtual -pthread")
-set(CMAKE_C_FLAGS "-pthread")
+if(POSIXTHREADS)
+    message("POSIX threads enabled")
+    add_compile_options("-pthread")
+endif(POSIXTHREADS)
 
-project(ANGORTLIB)
 
 # would be awesome if these could live in an angort cmake module
 
@@ -72,6 +76,10 @@ set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})
+
+if(POSIXTHREADS)
+    set_target_properties(angort PROPERTIES COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+endif(POSIXTHREADS)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(angort dl m)

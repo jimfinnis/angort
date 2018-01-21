@@ -40,6 +40,13 @@ namespace angort {
 
 ThreadHookObject *Angort::threadHookObj=NULL;
 
+bool hasLocking(){
+#if defined(ANGORT_POSIXLOCKS)
+    return true;
+#else
+    return false;
+#endif
+}
 
 const char* Angort::getVersion(){
     return ANGORT_VERSION;
