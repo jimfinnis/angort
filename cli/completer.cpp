@@ -210,7 +210,7 @@ void Completer::printCompletions() {
 // 2 tabs. It then invokes the completion
 // match printer or the matcher.
 
-static int tabCheckingCharReader(EditLine *el, char *cp)
+static int tabCheckingCharReader(EditLine *el, wchar_t *cp)
 {
     Completer *d = Completer::get(el);
     
