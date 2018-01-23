@@ -44,7 +44,7 @@ static ArrayList<Value> *strippedArgs;
 Runtime *runtime; // default angort runtime
 
 static void showException(Exception& e){
-    e.run->ang->globalLock();
+    GlobalLock lock();
     printf("Error in thread %d: %s\n",e.run?e.run->id:-1,e.what());
     if(e.ip){
         printf("Error at:");
@@ -53,7 +53,6 @@ static void showException(Exception& e){
     }else
           printf("Last line input: %s\n",runtime->ang->getLastLine());
     runtime->clearStack();
-    e.run->ang->globalUnlock();
     if(e.fatal)
         exit(1);
     

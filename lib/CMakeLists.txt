@@ -9,11 +9,6 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     
 add_compile_options("-Woverloaded-virtual")
 
-if(POSIXTHREADS)
-    message("POSIX threads enabled")
-    add_compile_options("-pthread")
-endif(POSIXTHREADS)
-
 
 # would be awesome if these could live in an angort cmake module
 
@@ -78,7 +73,9 @@ set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
 add_library(angort ${SOURCE})
 
 if(POSIXTHREADS)
+    message("POSIX threads enabled")
     set_target_properties(angort PROPERTIES COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+    target_compile_options(angort PUBLIC "-pthread")
 endif(POSIXTHREADS)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")

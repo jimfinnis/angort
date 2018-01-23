@@ -84,9 +84,8 @@ Runtime::~Runtime(){
 }
 
 void Runtime::gc(){
-    Angort::globalLock();
+    GlobalLock lock();
     GarbageCollected::gc();
-    Angort::globalUnlock();
 }    
 
 Angort::Angort() {

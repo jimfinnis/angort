@@ -869,6 +869,7 @@ class Angort {
     friend class Runtime;
     friend class AutoGCProperty;
     friend class SearchPathProperty;
+    friend class GlobalLock;
 private:
     
     bool running; //!< used by shutdown()
@@ -971,17 +972,7 @@ public:
     
     // if a thread API is installed, these run the various
     // thread handling methods using it.
-    
-    
-    /// lock the global lock (used in quite a few places)
-    inline static void globalLock(){
-        if(threadHookObj)threadHookObj->globalLock();
-    }
-    /// unlock the global lock (used in quite a few places)
-    inline static void globalUnlock(){
-        if(threadHookObj)threadHookObj->globalUnlock();
-    }
-    
+    // (none yet, but see the GlobalLock class)
 
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
@@ -1128,6 +1119,23 @@ public:
     /// import all symbols in the `deprecated namespace
     void importAllDeprecated();
 };
+
+
+/// RAII way of using the global lock
+
+class GlobalLock {
+public:
+    GlobalLock(){
+        if(Angort::threadHookObj)
+            Angort::threadHookObj->globalLock();
+    }
+    ~GlobalLock(){
+        if(Angort::threadHookObj)
+            Angort::threadHookObj->globalUnlock();
+    }
+};
+    
+
 
 
 }

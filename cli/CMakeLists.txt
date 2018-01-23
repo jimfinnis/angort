@@ -6,8 +6,9 @@ include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
 if(POSIXTHREADS)
     message("POSIX threads enabled")
-    add_compile_options("-pthread")
-    set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-pthread")
+    set(PTHREAD "-lpthread")
+else()  
+    set(PTHREAD "")
 endif(POSIXTHREADS)
 
 
@@ -50,6 +51,7 @@ add_executable(angortcli ${SOURCE})
 
 if(POSIXTHREADS)
     set_target_properties(angortcli PROPERTIES COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+    target_compile_options(angortcli PUBLIC "-pthread")
 endif(POSIXTHREADS)
 
 # we change the name of angortcli to angort, so it appears under that
@@ -58,7 +60,7 @@ endif(POSIXTHREADS)
 set_target_properties(angortcli PROPERTIES
     OUTPUT_NAME angort)
 
-target_link_libraries(angortcli angort ${LIBEDIT_LIBRARIES})
+target_link_libraries(angortcli angort ${LIBEDIT_LIBRARIES} ${PTHREAD})
 
 install(TARGETS angortcli
     RUNTIME DESTINATION bin)
