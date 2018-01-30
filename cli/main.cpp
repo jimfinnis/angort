@@ -87,7 +87,7 @@ public:
 bool debugOnSignal=false;
 
 
-const char *getPrompt(){
+const wchar_t *getPrompt(){
     extern Value promptCallback;
     
     static char buf[256];
@@ -112,7 +112,19 @@ const char *getPrompt(){
                 GarbageCollected::getGlobalCount(),
                 runtime->stack.ct,pchar);
     }
-    return buf;
+    
+    // convert to wide, we have to do it here rather than leave it
+    // to EditLine because there is a bug in EditLine's prompt code
+    // (if conversion fails, a NULL is returned which print_prompt()
+    // cheerfully tries to print).
+    static wchar_t wbuf[256];
+failed:
+    int conv = mbstowcs(wbuf,buf,256);
+    if(conv != strlen(buf)){
+        strcpy(buf,"(prompt contains bad unicode) > "); 
+        goto failed;
+    }
+    return wbuf;
 }
 
 void addDirToSearchPath(const char *data){
@@ -328,7 +340,7 @@ int main(int argc,char *argv[]){
     // start up an editline instance
     
     el = el_init(argv[0],stdin,stdout,stderr);
-    el_set(el,EL_PROMPT,&getPrompt);
+    el_wset(el,EL_PROMPT,&getPrompt); // use wide prompt (see getPrompt for why)
     el_set(el,EL_EDITOR,"emacs");
     
     hist = history_init();
