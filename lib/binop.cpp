@@ -402,7 +402,7 @@ void Runtime::binop(Value *a,Value *b,int opcode){
         case OP_LT:
             p = a->toLong();
             q = b->toLong();
-            pushInt(p>q);break;
+            pushInt(p<q);break;
         case OP_GE:
             p = a->toLong();
             q = b->toLong();
