@@ -160,6 +160,11 @@ package locpub
     ["* " ?t +, ?t mkcontentfilter] ?Filters push
     runfilters;
 
+:fe |t:|
+    :"(s --) extension filter (looks for .xxx at end of name)"
+    ["e " ?t +, "\\." ?t + "$" + mkaddfilter] ?Filters push
+    runfilters;
+
 
 
 
