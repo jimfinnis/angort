@@ -36,7 +36,7 @@ public:
     }
     
     virtual void postSet(){
-        GlobalLock lock();
+        WriteLock lock(&globalLock);
         run->ang->autoCycleInterval = v.toInt();
         run->autoCycleCount = run->ang->autoCycleInterval;
     }

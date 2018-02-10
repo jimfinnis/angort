@@ -38,8 +38,6 @@ LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated);
 
 namespace angort {
 
-ThreadHookObject *Angort::threadHookObj=NULL;
-
 bool hasLocking(){
 #if defined(ANGORT_POSIXLOCKS)
     return true;
@@ -47,6 +45,8 @@ bool hasLocking(){
     return false;
 #endif
 }
+
+Lockable globalLock("global");
 
 const char* Angort::getVersion(){
     return ANGORT_VERSION;
@@ -84,7 +84,7 @@ Runtime::~Runtime(){
 }
 
 void Runtime::gc(){
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     GarbageCollected::gc();
 }    
 
@@ -2507,6 +2507,7 @@ int arrayCmp(const void *a,const void *b){
 
 template<> void ArrayList<Value>::sort(ArrayListComparator<Value> *cmp){
     cmpObj=cmp;
+    WriteLock(this);
     qsort(data,ct,sizeof(Value),arrayCmp);
 }
 

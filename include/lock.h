@@ -14,7 +14,6 @@
 #define lockprintf if(0)printf
 //#define lockprintf printf
 
-
 namespace angort {
 
 /// an rwlock thingy; don't want to require c++17 at this point.
@@ -37,6 +36,7 @@ public:
 #if defined(ANGORT_POSIXLOCKS)
         writelockct=0;
         lockablename = n;
+        lockprintf("Registering lockable %s at %p\n",lockablename,this);
         pthread_rwlock_init(&lock,NULL);
 #endif
     }
@@ -53,14 +53,18 @@ public:
     ReadLock(const Lockable* _t){
 #if defined(ANGORT_POSIXLOCKS)
         t = (Lockable *)_t;
-        lockprintf("READLOCK START on %s %p\n",t->getLockableName(),&t->lock);
-        pthread_rwlock_rdlock(&t->lock);
+        if(t){
+            lockprintf("READLOCK START on %s %p\n",t->getLockableName(),&t->lock);
+            pthread_rwlock_rdlock(&t->lock);
+        }
 #endif
     }
     ~ReadLock(){
 #if defined(ANGORT_POSIXLOCKS)
-        lockprintf("READLOCK END on %s %p\n",t->getLockableName(),&t->lock);
-        pthread_rwlock_unlock(&t->lock);
+        if(t){
+            lockprintf("READLOCK END on %s %p\n",t->getLockableName(),&t->lock);
+            pthread_rwlock_unlock(&t->lock);
+        }
 #endif
     }
 };
@@ -71,18 +75,22 @@ public:
     WriteLock(const Lockable* _t){
 #if defined(ANGORT_POSIXLOCKS)
         t = (Lockable *)_t;
-        if(!t->writelockct)
-            pthread_rwlock_wrlock(&t->lock);
-        t->writelockct++;
-        lockprintf("WRITELOCK START on %s %p, ct now %d\n",t->getLockableName(),&t->lock,t->writelockct);
+        if(t){
+            if(!t->writelockct)
+                pthread_rwlock_wrlock(&t->lock);
+            t->writelockct++;
+            lockprintf("WRITELOCK START on %s %p, ct now %d\n",t->getLockableName(),&t->lock,t->writelockct);
+        }
 #endif
     }
     ~WriteLock(){
 #if defined(ANGORT_POSIXLOCKS)
-        t->writelockct--;
-        lockprintf("WRITELOCK END on %s %p, ct now %d\n",t->getLockableName(),&t->lock,t->writelockct);
-        if(!t->writelockct)
-            pthread_rwlock_unlock(&t->lock);
+        if(t){
+            t->writelockct--;
+            lockprintf("WRITELOCK END on %s %p, ct now %d\n",t->getLockableName(),&t->lock,t->writelockct);
+            if(!t->writelockct)
+                pthread_rwlock_unlock(&t->lock);
+        }
 #endif
     }
 };

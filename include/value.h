@@ -58,7 +58,7 @@ struct Value {
     }
     
     
-    ~Value(){
+    virtual ~Value(){
         clr();
     }
     
@@ -72,7 +72,12 @@ struct Value {
             t->decRef(this);
             t=Types::tNone;
         }
-        
+    }
+    
+    /// JUST set type to none. Do not use this; it's only used to ensure arrays and that
+    /// are clear when they are destroyed in cycle detection GC.
+    inline void wipe(){
+        t=Types::tNone;
     }
     
     /// decrement the reference count and deallocate if zero and is a type with extra stuff
@@ -204,6 +209,11 @@ struct Value {
     /// make sure the string gets copied on copy-create
     Value(const Value &src){
         copy(&src);
+    }
+    
+    /// return a lockable for this value (i.e. underlying list or hash, typically) or NULL
+    virtual class Lockable *getLockable() const{
+        return t->getLockable((Value *)this);
     }
 };
 

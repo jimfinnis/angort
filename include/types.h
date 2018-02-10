@@ -90,6 +90,9 @@ public:
     virtual class GarbageCollected *getGC(Value *v) const{
         return NULL;
     }
+     
+    /// return a lockable for this value (i.e. underlying list or hash, typically) or NULL
+    virtual class Lockable *getLockable(Value *v) const { return NULL; }
           
     
     /// set name of type, add to global type list

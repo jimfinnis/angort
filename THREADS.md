@@ -92,3 +92,16 @@ Because of course it is. There must be a lot of places where I'm doing
 
 all split up like that. The only thing to do is go through the code 
 with a fine-tooth comb.
+
+
+## OK, what things lock at the object level, not the word level
+
+### Lists
+Locking is done at the ListObject level, not in ArrayList itself.
+- iterators create a readlock around the list until they complete
+- getCount
+- getValue
+- removeAndReturn
+- slice (both future and deprecated)
+- clone writelocks the outlist and (by iterator) readlocks the source
+

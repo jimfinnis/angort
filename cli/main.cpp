@@ -44,7 +44,7 @@ static ArrayList<Value> *strippedArgs;
 Runtime *runtime; // default angort runtime
 
 static void showException(Exception& e){
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     printf("Error in thread %d: %s\n",e.run?e.run->id:-1,e.what());
     if(e.ip){
         printf("Error at:");
@@ -158,6 +158,8 @@ void cliSighandler(int s){
 }
 
 int main(int argc,char *argv[]){
+    
+    printf("%ld\n",sizeof(Lockable));
     struct sigaction sa;
     sa.sa_handler = cliSighandler;
     memset(&sa,0,sizeof(sa));

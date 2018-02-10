@@ -40,7 +40,11 @@ public:
     virtual void removeAndReturn(Value *coll,Value *k,Value *result)const;
     virtual void slice(Value *out,Value *coll,int start,int len)const;
     virtual void slice_dep(Value *out,Value *coll,int start,int len)const;
+    
     virtual void clone(Value *out,const Value *in,bool deep=false)const;
+    
+    virtual class Lockable *getLockable(Value *v) const { return get(v); }
+    
 };
 
 }

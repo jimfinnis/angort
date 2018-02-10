@@ -136,7 +136,7 @@ const char *BlockAllocType::getData(const Value *v) const{
 }
 
 void BlockAllocType::incRef(Value *v)const{
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     BlockAllocHeader *h = v->v.block;
     h->refct++;
     tdprintf("INCREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
@@ -146,7 +146,7 @@ void BlockAllocType::incRef(Value *v)const{
 }
     
 void BlockAllocType::decRef(Value *v)const{
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     BlockAllocHeader *h = v->v.block;
     if(h->refct!=0xffff)h->refct--; // MAX REFCOUNT is never freed!
     tdprintf("DECREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
@@ -156,13 +156,13 @@ void BlockAllocType::decRef(Value *v)const{
 }
 
 void GCType::incRef(Value *v)const{
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     v->v.gc->incRefCt();
     tdprintf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
 }
 
 void GCType::decRef(Value *v)const{
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     bool b = v->v.gc->decRefCt();
     tdprintf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
@@ -183,8 +183,8 @@ GarbageCollected *GCType::getGC(Value *v)const{
     return v->v.gc;
 }
 
-GarbageCollected::GarbageCollected(){
-    GlobalLock lock();
+GarbageCollected::GarbageCollected() : Lockable("gc"){
+    WriteLock lock(&globalLock);
     refct=0;
     globalCount++;
     CycleDetector::getInstance()->add(this);
@@ -194,7 +194,7 @@ GarbageCollected::GarbageCollected(){
 
 
 GarbageCollected::~GarbageCollected(){
-    GlobalLock lock();
+    WriteLock lock(&globalLock);
     globalCount--;
     CycleDetector::getInstance()->remove(this);
     refct=-999; // to mark was deleted properly; snark.

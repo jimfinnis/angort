@@ -92,6 +92,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
     const char *format = Types::tString->getData(formatVal);
     
     ArrayListIterator<Value> iter(items);
+    ReadLock lock(items);
     iter.first();
     
     unsigned int width,precision;

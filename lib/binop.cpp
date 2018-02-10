@@ -14,8 +14,11 @@ namespace angort {
 /// split it apart and and the items individually.
 
 static void addListOrValueToList(ArrayList<Value> *list,Value *a){
+    WriteLock lock(list);
     if(a->getType() == Types::tList){
-        ArrayListIterator<Value> iter(Types::tList->get(a));
+        ArrayList<Value> *src = Types::tList->get(a);
+        ReadLock lock(src);
+        ArrayListIterator<Value> iter(src);
         
         for(iter.first();!iter.isDone();iter.next()){
             list->append()->copy(iter.current());

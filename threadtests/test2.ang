@@ -1,5 +1,8 @@
 [`time,`thread,`io] each {i library drop}
-0 !L
+thread$mutex !Mutex
+
+
+
 :f |a:|
     "go".
     []
@@ -8,11 +11,18 @@
         i 100.0 / sin,
         "." p io$stdout io$flush
     }
-    thread$glock
+    ?Mutex thread$lock
     ?List + !List
-    thread$unglock
+    ?Mutex thread$unlock
 ;
 
 
-0!I { ?I. !+I [] !List [] 0 10 range each { i ?f thread$create,} thread$join}
+(
+    0!I 
+    { 
+        "Going round.. "p  ?I. !+I 
+        [] !List [] 0 10 range each { i ?f thread$create,} thread$join
+    }
+)@
+
 quit

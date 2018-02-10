@@ -9,6 +9,8 @@
 #ifndef __ANGORTGC_H
 #define __ANGORTGC_H
 
+#include "lock.h"
+
 namespace angort {
 
 struct Value;
@@ -22,7 +24,7 @@ typedef uint16_t refct_t; //!< reference count - make sure it's unsigned
 /// a garbage collected entity. This is not a subclass of Value or Type, but a Value may
 /// reference one via the v.gc field.
 
-class GarbageCollected {
+class GarbageCollected : public Lockable {
     static int globalCount;
 public:
     
@@ -52,6 +54,7 @@ public:
     
     /// increment the refct, throwing an exception if it wraps
     void incRefCt(){
+        WriteLock lock(this);
         refct++;
         dprintf("++ incrementing count for %p, now %d\n",this,refct);
         if(refct==0)
@@ -60,6 +63,7 @@ public:
 
     /// decrement the reference count returning true if it became zero
     bool decRefCt(){
+        WriteLock lock(this);
         if(refct<=0)
             throw RUNT(EX_REFS,"").set("ERROR - already deleted: %p!",this);
         --refct;

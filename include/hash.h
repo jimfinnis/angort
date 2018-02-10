@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "angort.h"
+#include "lock.h"
 
 namespace angort {
 
@@ -64,10 +65,10 @@ struct HashEnt {
 /// implementation at http://www.laurentluce.com/?p=249
 /// Also the original source code is in dictobject.c
 
-class Hash {
+class Hash : public Lockable {
 public:
     
-    Hash(){
+    Hash() : Lockable("hash"){
 #ifdef DEBUG
         miss=0;
 #endif

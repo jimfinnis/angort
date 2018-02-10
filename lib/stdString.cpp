@@ -120,7 +120,8 @@ numeric types. The list contains the items to be substituted into the string.
     f.copy(a->popval());
     l.copy(a->popval());
     
-    format(a->pushval(),&f,Types::tList->get(&l));
+    ArrayList<Value> *lst = Types::tList->get(&l); // format() will lock
+    format(a->pushval(),&f,lst);
 }
 
 %word sx (v -- s) convert a value to hex string
@@ -230,6 +231,8 @@ numeric types. The list contains the items to be substituted into the string.
     const char *s = strdup(strb.get());
     char delim = params[1]->toString().get()[0];
     ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
+    WriteLock lock(list);
     
     // must be the size of the longest string
     char *buf = (char *)malloc(strlen(s)+1);

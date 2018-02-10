@@ -25,6 +25,7 @@ typedef void (*NativeFunc)(class Runtime *a);
 #include "types.h"
 #include "value.h"
 #include "namespace.h"
+#include "lock.h"
 
 namespace angort {
 
@@ -613,18 +614,6 @@ struct Frame {
     }
 };
 
-
-/// thread hook class - the thread library installs one of these
-/// into Angort using setThreadHookObject(). Annoyingly this has
-/// to be global, because it's used in various places if present.
-
-class ThreadHookObject {
-public:
-    // single global mutex, nestable
-    virtual void globalLock() = 0;
-    virtual void globalUnlock() = 0;
-};
-
 /// runtime data
 
 class Runtime {
@@ -667,7 +656,7 @@ private:
     /// called at the end of a block of code,
     /// or by emergency stop invocation. May set the IP to NULL.
     void ret();
-
+    
 public:
     class Angort *ang; // main angort object
     // annoyingly public to allow debugger access
@@ -860,6 +849,9 @@ public:
 };
 
 
+/// global lock
+extern Lockable globalLock;
+
 
 /// This is the main Angort class, of which there should be only
 /// one instance.
@@ -955,25 +947,11 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
-    /// the global thread hook object, which may be NULL.
-    /// It's static because it gets used in various places.
-    
-    static ThreadHookObject *threadHookObj;
-
 public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
     
-    /// set the object we use to manipulate threads. Note it's static.
-    static void setThreadHookObject(ThreadHookObject *tho){
-        threadHookObj = tho;
-    }
-    
-    // if a thread API is installed, these run the various
-    // thread handling methods using it.
-    // (none yet, but see the GlobalLock class)
-
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
         debuggerHook = f;
@@ -1120,21 +1098,6 @@ public:
     void importAllDeprecated();
 };
 
-
-/// RAII way of using the global lock
-
-class GlobalLock {
-public:
-    GlobalLock(){
-        if(Angort::threadHookObj)
-            Angort::threadHookObj->globalLock();
-    }
-    ~GlobalLock(){
-        if(Angort::threadHookObj)
-            Angort::threadHookObj->globalUnlock();
-    }
-};
-    
 
 
 
