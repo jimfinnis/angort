@@ -25,7 +25,7 @@ public:
     NamespaceBase(int initialSize) : entries(initialSize) {}
     
     void appendNamesToList(ArrayList<Value> *list){
-        WriteLock lock(list);
+        WriteLock lock=WL(list);
         StringMapIterator<int> iter(&locations);
         for(iter.first();!iter.isDone();iter.next()){
             const char *name = iter.current()->key;

@@ -15,11 +15,6 @@ ListObject::ListObject() : GarbageCollected(), list(32) {
 
 ListObject::~ListObject(){
     dprintf("LISTOBJECT delete at %p\n",this);
-    
-    // just to make sure we don't do anything nasty once the
-    // object has been DC'd, wipe the array.
-    list.wipe();
-    
 }
 
 void ListType::set(Value *v,ListObject *lo)const{
@@ -130,7 +125,7 @@ Iterator<Value *> *ListObject::makeKeyIterator()const{
 
 void ListType::setValue(Value *coll,Value *k,Value *v)const{
     ListObject *r = coll->v.list;
-    WriteLock lock(&r->list);
+    WriteLock lock=WL(&r->list);
     int i = k->toInt();
     r->list.set(i,v);
 }
@@ -149,7 +144,7 @@ int ListType::getCount(Value *coll)const{
 }
 void ListType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
-    WriteLock lock(&r->list);
+    WriteLock lock=WL(&r->list);
     int i = k->toInt();
     // will throw if out of range
     result->copy(r->list.get(i));
@@ -161,7 +156,7 @@ void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
     
-    WriteLock lock1(outlist);
+    WriteLock lock1=WL(outlist);
     ReadLock lock2(list);
     
     int listlen = list->count();
@@ -182,7 +177,7 @@ void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
 void ListType::slice(Value *out,Value *coll,int startin,int endin)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
-    WriteLock lock1(outlist);
+    WriteLock lock1=WL(outlist);
     ReadLock lock2(list);
     
     int start,end;
@@ -200,7 +195,7 @@ void ListType::slice(Value *out,Value *coll,int startin,int endin)const{
 void ListType::clone(Value *out,const Value *in,bool deep)const{
     ListObject *p = new ListObject();
     
-    WriteLock(&p->list);
+    WriteLock lock=WL(&p->list);
     
     // cast away constness - makeIterator() can't be const
     // because it modifies refcounts

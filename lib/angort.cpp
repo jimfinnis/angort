@@ -84,13 +84,13 @@ Runtime::~Runtime(){
 }
 
 void Runtime::gc(){
-    WriteLock lock(&globalLock);
+    WriteLock lock = WL(&globalLock);
     GarbageCollected::gc();
 }    
 
 Angort::Angort() {
     {
-        WriteLock lock(&names);
+        WriteLock lock=WL(&names);
         
         Types::createTypes();
         // create and set default namespace
@@ -137,7 +137,7 @@ Angort::Angort() {
     // user package into which their words are defined.
     
     {
-        WriteLock lock(&names);
+        WriteLock lock=WL(&names);
         int userNamespace = names.create("user");
         names.import(userNamespace,NULL);
         names.push(userNamespace);
@@ -161,14 +161,14 @@ Angort::~Angort(){
 }
 
 void Angort::importAllFuture(){
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     Namespace *ns = names.getSpaceByName("future");
     names.import(ns->idx,NULL);
     
 }
 
 void Angort::importAllDeprecated(){
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     Namespace *ns = names.getSpaceByName("deprecated");
     names.import(ns->idx,NULL);
 }
@@ -653,7 +653,7 @@ void Runtime::run(const Instruction *startip){
                     break;
                 case OP_GLOBALSET:
                     {
-                        WriteLock lock(&ang->names);
+                        WriteLock lock=WL(&ang->names);
                         // SNARK - combine with consts
                         a = popval();
                         ang->names.getVal(ip->d.i)->copy(a);
@@ -662,14 +662,14 @@ void Runtime::run(const Instruction *startip){
                     break;
                 case OP_GLOBALINC:
                     {
-                        WriteLock lock(&ang->names);
+                        WriteLock lock=WL(&ang->names);
                         ang->names.getVal(ip->d.i)->increment(1);
                         ip++;
                     }
                     break;
                 case OP_GLOBALDEC:
                     {
-                        WriteLock lock(&ang->names);
+                        WriteLock lock=WL(&ang->names);
                         ang->names.getVal(ip->d.i)->increment(-1);
                         ip++;
                     }
@@ -949,7 +949,7 @@ void Runtime::run(const Instruction *startip){
                     ip++;
                     break;
                 case OP_DEF:{
-                    WriteLock lock(&ang->names);
+                    WriteLock lock=WL(&ang->names);
                     const StringBuffer& sb = popString();
                     if(ang->names.isConst(sb.get(),false))
                         throw AlreadyDefinedException(sb.get());
@@ -1051,7 +1051,7 @@ leaverun:
 void Angort::startDefine(const char *name){
     //        printf("---Now defining %s\n",name);
     int idx;
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
     if((idx = names.get(name))<0)
@@ -1064,7 +1064,7 @@ void Angort::startDefine(const char *name){
 
 
 void Angort::endDefine(CompileContext *c){
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     if(!isDefining())
         throw SyntaxException("not defining a word");
     // make sure we have no dangling constructs
@@ -1398,7 +1398,7 @@ int CompileContext::findOrCreateClosure(const char *name){
 
 
 void Angort::endPackageInScript(){
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     // see the similar code below in include().
     // pop the namespace stack
     int idx=names.pop();
@@ -1462,7 +1462,7 @@ void Angort::constCheck(int name){
 }
 
 void Angort::parseVarAccess(int token){
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     
     int t,opcode;
     if(tok.getnext()!=T_IDENT)
@@ -1633,18 +1633,18 @@ void Angort::feed(const char *buf){
             }
             case T_PRIVATE:
                 {
-                    WriteLock lock(&names);
+                    WriteLock lock=WL(&names);
                     names.setPrivate(true);
                 }
                 break;
             case T_PUBLIC:
                 {
-                    WriteLock lock(&names);
+                    WriteLock lock=WL(&names);
                     names.setPrivate(false);
                 }
                 break;
             case T_PACKAGE:{
-                WriteLock lock(&names);
+                WriteLock lock=WL(&names);
                 // start a new package.
                 char buf[256];
                 if(!tok.getnextident(buf))
@@ -1665,7 +1665,7 @@ void Angort::feed(const char *buf){
             }
             case T_CONST: // const syntax = <val> const <ident>
                 {
-                    WriteLock lock(&names);
+                    WriteLock lock=WL(&names);
                     if(isDefining())
                         throw SyntaxException("'const' not allowed in a definition");
                     if(tok.getnext()!=T_IDENT)
@@ -1848,7 +1848,7 @@ void Angort::feed(const char *buf){
 #endif
             case T_IDENT:
                 {
-                    WriteLock lock(&names);
+                    WriteLock lock=WL(&names);
                     char *s = tok.getstring();
                     if((t = names.get(s))>=0){
                         // fast option for functions
@@ -1902,7 +1902,7 @@ void Angort::feed(const char *buf){
                 break;
             }
             case T_GLOBAL:{
-                WriteLock lock(&names);
+                WriteLock lock=WL(&names);
                 if(tok.getnext()!=T_IDENT)
                     throw SyntaxException(NULL)
                       .set("expected an identifier, got %s",tok.getstring());
@@ -2260,7 +2260,7 @@ void Runtime::dumpFrame(){
 }
 
 void Angort::registerProperty(const char *name, Property *p, const char *ns,const char *spec){
-    WriteLock lock(&names);
+    WriteLock lock=WL(&names);
     Namespace *sp = names.getSpaceByName(ns?ns:"std",true);
     int i = sp->addConst(name,false);
     sp->setSpec(i,spec);
@@ -2319,23 +2319,26 @@ void Angort::registerBinop(const char *lhsName,const char *rhsName,
 
 
 int Angort::registerLibrary(LibraryDef *lib,bool import){
-    WriteLock lock(&names);
+    Namespace *sp;
+    {
+        WriteLock lock=WL(&names);
     
-    // make the namespace. Multiple imports into the same one
-    // are permitted.
-    Namespace *sp = names.getSpaceByName(lib->name,true);
+        // make the namespace. Multiple imports into the same one
+        // are permitted.
+        sp = names.getSpaceByName(lib->name,true);
     
-    // register the words
-    for(int i=0;;i++){
-        if(!lib->wordList[i].name)break;
-        int id = sp->addConst(lib->wordList[i].name,false);
-        Value *v = sp->getVal(id);
-        Types::tNative->set(v,lib->wordList[i].f);
-        sp->setSpec(id,lib->wordList[i].desc);
+        // register the words
+        for(int i=0;;i++){
+            if(!lib->wordList[i].name)break;
+            int id = sp->addConst(lib->wordList[i].name,false);
+            Value *v = sp->getVal(id);
+            Types::tNative->set(v,lib->wordList[i].f);
+            sp->setSpec(id,lib->wordList[i].desc);
+        }
+    
+    
+        *libs->append() = lib;
     }
-    
-    
-    *libs->append() = lib;
     
     if(lib->initfunc){
         (*lib->initfunc)(run);
@@ -2353,10 +2356,10 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
                           lib->binopList[i].f);
         }
     }
-    
-    if(import)
+    if(import){
+        WriteLock lock=WL(&names);
         names.import(sp->idx,NULL);
-    
+    }
     return sp->idx;
     
 }
@@ -2507,7 +2510,7 @@ int arrayCmp(const void *a,const void *b){
 
 template<> void ArrayList<Value>::sort(ArrayListComparator<Value> *cmp){
     cmpObj=cmp;
-    WriteLock(this);
+    WriteLock lock=WL(this);
     qsort(data,ct,sizeof(Value),arrayCmp);
 }
 

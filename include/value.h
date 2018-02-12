@@ -64,6 +64,8 @@ struct Value {
     
     /// decrement reference count and set type to NONE. 
     inline void clr(){
+        extern Lockable globalLock;
+        WriteLock lock = WL(&globalLock);
         if(t&&t!=Types::tNone){
             if(GarbageCollected *gc = t->getGC(this)){
                 if(gc->refct<=0)

@@ -21,7 +21,7 @@ static ArrayList<SymbolName> strings(32);
 int symbolCtr=1;
 
 void SymbolType::deleteAll(){
-    WriteLock l(Types::tSymbol);
+    WriteLock l=WL(Types::tSymbol);
     locations.clear();
     strings.clear();
 }
@@ -49,7 +49,7 @@ int SymbolType::getSymbol(const char *s){
     
     // unpleasant - see
     // https://groups.google.com/forum/#!topic/comp.programming.threads/QsJI57oQZKc
-    WriteLock l(Types::tSymbol);
+    WriteLock l=WL(Types::tSymbol);
     
     if(locations.find(s)){
         n=locations.found();

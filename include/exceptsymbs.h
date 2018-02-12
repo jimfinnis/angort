@@ -84,4 +84,7 @@
 #define EX_NOTNUMBER                   "ex$notnumber"
 // called from non-zero thread
 #define EX_BADTHREAD                   "ex$badthread"
+// deadlock (wrlock twice)
+#define EX_DEADLOCK                    "ex$deadlock"
+
 #endif /* __EXCEPTSYMBS_H */

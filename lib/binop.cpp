@@ -14,7 +14,7 @@ namespace angort {
 /// split it apart and and the items individually.
 
 static void addListOrValueToList(ArrayList<Value> *list,Value *a){
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     if(a->getType() == Types::tList){
         ArrayList<Value> *src = Types::tList->get(a);
         ReadLock lock(src);

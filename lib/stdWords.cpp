@@ -24,6 +24,8 @@ void sighandler(int sig){
 
 namespace angort {
 
+bool boojum=false;
+
 /// define a property to set and get the auto cycle detection interval.
 /// It will be called "autogc".
 
@@ -36,7 +38,7 @@ public:
     }
     
     virtual void postSet(){
-        WriteLock lock(&globalLock);
+        WriteLock lock=WL(&globalLock);
         run->ang->autoCycleInterval = v.toInt();
         run->autoCycleCount = run->ang->autoCycleInterval;
     }
@@ -198,6 +200,20 @@ removing them.
 {
     static int snarkct=0;
     printf("SNARK %d\n",snarkct++);
+}
+
+%word boojum ( ) used during debugging; sets the boojum global
+{
+    WriteLock lock = WL(&globalLock);
+    printf("Setting boojum\n");
+    boojum=true;
+}
+
+%word endboojum ( ) used during debugging; clears the boojum global
+{
+    WriteLock lock = WL(&globalLock);
+    printf("Clearing boojum\n");
+    boojum=false;
 }
 
 %word none ( -- none ) stack a None value
@@ -437,7 +453,7 @@ Gets the value of a global variable by name.
 %wordargs setglobal vs (val string -- val) set a global by name
 Sets the value of a global variable by name.
 {
-    WriteLock lock(&a->ang->names);
+    WriteLock lock=WL(&a->ang->names);
     int id = a->ang->findOrCreateGlobal(p1);
     Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
@@ -843,7 +859,7 @@ the end of a package is marked by the end of the file.
 }
 
 
-%word dumpframe () debugging - dump the frame variables
+%word dumpframe () debugging - dump the frame variables and GC objects
 Prints internal debugging data.
 {
     a->dumpFrame();
@@ -955,7 +971,7 @@ into the default namespace, making them available without full
 qualification. The idiom for this is typically:
 `libname nspace [`s1,`s2..] import
 {
-    WriteLock lock(&a->ang->names);
+    WriteLock lock=WL(&a->ang->names);
     a->checkzerothread();
     if(a->stack.peekptr()->t==Types::tNSID){
         int nsid = Types::tNSID->get(a->popval());

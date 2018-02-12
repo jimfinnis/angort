@@ -54,7 +54,7 @@ public:
     
     /// increment the refct, throwing an exception if it wraps
     void incRefCt(){
-        WriteLock lock(this);
+        WriteLock lock = WL(this);
         refct++;
         dprintf("++ incrementing count for %p, now %d\n",this,refct);
         if(refct==0)
@@ -63,7 +63,7 @@ public:
 
     /// decrement the reference count returning true if it became zero
     bool decRefCt(){
-        WriteLock lock(this);
+        WriteLock lock = WL(this);
         if(refct<=0)
             throw RUNT(EX_REFS,"").set("ERROR - already deleted: %p!",this);
         --refct;

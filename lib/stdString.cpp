@@ -232,7 +232,7 @@ numeric types. The list contains the items to be substituted into the string.
     char delim = params[1]->toString().get()[0];
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     
     // must be the size of the longest string
     char *buf = (char *)malloc(strlen(s)+1);

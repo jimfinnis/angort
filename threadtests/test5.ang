@@ -1,4 +1,5 @@
 
+0!autogc
 [`time,`thread,`io] each {i library drop}
 
 :startMsgThread
@@ -13,13 +14,12 @@
 :msgSend |s:|
     [thread$cur,?s] ?MsgThread thread$send;
 
-:calc |a:|
-    0 ?a range (|a:r|
+:calc |a:t|
+    0 ?a range (|a:|
         0.01 time$delay
-        ?a dup * !r
-        [?a,?r] "%f -> %f" format msgSend
-        ?r
-    ) map 0 swap (+) reduce
+        ?a dup *
+    ) map 0 swap (+) reduce !t
+    [?a,?t] "%f -> %f" format msgSend
 ;
 
 
@@ -27,10 +27,9 @@ startMsgThread
 
 :main
     []
-    100 200 range each {
-        i (|a:| 0 10 range each {i ?a * calc} ) thread$create,
+    1 100 range each {
+        i (|a:| 0 1000 range each {i ?a * calc} ) thread$create,
     } dup thread$join (thread$retval) map show.
 ;
 
-{main}
-    
+main    

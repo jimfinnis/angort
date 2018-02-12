@@ -91,7 +91,7 @@ requested is 1. (See also "fst".) In the case of a string, returns the first n c
         
         Value r;
         ArrayList<Value> *list = Types::tList->set(&r);
-        WriteLock wlock(list);
+        WriteLock wlock=WL(list);
         
         for(int i=0;i<p1;i++){
             if(i==in->count())break;
@@ -139,7 +139,7 @@ requested is 1. (See also "last".) In the case of a string, returns the last n c
         
         Value r;
         ArrayList<Value> *list = Types::tList->set(&r);
-        WriteLock wlock(list);
+        WriteLock wlock=WL(list);
         
         int start = in->count()-p1;
         if(start<0)start=0;
@@ -186,11 +186,11 @@ first n items in the first list and the remainder in the second list.
     
     Value r;
     ArrayList<Value> *list = Types::tList->set(&r);
-    WriteLock wlock(list);
+    WriteLock wlock=WL(list);
     ArrayList<Value> *list1 = Types::tList->set(list->append());
-    WriteLock wlocka(list1);
+    WriteLock wlocka=WL(list1);
     ArrayList<Value> *list2 = Types::tList->set(list->append());
-    WriteLock wlockb(list2);
+    WriteLock wlockb=WL(list2);
     
     for(int i=0;i<p0->count();i++){
         (i<p1 ? list1 : list2)->append()->copy(p0->get(i));
@@ -432,7 +432,7 @@ if there are no items.
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->pushval();
     
-    WriteLock lock(list); // get() doesn't lock
+    WriteLock lock=WL(list); // get() doesn't lock
     v->copy(list->get(0));
     list->remove(0);
 }
@@ -442,7 +442,7 @@ Adds an item to the start of a list.
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     
-    WriteLock lock(list); // get() doesn't lock
+    WriteLock lock=WL(list); // get() doesn't lock
     Value *v = a->popval();
     list->insert(0)->copy(v);
 }
@@ -455,7 +455,7 @@ if there are no items.
     v.copy(a->popval());
     ArrayList<Value> *list = Types::tList->get(&v);
     
-    WriteLock lock(list); // get() doesn't lock
+    WriteLock lock=WL(list); // get() doesn't lock
     Value *p = a->pushval();
     Value *src = list->get(list->count()-1);
     p->copy(src);
@@ -468,7 +468,7 @@ Adds an item to the end of a list.
 {
     ArrayList<Value> *list = Types::tList->get(a->popval());
     Value *v = a->popval();
-    WriteLock lock(list); // append() doesn't lock
+    WriteLock lock=WL(list); // append() doesn't lock
     list->append()->copy(v);
 }
 
@@ -484,7 +484,7 @@ hash key is passed to the function.
     Iterator<Value *> *iter = p0->t->makeIterator(p0);
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     
     for(iter->first();!iter->isDone();iter->next()){
         a->pushval()->copy(iter->current());
@@ -526,7 +526,7 @@ the hash key is used).
     Iterator<Value *> *iter = p0->t->makeIterator(p0);
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     for(iter->first();!iter->isDone();iter->next()){
         a->pushval()->copy(iter->current());
         a->runValue(&func);
@@ -550,8 +550,8 @@ lists, ranges or hashes (in the latter case the hash key is used).
     ArrayList<Value> *falselist = Types::tList->set(a->pushval());
     ArrayList<Value> *truelist = Types::tList->set(a->pushval());
     
-    WriteLock lock1(falselist);
-    WriteLock lock2(truelist);
+    WriteLock lock1=WL(falselist);
+    WriteLock lock2=WL(truelist);
     
     for(iter->first();!iter->isDone();iter->next()){
         a->pushval()->copy(iter->current());
@@ -634,7 +634,7 @@ the types of the items are not comparable.
     ArrayList<Value> *list = Types::tList->get(&listv);
     
     StdComparator cmp(a);
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     list->sort(&cmp);
 }
 
@@ -648,7 +648,7 @@ the types of the items are not comparable.
     ArrayList<Value> *list = Types::tList->get(&listv);
     
     RevStdComparator cmp(a);
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     list->sort(&cmp);
 }
 
@@ -665,7 +665,7 @@ Reorders the list using a binary function.
     ArrayList<Value> *list = Types::tList->get(&listv);
     
     FuncComparator cmp(a,&func);
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     list->sort(&cmp);
 }
 
@@ -731,7 +731,7 @@ will return "[11,22,33]".
     func.copy(p[2]); // need a local copy
     
     ArrayList<Value> *list = Types::tList->set(a->pushval());
-    WriteLock wlock(list);
+    WriteLock wlock=WL(list);
     
     for(iter1->first(),iter2->first();
         !(iter1->isDone() || iter2->isDone());
@@ -770,7 +770,7 @@ since the keys are unordered.
     
     // new list
     ArrayList<Value> *list = Types::tList->set(a->pushval());
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     
     int i=n;
     for(iter->first();!iter->isDone();iter->next()){
@@ -838,7 +838,7 @@ separated by the provided item.
     Value sep,output;
     sep.copy(p[1]);
     ArrayList<Value> *list = Types::tList->set(&output);
-    WriteLock lock(list);
+    WriteLock lock=WL(list);
     
     int count = v->t->getCount(v);
     int n=0;

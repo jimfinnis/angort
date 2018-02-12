@@ -217,7 +217,7 @@ public:
     bool isInDeleteCycle(){
         return inDeleteCycle;
     }
-
+    
 private:
     /// the list of items
     GCList mainlist;
