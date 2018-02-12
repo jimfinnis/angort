@@ -5,6 +5,18 @@ but in order to work it relies on Angort being properly thread-safe,
 which it isn't. First I'll deal with how the library works (or rather
 *should* work, and then I'll deal with what needs to be done.
 
+## Threads and GC
+Because threads can theoretically modify any object, to make it work
+with GC I've had to slap global locks all around the GC system.
+And since every time a GC object is accessed it uses the GC system,
+these locks run an awful lot. This makes Angort a bit on the inefficient
+side when threading. If you run a pure Angort app with lots of
+threads, you'll notice that the CPU utilisation isn't what it might be.
+Ways around this in the future are:
+- remove the locks and somehow manage how threads and the main thread exchange data some other way, preventing threads from accessing globals
+- replace the current GC system with a simple mark/sweep rather than the current system (refcounting with occasional cycle detection), so we have one big lock around the GC tick.
+Each container object has its own lock, so the latter version should work safely.
+
 ## Thread library
 
 To use the library, import the `thread` library. Then create
