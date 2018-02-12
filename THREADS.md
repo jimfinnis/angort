@@ -3,7 +3,7 @@
 Oh lord, threads. There is a threading library in **angortplugins**,
 but in order to work it relies on Angort being properly thread-safe,
 which it isn't. First I'll deal with how the library works (or rather
-*should* work, and then I'll deal with what needs to be done.
+*should* work), and then I'll deal with what needs to be done.
 
 ## Threads and GC
 Because threads can theoretically modify any object, to make it work
@@ -52,16 +52,7 @@ which will start a separate thread for each number 0..9, calculating
 and returning their squares after a bit of a delay. The threads will
 all be joined, and the return values obtained and printed.
 
-This works - provided you don't access any collections or data structures,
-or pretty much anything interesting inside the thread. Ranges are *probably*
-OK, and maybe strings, but the problem with collections is that lists
-and hashes can change their data storage location drastically in the course
-of a run. Consider when an `ArrayList` grows: the data is reallocated
-in an entirely different place. If this is done while another thread is
-reading that data, disaster will ensue.
-
-## What needs to be done.
-
+## Making it work
 My first attempt at fixing this was bottom-up: add rwlocks to the 
 underlying structures and work upwards, dealing with the consequences.
 Unfortunately the consequences were very messy indeed. This aborted
@@ -85,35 +76,12 @@ Anyway, so the method for each "thing" is:
 - make sure exceptions don't leave things locked
 
 And the "things" are (as far as I can tell)
-- the symbol table 
-- the namespace data
-- `ListObject` arrays
-- `HashObject` arrays
-- iterators could be horrible.
-
-It might be an idea to remove `tosymbol` - only the compiler should be
-able to add symbols, really. We could rig it so that `tosymbol` only
-permits existing symbols to be returned.
-
-## It's much worse than that.
-
-Because of course it is. There must be a lot of places where I'm doing
-- access global data
-- make decision on global data
-- modify global data..
-
-all split up like that. The only thing to do is go through the code 
-with a fine-tooth comb.
-
-
-## OK, what things lock at the object level, not the word level
-
-### Lists
-Locking is done at the ListObject level, not in ArrayList itself.
-- iterators create a readlock around the list until they complete
-- getCount
-- getValue
-- removeAndReturn
-- slice (both future and deprecated)
-- clone writelocks the outlist and (by iterator) readlocks the source
+###Done things
+- the symbol table - DONE - `tSymbol` (the type object) is lockable.
+- the namespace data - DONE - the name manager is lockable.
+- `ListObject` arrays - DONE - `ArrayList` is lockable, so `ListObject` wraps it with calls which lock
+- list iterators create a writelock on the list, which is destroyed when the iterator completes or is destroyed. Resetting with `first should be OK too.
+- list cloning is inside writelock on the destination list, and the iterator will create a readlock on the source list.
+###Not done things
+- `HashObject` hashes and their iterators
 
