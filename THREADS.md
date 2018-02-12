@@ -1,5 +1,7 @@
 # Threads.
 
+THESE DO NOT WORK IN THE MASTER BUILD.
+
 Oh lord, threads. There is a threading library in **angortplugins**,
 but in order to work it relies on Angort being properly thread-safe,
 which it isn't. First I'll deal with how the library works (or rather
