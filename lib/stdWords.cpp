@@ -834,7 +834,7 @@ the end of a package is marked by the end of the file.
 }
 
 
-%word dumpframe () debugging - dump the frame variables
+%word dumpframe () debugging - dump the frame variables and GC objects
 Prints internal debugging data.
 {
     a->dumpFrame();

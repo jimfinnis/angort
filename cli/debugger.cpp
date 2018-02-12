@@ -186,6 +186,7 @@ static void debugSighandler(int s)
 
 void basicDebugger(Runtime *a){
     struct sigaction sa,oldsa;
+    memset(&sa,0,sizeof(sa));
     sa.sa_handler = debugSighandler;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGSEGV,&sa,&oldsa);
