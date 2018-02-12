@@ -1,0 +1,106 @@
+#
+# TeX table output utils
+#
+
+package tex
+private
+
+:checkkeys |row,keys:|
+    ?keys each {
+        i ?row in not if
+            "One row is missing key " i + `ex$badkey throw
+        then
+    }
+;
+    
+--EOT
+\begin{table}[%s]
+\centering
+\caption{%s}
+\label{%s}
+\begin{tabular}{@{}%s@{}}
+\toprule
+--EOT
+!Preamble
+
+--EOT
+\bottomrule
+\end{tabular}
+\end{table}
+--EOT
+!Postamble
+
+# get from hash, with a default
+:gethashdef |k,deflt,h:|
+    ?k ?h in if
+        ?k ?h get
+    else
+        ?deflt
+    then
+;
+
+:embolden |str,key,boldkeys:|
+    ?key ?boldkeys in if
+        "\\textbf{" ?str + "}" +
+    else
+        ?str
+    then
+;
+
+:getcolname |colname,coltitles:|
+    ?coltitles if
+        ?colname dup ?coltitles gethashdef
+    else
+        ?colname
+    then
+;
+    
+
+public
+
+# Generates a string containing a booktabs LaTeX table for a list
+# of hashes, given the keys in the required order.
+# Opts is a hash of options:
+#  `boldkeys is a list of keys which should be bold IN THE TITLE,
+#     or `all, in which case all keys are bold.
+#  `boldkeysdata is a list of keys which should be bold IN THE DATA
+#  `caption is a caption (default is a placeholder)
+#  `label is a label (default is a placeholder)
+#  `tablepos is a table position, by default "ht"
+#  `coltitles is a mapping of column in data to column title in table
+:table |l,keys,opts:i,boldkeystitle,boldkeysdata,coltitles|
+    # get options
+    ?opts type `hash != if
+        "opts should be a hash" `ex$badtype throw
+    then
+    `boldkeys [%] ?opts gethashdef !boldkeystitle
+    `boldkeysdata [%] ?opts gethashdef !boldkeysdata
+    `caption [%]
+    `coltitles none ?opts gethashdef !coltitles
+    
+    ?boldkeystitle `all = if ?keys !boldkeystitle then
+    ?boldkeysdata `all = if ?keys !boldkeysdata then
+    
+    # check the list has the keys
+    ?l each {i ?keys checkkeys}
+    # build format line
+    [
+        `tablepos "ht" ?opts gethashdef,
+        `caption "CAPTION HERE" ?opts gethashdef,
+        `label "LABEL HERE" ?opts gethashdef,
+        "l" ?keys len *] ?Preamble format "\n"+
+    # add key line
+    ?keys ( |a:|
+        ?a ?coltitles getcolname 
+        ?a ?boldkeystitle embolden
+    ) map " & " intercalate +
+    " \\\\ \\midrule \n" +
+    # do each row
+    ?l each {
+        i!i ?keys (|k:| ?k ?i get ?k ?boldkeysdata embolden) map
+        " & " intercalate " \\\\ \n" + +
+    }
+    # end row
+    ?Postamble +
+;   
+
