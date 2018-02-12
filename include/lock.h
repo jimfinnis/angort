@@ -95,7 +95,6 @@ public:
         t = (Lockable *)_t;
 #if(LOCKDEBUG)
         lockprintf("%8lu: TRY WRITELOCK START on %s %p at %s:%d\n",pthread_self(),t->getLockableName(),&t->lock,file,line);
-        fflush(stdout); // REMOVE THIS
 #endif
         if(t){
             if(pthread_rwlock_wrlock(&t->lock)==EDEADLK){
@@ -111,7 +110,6 @@ public:
             }
         } else locked=false;
 #endif
-        fflush(stdout); // REMOVE THIS
     }
     ~WriteLock(){
 #if defined(ANGORT_POSIXLOCKS)
