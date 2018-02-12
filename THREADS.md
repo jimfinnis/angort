@@ -24,7 +24,7 @@ a thread using `thread$create`, which takes an argument and a function
 (*not* a closure - that would be very hard indeed). The argument is
 copied onto the thread's stack - all threads get a separate runtime
 environment (the `Runtime` class) - and forms the argument
-to the thread function. The `thread$create` returns a handle to the
+to the thread function. The `thread$create` call returns a handle to the
 new thread. In your main thread, wait for threads to complete by
 passing a list of handles to `thread$join`. If a thread completes
 and leaves any items on its stack, the top item is copied into its
