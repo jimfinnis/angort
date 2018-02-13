@@ -958,6 +958,11 @@ private:
     /// It's static because it gets used in various places.
     
     static ThreadHookObject *threadHookObj;
+    
+    /// true if the compiler is skipping lines due to compileif
+    bool isSkipping;
+    /// true if we are between compileif..endcompileif
+    bool inCompileIf;
 
 public:
     Runtime *run; //!< the default runtime used by the main thread

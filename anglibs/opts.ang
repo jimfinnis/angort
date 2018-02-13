@@ -56,7 +56,7 @@ package opts
 # the symbol of a type
 
 :asserttype |hash,key:|
-    ?key ?hash get <<[`bool,`string,`integer,`list,`float,`double]>> in not if
+    ?key ?hash get <<[`bool,`string,`symbol,`integer,`list,`float,`double]>> in not if
         [?key,?hash?`name] "%s in definition %s is not a type" format
         `opts$notatypeindefs throw
     then
@@ -127,6 +127,7 @@ package opts
             ?v dup ?opt assertint toint
             case
         ?t `string = if ?v tostr case
+        ?t `symbol = if ?v tosymbol case
         ?t `bool = if 
             ?v dup ?opt assertint toint
             case

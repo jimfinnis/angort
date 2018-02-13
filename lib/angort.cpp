@@ -92,6 +92,8 @@ Angort::Angort() {
     names.push(stdNamespace);
     lineNumber=1;
     running = true;
+    isSkipping = false;
+    inCompileIf = false;
     
     // no debugger by default; CLI sets this up.
     debuggerHook = NULL;
@@ -927,6 +929,13 @@ void Runtime::run(const Instruction *startip){
                     pushval()->copy(ip->d.constexprval);
                     ip++;
                     break;
+                case OP_COMPILEIF:
+                    if(!popBool()){
+                        if(ang->tokeniserTrace)printf("SKIPPING STARTS\n");
+                        ang->isSkipping = true;
+                    }
+                    ip++;
+                    break;
                 case OP_TRY:
                     // make us ready to catch a throw
                     catchstack.peekptr()->push(ip->d.catches);
@@ -1560,6 +1569,18 @@ void Angort::feed(const char *buf){
         return;
     }
     
+    if(isSkipping){
+        if(tokeniserTrace)printf("SKIPPING %s\n",buf);
+        bool isend = !strncmp(buf,"endcompileif",12);
+        if(isend || !strncmp(buf,"elsecompileif",12)){
+            if(tokeniserTrace)printf("SKIPPING OFF %s\n",buf);
+            isSkipping=false;
+            if(isend)inCompileIf=false;
+        }
+        return;
+    }
+        
+    
     int here; // instruction index variable used in different ways
     try {
         for(;;){
@@ -1591,6 +1612,24 @@ void Angort::feed(const char *buf){
                 include(buf,true);
                 break;
             }
+            case T_COMPILEIF:
+                if(isDefining())
+                    throw SyntaxException("'compileif' not allowed in a definition");
+                compile(OP_COMPILEIF);
+                inCompileIf=true;
+                break;
+            case T_ENDCOMPILEIF:
+                if(isDefining())
+                    throw SyntaxException("'compileendif' not allowed in a definition");
+                inCompileIf=false;
+                break;
+            case T_ELSECOMPILEIF:
+                if(isDefining())
+                    throw SyntaxException("'elsecompileif' not allowed in a definition");
+                if(!inCompileIf)
+                    throw SyntaxException("'elsecompileif' without 'compileif'");
+                isSkipping=true;
+                break;
             case T_PRIVATE:
                 names.setPrivate(true);
                 break;

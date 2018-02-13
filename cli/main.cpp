@@ -25,6 +25,7 @@ static const char *usageString=
 "-e    : execute command-line script\n"
 "-d    : disassemble while running\n"
 "-D    : tokeniser trace\n"
+"-L    : print input lines\n"
 "-b    : signals cause debugger entry rather than exit\n"
 "-if   : import symbols from future namespace, mutually exclusive with...\n"
 "-if   : import symbols from deprecated namespace\n"
@@ -238,6 +239,9 @@ int main(int argc,char *argv[]){
                     printf("should be -if or -id\n");
                     exit(1);
                 }
+                break;
+            case 'L':
+                a->printLines = true;
                 break;
             case 'l':
                 a->plugin(arg+2);

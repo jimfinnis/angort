@@ -378,3 +378,61 @@ but a more elegant solution might be:
 \end{lstlisting}
 Here, we use an each loop to iterate over list a, and an explicit
 iterator to iterate over list b.
+
+\subsection{Conditional compilation}
+The normal \textbf{if..else..then} construction doesn't help
+if you want a piece of code to be completely ignored by Angort,
+for example when it refers to a library that may not be loaded.
+In that case, you don't want Angort to try to compile the code
+at all because it won't be able to resolve the identifiers to
+the unloaded library. Consider the code
+\begin{lstlisting}
+0!Threads
+(
+    ?Threads if
+        `thread library drop
+        0 mythreadfunction thread$create !Thread
+    then
+)@
+\end{lstlisting}
+This will fail because the thread library won't load, but Angort
+still needs to compile the \texttt{thread\$create} call.
+
+To fix problems like this, the \textbf{compileif} directive can skip entire
+lines. Because it reads the value on the stack top it is compiled as an
+opcode, so don't put it inside a function and make sure it ends the line it's
+on. The skipping stops when the \textbf{endcompileif} directive is found on a
+line by itself. The above code could then be rewritten
+\begin{lstlisting}
+0!Threads
+?Threads compileif
+    `thread library drop
+    0 mythreadfunction thread$create !Thread
+endcompileif
+\end{lstlisting}
+There is also the \textbf{elsecompileif} directive, which works as
+you would expect:
+\begin{lstlisting}
+0!Threads
+?Threads compileif
+    `thread library drop
+    thread$mutex !MyMutex
+    0 mythreadfunction thread$create !Thread
+    :lock ?MyMutex thread$lock
+    :unlock ?MyMutex thread$unlock
+elsecompileif
+    :lock ;
+    :unlock ;
+endcompileif
+\end{lstlisting}
+Note that \textbf{compileif clauses cannot be nested.} 
+Those caveats in full:
+\begin{itemize}
+\item \textbf{compileif} structures cannot be nested;
+\item \textbf{ifcompile} should end a line;
+\item \textbf{elsecompileif} and \textbf{endcompileif} should be on
+a line by themselves;
+\item \textbf{compileif}, \textbf{elsecompileif} and \textbf{endcompileif} cannot
+be inside a function definition (anonymous or otherwise).
+\end{itemize}
+
