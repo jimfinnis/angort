@@ -94,8 +94,16 @@ float StringType::toFloat(const Value *v) const {
     return atof(getData(v));
 }
 
+double StringType::toDouble(const Value *v) const {
+    return atof(getData(v));
+}
+
 int StringType::toInt(const Value *v) const {
     return atoi(getData(v));
+}
+
+long StringType::toLong(const Value *v) const {
+    return atol(getData(v));
 }
 
 uint32_t StringType::getHash(Value *v)const{

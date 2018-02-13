@@ -33,6 +33,8 @@ public:
     
     virtual float toFloat(const Value *v) const;
     virtual int toInt(const Value *v) const;
+    virtual long toLong(const Value *v) const;
+    virtual double toDouble(const Value *v) const;
 
     /// get a hash key
     virtual uint32_t getHash(Value *v)const;

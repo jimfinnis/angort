@@ -816,14 +816,28 @@ returned by "nspace", and returns its value.
 
 %word tolong (val -- long) -- convert value to long int
 {
-    Types::tLong->set(a->pushval(),a->popval()->toLong());
+    Value *v = a->stack.peekptr();
+    Types::tLong->set(v,v->toLong());
 }
 
 %word todouble (val -- double) -- convert value to double
 {
-    Types::tDouble->set(a->pushval(),a->popval()->toDouble());
+    Value *v = a->stack.peekptr();
+    Types::tDouble->set(v,v->toDouble());
 }
 
+%word toint (string -- int) string to integer
+{
+    Value *v = a->stack.peekptr();
+    Types::tInteger->set(v,v->toInt());
+}
+        
+%word tofloat (string -- float) string to float
+{
+    Value *v = a->stack.peekptr();
+    Types::tFloat->set(v,v->toFloat());
+}
+        
 
 %word endpackage (-- namespaceID) mark end of package, only when used within a single script
 For packages which are part of a long script, this marks the end. Normally

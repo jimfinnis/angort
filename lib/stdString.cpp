@@ -45,18 +45,6 @@ inline int wstrlen(const char *s){
         a->pushInt(p-haystack.get());
 }
 
-%word toint (string -- int) string to integer
-{
-    Value *v = a->stack.peekptr();
-    Types::tInteger->set(v,v->toInt());
-}
-        
-%word tofloat (string -- float) string to float
-{
-    Value *v = a->stack.peekptr();
-    Types::tFloat->set(v,v->toFloat());
-}
-        
 
 %word chr (integer -- string) convert integer to ASCII char (as single-character string)
 {

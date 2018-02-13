@@ -30,6 +30,7 @@ package opts
 :typeequal |wanted,got:|
     cases
         ?wanted ?got = if 1 case
+        ?wanted `double = ?got `integer = and if 1 case
         ?wanted `float = ?got `integer = and if 1 case
         ?wanted `bool = ?got `integer = and if 1 case
         0 otherwise    
@@ -55,7 +56,7 @@ package opts
 # the symbol of a type
 
 :asserttype |hash,key:|
-    ?key ?hash get <<[`bool,`string,`integer,`list,`float]>> in not if
+    ?key ?hash get <<[`bool,`string,`integer,`list,`float,`double]>> in not if
         [?key,?hash?`name] "%s in definition %s is not a type" format
         `opts$notatypeindefs throw
     then
@@ -118,6 +119,9 @@ package opts
     cases
         ?t `float = if 
             ?v dup ?opt assertnumber tofloat
+            case
+        ?t `double = if 
+            ?v dup ?opt assertnumber todouble
             case
         ?t `integer = if 
             ?v dup ?opt assertint toint
