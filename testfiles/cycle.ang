@@ -1,14 +1,9 @@
 `io library drop
 
-"/tmp/boojum" "w" io$open !F
-0!SNCT
-:boo "Boojum " ?SNCT+ "\n"+  ?F io$write ?F io$flush !+SNCT;
-
 gccount!BaseGC
 [%] !A
 [%] !B
 
-boo
 ?B `foo ?A set
 ?A `foo ?B set
 
@@ -22,7 +17,6 @@ gc
 gccount.
 ?BaseGC gccount = "cycle2a" assert
 
-boo
 [%] !A
 [% `foo A ] !B
 [% `bar B, `fod A] !C
@@ -32,7 +26,6 @@ gccount .
 
 gc
 ?BaseGC 3+ gccount = "cycle2c" assert
-boo
 0 !A
 0 !B
 0 !C
@@ -42,7 +35,6 @@ gccount.
 ?BaseGC gccount = "cycle4" assert
 
 # hashes appear to be OK, let's check lists.
-boo
 [10,20,30] !A
 [1,2,3,?A,4] !B
 ?B ?A push
@@ -54,7 +46,6 @@ gccount.
 0 !B
 gc
 ?BaseGC gccount  = "listcyc2" assert
-boo
 # lists are good, let's do something with closures AND lists
 
 snark
@@ -66,7 +57,6 @@ snark
 ?A push
 
 # clear the locals stack
-boo
 :foo |a,b,c,d:|;
 
 1 2 3 4 foo
@@ -77,5 +67,4 @@ gc
 gccount.
 
 ?BaseGC gccount  = "closurecyc2" assert
-boo
 quit
