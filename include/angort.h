@@ -613,18 +613,6 @@ struct Frame {
     }
 };
 
-
-/// thread hook class - the thread library installs one of these
-/// into Angort using setThreadHookObject(). Annoyingly this has
-/// to be global, because it's used in various places if present.
-
-class ThreadHookObject {
-public:
-    // single global mutex, nestable
-    virtual void globalLock() = 0;
-    virtual void globalUnlock() = 0;
-};
-
 /// runtime data
 
 class Runtime {
@@ -860,7 +848,6 @@ public:
 };
 
 
-
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
@@ -869,6 +856,7 @@ class Angort {
     friend class Runtime;
     friend class AutoGCProperty;
     friend class SearchPathProperty;
+    friend class GlobalLock;
 private:
     
     bool running; //!< used by shutdown()
@@ -954,40 +942,11 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
-    /// the global thread hook object, which may be NULL.
-    /// It's static because it gets used in various places.
-    
-    static ThreadHookObject *threadHookObj;
-    
-    /// true if the compiler is skipping lines due to compileif
-    bool isSkipping;
-    /// true if we are between compileif..endcompileif
-    bool inCompileIf;
-
 public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
     
-    /// set the object we use to manipulate threads. Note it's static.
-    static void setThreadHookObject(ThreadHookObject *tho){
-        threadHookObj = tho;
-    }
-    
-    // if a thread API is installed, these run the various
-    // thread handling methods using it.
-    
-    
-    /// lock the global lock (used in quite a few places)
-    inline static void globalLock(){
-        if(threadHookObj)threadHookObj->globalLock();
-    }
-    /// unlock the global lock (used in quite a few places)
-    inline static void globalUnlock(){
-        if(threadHookObj)threadHookObj->globalUnlock();
-    }
-    
-
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
         debuggerHook = f;
@@ -1133,6 +1092,8 @@ public:
     /// import all symbols in the `deprecated namespace
     void importAllDeprecated();
 };
+
+
 
 
 }

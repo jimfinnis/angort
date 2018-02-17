@@ -45,6 +45,10 @@ set(SOURCE main.cpp completer.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
 
+if(EDITLINE_NOUNICODE)
+    set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS EDITLINE_NOUNICODE)
+endif()
+
 
 # we change the name of angortcli to angort, so it appears under that
 # latter name in the build directory

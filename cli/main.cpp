@@ -45,7 +45,7 @@ static ArrayList<Value> *strippedArgs;
 Runtime *runtime; // default angort runtime
 
 static void showException(Exception& e){
-    e.run->ang->globalLock();
+    WriteLock lock=WL(&globalLock);
     printf("Error in thread %d: %s\n",e.run?e.run->id:-1,e.what());
     if(e.ip){
         printf("Error at:");
@@ -54,7 +54,6 @@ static void showException(Exception& e){
     }else
           printf("Last line input: %s\n",runtime->ang->getLastLine());
     runtime->clearStack();
-    e.run->ang->globalUnlock();
     if(e.fatal)
         exit(1);
     
@@ -88,10 +87,16 @@ public:
 
 bool debugOnSignal=false;
 
+// this symbol needs to be defined if editline wasn't compiled with
+// UNICODE support, as it wasn't on earlier versions of Ubuntu.
 
+#if EDITLINE_NOUNICODE
 const char *getPrompt(){
     extern Value promptCallback;
-    
+#else
+const wchar_t *getPrompt(){
+    extern Value promptCallback;
+#endif
     static char buf[256];
     char pchar=0;
     if(runtime->ang->isDefining())
@@ -114,7 +119,22 @@ const char *getPrompt(){
                 GarbageCollected::getGlobalCount(),
                 runtime->stack.ct,pchar);
     }
+#if EDITLINE_NOUNICODE
     return buf;
+#else
+    // convert to wide, we have to do it here rather than leave it
+    // to EditLine because there is a bug in EditLine's prompt code
+    // (if conversion fails, a NULL is returned which print_prompt()
+    // cheerfully tries to print).
+    static wchar_t wbuf[256];
+failed:
+    int conv = mbstowcs(wbuf,buf,256);
+    if(conv != strlen(buf)){
+        strcpy(buf,"(prompt contains bad unicode) > "); 
+        goto failed;
+    }
+    return wbuf;
+#endif
 }
 
 void addDirToSearchPath(const char *data){
@@ -333,7 +353,11 @@ int main(int argc,char *argv[]){
     // start up an editline instance
     
     el = el_init(argv[0],stdin,stdout,stderr);
-    el_set(el,EL_PROMPT,&getPrompt);
+#if EDITLINE_NOUNICODE
+    el_set(el,EL_PROMPT,&getPrompt); // sorry, no unicode support...
+#else
+    el_wset(el,EL_PROMPT,&getPrompt); // use wide prompt (see getPrompt for why)
+#endif
     el_set(el,EL_EDITOR,"emacs");
     
     hist = history_init();

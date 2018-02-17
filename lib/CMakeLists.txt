@@ -1,15 +1,14 @@
 cmake_minimum_required(VERSION 2.6)
 
+project(ANGORTLIB)
+
+
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX)
-    
-
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    
+add_compile_options("-Woverloaded-virtual")
 
-set(CMAKE_CXX_FLAGS "-Woverloaded-virtual -pthread")
-set(CMAKE_C_FLAGS "-pthread")
-
-project(ANGORTLIB)
 
 # would be awesome if these could live in an angort cmake module
 
