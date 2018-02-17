@@ -150,10 +150,8 @@ numeric types. The list contains the items to be substituted into the string.
         newstr[i]=L' ';
     wcscpy(newstr+i,buf);
     
-//    Angort::globalLock();
     wcstombs(sbuf,newstr,1023);
     Types::tString->set(v,sbuf);
-//    Angort::globalUnlock();
     free(newstr);
 }
 
@@ -181,10 +179,8 @@ numeric types. The list contains the items to be substituted into the string.
         newstr[len+i]=L' ';
     newstr[padding]=0;
     
-//    Angort::globalLock();
     wcstombs(sbuf,newstr,1023);
     Types::tString->set(v,sbuf);
-//    Angort::globalUnlock();
     
     free(newstr);
 }
@@ -204,10 +200,8 @@ numeric types. The list contains the items to be substituted into the string.
     
     // might not actually be a string.
     buf[maxlen]=0;
-//    Angort::globalLock();
     wcstombs(sbuf,buf,1023);
     Types::tString->set(v,sbuf);
-//    Angort::globalUnlock();
 }
 
 %word split (string delim -- list) split a string on a single-character delimiter 

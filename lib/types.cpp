@@ -136,43 +136,35 @@ const char *BlockAllocType::getData(const Value *v) const{
 }
 
 void BlockAllocType::incRef(Value *v)const{
-    Angort::globalLock();
     BlockAllocHeader *h = v->v.block;
     h->refct++;
     tdprintf("INCREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
     if(!h->refct)
         h->refct=0xffff; // MAX REFCOUNT is never freed!
     //        throw RUNT("reference count too large");
-    Angort::globalUnlock();
 }
     
 void BlockAllocType::decRef(Value *v)const{
-    Angort::globalLock();
     BlockAllocHeader *h = v->v.block;
     if(h->refct!=0xffff)h->refct--; // MAX REFCOUNT is never freed!
     tdprintf("DECREF STR to %d: %p%s\n",h->refct,getData(v),getData(v));
     if(h->refct==0){
         free(h);
     }
-    Angort::globalUnlock();
 }
 
 void GCType::incRef(Value *v)const{
-    Angort::globalLock();
     v->v.gc->incRefCt();
     tdprintf("incrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
-    Angort::globalUnlock();
 }
 
 void GCType::decRef(Value *v)const{
-    Angort::globalLock();
     bool b = v->v.gc->decRefCt();
     tdprintf("decrementing ref count of %s:%p, now %d\n",name,v->v.gc,v->v.gc->refct);
     if(b){
         tdprintf("  AND DELETING %s:%p\n",name,v->v.gc);
         delete v->v.gc;
     }
-    Angort::globalUnlock();
 }
 
 Iterator<class Value *> *GCType::makeKeyIterator(Value *v)const{
@@ -188,22 +180,18 @@ GarbageCollected *GCType::getGC(Value *v)const{
 }
 
 GarbageCollected::GarbageCollected(){
-    Angort::globalLock();
     refct=0;
     globalCount++;
     CycleDetector::getInstance()->add(this);
-    Angort::globalUnlock();
     
 }
 
 
 
 GarbageCollected::~GarbageCollected(){
-    Angort::globalLock();
     globalCount--;
     CycleDetector::getInstance()->remove(this);
     refct=-999; // to mark was deleted properly; snark.
-    Angort::globalUnlock();
 }
 
 

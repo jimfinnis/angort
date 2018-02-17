@@ -38,8 +38,6 @@ LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated);
 
 namespace angort {
 
-ThreadHookObject *Angort::threadHookObj=NULL;
-
 
 const char* Angort::getVersion(){
     return ANGORT_VERSION;
@@ -77,9 +75,7 @@ Runtime::~Runtime(){
 }
 
 void Runtime::gc(){
-    Angort::globalLock();
     GarbageCollected::gc();
-    Angort::globalUnlock();
 }    
 
 Angort::Angort() {

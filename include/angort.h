@@ -932,7 +932,12 @@ private:
     /// look for a file in the search path. Will attempt to use wordexp
     /// to do shell expansions of the path if it is available.
     const char *findFile(const char *name);
-    
+        
+    /// true if the compiler is skipping lines due to compileif
+    bool isSkipping;
+    /// true if we are between compileif..endcompileif
+    bool inCompileIf;
+
     /// autocomplete state
     ArrayList<const char *> *acList;
     int acIndex;
