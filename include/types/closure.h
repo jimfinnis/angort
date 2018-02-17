@@ -46,7 +46,8 @@ public:
     virtual void clearZombieReferences();
     virtual void decReferentsCycleRefCounts();
     virtual void traceAndMove(class CycleDetector *cycle);
-
+    
+    virtual void wipeContents();
 };
 
 

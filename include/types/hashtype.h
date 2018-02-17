@@ -18,6 +18,7 @@ struct HashObject: public GarbageCollected {
     
     virtual Iterator<Value *> *makeKeyIterator()const;
     virtual Iterator<Value *> *makeValueIterator()const;
+    virtual void wipeContents();
     HashObject();
     ~HashObject();
 };

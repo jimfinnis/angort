@@ -655,7 +655,7 @@ private:
     /// called at the end of a block of code,
     /// or by emergency stop invocation. May set the IP to NULL.
     void ret();
-
+    
 public:
     class Angort *ang; // main angort object
     // annoyingly public to allow debugger access

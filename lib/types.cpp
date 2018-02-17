@@ -181,6 +181,7 @@ GarbageCollected *GCType::getGC(Value *v)const{
 
 GarbageCollected::GarbageCollected(){
     refct=0;
+    inCycle=false;
     globalCount++;
     CycleDetector::getInstance()->add(this);
     

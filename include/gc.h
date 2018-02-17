@@ -40,6 +40,9 @@ public:
     /// the reference count
     refct_t refct;
     
+    /// true if we've been found in a GC cycle and we're being deleted
+    bool inCycle;
+    
     /// the reference count used by the cycle detector. The name
     /// comes from the original doc (see CycleDetector).
     refct_t gc_refs;
@@ -66,6 +69,12 @@ public:
         dprintf("-- decrementing count for %p, now %d\n",this,refct);
         return refct==0;
     }
+    
+    /// called from inside the cycle delete code to safely wipe
+    /// the object's contents, leaving NO REFERENCES to GC objects.
+    /// This avoids recursive deletion in cycle detection.
+    /// Typically, all Value contents will have wipeIfInGCCycle() called.
+    virtual void wipeContents() {}
     
     
     /// many GC objects are containers for references to other objects - return a reference

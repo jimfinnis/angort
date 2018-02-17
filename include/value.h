@@ -58,7 +58,7 @@ struct Value {
     }
     
     
-    ~Value(){
+    virtual ~Value(){
         clr();
     }
     
@@ -71,10 +71,17 @@ struct Value {
             }
             t->decRef(this);
             t=Types::tNone;
-        }
-        
+        }   
     }
     
+    /// called on GC object contents inside a cycle detect to avoid
+    /// recursive deletion, before the GC actually happens.
+    void wipeIfInGCCycle(){
+        if(GarbageCollected *gc = t->getGC(this)){
+            if(gc->inCycle)t=Types::tNone;
+        }
+    }
+
     /// decrement the reference count and deallocate if zero and is a type with extra stuff
     inline void decRef(){
         t->decRef(this);

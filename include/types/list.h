@@ -13,6 +13,7 @@ struct ListObject : public GarbageCollected {
     ArrayList<Value> list;
     virtual Iterator<class Value *> *makeValueIterator()const;
     virtual Iterator<class Value *> *makeKeyIterator()const;
+    virtual void wipeContents();
     
     ListObject();
     ~ListObject();
