@@ -17,6 +17,14 @@ ListObject::~ListObject(){
     dprintf("LISTOBJECT delete at %p\n",this);
 }
 
+void ListObject::wipeContents(){
+    ArrayListIterator<Value> iter(&list);
+    for(iter.first();!iter.isDone();iter.next()){
+        iter.current()->wipeIfInGCCycle();
+    }
+}
+
+
 void ListType::set(Value *v,ListObject *lo)const{
     v->clr();
     v->t = this;

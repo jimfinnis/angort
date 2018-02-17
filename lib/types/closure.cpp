@@ -90,6 +90,11 @@ void Closure::init(const CodeBlock *c){
     }    
 }
 
+void Closure::wipeContents(){
+    for(int i=0;i<cb->closureBlockSize;i++)
+        block[i].wipeIfInGCCycle();
+}
+
 
 Closure::~Closure(){
     //printf("deleting closure %p\n",this);

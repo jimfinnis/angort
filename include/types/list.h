@@ -13,6 +13,7 @@ struct ListObject : public GarbageCollected {
     ArrayList<Value> list;
     virtual Iterator<class Value *> *makeValueIterator()const;
     virtual Iterator<class Value *> *makeKeyIterator()const;
+    virtual void wipeContents();
     
     ListObject();
     ~ListObject();
@@ -42,7 +43,6 @@ public:
     virtual void slice_dep(Value *out,Value *coll,int start,int len)const;
     
     virtual void clone(Value *out,const Value *in,bool deep=false)const;
-    
     virtual class Lockable *getLockable(Value *v) const { return get(v); }
     
 };

@@ -88,6 +88,7 @@ void CycleDetector::detect(){
     for(p=mainlist.head();p;p=mainlist.next(p)){
         dprintf("maxreffing %p\n",p);
         p->gc_refs=0xffff;
+        p->inCycle=true;
     }
     
     // then we do it again, and tell each of these objects to clear, without dereferencing,
@@ -99,6 +100,12 @@ void CycleDetector::detect(){
         clearZombieReferencesIterator(p,true);
         clearZombieReferencesIterator(p,false);
         p->clearZombieReferences();
+        // we also tell all members of the cycle to "wipe" any values
+        // (i.e. just set their types to None) which are also in the
+        // cycle. This means they will not be deleted by the members'
+        // destructors, only by "delete p" below, avoiding recursive
+        // deletes.
+        p->wipeContents();
     }
     
     inDeleteCycle=true;

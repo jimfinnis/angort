@@ -195,6 +195,7 @@ GarbageCollected *GCType::getGC(Value *v)const{
 GarbageCollected::GarbageCollected() : Lockable("gc"){
     WriteLock lock=WL(&globalLock);
     refct=0;
+    inCycle=false;
     globalCount++;
     CycleDetector::getInstance()->add(this);
     

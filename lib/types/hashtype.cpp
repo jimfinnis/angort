@@ -20,6 +20,14 @@ HashObject::~HashObject(){
     delete hash;
 }
 
+void HashObject::wipeContents(){
+    // key's can't be GC.
+    HashValueIterator iter(hash);
+    for(iter.first();!iter.isDone();iter.next()){
+        iter.current()->wipeIfInGCCycle();
+    }
+}
+
 // this is unpleasant, but happened because the underlying iterators don't
 // know about the value to lock it.
 
