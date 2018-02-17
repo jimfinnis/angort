@@ -5,7 +5,7 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
 include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
 if(POSIXTHREADS)
-    message("POSIX threads enabled")
+    message("CLI POSIX threads enabled")
     set(PTHREAD "-lpthread")
 else()  
     set(PTHREAD "")
@@ -50,9 +50,15 @@ set(SOURCE main.cpp completer.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
 add_executable(angortcli ${SOURCE})
 
 if(POSIXTHREADS)
-    set_target_properties(angortcli PROPERTIES COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+    message("CLI POSIX threads enabled")
+    set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
     target_compile_options(angortcli PUBLIC "-pthread")
 endif(POSIXTHREADS)
+
+if(EDITLINE_NOUNICODE)
+    set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS EDITLINE_NOUNICODE)
+endif()
+
 
 # we change the name of angortcli to angort, so it appears under that
 # latter name in the build directory

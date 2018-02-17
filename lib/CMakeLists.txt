@@ -74,7 +74,7 @@ add_library(angort ${SOURCE})
 
 if(POSIXTHREADS)
     message("POSIX threads enabled")
-    set_target_properties(angort PROPERTIES COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+    set_property(TARGET angort APPEND PROPERTY COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
     target_compile_options(angort PUBLIC "-pthread")
 endif(POSIXTHREADS)
 
