@@ -57,13 +57,6 @@ public:
         
     }
     
-    /// JUST set all vals to none. Do not use this; it's only used to ensure arrays and that
-    /// are clear when they are destroyed in cycle detection GC.
-    void wipe(){
-        for(int i=0;i<ct;i++)
-            data[i].wipe();
-    }
-    
     /// add an item to the end of the list, return a pointer to
     /// fill in the item. Runs in O(1) time unless the list needs
     /// resizing.

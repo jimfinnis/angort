@@ -75,13 +75,7 @@ struct Value {
             t=Types::tNone;
         }
     }
-    
-    /// JUST set type to none. Do not use this; it's only used to ensure arrays and that
-    /// are clear when they are destroyed in cycle detection GC.
-    inline void wipe(){
-        t=Types::tNone;
-    }
-    
+
     /// decrement the reference count and deallocate if zero and is a type with extra stuff
     inline void decRef(){
         t->decRef(this);
