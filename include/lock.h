@@ -34,8 +34,6 @@ class Lockable {
 #if defined(ANGORT_POSIXLOCKS)
     pthread_rwlock_t lock;
     const char *lockablename;
-#else
-    dsfsdfsdf
 #endif
 public:
 #if defined(ANGORT_POSIXLOCKS)
