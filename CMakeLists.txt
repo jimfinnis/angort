@@ -6,9 +6,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 link_directories(${ANGORT_SOURCE_DIR}/lib)
 
-#set(CMAKE_CXX_FLAGS_PROFILE -pg -Wall)
-#set(CMAKE_C_FLAGS_PROFILE -pg)
-
 # To use threading, you'll need to use the thread library in angortplugins
 # and build Angort itself with 
 #
@@ -17,6 +14,7 @@ link_directories(${ANGORT_SOURCE_DIR}/lib)
 
 
 option(POSIXTHREADS "enable POSIX threading")
+option(PROFILE "enable profiling")
 
 if(!POSIXTHREADS)
     message("No POSIX threading support")

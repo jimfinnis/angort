@@ -11,7 +11,6 @@ else()
     set(PTHREAD "")
 endif(POSIXTHREADS)
 
-
 set(WORDFILELIST)
 
 # this macro generates a custom build step which takes the files passed in,
@@ -57,6 +56,12 @@ endif(POSIXTHREADS)
 
 if(EDITLINE_NOUNICODE)
     set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS EDITLINE_NOUNICODE)
+endif()
+
+if(PROFILE)
+    message("CLI profiling enabled")
+    target_compile_options(angortcli PUBLIC "-pg")
+    set_property(TARGET angortcli APPEND PROPERTY LINK_FLAGS -pg)
 endif()
 
 

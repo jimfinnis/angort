@@ -9,7 +9,6 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     
 add_compile_options("-Woverloaded-virtual")
 
-
 # would be awesome if these could live in an angort cmake module
 
 set(WORDFILELIST)
@@ -77,6 +76,11 @@ if(POSIXTHREADS)
     set_property(TARGET angort APPEND PROPERTY COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
     target_compile_options(angort PUBLIC "-pthread")
 endif(POSIXTHREADS)
+
+if(PROFILE)
+    message("profiling enabled")
+    target_compile_options(angort PUBLIC "-pg")
+endif()
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(angort dl m)
