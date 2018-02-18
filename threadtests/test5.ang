@@ -16,7 +16,7 @@
 
 :calc |a:t|
     0 ?a range (|a:|
-        0.01 time$delay
+#        0.01 time$delay
         ?a dup *
     ) map 0 swap (+) reduce !t
     [?a,?t] "%f -> %f" format msgSend
