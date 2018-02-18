@@ -49,6 +49,12 @@ if(EDITLINE_NOUNICODE)
     set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS EDITLINE_NOUNICODE)
 endif()
 
+if(PROFILE)
+    message("CLI profiling enabled")
+    target_compile_options(angortcli PUBLIC "-pg")
+    set_property(TARGET angortcli APPEND PROPERTY LINK_FLAGS -pg)
+endif()
+
 
 # we change the name of angortcli to angort, so it appears under that
 # latter name in the build directory

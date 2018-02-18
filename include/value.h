@@ -71,7 +71,7 @@ struct Value {
             }
             t->decRef(this);
             t=Types::tNone;
-        }   
+        }
     }
     
     /// called on GC object contents inside a cycle detect to avoid
@@ -155,6 +155,10 @@ struct Value {
         if(src==this)
             return;
         
+        // there are two copy methods here. The first is a strange thing
+        // which works and might be slow. The second is untested but seems
+        // to work, but for now I'll stick with the first.
+#if 1
         // we do this weird stuff to avoid situation where we try to copy 
         // a value out of a GC into a value which holds the GC itself with
         // one reference. Here, the GC would actually get deleted by clr()
@@ -166,14 +170,18 @@ struct Value {
         old.t = t;
         old.v = v;
         old.incRef();
-        
-        
         clr();
-        
         t = src->t;
         v = src->v;
         incRef();
         // "old" will decref on destruction
+#else
+        ((Value *)src)->incRef();
+        clr();
+        t = src->t;
+        v = src->v;
+#endif
+        
     }
     
     /// copy of a type but this time a true copy, rather than a copy

@@ -9,6 +9,8 @@ link_directories(${ANGORT_SOURCE_DIR}/lib)
 #set(CMAKE_CXX_FLAGS_PROFILE -pg -Wall)
 #set(CMAKE_C_FLAGS_PROFILE -pg)
 
+option(PROFILE "enable profiling")
+
 add_subdirectory(cli)
 add_subdirectory(tests)
 add_subdirectory(lib)
