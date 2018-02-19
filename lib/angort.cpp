@@ -34,7 +34,8 @@
 #define CATCHALLKEY 0xdeadbeef
 
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std),
-LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated);
+LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated),
+LIBNAME(thread);
 
 namespace angort {
 
@@ -130,9 +131,15 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(math),true);
     registerLibrary(&LIBNAME(env),true);
     
+    // libraries which are not imported by default
+    registerLibrary(&LIBNAME(thread),true);
+    
+    
     // future and deprecated are not imported
     registerLibrary(&LIBNAME(future),false);
     registerLibrary(&LIBNAME(deprecated),false);
+    
+    
     tokeniserTrace=false;
     
     // now the standard package has been imported, set up the

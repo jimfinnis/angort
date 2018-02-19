@@ -183,7 +183,7 @@ GarbageCollected *GCType::getGC(Value *v)const{
     return v->v.gc;
 }
 
-GarbageCollected::GarbageCollected() : Lockable("gc"){
+GarbageCollected::GarbageCollected(const char *name) : Lockable(name){
     WriteLock lock=WL(&globalLock);
     refct=0;
     globalCount++;

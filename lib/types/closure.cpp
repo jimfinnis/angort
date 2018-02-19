@@ -10,7 +10,7 @@
 
 namespace angort {
 
-Closure::Closure(Closure *p) : GarbageCollected() {
+Closure::Closure(Closure *p) : GarbageCollected("closure") {
     parent = p;
     ip = NULL;
     if(p)p->incRefCt();

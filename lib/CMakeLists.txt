@@ -58,14 +58,14 @@ add_definitions(-Wall)
 #add_definitions(-g)
 
 add_words_files(libStd.cpp libColl.cpp  libString.cpp  libMath.cpp
-libEnv.cpp future.cpp deprecated.cpp)
+libThread.cpp libEnv.cpp future.cpp deprecated.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
-    cycle.cpp   binop.cpp   plugins.cpp    format.cpp    stringbuf.cpp
+    cycle.cpp binop.cpp plugins.cpp format.cpp stringbuf.cpp
     filefind.cpp value.cpp
-    types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
-    types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
-    types/hashtype.cpp         types/symbol.cpp       types/native.cpp
+    types/closure.cpp types/int.cpp types/float.cpp types/string.cpp
+    types/range.cpp types/code.cpp types/iter.cpp types/list.cpp
+    types/hashtype.cpp types/symbol.cpp types/native.cpp
     types/long.cpp types/double.cpp types/nsid.cpp
     ${WORDFILELIST})
 

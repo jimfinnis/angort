@@ -29,7 +29,7 @@ class GarbageCollected : public Lockable {
 public:
     
     /// set refct to zero, add to cycle detection system
-    GarbageCollected();
+    GarbageCollected(const char *name);
     /// remove from cycle detection system
     virtual ~GarbageCollected();
     

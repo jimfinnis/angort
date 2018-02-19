@@ -23,13 +23,12 @@ template <class T> struct Range : public GarbageCollected {
 //    virtual ~Range(){
 //        printf("%lu Delete range at %p\n",pthread_self(),this);
 //    }
-    
-    Range(){
+    Range() : GarbageCollected("range"){
         start = 0;
         end = 10;
         step = 1;
     }
-    Range(const Range<T>& r){
+    Range(const Range<T>& r) : GarbageCollected("range"){
         start = r.start;
         end = r.end;
         step = r.step;

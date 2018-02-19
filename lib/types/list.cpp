@@ -9,7 +9,7 @@
 
 namespace angort {
 
-ListObject::ListObject() : GarbageCollected(), list(32) {
+ListObject::ListObject() : GarbageCollected("list"), list(32) {
     dprintf("LISTOBJECT create at %p\n",this);
 }
 
