@@ -122,8 +122,18 @@ public:
         return runtime != NULL;
     }
     Thread(Angort *ang,Value *v,Value *_arg) : GarbageCollected("thread"){
+//        printf("+++++Creating new thread at %p\n",this);
         WriteLock lock=WL(&globalLock);
         incRefCt(); // make sure we don't get deleted until complete
+        
+        // this is the *usual* incref which is done in set() to say
+        // this is now assigned to a variable, since that's what we do.
+        // It's been moved here to avoid extra locking rather than
+        // after the thread creation outside a lock. If it's not here
+        // but in the usual place, we can get a race condition in which
+        // a thread will get decreffed very quickly and screw up.
+        
+        incRefCt(); 
         func.copy(v);
         _arg->t->clone(&arg,_arg); // clone the argument
 //        printf("%p %p\n",arg.v.gc,_arg->v.gc);
@@ -203,7 +213,9 @@ public:
         v->clr();
         v->t=this;
         v->v.gc = new Thread(ang,func,pass);
-        incRef(v);
+        // see the note in Thread ctor for why this is removed; normally
+        // we would incref here (see other GC types).
+//        incRef(v); 
     }
     
     // set a value to a thread

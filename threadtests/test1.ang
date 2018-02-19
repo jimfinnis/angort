@@ -1,4 +1,4 @@
-[`time,`thread,`io] each {i library drop}
+[`time,`io] each {i library drop}
 
 none (drop
     "/etc/dictionaries-common/words" "r" io$open io$readfilestr "\n" split

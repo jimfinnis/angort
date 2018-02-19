@@ -28,8 +28,10 @@ class GarbageCollected : public Lockable {
     static int globalCount;
 public:
     
-    /// set refct to zero, add to cycle detection system
+    /// set refct to zero, add to cycle detection system (with debugging name)
     GarbageCollected(const char *name);
+    /// set refct to zero, add to cycle detection system 
+    GarbageCollected();
     /// remove from cycle detection system
     virtual ~GarbageCollected();
     
@@ -59,7 +61,7 @@ public:
     void incRefCt(){
         WriteLock lock = WL(this);
         refct++;
-        dprintf("++ incrementing count for %p, now %d\n",this,refct);
+        dprintf("++ incrementing count for %s:%p, now %d\n",lockablename,this,refct);
         if(refct==0)
             throw RUNT(EX_REFS,"ref count too large");
     }
@@ -68,9 +70,9 @@ public:
     bool decRefCt(){
         WriteLock lock = WL(this);
         if(refct<=0)
-            throw RUNT(EX_REFS,"").set("ERROR - already deleted: %p!",this);
+            throw RUNT(EX_REFS,"").set("ERROR - already deleted: %s:%p!",lockablename,this);
         --refct;
-        dprintf("-- decrementing count for %p, now %d\n",this,refct);
+        dprintf("-- decrementing count for %s:%p, now %d\n",lockablename,this,refct);
         return refct==0;
     }
     

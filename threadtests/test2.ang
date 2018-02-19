@@ -1,4 +1,4 @@
-[`time,`thread,`io] each {i library drop}
+[`time,`io] each {i library drop}
 thread$mutex !Mutex
 
 

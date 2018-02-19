@@ -33,6 +33,7 @@ class Lockable {
     friend class WriteLock;
 #if defined(ANGORT_POSIXLOCKS)
     pthread_rwlock_t lock;
+protected:
     const char *lockablename;
 #endif
 public:

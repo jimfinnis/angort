@@ -1,6 +1,6 @@
 
 0!autogc
-[`time,`thread,`io] each {i library drop}
+[`time,`io] each {i library drop}
 
 :startMsgThread
     none (|:m| drop

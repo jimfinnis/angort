@@ -190,6 +190,13 @@ GarbageCollected::GarbageCollected(const char *name) : Lockable(name){
     CycleDetector::getInstance()->add(this);
     
 }
+GarbageCollected::GarbageCollected() : Lockable("???"){
+    WriteLock lock=WL(&globalLock);
+    refct=0;
+    globalCount++;
+    CycleDetector::getInstance()->add(this);
+    
+}
 
 
 

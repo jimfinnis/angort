@@ -1,6 +1,5 @@
 #!/usr/local/bin/angort
 
-`thread library drop
 `time library drop
 
 10 !THREADS
