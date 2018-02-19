@@ -4,22 +4,14 @@ project(ANGORT)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    message("Linux detected")
+    set(POSIXTHREADS,1)
+ELSE()
+    set(POSIXTHREADS,0)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
 link_directories(${ANGORT_SOURCE_DIR}/lib)
-
-# To use threading, you'll need to use the thread library in angortplugins
-# and build Angort itself with 
-#
-#  cmake -DPOSIXTHREADS=ON ..
-#
-
-
-option(POSIXTHREADS "enable POSIX threading")
-option(PROFILE "enable profiling")
-
-if(!POSIXTHREADS)
-    message("No POSIX threading support")
-endif(!POSIXTHREADS)
-
 
 option(PROFILE "enable profiling")
 
@@ -63,4 +55,11 @@ foreach(item ${anglibfiles})
 endforeach(item)
 
 install(FILES ${anglibfiles} makeWords.pl DESTINATION share/angort)
+
+
+
+# build a config file into the include dir so other projects know
+# how Angort was built.
+
+configure_file(${ANGORT_SOURCE_DIR}/config.h.in ${ANGORT_SOURCE_DIR}/include/config.h)
 

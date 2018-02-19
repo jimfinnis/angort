@@ -50,7 +50,6 @@ add_executable(angortcli ${SOURCE})
 
 if(POSIXTHREADS)
     message("CLI POSIX threads enabled")
-    set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
     target_compile_options(angortcli PUBLIC "-pthread")
 endif(POSIXTHREADS)
 

@@ -7,6 +7,9 @@
 #ifndef __LOCK_H
 #define __LOCK_H
 
+#include "config.h"
+
+
 #define LOCKDEBUG 0
 
 #if defined(ANGORT_POSIXLOCKS)
@@ -33,9 +36,9 @@ class Lockable {
     friend class WriteLock;
 #if defined(ANGORT_POSIXLOCKS)
     pthread_rwlock_t lock;
+#endif
 protected:
     const char *lockablename;
-#endif
 public:
 #if defined(ANGORT_POSIXLOCKS)
     const char *getLockableName(){return lockablename;}
