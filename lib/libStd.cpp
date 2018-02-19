@@ -24,6 +24,8 @@ void sighandler(int sig){
 
 namespace angort {
 
+bool boojum=false;
+
 /// define a property to set and get the auto cycle detection interval.
 /// It will be called "autogc".
 
@@ -36,6 +38,7 @@ public:
     }
     
     virtual void postSet(){
+        WriteLock lock=WL(&globalLock);
         run->ang->autoCycleInterval = v.toInt();
         run->autoCycleCount = run->ang->autoCycleInterval;
     }
@@ -67,7 +70,7 @@ public:
     }
 };
 
-// assumes (nsid name --) on the stack
+// assumes (nsid name --) on the stack. Must be locked!
 static NamespaceEnt *getNSEnt(Runtime *a){
     const StringBuffer &s = a->popString();
     int nsid = Types::tNSID->get(a->popval());
@@ -197,6 +200,20 @@ removing them.
 {
     static int snarkct=0;
     printf("SNARK %d\n",snarkct++);
+}
+
+%word boojum ( ) used during debugging; sets the boojum global
+{
+    WriteLock lock = WL(&globalLock);
+    printf("Setting boojum\n");
+    boojum=true;
+}
+
+%word endboojum ( ) used during debugging; clears the boojum global
+{
+    WriteLock lock = WL(&globalLock);
+    printf("Clearing boojum\n");
+    boojum=false;
 }
 
 %word none ( -- none ) stack a None value
@@ -422,6 +439,7 @@ Returns the total number of garbage collected objects in the system.
 Gets the value of a global variable by name.
 {
     int id = a->ang->findOrCreateGlobal(p0);
+    ReadLock lock(&a->ang->names);
     Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
     if(v->t == Types::tProp){
@@ -435,6 +453,7 @@ Gets the value of a global variable by name.
 %wordargs setglobal vs (val string -- val) set a global by name
 Sets the value of a global variable by name.
 {
+    WriteLock lock=WL(&a->ang->names);
     int id = a->ang->findOrCreateGlobal(p1);
     Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
@@ -694,6 +713,8 @@ This is the same as "??name".
 List all words in a given namespace, showing the help texts for all
 of them.
 {
+    // this may lock the namespace for quite some time.
+    ReadLock lock(&a->ang->names);
     Namespace *s = a->ang->names.getSpaceByName(a->popString().get());
     for(int i=0;i<s->count();i++){
         NamespaceEnt *e = s->getEnt(i);
@@ -736,6 +757,7 @@ structures which refer to themselves).
 Return a namespace ID for a given namespace. Throws ex$notfound if there
 is no such namespace.
 {
+    ReadLock lock(&a->ang->names);
     const StringBuffer& name = a->popString();
     Namespace *ns = a->ang->names.getSpaceByName(name.get());
     Types::tNSID->set(a->pushval(),ns->idx);
@@ -745,6 +767,7 @@ is no such namespace.
 Returns a list names of all namespaces, in the order in which they
 were created.
 {
+    ReadLock lock(&a->ang->names);
     ArrayList<Value> *list=Types::tList->set(a->pushval());
     a->ang->names.spaces.appendNamesToList(list);
 }
@@ -753,6 +776,7 @@ were created.
 Returns a list of names from a namespace whose handle has been obtained
 with "nspace".
 {
+    ReadLock lock(&a->ang->names);
     int idx = Types::tNSID->get(a->popval());
     Namespace *ns = a->ang->names.getSpaceByIdx(idx);
     if(!ns)a->pushNone();
@@ -767,6 +791,7 @@ with "nspace".
 Returns true if the identifier is private inside the given namespace, which
 is identified by a nsid returned by "nspace".
 {
+    ReadLock lock(&a->ang->names);
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isPriv?1:0);
     
@@ -775,6 +800,7 @@ is identified by a nsid returned by "nspace".
 Returns true if the identifier is modifiable inside the given namespace, which
 is identified by a nsid returned by "nspace".
 {
+    ReadLock lock(&a->ang->names);
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isConst?1:0);
     
@@ -784,6 +810,7 @@ is identified by a nsid returned by "nspace".
 Looks up an identifier in a namespace, which is identified by a nsid
 returned by "nspace", and returns its value.
 {
+    ReadLock lock(&a->ang->names);
     NamespaceEnt *ent = getNSEnt(a);
     a->pushval()->copy(&ent->v);
 }
@@ -958,6 +985,7 @@ into the default namespace, making them available without full
 qualification. The idiom for this is typically:
 `libname nspace [`s1,`s2..] import
 {
+    WriteLock lock=WL(&a->ang->names);
     a->checkzerothread();
     if(a->stack.peekptr()->t==Types::tNSID){
         int nsid = Types::tNSID->get(a->popval());

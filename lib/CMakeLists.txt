@@ -57,8 +57,8 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
 add_definitions(-Wall)
 #add_definitions(-g)
 
-add_words_files(stdWords.cpp   stdColl.cpp  stdString.cpp  stdMath.cpp
-stdEnv.cpp future.cpp deprecated.cpp)
+add_words_files(libStd.cpp libColl.cpp  libString.cpp  libMath.cpp
+libEnv.cpp future.cpp deprecated.cpp)
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     cycle.cpp   binop.cpp   plugins.cpp    format.cpp    stringbuf.cpp
@@ -70,6 +70,12 @@ set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})
+
+if(POSIXTHREADS)
+    message("POSIX threads enabled")
+    set_property(TARGET angort APPEND PROPERTY COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+    target_compile_options(angort PUBLIC "-pthread")
+endif(POSIXTHREADS)
 
 if(PROFILE)
     message("profiling enabled")

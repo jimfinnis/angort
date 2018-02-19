@@ -4,9 +4,12 @@ find_package(Libedit REQUIRED)
 include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
 include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
-set(CMAKE_CXX_FLAGS "-pthread")
-set(CMAKE_C_FLAGS "-pthread")
-set(CMAKE_EXE_LINKER_FLAGS,"-pthread")
+if(POSIXTHREADS)
+    message("CLI POSIX threads enabled")
+    set(PTHREAD "-lpthread")
+else()  
+    set(PTHREAD "")
+endif(POSIXTHREADS)
 
 set(WORDFILELIST)
 
@@ -45,6 +48,12 @@ set(SOURCE main.cpp completer.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
 
 add_executable(angortcli ${SOURCE})
 
+if(POSIXTHREADS)
+    message("CLI POSIX threads enabled")
+    set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS ANGORT_POSIXLOCKS)
+    target_compile_options(angortcli PUBLIC "-pthread")
+endif(POSIXTHREADS)
+
 if(EDITLINE_NOUNICODE)
     set_property(TARGET angortcli APPEND PROPERTY COMPILE_DEFINITIONS EDITLINE_NOUNICODE)
 endif()
@@ -62,7 +71,7 @@ endif()
 set_target_properties(angortcli PROPERTIES
     OUTPUT_NAME angort)
 
-target_link_libraries(angortcli angort ${LIBEDIT_LIBRARIES})
+target_link_libraries(angortcli angort ${LIBEDIT_LIBRARIES} ${PTHREAD})
 
 install(TARGETS angortcli
     RUNTIME DESTINATION bin)

@@ -54,6 +54,7 @@ public:
         throw RUNT("ex$nocol","cannot get slice of hash");
     }
     virtual void clone(Value *out,const Value *in,bool deep=false)const;
+    virtual class Lockable *getLockable(Value *v) const;
 };
 
 }    

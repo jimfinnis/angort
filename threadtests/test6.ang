@@ -7,7 +7,7 @@
 0!autogc
 ######################################## main program
 
-:runrange |:f,lst| # fails
+:runrange # fails
     [] 0 10 range each{
         0 i range (|rangeseg:|
             # thread code
@@ -15,9 +15,12 @@
         ) thread$create,
     }
     dup thread$join (thread$retval) map show.
+    ct. 10 10 10 drop drop drop
+    gc
+    gccount.
 ;
 
-:runrangenoval |:f,lst| # works - it seems passing in values fails
+:runrangenoval # works - it seems passing in values fails
     [] 0 10 range each{
         none (drop
             # thread code
@@ -27,7 +30,7 @@
     thread$join
 ;
 
-:runrange2 |:f,lst,t| # fails!
+:runrange2 |:t| # fails!
     [] 0 10 range each {
         none (
             [] 0  thread$waitrecv each {1+}, thread$cur thread$id,

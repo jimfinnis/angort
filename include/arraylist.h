@@ -8,6 +8,8 @@
 // we need placement new, sadly.
 #include <new> 
 
+#include "lock.h"
+
 namespace angort {
 
 /// comparator object for sorting
@@ -25,7 +27,7 @@ template <class T> struct ArrayListComparator {
 /// not run the destructors and constructors. We do run these
 /// when the list is created or destroyed, however.
 
-template <class T> class ArrayList {
+template <class T> class ArrayList : public Lockable {
     // because I don't want to rely on c++11 delegated ctors
     void init(int n){ 
         capacity = n;
@@ -37,11 +39,11 @@ template <class T> class ArrayList {
     }
 public:
     /// create a list, with initially enough room for n elements
-    ArrayList(int n){
+    ArrayList(int n) : Lockable("list"){
         init(n);
     }
     
-    ArrayList() {
+    ArrayList() : Lockable("list"){
         init(4);
     }
     

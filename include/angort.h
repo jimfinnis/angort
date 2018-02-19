@@ -25,6 +25,7 @@ typedef void (*NativeFunc)(class Runtime *a);
 #include "types.h"
 #include "value.h"
 #include "namespace.h"
+#include "lock.h"
 
 namespace angort {
 
@@ -655,7 +656,7 @@ private:
     /// called at the end of a block of code,
     /// or by emergency stop invocation. May set the IP to NULL.
     void ret();
-    
+
 public:
     class Angort *ang; // main angort object
     // annoyingly public to allow debugger access
@@ -848,6 +849,10 @@ public:
 };
 
 
+/// global lock
+extern Lockable globalLock;
+
+
 /// This is the main Angort class, of which there should be only
 /// one instance.
 
@@ -856,7 +861,6 @@ class Angort {
     friend class Runtime;
     friend class AutoGCProperty;
     friend class SearchPathProperty;
-    friend class GlobalLock;
 private:
     
     bool running; //!< used by shutdown()
@@ -951,7 +955,7 @@ public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
-    
+
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){
         debuggerHook = f;
@@ -1097,8 +1101,6 @@ public:
     /// import all symbols in the `deprecated namespace
     void importAllDeprecated();
 };
-
-
 
 
 }

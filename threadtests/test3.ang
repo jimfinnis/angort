@@ -21,4 +21,4 @@
     0 swap (+) reduce.
 ;
 
-main quit
+{main} quit

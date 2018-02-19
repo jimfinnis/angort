@@ -64,6 +64,8 @@ struct Value {
     
     /// decrement reference count and set type to NONE. 
     inline void clr(){
+        extern Lockable globalLock;
+//        WriteLock lock = WL(&globalLock);
         if(t&&t!=Types::tNone){
             if(GarbageCollected *gc = t->getGC(this)){
                 if(gc->refct<=0)
@@ -219,6 +221,11 @@ struct Value {
     /// make sure the string gets copied on copy-create
     Value(const Value &src){
         copy(&src);
+    }
+    
+    /// return a lockable for this value (i.e. underlying list or hash, typically) or NULL
+    virtual class Lockable *getLockable() const{
+        return t->getLockable((Value *)this);
     }
 };
 

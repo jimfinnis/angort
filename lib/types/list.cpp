@@ -44,11 +44,16 @@ ArrayList<Value> *ListType::get(Value *v)const{
     return &v->v.list->list;
 }
 
+// list iterator locking: on construction there's no lock;
+// lock is created if required on first() and destroyed on end of loop or
+// destructor.
+
 class ListIterator : public Iterator<Value *>{
     Value v; //!< the current value, as an actual value
     int idx; //!< current index
     bool isKey;
     ListObject *list; //!< the range we're iterating over
+    ReadLock *lock;
     
     /// copy the current value into the value
     inline void copyCurrent(){
@@ -62,6 +67,7 @@ public:
     /// create a list iterator for a list
     ListIterator(const ListObject *r,bool iskeyiterator){
         idx=0;
+        lock = NULL; // starts with no lock
         isKey = iskeyiterator;
         list = (ListObject *)r;
         /// increment the list's reference count
@@ -74,15 +80,20 @@ public:
             delete list;
         }
         v.clr();
+        if(lock){delete lock; lock=NULL;}
     }
     
     /// set the current value to the first item
     virtual void first(){
         idx=0;
+        if(lock)delete lock;
+        lock = new ReadLock(&list->list);
         if(idx<list->list.count())
             copyCurrent();
-        else
+        else {
             v.clr();
+            if(lock){delete lock; lock=NULL;}
+        }
     }
     /// set the current value to the next item
     virtual void next(){
@@ -91,6 +102,7 @@ public:
             copyCurrent();
         else{
             v.clr();
+            if(lock){delete lock; lock=NULL;}
         }
     }
     /// return true if we're out of bounds
@@ -121,22 +133,26 @@ Iterator<Value *> *ListObject::makeKeyIterator()const{
 
 void ListType::setValue(Value *coll,Value *k,Value *v)const{
     ListObject *r = coll->v.list;
+    WriteLock lock=WL(&r->list);
     int i = k->toInt();
     r->list.set(i,v);
 }
 
 void ListType::getValue(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
+    ReadLock lock(&r->list);
     int i = k->toInt();
     result->copy(r->list.get(i));
 }
 
 int ListType::getCount(Value *coll)const{
     ListObject *r = coll->v.list;
+    ReadLock lock(&r->list);
     return r->list.count();
 }
 void ListType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     ListObject *r = coll->v.list;
+    WriteLock lock=WL(&r->list);
     int i = k->toInt();
     // will throw if out of range
     result->copy(r->list.get(i));
@@ -147,6 +163,9 @@ void ListType::removeAndReturn(Value *coll,Value *k,Value *result)const{
 void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
+    
+    WriteLock lock1=WL(outlist);
+    ReadLock lock2(list);
     
     int listlen = list->count();
     if(start<0)start=listlen+start;
@@ -166,6 +185,8 @@ void ListType::slice_dep(Value *out,Value *coll,int start,int len)const{
 void ListType::slice(Value *out,Value *coll,int startin,int endin)const{
     ArrayList<Value> *outlist = set(out);
     ArrayList<Value> *list = get(coll);
+    WriteLock lock1=WL(outlist);
+    ReadLock lock2(list);
     
     int start,end;
     int listlen = list->count();
@@ -181,6 +202,9 @@ void ListType::slice(Value *out,Value *coll,int startin,int endin)const{
 
 void ListType::clone(Value *out,const Value *in,bool deep)const{
     ListObject *p = new ListObject();
+    
+    WriteLock lock=WL(&p->list);
+    
     // cast away constness - makeIterator() can't be const
     // because it modifies refcounts
     ListIterator iter(in->v.list,false);

@@ -1,5 +1,6 @@
-gccount!BaseGC
+`io library drop
 
+gccount!BaseGC
 [%] !A
 [%] !B
 
@@ -16,7 +17,6 @@ gc
 gccount.
 ?BaseGC gccount = "cycle2a" assert
 
-
 [%] !A
 [% `foo A ] !B
 [% `bar B, `fod A] !C
@@ -26,7 +26,6 @@ gccount .
 
 gc
 ?BaseGC 3+ gccount = "cycle2c" assert
-
 0 !A
 0 !B
 0 !C
@@ -36,7 +35,6 @@ gccount.
 ?BaseGC gccount = "cycle4" assert
 
 # hashes appear to be OK, let's check lists.
-
 [10,20,30] !A
 [1,2,3,?A,4] !B
 ?B ?A push
@@ -48,7 +46,6 @@ gccount.
 0 !B
 gc
 ?BaseGC gccount  = "listcyc2" assert
-
 # lists are good, let's do something with closures AND lists
 
 snark
@@ -60,7 +57,6 @@ snark
 ?A push
 
 # clear the locals stack
-
 :foo |a,b,c,d:|;
 
 1 2 3 4 foo
@@ -71,5 +67,4 @@ gc
 gccount.
 
 ?BaseGC gccount  = "closurecyc2" assert
-
 quit

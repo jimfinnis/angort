@@ -56,6 +56,11 @@ public:
     
 };
 
+
+Lockable *HashType::getLockable(Value *v) const{
+    return get(v);
+}
+
 Iterator<Value *> *HashObject::makeValueIterator() const{
     return new HashObjectIterator(this,false);
 }
