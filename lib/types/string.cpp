@@ -236,4 +236,27 @@ Iterator<Value *> *StringType::makeValueIterator(Value *v)const{
     return new StringIterator(v);
 }
 
+int StringType::getIndexOfContainedItem(Value *v,Value *item)const {
+    const StringBuffer &b = StringBuffer(v);
+    const wchar_t *haystack = b.getWideBuffer();
+    const StringBuffer &b2 = StringBuffer(item);
+    const wchar_t *needle = b2.getWideBuffer();
+    
+    const wchar_t *res = wcsstr(haystack,needle);
+    if(res){
+        return res-haystack;
+    } else return -1;
+}
+
+bool StringType::contains(Value *v,Value *item) const {
+    const StringBuffer &b = StringBuffer(v);
+    const wchar_t *haystack = b.getWideBuffer();
+    const StringBuffer &b2 = StringBuffer(item);
+    const wchar_t *needle = b2.getWideBuffer();
+    
+    const wchar_t *res = wcsstr(haystack,needle);
+    return res!=NULL;
+}
+
+
 }

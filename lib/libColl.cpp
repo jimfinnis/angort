@@ -574,8 +574,8 @@ the item.
     Value *iterable = a->popval();
     Value *item = a->popval();
     
-    // will create an iterator which has a lock
-    bool b = iterable->t->getIndexOfContainedItem(iterable,item)>=0;
+    // may create an iterator which has a lock
+    bool b = iterable->t->contains(iterable,item);
     
     a->pushInt(b?1:0);
 }

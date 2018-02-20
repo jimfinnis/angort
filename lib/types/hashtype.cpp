@@ -151,13 +151,17 @@ void HashType::removeAndReturn(Value *coll,Value *k,Value *result)const{
         result->clr();
 }
 
-bool HashType::isIn(Value *coll,Value *item)const{
+bool HashType::contains(Value *coll,Value *item)const{
     Hash *h = coll->v.hash->hash;
     ReadLock lock(h);
     if(h->find(item))
         return true;
     else
         return false;
+}
+
+int HashType::getIndexOfContainedItem(Value *coll,Value *item)const {
+    throw RUNT(EX_BADOP,"cannot find index of item in a hash");
 }
 
 void HashType::clone(Value *out,const Value *in,bool deep)const{

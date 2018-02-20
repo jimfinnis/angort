@@ -45,6 +45,13 @@ global b
 ?B "foo" = "clone3" assert
 
 
+"f" "foo" in "strin1" assert
+"g" "foo" in not "strin2" assert
+"go" "foo" in not "strin2a" assert
+"fo" "foo" in "strin3" assert
+"oo" "foo" in "strin4" assert
+"" "foo" in "strin5" assert
+
 quit
 
 

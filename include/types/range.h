@@ -44,7 +44,8 @@ public:
     /// get a hash key
     virtual uint32_t getHash(Value *v)const;
     
-    virtual bool isIn(Value *v,Value *item)const;
+    virtual int getIndexOfContainedItem(Value *v,Value *item)const;
+    virtual bool contains(Value *v,Value *item) const;
     
     /// are these two equal
     virtual bool equalForHashTable(Value *a,Value *b)const;

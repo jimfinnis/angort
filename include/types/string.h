@@ -45,6 +45,11 @@ public:
         throw RUNT("ex$string","cannot remove from string");
     }
     
+    /// return the index of item is in the collection (uses the same
+    /// equality test as hash keys).If not present, returns -1.
+    virtual int getIndexOfContainedItem(Value *v,Value *item)const;
+    virtual bool contains(Value *v,Value *item) const;
+    
     virtual Iterator<Value *> *makeValueIterator(Value *v)const;
     
     /// are these two equal
