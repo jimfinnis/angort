@@ -9,23 +9,22 @@
 :fac |x:| ?x 1 = if 1 else ?x ?x 1 - fac * then;
 
 :main |:t|
-    # create the threads, producing a list of thread objects
-    [] 1 11 range each {
+    [] 1 11 range each{i,} !L # create list of arguments
+    # create the threads
+    ?L each {
         # null thread argument, thread function
         none (
             # wait for the message and calculate the factorial
             thread$waitrecv fac
-            # send the factorial back to the root thread
+            # send the factorial back to the root thread (id none)
             none thread$send
         ) thread$create !t
         # send the message (the integer) to the thread
         i ?t thread$send
-        ?t, # add the thread to the list
     } 
-    # get a list of results by running waitrecv over the list of threads
-    # Note, waitrecv doesn't actually take arguments, it just gets the
-    # next message. Therefore we drop the argument first.
-    (drop thread$waitrecv) map
+    # get a list of results by running waitrecv the right
+    # number of times
+    ?L (0.1 time$delay drop thread$waitrecv) map
     # use reduce to sum the results
     0 swap (+) reduce.
 ;

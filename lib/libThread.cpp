@@ -98,9 +98,6 @@ public:
 //        printf("%d write ok\n",snark);
         pthread_mutex_unlock(&mutex2);
     }
-    
-    
-    
 };
 
 void *_threadfunc(void *);
@@ -170,11 +167,17 @@ public:
         //        printf("Deleting OK\n");
         runtime = NULL;
         func.clr();
-        // decrement refct, and delete this if it's zero. This is kind
-        // of OK, here - it's the last thing that happens.
         //            printf("End of run refcount is %d\n",(int)refct);
+        
+        // decrement refct, and "delete this" if it's zero. This is kind
+        // of OK, here - it's the last thing that happens. It will
+        // happen if the thread dies after it has been "forgotten" by
+        // everything else in Angort, which could be after it has
+        // sent a message back. If we're using the retval mechanism
+        // it will still have a live handle to get the retval from.
+        //
         if(decRefCt()){
-            printf("Refcount delete at end of run()\n");
+//            printf("Refcount delete at end of run()\n");
             delete this; 
         }
     }
