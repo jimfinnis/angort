@@ -85,10 +85,12 @@ Lockable *HashType::getLockable(Value *v) const{
 }
 
 Iterator<Value *> *HashObject::makeValueIterator() const{
+    ReadLock lock(hash);
     return new HashObjectIterator(this,false);
 }
 
 Iterator<Value *> *HashObject::makeKeyIterator() const {
+    ReadLock lock(hash);
     return new HashObjectIterator(this,true);
 }
 
@@ -120,11 +122,13 @@ void HashType::setValue(Value *coll,Value *k,Value *v)const{
     if(coll->t != this)
         throw RUNT("ex$nohash","").set("not a hash, is a %s",coll->t->name);
     Hash *h = coll->v.hash->hash;
+    WriteLock lock = WL(h);
     h->set(k,v);
 }
 
 void HashType::getValue(Value *coll,Value *k,Value *result)const{
     Hash *h = coll->v.hash->hash;
+    ReadLock lock(h);
     if(h->find(k))
         result->copy(h->getval());
     else
@@ -133,11 +137,13 @@ void HashType::getValue(Value *coll,Value *k,Value *result)const{
 
 int HashType::getCount(Value *coll)const{
     Hash *h = coll->v.hash->hash;
+    ReadLock lock(h);
     return h->count();
 }
 
 void HashType::removeAndReturn(Value *coll,Value *k,Value *result)const{
     Hash *h = coll->v.hash->hash;
+    WriteLock lock = WL(h);
     if(h->find(k)){
         result->copy(h->getval());
         h->del(k);
@@ -147,6 +153,7 @@ void HashType::removeAndReturn(Value *coll,Value *k,Value *result)const{
 
 bool HashType::isIn(Value *coll,Value *item)const{
     Hash *h = coll->v.hash->hash;
+    ReadLock lock(h);
     if(h->find(item))
         return true;
     else
@@ -156,6 +163,8 @@ bool HashType::isIn(Value *coll,Value *item)const{
 void HashType::clone(Value *out,const Value *in,bool deep)const{
     HashObject *p = new HashObject();
     Hash *h = get(const_cast<Value *>(in));
+    
+    WriteLock lock=WL(p->hash);
     
     // cast away constness - makeIterator() can't be const
     // because it modifies refcounts
