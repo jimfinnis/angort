@@ -62,7 +62,12 @@
 ?H?`bar 2 = "hadd3" assert
 ?H?`baz 3 = "hadd4" assert
 
-
+# test hash iterator by putting keys into list
+[] ?H each {i,} !L
+?L len 3 = "hiter1" assert
+`foo ?L in "hiter2" assert
+`bar ?L in "hiter2" assert
+`baz ?L in "hiter2" assert
 
  
 

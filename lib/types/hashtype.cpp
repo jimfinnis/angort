@@ -29,15 +29,18 @@ void HashObject::wipeContents(){
 }
 
 // this is unpleasant, but happened because the underlying iterators don't
-// know about the value to lock it.
+// know about the value to lock it. It also encapsulates the hash iterator
+// thread lock, which works the same way as in lists.
 
 class HashObjectIterator : public Iterator<Value *>{
     HashObject *h;
     Iterator<Value *> *iter; // the underlying iterator
+    ReadLock *lock;
 public:
     HashObjectIterator(const HashObject *ho,bool iskeyiterator){
         h = (HashObject *)ho;
         h->incRefCt();
+        lock=NULL;
         if(iskeyiterator)iter = new HashKeyIterator(h->hash);
         else iter = new HashValueIterator(h->hash);
     }
@@ -46,13 +49,33 @@ public:
         delete iter;
         if(h->decRefCt())
             delete h;
+        if(lock){delete lock; lock=NULL;}
     }
     
-    virtual void first() {iter->first();}
-    virtual void next() {iter->next();}
-    virtual bool isDone()const {return iter->isDone();}
-    virtual int index() const {return iter->index();}
-    virtual Value *current() {return iter->current();}
+    virtual void first() {
+        if(lock)delete lock;
+        lock = new ReadLock(h->hash);
+        iter->first();
+        if(iter->isDone()){
+            delete lock;
+            lock=NULL;
+        }
+    }
+    virtual void next() {
+        iter->next();
+        if(iter->isDone()){
+            if(lock){delete lock; lock=NULL;}
+        }
+    }
+    virtual bool isDone()const {
+        return iter->isDone();
+    }
+    virtual int index() const {
+        return iter->index();
+    }
+    virtual Value *current() {
+        return iter->current();
+    }
     
 };
 

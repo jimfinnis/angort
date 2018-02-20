@@ -1,27 +1,24 @@
 # Threads.
 
-THESE DO NOT WORK IN THE MASTER BUILD.
+## Threads, GC and global access
 
-Oh lord, threads. There is a threading library in **angortplugins**,
-but in order to work it relies on Angort being properly thread-safe,
-which it isn't. First I'll deal with how the library works (or rather
-*should* work), and then I'll deal with what needs to be done.
-
-## Threads and GC
 Because threads can theoretically modify any object, to make it work
 with GC I've had to slap global locks all around the GC system.
 And since every time a GC object is accessed it uses the GC system,
 these locks run an awful lot. This makes Angort a bit on the inefficient
 side when threading. If you run a pure Angort app with lots of
-threads, you'll notice that the CPU utilisation isn't what it might be.
-Ways around this in the future are:
-- remove the locks and somehow manage how threads and the main thread exchange data some other way, preventing threads from accessing globals
-- replace the current GC system with a simple mark/sweep rather than the current system (refcounting with occasional cycle detection), so we have one big lock around the GC tick.
-Each container object has its own lock, so the latter version should work safely.
+threads, you might notice that the CPU utilisation isn't what it might be.
+
+It's a bit better than it once was because I've removed the lock
+around the `clr()` method of `Value`. This isn't ideal, but this method
+is called a huge amount - whenever a value overwrites another value.
+In consequence, you MUST NOT access a global in a thread without
+using a thread library mutex.
 
 ## Thread library
 
-To use the library, import the `thread` library. Then create
+The thread library is not imported by default, but is now built into
+Angort. Create
 a thread using `thread$create`, which takes an argument and a function
 (*not* a closure - that would be very hard indeed). The argument is
 copied onto the thread's stack - all threads get a separate runtime
@@ -35,7 +32,7 @@ can be read from the handle with `thread$retval`.
 
 Thus we can write code like this:
 ```
-[`time, `thread] each {i library drop}
+`time library drop
 
 (
     []
@@ -84,6 +81,8 @@ And the "things" are (as far as I can tell)
 - `ListObject` arrays - DONE - `ArrayList` is lockable, so `ListObject` wraps it with calls which lock
 - list iterators create a writelock on the list, which is destroyed when the iterator completes or is destroyed. Resetting with `first should be OK too.
 - list cloning is inside writelock on the destination list, and the iterator will create a readlock on the source list.
+- global locking (unfortunately) on increment/decrement operations on gc objects.
 ###Not done things
+- test removing the GC global locks
 - `HashObject` hashes and their iterators
 
