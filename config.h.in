@@ -1,0 +1,3 @@
+// Automatically generated!
+
+#define ANGORT_POSIXLOCKS ${POSIXTHREADS}
