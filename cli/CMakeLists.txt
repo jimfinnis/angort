@@ -1,5 +1,6 @@
 project(ANGORTCLI)
 find_package(Libedit REQUIRED)
+message(${ANGORT_SOURCE_DIR}/include)
 
 include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
 include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)

@@ -5,7 +5,7 @@
  * long description, many sentences.
  * 
  */
-
+#include "/home/white/angort/include/config.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -90,7 +90,7 @@ bool debugOnSignal=false;
 // this symbol needs to be defined if editline wasn't compiled with
 // UNICODE support, as it wasn't on earlier versions of Ubuntu.
 
-#if EDITLINE_NOUNICODE
+#if(EDITLINE_NOUNICODE)
 const char *getPrompt(){
     extern Value promptCallback;
 #else
@@ -119,7 +119,7 @@ const wchar_t *getPrompt(){
                 GarbageCollected::getGlobalCount(),
                 runtime->stack.ct,pchar);
     }
-#if EDITLINE_NOUNICODE
+#if(EDITLINE_NOUNICODE)
     return buf;
 #else
     // convert to wide, we have to do it here rather than leave it
@@ -354,7 +354,7 @@ int main(int argc,char *argv[]){
     // start up an editline instance
     
     el = el_init(argv[0],stdin,stdout,stderr);
-#if EDITLINE_NOUNICODE
+#if(EDITLINE_NOUNICODE)
     el_set(el,EL_PROMPT,&getPrompt); // sorry, no unicode support...
 #else
     el_wset(el,EL_PROMPT,&getPrompt); // use wide prompt (see getPrompt for why)

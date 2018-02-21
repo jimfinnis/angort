@@ -4,16 +4,25 @@ project(ANGORT)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+option(PROFILE "enable profiling")
+option(EDITLINE_NOUNICODE "using a version of editline with no unicode support")
+
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     message("Linux detected")
-    set(POSIXTHREADS,1)
+    set(POSIXTHREADS 1)
 ELSE()
-    set(POSIXTHREADS,0)
+    set(POSIXTHREADS 0)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-link_directories(${ANGORT_SOURCE_DIR}/lib)
+# build a config file into the include dir so other projects know
+# how Angort was built.
 
-option(PROFILE "enable profiling")
+message("Writing config")
+configure_file(${ANGORT_SOURCE_DIR}/config.h.in ${ANGORT_SOURCE_DIR}/include/config.h)
+
+
+
+link_directories(${ANGORT_SOURCE_DIR}/lib)
 
 add_subdirectory(cli)
 add_subdirectory(tests)
@@ -57,9 +66,4 @@ endforeach(item)
 install(FILES ${anglibfiles} makeWords.pl DESTINATION share/angort)
 
 
-
-# build a config file into the include dir so other projects know
-# how Angort was built.
-
-configure_file(${ANGORT_SOURCE_DIR}/config.h.in ${ANGORT_SOURCE_DIR}/include/config.h)
 

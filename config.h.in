@@ -1,3 +1,5 @@
 // Automatically generated!
 
 #define ANGORT_POSIXLOCKS ${POSIXTHREADS}
+#cmakedefine01 EDITLINE_NOUNICODE
+
