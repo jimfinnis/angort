@@ -132,7 +132,7 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(env),true);
     
     // libraries which are not imported by default
-    registerLibrary(&LIBNAME(thread),true);
+    registerLibrary(&LIBNAME(thread),false);
     
     
     // future and deprecated are not imported
