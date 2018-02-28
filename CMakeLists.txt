@@ -6,12 +6,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 option(PROFILE "enable profiling")
 option(EDITLINE_NOUNICODE "using a version of editline with no unicode support")
-
+option(POSIXTHREADS "enable POSIX threading (experimental")
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     message("Linux detected")
-    set(POSIXTHREADS 1)
+#    set(POSIXTHREADS 1)
 ELSE()
-    set(POSIXTHREADS 0)
+#    set(POSIXTHREADS 0)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 # build a config file into the include dir so other projects know

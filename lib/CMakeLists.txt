@@ -57,8 +57,12 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
 add_definitions(-Wall)
 #add_definitions(-g)
 
-add_words_files(libStd.cpp libColl.cpp  libString.cpp  libMath.cpp
-libThread.cpp libEnv.cpp future.cpp deprecated.cpp)
+add_words_files(libStd.cpp libColl.cpp libString.cpp libMath.cpp
+libEnv.cpp future.cpp deprecated.cpp)
+
+if(POSIXTHREADS)
+    add_words_files(libThread.cpp)
+endif()
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
     cycle.cpp binop.cpp plugins.cpp format.cpp stringbuf.cpp

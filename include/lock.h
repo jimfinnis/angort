@@ -12,7 +12,8 @@
 
 #define LOCKDEBUG 0
 
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
+#pragma message "Threading on"
 #include <pthread.h>
 #include <errno.h>
 #endif
@@ -20,13 +21,14 @@
 #include "exception.h"
 
 #if(LOCKDEBUG)
-#define lockprintf printf
+#define lockprintf if(boojum)printf
 #else
 #define lockprintf if(0)printf
 #endif
 
 namespace angort {
 
+extern bool boojum;
 /// an rwlock thingy; don't want to require c++17 at this point.
 /// Shared-lockable classes should inherit this, and then create either
 /// ReadLock or WriteLock in the block where access is done (RAII).
@@ -34,24 +36,24 @@ namespace angort {
 class Lockable {
     friend class ReadLock;
     friend class WriteLock;
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
     pthread_rwlock_t lock;
 #endif
 protected:
     const char *lockablename;
 public:
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
     const char *getLockableName(){return lockablename;}
 #endif    
     Lockable(const char *n){
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
         lockablename = n;
         lockprintf("Registering lockable %s at %p\n",lockablename,this);
         pthread_rwlock_init(&lock,NULL);
 #endif
     }
     ~Lockable(){
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
         pthread_rwlock_destroy(&lock);
 #endif
     }
@@ -61,7 +63,7 @@ class ReadLock {
     Lockable *t;
 public:
     ReadLock(const Lockable* _t){
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
         t = (Lockable *)_t;
         if(t){
             lockprintf("READLOCK START on %s %p\n",t->getLockableName(),&t->lock);
@@ -70,7 +72,7 @@ public:
 #endif
     }
     ~ReadLock(){
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
         if(t){
             lockprintf("READLOCK END on %s %p\n",t->getLockableName(),&t->lock);
             pthread_rwlock_unlock(&t->lock);
@@ -95,7 +97,7 @@ public:
         file = f;
         line = l;
 #endif
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
         t = (Lockable *)_t;
 #if(LOCKDEBUG)
         lockprintf("%8lu: TRY WRITELOCK START on %s %p at %s:%d\n",pthread_self(),t->getLockableName(),&t->lock,file,line);
@@ -116,7 +118,7 @@ public:
 #endif
     }
     ~WriteLock(){
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
         if(locked){
 #if(LOCKDEBUG)
             lockprintf("%8lu: WRITELOCK END on %s %p at %s:%d\n",pthread_self(),t->getLockableName(),&t->lock,file,line);

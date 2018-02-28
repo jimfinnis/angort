@@ -79,8 +79,13 @@ void Runtime::popParams(Value **out,const char *spec,const Type *type0,
             if(!tt)
                 throw ParameterTypeException(i,"unsupplied special type specified in parameter check",v->t->name);
             // if the parameter is upper case, we don't allow NONE through.
-            if( ! ((v->t == tt) || (v->isNone() && (*p=='a' || *p=='b')))) // easier to read with the negation
-                throw ParameterTypeException(i,tt->name,v->t->name);
+            if(*p=='A' || *p=='B'){
+                if(v->t != tt)
+                    throw ParameterTypeException(i,tt->name,v->t->name);
+            } else {
+                if((v->t != tt) && v->t != Types::tNone)
+                    throw ParameterTypeException(i,tt->name,v->t->name,true);
+            }
             break;
                 
         case 'v':

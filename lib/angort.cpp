@@ -34,13 +34,17 @@
 #define CATCHALLKEY 0xdeadbeef
 
 extern angort::LibraryDef LIBNAME(coll),LIBNAME(string),LIBNAME(std),
-LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated),
-LIBNAME(thread);
+LIBNAME(math),LIBNAME(env),LIBNAME(future),LIBNAME(deprecated);
+
+
+#if ANGORT_POSIXLOCKS
+extern angort::LibraryDef LIBNAME(thread);
+#endif
 
 namespace angort {
 
 bool hasLocking(){
-#if defined(ANGORT_POSIXLOCKS)
+#if ANGORT_POSIXLOCKS
     return true;
 #else
     return false;
@@ -132,8 +136,9 @@ Angort::Angort() {
     registerLibrary(&LIBNAME(env),true);
     
     // libraries which are not imported by default
+#if ANGORT_POSIXLOCKS
     registerLibrary(&LIBNAME(thread),false);
-    
+#endif    
     
     // future and deprecated are not imported
     registerLibrary(&LIBNAME(future),false);
