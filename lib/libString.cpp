@@ -205,6 +205,42 @@ numeric types. The list contains the items to be substituted into the string.
     Types::tString->set(v,sbuf);
 }
 
+inline int wordlen(const wchar_t * s){
+    const wchar_t *p;
+    for(p = s; *s && *s!=' ' && *s!='\t' && *s!='\n'; s++){}
+    return(s-p);
+}
+%word wrap (string maxlen -- string) word wrap to max characters, inserting breaks. Tabs are one space!
+{
+    int maxlen = a->popInt();
+    Value *v = a->stack.peekptr();
+    const StringBuffer &sb = v->toString();
+    const char *src = sb.get();
+    int len = wstrlen(src);
+    
+    wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    int rv = mbstowcs(s,src,len+1);
+    if(rv<0){
+        a->pushNone();
+        return;
+    }
+    int llen=0;
+    for(wchar_t *p = s;*p;p++,llen++){
+        if(*p=='\n'){
+            llen=0;
+        } else if(*p==' ' || *p=='\t'){
+            if(llen + wordlen(p+1) > maxlen){
+                *p='\n';
+                llen=0;
+            }
+        }
+    }
+    
+    char *ss = (char *)malloc(len+1);
+    rv=wcstombs(ss,s,len);
+    Types::tString->set(v,ss);
+}
+
 %word split (string delim -- list) split a string on a single-character delimiter 
 {
     Value *params[2];
