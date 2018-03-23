@@ -291,9 +291,10 @@ if start negative calculate start from end. See also "slice".
         s+=p1;
         if(p2<=0){
             p2=len+p2-p1;
-//            printf("**len=%d, p1=%d, p2=%d\n",len,p1,p2);
         }
-        if(p2>0)s[p2]=0;
+        
+        if(p2>len)p2=len;
+        if(p2>0 && p1+p2<len)s[p2]=0;
         char *s2 = (char *)alloca(rv-p1+1);
         wcstombs(s2,s,rv-p1+1);
         a->pushString(s2);
