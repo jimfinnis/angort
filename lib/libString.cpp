@@ -237,7 +237,7 @@ inline int wordlen(const wchar_t * s){
     }
     
     char *ss = (char *)malloc(len+1);
-    rv=wcstombs(ss,s,len);
+    rv=wcstombs(ss,s,len+1);
     Types::tString->set(v,ss);
 }
 

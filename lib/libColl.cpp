@@ -424,6 +424,30 @@ removed item is returned.
     keyAndResult->copy(&v); // copy into the key's slot
 }
 
+%wordargs unique l (list -- list) remove duplicate items
+{
+    Value out;
+    ReadLock lock(p0);
+    ArrayListIterator<Value> iter(p0);
+    ArrayList<Value> *outlist = Types::tList->set(&out);
+    
+    for(iter.first();!iter.isDone();iter.next()){
+        Value *v = iter.current();
+        // go over existing list to see if we've got it
+        bool isin=false;
+        for(int i=0;i<outlist->count();i++){
+            Value *cmp = outlist->get(i);
+            if(cmp->equalForHashTable(v)){
+                isin=true;break;
+            }
+        }
+        if(!isin)
+            outlist->append()->copy(v);
+    }
+    a->pushval()->copy(&out);
+    
+}
+
 
 %word shift (list -- item) remove and return the first item of the list
 Removes and returns the first item of the list, throwing ex$outofrange
