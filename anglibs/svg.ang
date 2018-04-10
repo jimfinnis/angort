@@ -332,7 +332,18 @@ none "txtoattr" def # forward declare
         then
     then
     `smallend ?c makemarker markerstyleEnd pushstyle
-    `markerArrowSEnd markerstyleEnd pushstyle
+    line
+    popstyle
+;
+
+:arrowmarker |s:c| :"(x1 y1 x2 y2 markertype --) single ended arrow"
+    "black"!c
+    ?StyleStack len  0 = if
+        ?StyleStack last ?`stroke isnone not if
+            ?StyleStack last?`stroke
+        then
+    then
+    ?s ?c makemarker markerstyleEnd pushstyle
     line
     popstyle
 ;
@@ -382,10 +393,18 @@ new
 # print the whole shebang to stdout, i.e. the entire shapelist
 
 :out |w,h:|
-    ?w ?h 
+    ?w ?h
     ["defs" [%] [] ?MarkerDefs each {ival,} tag]
     ?ShapeList + svg.
 ;
+
+# groups: an example
+#   [%`width 0.1, `stroke "black", `fill "black"] svg$pushgroup
+#   ...draw stuff...
+#   [10 svg$scaletx] svg$popgroup # group is on stack, no longer adding shapes to group
+#   svg$group # add stacked group to output
+#   100 100 svg$out # and output everything 
+
 
 # start a new group, setting its style. The group elements
 # will not be added to the shape list.
@@ -408,9 +427,8 @@ new
 # takes a transform list, which can be built with
 # the tx commands.
 :group |tlist,g:|
-    "g" [%
-         "transform" ?tlist txtoattr
-         ] ?g snd ?StyleStack last + appendst 
+    "g" [%] ?tlist len if "transform" ?tlist txtoattr, then
+    ?g snd ?StyleStack last + appendst 
     ?g fst
     tag ?ShapeList push;
 
