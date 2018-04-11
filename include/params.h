@@ -24,14 +24,14 @@ inline void showException(Angort *a,Exception& e){
     printf("Error: %s\n",e.what());
     if(e.ip){
         printf("Error at:");
-        a->showop(e.ip);
+        a->run->showop(e.ip);
         printf("\n");
     }else
           printf("Last line input: %s\n",a->getLastLine());
     if(e.fatal)
         exit(1);
     
-    a->clearStack();
+    a->run->clearStack();
 }
 
 
@@ -149,7 +149,7 @@ public:
             return;
         }
         // we copy the obtained hash to avoid premature GC.
-        val.copy(a.popval());
+        val.copy(a.run->popval());
         if(val.t != Types::tHash){
             throw "parameter file did not leave hash on stack";
         }
@@ -204,7 +204,7 @@ public:
     }
     
     void runFunc(Value *v){
-        a.runValue(v);
+        a.run->runValue(v);
     }
     
     // for processing lists - go into a list with "pushList" and
@@ -292,11 +292,11 @@ public:
     }
     
     void pushFuncArg(double v){
-        a.pushDouble(v);
+        a.run->pushDouble(v);
     }
     
     double popFuncResult(){
-        return a.popDouble();
+        return a.run->popDouble();
     }
 };
 
