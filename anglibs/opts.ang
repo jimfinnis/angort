@@ -168,7 +168,7 @@ package opts
          ) filter2 !optstrings !argstrings
          
          # remove the leading "-" from the optstrings
-         ?optstrings (1 -1 substr) map !optstrings
+         ?optstrings (1 0 substr) map !optstrings
          0!curidx
          # go through optstrings by index, keep checking the end
          # hasn't been reached because we'll be modding the lst
@@ -177,7 +177,7 @@ package opts
              ?curidx ?optstrings get !str
              0 ?str get "-" = if
                  # long opt, drop leading char
-                 ?str 1 -1 substr !str
+                 ?str 1 0 substr !str
                  # and get it
                  ?optlist ?str getoptbyname !opt
                  # had it before?

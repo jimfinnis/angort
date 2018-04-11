@@ -238,10 +238,16 @@ int main(int argc,char *argv[]){
                 exit(0);
                 break;
             case '-':
+                // If just a '--' with no following chars,
                 // copy ALL remaining arguments into stripped arg list,
-                // ignoring them here
-                for(i++;i<argc;i++)
+                // ignoring them here. Otherwise add to the args list.
+                
+                if(!arg[2]){
+                    for(i++;i<argc;i++)
+                        Types::tString->set(strippedArgs->append(),argv[i]);
+                } else 
                     Types::tString->set(strippedArgs->append(),argv[i]);
+                    
                 break;
             case 'n':flags|=F_LOOP|F_CMD;break;
             case 'e':flags|=F_CMD;break;
