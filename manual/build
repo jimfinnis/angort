@@ -14,6 +14,6 @@ done
 # words.
 sed s/\\\\index/\\\\indw/g allwords.tex |\
     sed s/section\{/subsection\{/g >autowords.tex
-pdflatex main.tex
-makeindex main
-pdflatex main.tex
+pdflatex manual.tex
+makeindex manual
+pdflatex manual.tex
