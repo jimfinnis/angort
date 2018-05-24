@@ -1,8 +1,6 @@
 project(ANGORTCLI)
-find_package(Libedit REQUIRED)
-message(${ANGORT_SOURCE_DIR}/include)
 
-include_directories(${ANGORT_SOURCE_DIR}/include ${LIBEDIT_INCLUDE_DIR})
+
 include_directories(${ANGORT_BINARY_DIR}/lib ${ANGORT_BINARY_DIR}/cli)
 
 if(POSIXTHREADS)
@@ -11,6 +9,16 @@ if(POSIXTHREADS)
 else()  
     set(PTHREAD "")
 endif(POSIXTHREADS)
+
+set(INCDIRS "${ANGORT_SOURCE_DIR}/include")
+
+if(NOT NOLINEEDITING)
+    find_package(Libedit REQUIRED)
+    set(INCDIRS ${INCDIRS} ${LIBEDIT_INCLUDE_DIR})
+endif(NOT NOLINEEDITING)
+
+message(${INCDIRS})
+include_directories(Includes: ${INCDIRS})
 
 set(WORDFILELIST)
 
@@ -45,7 +53,12 @@ add_custom_command(
     COMMAND python ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/cli/debtoks debtoks)
 
 
-set(SOURCE main.cpp completer.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
+
+set(SOURCE main.cpp debugger.cpp debtoks.cpp ${WORDFILELIST})
+
+if(NOT NOLINEEDITING)
+    set(SOURCE ${SOURCE} completer.cpp)
+endif()
 
 add_executable(angortcli ${SOURCE})
 
@@ -71,9 +84,16 @@ endif()
 set_target_properties(angortcli PROPERTIES
     OUTPUT_NAME angort)
 
-target_link_libraries(angortcli angort ${LIBEDIT_LIBRARIES} ${PTHREAD})
+set(LIBS angort ${PTHREAD})
+
+if(NOT NOLINEEDITING)
+    set(LIBS ${LIBS} ${LIBEDIT_LIBRARIES})
+endif()
+message("Libs: ${LIBS}")
+target_link_libraries(angortcli ${LIBS})
 
 install(TARGETS angortcli
     RUNTIME DESTINATION bin)
     
     
+message("NLE: ${NOLINEEDITING}")

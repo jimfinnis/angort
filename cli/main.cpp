@@ -9,10 +9,13 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
+#if !NOLINEEDITING
 #include <histedit.h>
+#include "completer.h"
+#endif
 
 #include "angort.h"
-#include "completer.h"
+
 
 // keep this up to date!
 static const char *copyString="(c) Jim Finnis 2012-2017";
@@ -64,6 +67,7 @@ static void showException(Exception& e){
 #define F_FUTURE 4
 #define F_DEPRECATED 8
 
+#if !NOLINEEDITING
 // autocompletion data generator
 class AngortAutocomplete : public completer::Iterator {
     const char *strstart;
@@ -83,6 +87,7 @@ public:
         return s;
     }
 };
+#endif
     
 
 bool debugOnSignal=false;
@@ -144,16 +149,20 @@ void addDirToSearchPath(const char *data){
     free((void *)path);
 }
 
+#if !NOLINEEDITING
 static EditLine *el=NULL;
 static History *hist=NULL;
+#endif
 
 void cliShutdown(){
+#if !NOLINEEDITING
     if(el){
         completer::shutdown(el);
         history_end(hist);
         el_end(el);
         el=NULL;
     }
+#endif
 }
 
 void cliSighandler(int s){
@@ -359,6 +368,7 @@ int main(int argc,char *argv[]){
     
     // start up an editline instance
     
+#if !NOLINEEDITING
     el = el_init(argv[0],stdin,stdout,stderr);
 #if(EDITLINE_NOUNICODE)
     el_set(el,EL_PROMPT,&getPrompt); // sorry, no unicode support...
@@ -366,25 +376,39 @@ int main(int argc,char *argv[]){
     el_wset(el,EL_PROMPT,&getPrompt); // use wide prompt (see getPrompt for why)
 #endif
     el_set(el,EL_EDITOR,"emacs");
-    
     hist = history_init();
     HistEvent ev;
     history(hist,&ev,H_SETSIZE,800);
     el_set(el,EL_HIST,history,hist);
     if(!hist)
         printf("warning: no history\n");
-        
-    
     AngortAutocomplete comp;
     completer::setup(el,&comp,"\t\n\"\\'@><=;|&{(?! ");
+#endif
     
+        
     for(;;){
         // set up the autocomplete function and others
 //        rl_completion_entry_function = autocomplete_generator;
 //        rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
         
         int count;
+#if !NOLINEEDITING
         const char *line = el_gets(el,&count);
+        
+#else
+#if(EDITLINE_NOUNICODE)
+        fputs(getPrompt(),stdout);
+#else
+        fputws(getPrompt(),stdout);
+#endif
+        char inbuf[1024];
+        const char *line = fgets(inbuf,1024,stdin);
+        if(line)
+            count=strlen(line);
+        else
+            count=0;
+#endif        
         // this avoids break happening when we exit the debugger
         // after a ctrl-c.
         extern bool debuggerBreakHack;
@@ -392,18 +416,19 @@ int main(int argc,char *argv[]){
             debuggerBreakHack=false;
         else if(!line)
             break;
-
-            
         
        
         if(count>1){ // there's going to be a trailing newline
+#if !NOLINEEDITING
             if(hist)
                 history(hist,&ev,H_ENTER,line);
+#endif
             try {
                 // annoyingly, editline keeps any trailing newline
                 char *tmp = strdup(line);
                 if(*tmp && tmp[strlen(tmp)-1]=='\n')
                     tmp[strlen(tmp)-1]=0;
+                printf("Feeding %s\n",tmp);
                 a->feed(tmp);
                 free(tmp);
             } catch(Exception e){
