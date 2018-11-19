@@ -300,3 +300,19 @@ if start negative calculate start from end. See also "slice".
         a->pushString(s2);
     }
 }        
+
+%wordargs trim s (s --) trim surrounding whitespace
+{
+    int len = wstrlen(p0);
+    wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    mbstowcs(buf,p0,len+1);
+    
+    wchar_t *s = buf;
+    while(iswspace(*s))s++;
+    wchar_t *wordend = s;
+    while(!iswspace(*wordend))wordend++;
+    *wordend = 0;
+    char *s2 = (char *)alloca(wordend-s+1);
+    wcstombs(s2,s,wordend-s+1);
+    a->pushString(s2);
+}
