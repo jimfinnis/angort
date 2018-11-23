@@ -141,10 +141,8 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 iter.next();
                 break;
             }
-            default://unknown code; just add the rest of the string in. Ugh.
-                size+=strlen(p);
-                goto expand;
-                break;
+            default://unknown code; throw.
+                throw RUNT(EX_BADPARAM,"").set("unknown format in format specification: %c",*f);
             }
         } else
             size++;
