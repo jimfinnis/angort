@@ -119,7 +119,6 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 ++f; // skip length flag (dealt with in pass 2)
             switch(*f){
             case 'c':
-                iter.next();
                 // fall through
             case '%':
                 size++;
@@ -189,6 +188,9 @@ expand:
             }
             
             switch(*f){
+            case '%':
+                *s++ = '%';
+                break;
             case 'c':
                 *s++ = iter.current()->toInt();
                 iter.next();
