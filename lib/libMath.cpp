@@ -165,7 +165,6 @@ Generate a skew-normal distributed random number as a double.
 
 %init
 {
-    printf("INIT INIT\n");
     // set up a constant PI
     Namespace *ns = a->ang->names.getSpaceByName("math");
     if(ns->get("PI")<0){
