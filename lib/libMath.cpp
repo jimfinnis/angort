@@ -37,6 +37,18 @@ using namespace angort;
 {
     FN(tan);
 }
+%word acos (x -- cos x)
+{
+    FN(acos);
+}
+%word asin (x -- sin x)
+{
+    FN(asin);
+}
+%word atan (x -- tan x)
+{
+    FN(atan);
+}
 %word ln (x -- ln x)
 {
     FN(log);
