@@ -5,7 +5,7 @@
  * long description, many sentences.
  * 
  */
-#include "/home/white/angort/include/config.h"
+#include "config.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
