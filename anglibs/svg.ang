@@ -449,3 +449,54 @@ new
 :popdrawgroup
     0 0 popgroup group;
 
+
+################## Handy colour and list stuff
+
+
+:interplist |v/double,l:n,idx,t,lastidx|
+    :"(double list -- ) Interpolate between values in a list, given 0-1"
+    ?v 0.0l >= ?v 1.0l <= and not if
+        "Value not in range 0-1 : " 
+        ?v +
+        `ex$badinterp throw
+    then
+    # first, scale from 0-(n-1)
+    ?l len 1- !lastidx
+    ?v ?lastidx *
+    # the integer part of that is our first index.
+    dup toint !idx
+    # the float part is the interpolation parameter.
+    ?idx - !t
+    
+    ?idx ?lastidx = if
+        # here we must have specified 1 for v
+        ?idx ?l get
+    else
+        # do the interpolation
+        ?idx 1+ ?l get todouble ?t *
+        ?idx ?l get todouble 1.0l ?t - * +
+    then
+    
+;
+
+
+:genpalette |l:r,g,b|
+    :"convert a list of colour triplets [[r,g,b]..] into 3 lists of colour data [[r,r,r...],[g,g,g...],[b,b,b...]] for easier interpolation"
+
+    []!r []!g []!b
+    ?l each{
+        i explode ?b push ?g push ?r push
+    }
+    [?r,?g,?b]
+;
+
+
+:interpcol |v,p:|
+    :"given a palette from genpalette, interpolate a colour from a value in 0-1"
+    ?p (?v swap interplist) map
+;    
+    
+:triple2col |t:r,g,b|
+    :"turn a 0-255 colour triplet into an SVG colour spec"
+    ?t (toint) map "#%02x%02x%02x" format
+;

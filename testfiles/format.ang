@@ -1,0 +1,20 @@
+
+[1] "%d" format "1" = "t1" assert
+[1,2] "%d%d" format "12" = "t2" assert
+
+
+["hello",1] "%s%d" format "hello1" = "t3" assert
+[2,"hello",1] "%d%s%d" format "2hello1" = "t4" assert
+
+[2.3] "%f" format "2.300000" = "t5" assert
+
+[2.3] "%.3f" format "2.300" = "t6" assert
+[2.3,"hello"] "%.3f%s" format "2.300hello" = "t7" assert
+
+[1] "%%%d%%" format "%1%" = "t8" assert
+
+[-1] "%05d" format "-0001" = "t9" assert
+
+[3.2] "%07.3f" format "003.200" = "t10" assert
+
+quit

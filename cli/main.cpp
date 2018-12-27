@@ -428,7 +428,6 @@ int main(int argc,char *argv[]){
                 char *tmp = strdup(line);
                 if(*tmp && tmp[strlen(tmp)-1]=='\n')
                     tmp[strlen(tmp)-1]=0;
-                printf("Feeding %s\n",tmp);
                 a->feed(tmp);
                 free(tmp);
             } catch(Exception e){

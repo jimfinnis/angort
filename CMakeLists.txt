@@ -53,6 +53,8 @@ add_test(exception cli/angort ${ANGORT_SOURCE_DIR}/testfiles/exception.ang)
 add_test(incdec cli/angort ${ANGORT_SOURCE_DIR}/testfiles/incdec.ang)
 add_test(generator cli/angort ${ANGORT_SOURCE_DIR}/testfiles/generator.ang)
 
+add_test(format cli/angort ${ANGORT_SOURCE_DIR}/testfiles/format.ang)
+
 # this only works in the testfiles directory.
 #add_test(pkg cli/angort ${ANGORT_SOURCE_DIR}/testfiles/pkg.ang)
 

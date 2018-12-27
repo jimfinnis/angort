@@ -37,6 +37,18 @@ using namespace angort;
 {
     FN(tan);
 }
+%word acos (x -- cos x)
+{
+    FN(acos);
+}
+%word asin (x -- sin x)
+{
+    FN(asin);
+}
+%word atan (x -- tan x)
+{
+    FN(atan);
+}
 %word ln (x -- ln x)
 {
     FN(log);
@@ -163,3 +175,14 @@ Generate a skew-normal distributed random number as a double.
     a->pushDouble(skewnormal(a,p0,p1,p2));
 }
 
+%init
+{
+    // set up a constant PI
+    Namespace *ns = a->ang->names.getSpaceByName("math");
+    if(ns->get("PI")<0){
+        int n = ns->addConst("PI",false);
+        Value *v = ns->getVal(n);
+        Types::tDouble->set(v,3.14159265358979323846);
+    }
+    
+}
