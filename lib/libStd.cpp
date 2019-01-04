@@ -743,6 +743,7 @@ Lists the names of all Angort types, including the internal ones
 }
 
 
+
 %word gc (--) perform a major garbage detect and cycle removal
 Runs a major garbage detect, which includes detecting cycles. This
 is automatically run every "autogc" ticks, so you may need to do this
@@ -998,13 +999,48 @@ qualification. The idiom for this is typically:
         throw SyntaxException("expected package list or package in import");
 }
 
+%wordargs eval ls (list string -- result or none) evaluate an Angort string
+Evaluates an Angort string in its own compile and runtime context
+(so locals aren't accessible). Arguments may be passed in a list
+which is exploded onto the stack: [1,2,3] becomes (1 2 3 --)
+If the stack is not empty at end, the top item is pushed, otherwise none
+is pushed.
+{
+    // sadly this isn't threadsafe, because there's only one compile context
+    // stack, so we're going to lock everything by locking the names.
+    WriteLock lock = WL(&a->ang->names);
+    
+    // compile the string
+    Value code;
+    a->ang->compile(p1,&code);
+    
+    // get a new runtime 
+    Runtime r(a->ang,"eval"); 
+    
+    // push the list elements
+    int len = p0->count();
+    for(int i=0;i<len;i++){
+        r.pushval()->copy(p0->get(i));
+    }
+    // run the code
+    r.trace = a->trace; // make sure we're debugging if the parent is
+    r.runValue(&code);
+    
+    // get top item and transfer or push none
+    if(r.stack.isempty())
+        a->pushNone();
+    else
+        a->pushval()->copy(r.popval());
+}
 
-/*%word showclosure (cl --)
+%word showclosure (cl --)
 {
     Value *v = a->popval();
     if(v->t == Types::tClosure)
         v->v.closure->show("Show command");
-}*/
+}
+
+
 
 %shared
 %init

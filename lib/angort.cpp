@@ -269,6 +269,7 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
     case OP_CLOSURESET:
     case OP_CLOSUREGET:
     case OP_CLOSUREDEC:
+    case OP_CLOSUREINC:
     case OP_LOCALSET:
     case OP_LOCALGET:
     case OP_LOCALINC:
@@ -1396,8 +1397,9 @@ int CompileContext::findOrCreateClosure(const char *name){
     ClosureListEnt *e = parentContainingVariable->getClosureListEntByIdx(localIndexInParent);
     localIndexInParent = e->i;
     
+#if DEBCLOSURES
     parentContainingVariable->dumpClosureList();
-    
+#endif    
     
     cdprintf("Local index (in context %p) in closure block is %d",
              parentContainingVariable,localIndexInParent);

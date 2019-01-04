@@ -25,7 +25,7 @@ public:
     const CodeBlock *cb;
     Value *block; //!< the variables I own
     Value **map; //!< pointers to both the above and other's variables I look at
-    Closure **blocksUsed; //!< the blocks the map uses, so I can deref them
+    Closure **blocksUsed; //!< the blocks the map uses, so I can deref them (or null for a selfref)
     Closure *parent; //!< link to parent closure (which created me)
     struct Instruction *ip; //!< used when routines yield
     

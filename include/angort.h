@@ -32,6 +32,9 @@ namespace angort {
 /// true to compile debugging data into opcodes
 #define SOURCEDATA 1
 
+/// true  for closure debugging
+#define DEBCLOSURES 0
+
 /// total number of local variables
 #define VBLOCKSIZE 4096
 /// depth of return stack
@@ -199,6 +202,7 @@ class CompileContext {
     /// to scan through existing variables too!
     void convertToClosure(const char *name);
     
+    
     int addClosureListEnt(CodeBlock *c,int n){
         cdprintf("adding new closure list entry, codeblock %p number %d",c,n);
         ClosureListEnt *p = new ClosureListEnt(c,n);
@@ -234,7 +238,7 @@ class CompileContext {
         int i=0;
         ClosureListEnt *p;
         for(p=closureList;p;p=p->next,i++){
-            cdprintf("Closure list entry %d: codeblock %p, index %d",i,p->c,p->i);
+            printf("Closure list entry %d: codeblock %p, index %d",i,p->c,p->i);
         }
         
     }
@@ -278,8 +282,9 @@ public:
         reset(NULL,NULL);
     }
     
+    
     void cdprintf(const char *s,...){
-#if 0
+#if DEBCLOSURES
         char buf[256];
         va_list args;
         va_start(args,s);

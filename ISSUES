@@ -13,7 +13,7 @@ Not yet documented:
     split (string)
     Parameter type checking
     yield and routines! Must be anon
-    various new words: fst snd etc, explode..
+    various new words: fst snd etc, explode, eval..
     
 *** Signed/unsigned ints! 
     - readu32 just converts to a signed 32, it should at least push as long.
