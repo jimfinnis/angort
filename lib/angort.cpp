@@ -1076,7 +1076,7 @@ void Angort::startDefine(const char *name){
     WriteLock lock=WL(&names);
     if(isDefining())
         throw SyntaxException("cannot define a word inside another");
-    if((idx = names.get(name))<0)
+    if((idx = names.get(name,false))<0)
         idx = names.add(name); // words are NOT constant; they can be redefined.
     else
         if(names.getEnt(idx)->isConst)
