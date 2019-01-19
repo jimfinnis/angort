@@ -133,6 +133,23 @@ Uses drand48 to generate a random number from 0 to 1.
     a->pushDouble(r);
 }
 
+%wordargs shuffle l (list --) perform a Fisher-Yates shuffle on a list in place
+{
+    WriteLock lock = WL(p0);
+    int ct = p0->count();
+    if(ct<=1)return; // no point..
+    Value t;
+    for(int i=ct-1;i>=1;i--){
+        long lr;
+        lrand48_r(&a->rnd,&lr);
+        int j = lr%(i+1);
+        // swap i and j
+        t.copy(p0->get(i));
+        p0->get(i)->copy(p0->get(j));
+        p0->get(j)->copy(&t);
+    }
+}
+
 
 
 
