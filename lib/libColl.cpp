@@ -360,6 +360,21 @@ usage is "reverse explode" (but this is slow).
     delete iter;
 }    
 
+%word gather (a b c d .. n -- [a,b,c,d]) turn N items on stack into a list
+{
+    Value out;
+    ArrayList<Value> *outlist = Types::tList->set(&out);
+    int n = a->popInt();
+    
+    for(int i=0;i<n;i++){
+        Value *v = a->stack.peekptr((n-1)-i);
+        outlist->append()->copy(v);
+    }
+    for(int i=0;i<n;i++)a->popval();
+    a->pushval()->copy(&out);
+}
+    
+
 %word fst (coll -- item/none) get first item
 Return the first item of a list or NONE if list is empty.
 {
