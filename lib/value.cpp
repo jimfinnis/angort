@@ -42,6 +42,8 @@ void Value::dump(char **str,int depth){
         Iterator<Value *> *iter = t->makeIterator(this);
         iter->first();
         for(;;){
+            if(iter->isDone())break; // ugly loop here, two breaks
+            
             Value *v = iter->current();
             v->dump(str,depth+1);
             strappend(str," ");

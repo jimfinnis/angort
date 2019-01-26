@@ -270,6 +270,12 @@ public:
         Types::tFloat->set(&v,f);
         setSym(s,&v);
     }
+    /// helper for setting double with symbol keys
+    void setSymDouble(const char *s,double f){
+        Value v;
+        Types::tDouble->set(&v,f);
+        setSym(s,&v);
+    }
     /// helper for setting strings with symbol keys
     void setSymStr(const char *s,const char *val){
         Value v;
