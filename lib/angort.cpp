@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.7.1"
+#define ANGORT_VERSION "4.8.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -207,14 +207,14 @@ void CompileContext::dump(){
 void Angort::shutdown(){
     if(running){
         ArrayListIterator<LibraryDef *>iter(libs);
-    
+        
         for(iter.first();!iter.isDone();iter.next()){
             LibraryDef *lib = *(iter.current());
             NativeFunc shutdownFunc = lib->shutdownfunc;
             if(shutdownFunc)
                 (*shutdownFunc)(run);
         }
-    
+        
         Type::clearList();
         SymbolType::deleteAll();
         running = false;
@@ -1018,7 +1018,7 @@ void Runtime::run(const Instruction *startip){
             } catch(Exception e){
                 Value vvv;
                 Types::tString->set(&vvv,e.what());
-                       
+                
                 if(!throwAngortException(e.id,&vvv)){
                     printf("Angort exception: %s\n",e.what());
                     // avoids debugger running with null IP when
@@ -1030,7 +1030,7 @@ void Runtime::run(const Instruction *startip){
                     // - rethrow
                     // - caught in next level of run() up
                     // - debugger re-entered with null ip
-                        
+                    
                     if(ip&&ang->debuggerHook)(*ang->debuggerHook)(this);
                     // set IP and runtime
                     e.ip = ip;
@@ -1132,7 +1132,7 @@ void Angort::compileParamsAndLocals(){
                     throw SyntaxException("expected a type in parameter list after /");
                 if(!parsingParams)
                     throw SyntaxException("types only supported on parameters");
-                    
+                
                 typ = Type::getByName(tok.getstring());
                 if(!typ)
                     throw SyntaxException("").set("unknown type in parameter list: %s",tok.getstring());
@@ -1482,7 +1482,7 @@ void Angort::include(const char *filename,bool isreq,bool mightNotExist){
 void Angort::constCheck(int name){
     if(names.getEnt(name)->isConst)
         throw RUNT(EX_SETCONST,"").set("attempt to set constant %s",tok.getstring());
- }
+}
 
 void Angort::parseVarAccess(int token){
     WriteLock lock=WL(&names);
@@ -1633,7 +1633,7 @@ void Angort::feed(const char *buf){
         }
         return;
     }
-        
+    
     
     int here; // instruction index variable used in different ways
     try {
@@ -1663,7 +1663,26 @@ void Angort::feed(const char *buf){
                     throw FileNameExpectedException();
                 //                if(tok.getnext()!=T_END)
                 //                    throw SyntaxException("require must be at end of line");
-                include(buf,true);
+                
+                // is there a package name specifier (so we can precheck
+                // it's not there already?)
+                char *fnstart = strchr(buf,':');
+                if(fnstart){
+                    // yes - do that.
+                    *fnstart=0;
+                    if(loadedLibraries.find(buf)){
+                        // it's there. Just return the NSID
+                        ReadLock rlnames(&names);
+                        Namespace *sp = names.getSpaceByName(buf);
+                        Types::tNSID->set(run->pushval(),sp->idx);
+                    } else {
+                        // no, do the include
+                        include(fnstart+1,true);
+                    }
+                } else {
+                    // no ':', so there's no package name.
+                    include(buf,true);
+                }
                 break;
             }
             case T_COMPILEIF:
@@ -1696,19 +1715,20 @@ void Angort::feed(const char *buf){
                     names.setPrivate(false);
                 }
                 break;
-            case T_PACKAGE:{
-                WriteLock lock=WL(&names);
-                // start a new package.
-                char buf[256];
-                if(!tok.getnextident(buf))
-                    throw SyntaxException("expected a package name");
-                int idx = names.create(buf);
-                // stack it, we're now defining things in
-                // this package and will be until fileFeed() returns
-                // in include()
-                names.push(idx);
+            case T_PACKAGE:
+                {
+                    WriteLock lock=WL(&names);
+                    // start a new package.
+                    char buf[256];
+                    if(!tok.getnextident(buf))
+                        throw SyntaxException("expected a package name");
+                    int idx = names.create(buf);
+                    // stack it, we're now defining things in
+                    // this package and will be until fileFeed() returns
+                    // in include()
+                    names.push(idx);
+                }
                 break;
-            }
             case T_BACKTICK:{
                 char buf[256];
                 if(!tok.getnextidentorkeyword(buf))
@@ -2372,11 +2392,11 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     Namespace *sp;
     {
         WriteLock lock=WL(&names);
-    
+        
         // make the namespace. Multiple imports into the same one
         // are permitted.
         sp = names.getSpaceByName(lib->name,true);
-    
+        
         // register the words
         for(int i=0;;i++){
             if(!lib->wordList[i].name)break;
@@ -2385,8 +2405,8 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
             Types::tNative->set(v,lib->wordList[i].f);
             sp->setSpec(id,lib->wordList[i].desc);
         }
-    
-    
+        
+        
         *libs->append() = lib;
     }
     

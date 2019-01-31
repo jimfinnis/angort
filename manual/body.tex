@@ -657,6 +657,21 @@ not the name of the file! Angort returns to defining things in the \texttt{user}
 at the end of the file (but see \texttt{endpackage} below in Sec.~\ref{localpack} if we want to go back to the \texttt{user}
 namespace before then).
 
+\subsubsection{Avoiding multiple require}
+Sometimes the structure of a project is such that \texttt{require} may
+be called several times on the same package. To avoid this, use the
+form
+\begin{v}
+require "foo:filename"
+\end{v}
+This will first check to see if a package called ``foo'' has already
+been loaded, and just stack the NSID of that package if so. Otherwise
+it will load the file as usual. While this is ugly, it's the only
+way to avoid opening the file, running to the \texttt{package} line to get the
+package name and then skipping to the \texttt{endpackage}, all without
+actually tokenising and running code. The disadvantages of not making
+a parse tree.
+
 \subsection{Importing packages into the default space}
 \indw{import}
 With the NSID returned by \texttt{require} 

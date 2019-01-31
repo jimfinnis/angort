@@ -59,11 +59,17 @@ public:
     }
 };
 
+/// done so we can call it with a default ctor, if we call lock()
 class ReadLock {
     Lockable *t;
 public:
-    ReadLock(const Lockable* _t){
+    ReadLock(){
+        t=NULL;
+    }
+    
+    void lock(Lockable *_t){
 #if ANGORT_POSIXLOCKS
+        t = _t;
         t = (Lockable *)_t;
         if(t){
             lockprintf("READLOCK START on %s %p\n",t->getLockableName(),&t->lock);
@@ -71,6 +77,13 @@ public:
         }
 #endif
     }
+    
+    ReadLock(const Lockable* _t){
+#if ANGORT_POSIXLOCKS
+        lock(_t);
+#endif
+    }
+    
     ~ReadLock(){
 #if ANGORT_POSIXLOCKS
         if(t){

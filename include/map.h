@@ -10,6 +10,7 @@
 #define __ANGORTMAP_H
 
 #include "iterator.h"
+#include "lock.h"
 
 namespace angort {
 
@@ -33,9 +34,10 @@ template <class T> struct StringMapEnt {
 
 template <class T> class StringMapIterator;
 
-template <class T> class StringMap {
+template <class T> class StringMap  {
     friend class StringMapIterator<T>;
     int size;
+    Lockable mylock;
 private:
     StringMapEnt<T> *head;
     
@@ -59,7 +61,7 @@ private:
     StringMapEnt<T> *foundEnt;
         
 public:
-    StringMap(){
+    StringMap() : mylock("map") {
         head=NULL;
         foundEnt=NULL;
         size=0;
@@ -68,11 +70,13 @@ public:
     // useful for when you have primitives in here, so a NULL return
     // isn't helpful
     bool find(const char *key){
+        ReadLock rl(&mylock);
         foundEnt = findent(key);
         return foundEnt?true:false;
     }
     
     T found(){
+        ReadLock rl(&mylock);
         if(foundEnt)
             return foundEnt->value;
         else
@@ -81,6 +85,7 @@ public:
     
     
     T get(const char *key){
+        ReadLock rl(&mylock);
         StringMapEnt<T> *p = findent(key);
         if(p)
             return p->value;
@@ -90,6 +95,7 @@ public:
     
     /// reverse lookup
     const char *getKey(T value){
+        ReadLock rl(&mylock);
         StringMapEnt<T> *p = findentreverse(value);
         if(p)
             return p->key;
@@ -99,6 +105,7 @@ public:
     
     /// set, will overwrite
     void set(const char *key,T value){
+        WriteLock lock = WL(&mylock);
         StringMapEnt<T> *p;
         p = findent(key);
         if(p){
@@ -112,6 +119,7 @@ public:
     }
     
     void clear(){
+        WriteLock lock = WL(&mylock);
         StringMapEnt<T> *p,*q;
         for(p=head;p;p=q){
             q=p->next;
@@ -123,15 +131,18 @@ public:
     
     void listKeys();
     int count(){
+        ReadLock rl(&mylock);
         return size;
     }
 };
 
 template <class T> class StringMapIterator : public Iterator<StringMapEnt<T>* > {
     int iteridx;
+    ReadLock rlock;
 public:
     
     StringMapIterator(StringMap<T> *m){
+        rlock.lock(&m->mylock);
         map = m;
     }
     

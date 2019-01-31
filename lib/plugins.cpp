@@ -115,6 +115,18 @@ int Angort::plugin(const char *name){
     const char *path;
     char buf[256];
     
+    // if we have this library already, don't reload: just return
+    // the old namespace ID. We don't just do a namespace check because
+    // loading things into a namespace multiple times is OK (but actually
+    // impossible to do because libraryname=namespacename)
+    
+    if(loadedLibraries.find(name)){
+        ReadLock rlnames(&names);
+        Namespace *sp = names.getSpaceByName(name);
+        return sp->idx;
+    }
+        
+    
     snprintf(buf,256,"%s.angso",name);
     path = findFile(buf);
     
@@ -141,7 +153,9 @@ int Angort::plugin(const char *name){
     
     // init the plugin and get the data, and register it.
     LibraryDef *info = (*init)(this);
-    
+    {
+        loadedLibraries.set(name,LL_PLUGIN);
+    }
     return registerLibrary(info);
 }
 

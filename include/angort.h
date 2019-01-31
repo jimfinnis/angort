@@ -956,6 +956,12 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
+    /// Hash of loaded libraries; the integer value is given in some consts below.
+    /// Mainly used to avoid library reload.
+    StringMap<int> loadedLibraries;
+    static const int LL_PLUGIN = 0; // native C++ lib
+    static const int LL_PACKAGE = 1;  // angort package
+    
 public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
