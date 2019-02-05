@@ -83,12 +83,12 @@ public:
     bool remove(int n=-1){
         if(n<0||n>=ct)
             return false;
-        reallocateifrequired(ct-1);
         ct--;
         // destruct the item we're about to remove
         data[n].~T();
-        if(n>=0 && n!=ct)
+        if(n!=ct)
             memmove(data+n,data+n+1,(ct-n)*sizeof(T));
+        reallocateifrequired(ct-1);
         return true;
     }
     

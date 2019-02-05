@@ -754,14 +754,35 @@ structures which refer to themselves).
     a->gc();
 }
 
-%word nspace (name -- nsid) get a namespace by name
-Return a namespace ID for a given namespace. Throws ex$notfound if there
-is no such namespace.
+%word getns (-- nsid) get the current namespace ID
+Gets the NSID of the namespace to which names are currently being written.
+{
+    ReadLock lock(&a->ang->names);
+    Types::tNSID->set(a->pushval(),a->ang->names.getCurrent());
+}
+
+%word nsname (nsid -- name) get the name of a namespace
+{
+    ReadLock lock(&a->ang->names);
+    int idx = Types::tNSID->get(a->popval());
+    const char *s = a->ang->names.spaces.getName(idx);
+    a->pushString(s);
+}
+        
+    
+    
+    
+
+%word nspace (name -- nsid|none) get a namespace by name
+Return a namespace ID for a given namespace or NONE.
 {
     ReadLock lock(&a->ang->names);
     const StringBuffer& name = a->popString();
-    Namespace *ns = a->ang->names.getSpaceByName(name.get());
-    Types::tNSID->set(a->pushval(),ns->idx);
+    int idx = a->ang->names.spaces.get(name.get());
+    if(idx<0)
+        a->pushNone();
+    else
+        Types::tNSID->set(a->pushval(),idx);
 }
 
 %word nspaces (-- list) return a list of all namespaces in index order

@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.8.0"
+#define ANGORT_VERSION "4.8.1"
 
 #include <stdlib.h>
 #include <sys/types.h>

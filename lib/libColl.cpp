@@ -419,7 +419,7 @@ memory usage: lists are not stored sparsely.
     Value *v = a->popval();
     c->t->setValue(c,k,v);
 }
-%word len (list --) get length of list, hash or string
+%word len (coll --) get length of list, hash or string
 Get the number of items in a list, hash or string.
 {
     Value *c = a->stack.peekptr();
@@ -427,15 +427,17 @@ Get the number of items in a list, hash or string.
     Types::tInteger->set(c,ct);
 }
 
-%word remove (key list -- item) remove an item by key or index, returning it.
+%word remove (key coll -- item) remove an item by key or index, returning it.
 Removes the nth item of a list, moving all subsequent items down.
 In a hash, removes the item given by the key. In both cases the
 removed item is returned.
 {
-    Value *c = a->popval();
+    Value c;
+    c.copy(a->popval()); // temp copy to avoid GC
+    
     Value *keyAndResult = a->stack.peekptr();
     Value v;
-    c->t->removeAndReturn(c,keyAndResult,&v);
+    c.t->removeAndReturn(&c,keyAndResult,&v);
     keyAndResult->copy(&v); // copy into the key's slot
 }
 
@@ -468,8 +470,12 @@ removed item is returned.
 Removes and returns the first item of the list, throwing ex$outofrange
 if there are no items.
 {
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    Value *v = a->pushval();
+    Value vv;
+    vv.copy(a->popval()); // to keep the list around
+    
+    ArrayList<Value> *list = Types::tList->get(&vv);
+    
+    Value *v = a->pushval(); // for the return item
     
     WriteLock lock=WL(list); // get() doesn't lock
     v->copy(list->get(0));

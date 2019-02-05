@@ -294,6 +294,10 @@ public:
         }
     }
     
+    int getCurrent(){
+        return currentIdx;
+    }
+    
     //////////////////// manipulating the current namespace ///////////
     
     int add(const char *name){
