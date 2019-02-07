@@ -10,7 +10,9 @@ invoking it in the outer lambda:
     :test |a:|
         (?a drop(?a *)map)map;
 
-
+LOCALDEC/LOCALINC etc don't work as closures. Need to reorganise 
+opcodes to automatically be able to remap local variable funcs
+to closure funcs.
 
 Not yet documented:
     redir/endredir (and other IO)

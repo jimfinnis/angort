@@ -33,7 +33,7 @@ namespace angort {
 #define SOURCEDATA 1
 
 /// true  for closure debugging
-#define DEBCLOSURES 0
+#define DEBCLOSURES 1
 
 /// total number of local variables
 #define VBLOCKSIZE 4096
@@ -522,6 +522,21 @@ struct CodeBlock {
     Type **paramTypes; 
     
     bool used; //!< true if the codeblock ends up being used (so the context mustn't delete it)
+    
+    void dump(){
+        printf("Codeblock dump for %p\n",this);
+        printf("%d locals of %d are params, bits %x closed\n",locals,
+               params,localsClosed);
+        printf("Closure block size %d, closure table size %d\n",
+               closureBlockSize,closureTableSize);
+        if(closureTableSize && closureTable){
+            printf("Closure table: \n");
+            for(int i=0;i<closureTableSize;i++)
+                printf("%3d  %2d levels up, index %d\n",
+                       i,closureTable[i].levelsUp,
+                       closureTable[i].idx);
+        }
+    }
 };
 
 

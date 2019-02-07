@@ -165,6 +165,7 @@ Angort::Angort() {
     
     /// create the default, root compilation context
     context = contextStack.pushptr();
+    context->ang = this;
     context->reset(NULL,&tok);
     
     acList = new ArrayList<const char *>(128);
@@ -199,8 +200,11 @@ void CompileContext::dump(){
                localIndices[i]);
     }
     printf("Disassembly:\n");
-    ang->disasm(cb);
-    
+    if(ang){
+        ang->disasm(cb);
+    } else {
+        printf("<no angort ptr>\n");
+    }
 }
 
 
@@ -342,8 +346,10 @@ const Instruction *Runtime::call(const Value *a,const Instruction *returnip){
     if(!cb->ip)
         throw RUNT(EX_DEFCALL,"call to a word with a deferred definition");
     
-    //        printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
-    //        printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
+#if DEBCLOSURES
+    printf("Locals = %d of which closures = %d\n",cb->locals,cb->closureBlockSize);
+    printf("Allocating %d stack spaces\n",cb->locals - cb->closureBlockSize);
+#endif
     // allocate true locals (stack locals)
     locals.alloc(cb->locals - cb->closureBlockSize);
     
@@ -405,7 +411,9 @@ const Instruction *Runtime::call(const Value *a,const Instruction *returnip){
     else
         currClosure.clr();
     
-    //        printf("PUSHED closure %s\n",currClosure.toString().get());
+#if DEBCLOSURES
+    printf("PUSHED closure %s\n",currClosure.toString().get());
+#endif
     
     f->loopIterCt=loopIterCt;
     loopIterCt=0;
@@ -631,7 +639,7 @@ void Runtime::run(const Instruction *startip){
                     a = stack.pushptr();
                     // as in globaldo, here we construct a 
                     // closure if required and stack that instead.
-                    if(cb->closureBlockSize || cb->closureTableSize){
+                    if(cb->closureBlockSize || cb->closureTableSize ){
                         //                        printf("OP_LITERALCODE running - creating a closure. Blocksize is %d, tablesize is %d\n",
                         //                               cb->closureBlockSize,cb->closureTableSize);
                         Closure *cl = new Closure(currClosure.v.closure); // 1st stage of setup
@@ -645,13 +653,17 @@ void Runtime::run(const Instruction *startip){
                 case OP_CLOSUREGET:
                     if(currClosure.t != Types::tClosure)throw WTF;
                     a = currClosure.v.closure->map[ip->d.i];
-                    //                currClosure.v.closure->show("VarGet");
+#if DEBCLOSURES
+                    currClosure.v.closure->show("VarGet");
+#endif
                     stack.pushptr()->copy(a);
                     ip++;
                     break;
                 case OP_CLOSURESET:
                     if(currClosure.t != Types::tClosure)throw WTF;
-                    //                currClosure.v.closure->show("VarSet");
+#if DEBCLOSURES
+                    currClosure.v.closure->show("VarSet");
+#endif
                     a = currClosure.v.closure->map[ip->d.i];
                     a->copy(stack.popptr());
                     ip++;
@@ -1071,7 +1083,9 @@ leaverun:
 }
 
 void Angort::startDefine(const char *name){
-    //        printf("---Now defining %s\n",name);
+#if DEBCLOSURES
+    printf("---Now defining %s\n",name);
+#endif
     int idx;
     WriteLock lock=WL(&names);
     if(isDefining())
@@ -1093,9 +1107,13 @@ void Angort::endDefine(CompileContext *c){
     c->checkStacksAtEnd();
     // get the codeblock out of the context and set it up.
     CodeBlock *cb = c->cb;
-    //    printf("End of define.\n");
     cb->setFromContext(c);
-    //        c->dump(); //snark
+#if DEBCLOSURES
+    printf("End of define.\n");
+    c->dump(); //snark
+    cb->dump();
+#endif
+    
     Value *wordVal = names.getVal(wordValIdx);
     
     Types::tCode->set(wordVal,cb);
@@ -1786,7 +1804,9 @@ void Angort::feed(const char *buf){
                     throw SyntaxException("; not allowed outside a definition");
                 compile(OP_END);
                 endDefine(context);
-                //                printf("defined %s - %d ops\n",defineName,context->getCodeSize());
+#if DEBCLOSURES
+                printf("defined - %d ops\n",context->getCodeSize());
+#endif
                 context->reset(NULL,&tok);
                 break;
                 
@@ -1998,9 +2018,13 @@ void Angort::feed(const char *buf){
             }
             case T_DOUBLEANGLEOPEN:
             case T_OPREN:// open lambda
-                //                                printf("---Pushing: current context is %p[cb:%p], ",context,context->cb);
+#if DEBCLOSURES
+                printf("---Pushing: current context is %p[cb:%p], ",context,context->cb);
+#endif
                 pushCompileContext();
-                //                                printf("pushing into new lambda context  %p[cb:%p]\n",context,context->cb);
+#if DEBCLOSURES
+                printf("pushing into new lambda context  %p[cb:%p]\n",context,context->cb);
+#endif
                 break;
             case T_CPREN: // close lambda and stack a code literal
                 {
@@ -2012,14 +2036,16 @@ void Angort::feed(const char *buf){
                     
                     // set the codeblock up
                     lambdaContext->cb->setFromContext(lambdaContext);
-                    //                    printf("End of lambda context.\n");
-                    //                                        lambdaContext->dump();//snark
+#if DEBCLOSURES
+                    printf("End of lambda context.\n");
+                    lambdaContext->dump();//snark
+                    lambdaContext->cb->dump();
+#endif
                     
                     // here, we compile LITERALCODE word with a codeblock created
                     // from the context.
                     
                     compile(OP_LITERALCODE)->d.cb = lambdaContext->cb;
-                    //                    lambdaContext->dump();
                     lambdaContext->reset(NULL,&tok);
                 }
                 break;
@@ -2264,6 +2290,7 @@ void Angort::clearAtEndOfFeed(){
     // make sure we tidy up any state
     contextStack.clear(); // clear the context stack
     context = contextStack.pushptr();
+    context->ang = this;
     context->reset(NULL,&tok); // reset the old context
     wordValIdx=-1;
     // make sure the return stack gets cleared otherwise
