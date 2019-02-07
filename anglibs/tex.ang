@@ -58,6 +58,25 @@ private
 
 public
 
+#### common tags
+
+:tag |str,tag:|
+    :"(str -- str tag) wrap a string in a latex tag"
+    "\\" ?tag+ "{" + ?str + "}" +;
+
+:bold "textbf" tag;
+:emph "emph" tag;
+
+:section "section" tag;
+:subsection "subsection" tag;
+:subsubsection "subsubsection" tag;
+:usepackage "usepackage" tag;
+:begin "begin" tag;
+:end "end" tag;
+
+    
+
+
 # Generates a string containing a booktabs LaTeX table for a list
 # of hashes, given the keys in the required order.
 # Opts is a hash of options:
