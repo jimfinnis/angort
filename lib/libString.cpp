@@ -263,13 +263,14 @@ inline int wordlen(const wchar_t * s){
             memcpy(buf,p,s-p);
             buf[s-p]=0;
             Types::tString->set(list->append(),buf);
-            if(!*s){free((void *)base);return;}
+            if(!*s)break;//{free((void *)base);return;}
             s++;
             p=s;
         } else
             s++;
     }
     free((void *)buf);
+    free((void *)base);
 }
 
 %wordargs substr sii (str start count -- str) get a substring.
