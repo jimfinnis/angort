@@ -243,10 +243,9 @@ int StringType::getIndexOfContainedItem(Value *v,Value *item)const {
     const wchar_t *needle = b2.getWideBuffer();
     
     const wchar_t *res = wcsstr(haystack,needle);
-    int out = res ? res-haystack: -1;
-    free((void *)needle);
-    free((void *)haystack);
-    return out;
+    if(res){
+        return res-haystack;
+    } else return -1;
 }
 
 bool StringType::contains(Value *v,Value *item) const {
@@ -256,8 +255,6 @@ bool StringType::contains(Value *v,Value *item) const {
     const wchar_t *needle = b2.getWideBuffer();
     
     const wchar_t *res = wcsstr(haystack,needle);
-    free((void *)needle);
-    free((void *)haystack);
     return res!=NULL;
 }
 

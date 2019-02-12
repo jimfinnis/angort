@@ -33,7 +33,7 @@ namespace angort {
 #define SOURCEDATA 1
 
 /// true  for closure debugging
-#define DEBCLOSURES 0
+#define DEBCLOSURES 1
 
 /// total number of local variables
 #define VBLOCKSIZE 4096
