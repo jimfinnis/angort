@@ -1185,11 +1185,7 @@ bool Angort::fileFeed(const char *name,bool rethrow){
     const char *oldName = tok.getname();
     int oldLN = lineNumber;
     lineNumber=1;
-#if defined(SOURCEDATA)
-    // we duplicate the filename so that we can always access it
-    const char *fileName = strdup(name); 
-    tok.setname(fileName);
-#endif
+    tok.setname(name);
     FILE *ff = fopen(name,"r");
     try{
         char buf[1024];
@@ -1205,6 +1201,8 @@ bool Angort::fileFeed(const char *name,bool rethrow){
         if(rethrow) throw e;
         printf("Error in file %s: %s\n",tok.getname(),e.what());
         printf("Last line: %s\n",getLastLine());
+        char buf[PATH_MAX+10];
+        printf("  %s\n",getLineData(buf,PATH_MAX+10));
         tok.setname(oldName);
         lineNumber=oldLN;
         return false;

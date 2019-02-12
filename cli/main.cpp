@@ -54,8 +54,12 @@ static void showException(Exception& e){
         printf("Error at:");
         runtime->showop(e.ip);
         printf("\n");
-    }else
-          printf("Last line input: %s\n",runtime->ang->getLastLine());
+    }else {
+        printf("Last line input: %s\n",runtime->ang->getLastLine());
+        char buf[PATH_MAX+10];
+        printf("  %s\n",runtime->ang->getLineData(buf,PATH_MAX+10));
+    }
+    
     runtime->clearStack();
     if(e.fatal)
         exit(1);
