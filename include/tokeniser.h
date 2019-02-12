@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
 
 
 /**
@@ -45,7 +44,8 @@ struct TokeniserContext {
     const char *start;
     const char *current;
     const char *end;
-    char fileName[PATH_MAX];
+    /// the current filename, should be strduped()
+    const char *fileName;
     int curtype;
     bool error;
     Token prevval;
@@ -187,7 +187,7 @@ public:
     
     /// set the current file name
     void setname(const char *f){
-        strcpy(fileName,f);
+        fileName = f;
     }
     
     /// get current line number
@@ -227,7 +227,7 @@ public:
         c->start = start;
         c->current = current;
         c->end = end;
-        strncpy(c->fileName,fileName,PATH_MAX);
+        c->fileName = fileName;
         c->curtype=curtype;
         c->error = error;
         c->prevval=prevval;
@@ -244,7 +244,7 @@ public:
         start = c->start;
         current = c->current;
         end = c->end;
-        strncpy(fileName,c->fileName,PATH_MAX);
+        fileName = c->fileName;
         curtype=c->curtype;
         error = c->error;
         prevval=c->prevval;
@@ -280,9 +280,8 @@ private:
     const char *start;
     const char *current;
     const char *end;
-    /// the current filename
-    char fileName[PATH_MAX];
-    int line; // current line number
+    /// the current filename, should be strduped()
+    const char *fileName;
     int curtype;
     bool error;
     Token prevval;
@@ -291,6 +290,7 @@ private:
     int prevline;
     bool keywordsOff;
     Token val;
+    int line;
     bool trace;
     
     int chartable[128];

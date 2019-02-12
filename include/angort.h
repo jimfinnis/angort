@@ -910,8 +910,6 @@ private:
     /// define a word from a context - startDefine() must have been called
     void endDefine(class CompileContext *cb);
     
-    char fileName[PATH_MAX]; //!< filename currently being read
-    
     char lastLine[1024]; //!< last line read
     
     /// parse various tokens which are followed by a var name
@@ -1059,12 +1057,6 @@ public:
     }
     const char *getLastLine(){
         return lastLine;
-    }
-    
-    /// get a file:number string from tokeniser data
-    const char *getLineData(char *s,int len){
-        snprintf(s,len,"%s:%d",tok.getname(),tok.getline());
-        return s;
     }
     
     /// function for registering properties
