@@ -9,6 +9,7 @@
 "Donec volutpat, tortor a congue aliquet, tortor lorem mattis urna, pretium sollicitudin nisi nibh nec ex. Phasellus pellentesque placerat tortor. Aenean pulvinar posuere arcu, et lacinia ex. Vestibulum hendrerit nisi ut dolor bibendum, a congue nisl tristique. Maecenas efficitur purus felis, non molestie metus pharetra vitae. Morbi sed ex elit. Nullam vehicula volutpat massa at fringilla. In hac habitasse platea dictumst. Vivamus sit amet ligula mi. Vivamus ac odio sed elit sodales mattis ac at elit. Aenean nunc eros, venenatis eu ultricies at, rutrum ac nisi. Vivamus eget urna et augue dignissim fermentum et sit amet velit. Nulla vel sapien pharetra sapien porttitor porta non in dui. Vestibulum iaculis nisi in neque egestas tempor." !Long
 ?Long 20 wrap "\n" split !T
 ?T each {i len 20 <= "wrap" assert}
+
 ?T " " intercalate len ?Long len = "wrap2" assert
 
 global a
