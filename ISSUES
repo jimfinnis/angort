@@ -29,7 +29,7 @@ Not yet documented:
     split (string)
     Parameter type checking
     yield and routines! Must be anon
-    various new words: fst snd etc, explode, eval..
+    various new words: fst snd etc, explode, eval.. sf, nsf..
     compileif! Dear god..
     Mechanisms for package/library reload prevention. Package is nasty.
 

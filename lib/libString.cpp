@@ -123,9 +123,21 @@ numeric types. The list contains the items to be substituted into the string.
 %word sf (v -- s) convert a float to a string with minimum sig figs
 {
     Value *s = a->stack.peekptr();
-    float x = s->toFloat();
+    double x = s->toDouble();
     char buf[256];
     snprintf(buf,255,"%g",x);
+    Types::tString->set(s,buf);
+}
+
+%word nsf (v n -- s) convert a float to a string with given sig figs
+{
+    int nsf = a->popInt();
+    Value *s = a->stack.peekptr();
+    double x = s->toDouble();
+    char buf[256];
+    char tmp[32];
+    snprintf(tmp,32,"%%.%df",nsf);
+    snprintf(buf,255,tmp,x);
     Types::tString->set(s,buf);
 }
 

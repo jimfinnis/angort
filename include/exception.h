@@ -74,7 +74,7 @@ public:
     }
     
     /// a copy of the error string
-    char error[1024];
+    char error[2064];
     bool fatal;
     int id; // ID of symbol
 };
@@ -97,7 +97,7 @@ public:
             strcpy(fileName,"<unknown>");
         line = l;
         
-        snprintf(error,1024,"%s(%d):  %s",fileName,line,brief);
+        snprintf(error,2063,"%s(%d):  %s",fileName,line,brief);
         fatal=false;
     }
    
