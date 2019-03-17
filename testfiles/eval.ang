@@ -1,0 +1,11 @@
+[] "1 1 +" eval 2 = "eval1" assert
+[1, 2] "+" eval 3 = "eval2" assert
+[1, 2] "-" eval -1 = "eval3" assert
+[1] "drop" eval isnone "eval4" assert
+
+10 !Foo
+[] "?Foo 1+" eval 11 = "eval5" assert
+
+[] "100!Foo" eval drop ?Foo 100 = "eval6" assert
+
+quit

@@ -4,10 +4,25 @@ project(ANGORT)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-link_directories(${ANGORT_SOURCE_DIR}/lib)
+option(PROFILE "enable profiling")
+option(EDITLINE_NOUNICODE "using a version of editline with no unicode support")
+option(POSIXTHREADS "enable POSIX threading (experimental")
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    message("Linux detected")
+#    set(POSIXTHREADS 1)
+ELSE()
+#    set(POSIXTHREADS 0)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-#set(CMAKE_CXX_FLAGS_PROFILE -pg -Wall)
-#set(CMAKE_C_FLAGS_PROFILE -pg)
+# build a config file into the include dir so other projects know
+# how Angort was built.
+
+message("Writing config")
+configure_file(${ANGORT_SOURCE_DIR}/config.h.in ${ANGORT_SOURCE_DIR}/include/config.h)
+
+
+
+link_directories(${ANGORT_SOURCE_DIR}/lib)
 
 add_subdirectory(cli)
 add_subdirectory(tests)
@@ -38,6 +53,8 @@ add_test(exception cli/angort ${ANGORT_SOURCE_DIR}/testfiles/exception.ang)
 add_test(incdec cli/angort ${ANGORT_SOURCE_DIR}/testfiles/incdec.ang)
 add_test(generator cli/angort ${ANGORT_SOURCE_DIR}/testfiles/generator.ang)
 
+add_test(format cli/angort ${ANGORT_SOURCE_DIR}/testfiles/format.ang)
+
 # this only works in the testfiles directory.
 #add_test(pkg cli/angort ${ANGORT_SOURCE_DIR}/testfiles/pkg.ang)
 
@@ -49,4 +66,6 @@ foreach(item ${anglibfiles})
 endforeach(item)
 
 install(FILES ${anglibfiles} makeWords.pl DESTINATION share/angort)
+
+
 

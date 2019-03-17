@@ -21,6 +21,7 @@ static ArrayList<SymbolName> strings(32);
 int symbolCtr=1;
 
 void SymbolType::deleteAll(){
+    WriteLock l=WL(Types::tSymbol);
     locations.clear();
     strings.clear();
 }
@@ -45,6 +46,11 @@ int SymbolType::getSymbol(const char *s){
         throw RUNT("ex$symbol","").set("symbol too long: %s",s);
     
     int n;
+    
+    // unpleasant - see
+    // https://groups.google.com/forum/#!topic/comp.programming.threads/QsJI57oQZKc
+    WriteLock l=WL(Types::tSymbol);
+    
     if(locations.find(s)){
         n=locations.found();
     } else {
@@ -68,6 +74,7 @@ void SymbolType::set(Value *v,int i){
 }
 
 const char *SymbolType::toString(bool *allocated,const Value *v) const {
+    ReadLock l(this);
     char buf[128];
     strncpy(buf,get(v),128);
     *allocated=true;
@@ -80,6 +87,7 @@ int SymbolType::toInt(const Value *v) const {
 
 
 uint32_t SymbolType::getHash(Value *v)const{
+    ReadLock l(this);
     // Fowler-Noll-Vo hash, variant 1a
     const unsigned char *s = (const unsigned char *)get(v);
     uint32_t h = 2166136261U;

@@ -64,6 +64,24 @@ mkrange !t
 100 ?R in not "rangein4" assert
 101 ?R in not "rangein4" assert
 
+
 0!R
 ?BaseGC gccount = "range6gc3" assert
+
+0 100 range !R
+0 ?R in "rangein1" assert
+-1 ?R in not "rangein2" assert
+100 ?R in not "rangein3" assert
+10 ?R in  "rangein4" assert
+
+0 100 3 srange !R
+0 ?R in "rangein5" assert
+-1 ?R in not "rangein6" assert
+100 ?R in not "rangein7" assert
+1 ?R in not "rangein8" assert
+2 ?R in not "rangein9" assert
+3 ?R in "rangein10" assert
+99 ?R in "rangein11" assert
+102 ?R in not "rangein12" assert
+
 quit

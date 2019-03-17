@@ -10,7 +10,7 @@
 
 namespace angort {
 
-Closure::Closure(Closure *p) : GarbageCollected() {
+Closure::Closure(Closure *p) : GarbageCollected("closure") {
     parent = p;
     ip = NULL;
     if(p)p->incRefCt();
@@ -88,6 +88,11 @@ void Closure::init(const CodeBlock *c){
             reffed->incRefCt();
         } else blocksUsed[i]=NULL; // self-refs are NULL
     }    
+}
+
+void Closure::wipeContents(){
+    for(int i=0;i<cb->closureBlockSize;i++)
+        block[i].wipeIfInGCCycle();
 }
 
 
@@ -230,15 +235,18 @@ void Closure::traceAndMove(class CycleDetector *cycle){
 }
 
 void Closure::show(const char *s){
-    printf("%s of Closure %p: block %s\n",s,this,block?"Y":"N");
+    printf("%s of Closure %p: is a block: %s\n",s,this,block?"Y":"N");
     printf("Block:\n");
     for(int i=0;i<cb->closureBlockSize;i++){
         printf("  %2d : %p %s\n",i,block+i,block[i].toString().get());
     }
     printf("Map:\n");
     for(int i=0;i<cb->closureTableSize;i++){
-        printf("  %2d : %p %s\n",i,map[i],map[i]->toString().get());
-        printf("     : contained in closure %p\n",blocksUsed[i]);
+        printf("  %2d : %p val=%s\n",i,map[i],map[i]->toString().get());
+        if(blocksUsed[i])
+            printf("     : contained in closure %p\n",blocksUsed[i]);
+        else
+            printf("     : contained in self\n");
     }
     
     if(parent)

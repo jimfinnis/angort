@@ -35,11 +35,11 @@ package stats
     :"(list -- upper median lower) find quartiles (Tukey hinge method)"
     ?list clone !list ?list sort
     ?list len 1 band if
-        ?list 0 ?list len 2/ 1+ slice !h1
-        ?list ?list len 2/ -1 slice !h2
+        ?list 0 ?list len 2/ 1+ deprecated$slice !h1
+        ?list ?list len 2/ -1 deprecated$slice !h2
     else
-        ?list 0 ?list len 2/ slice !h1
-        ?list ?list len 2/ -1 slice !h2
+        ?list 0 ?list len 2/ deprecated$slice !h1
+        ?list ?list len 2/ -1 deprecated$slice !h2
     then
     ?h2 mediansorted
     ?list mediansorted
@@ -48,3 +48,16 @@ package stats
 :popsd popvariance sqrt;
 :sampsd sampvariance sqrt;
 
+
+:summary |list:q1,q2,med|
+    :"(list -- hash) produce a hash of min,lowerq,median,upperq,max"
+    ?list quartiles !q1 !med !q2
+    [% `min ?list min,
+        `lowerq ?q1,
+        `median ?med,
+        `upperq ?q2,
+        `max ?list max
+    ]
+;
+    
+    

@@ -5,14 +5,17 @@
  * long description, many sentences.
  * 
  */
-
+#include "config.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
+#if !NOLINEEDITING
 #include <histedit.h>
+#include "completer.h"
+#endif
 
 #include "angort.h"
-#include "completer.h"
+
 
 // keep this up to date!
 static const char *copyString="(c) Jim Finnis 2012-2017";
@@ -25,6 +28,7 @@ static const char *usageString=
 "-e    : execute command-line script\n"
 "-d    : disassemble while running\n"
 "-D    : tokeniser trace\n"
+"-L    : print input lines\n"
 "-b    : signals cause debugger entry rather than exit\n"
 "-if   : import symbols from future namespace, mutually exclusive with...\n"
 "-if   : import symbols from deprecated namespace\n"
@@ -44,7 +48,7 @@ static ArrayList<Value> *strippedArgs;
 Runtime *runtime; // default angort runtime
 
 static void showException(Exception& e){
-    e.run->ang->globalLock();
+    WriteLock lock=WL(&globalLock);
     printf("Error in thread %d: %s\n",e.run?e.run->id:-1,e.what());
     if(e.ip){
         printf("Error at:");
@@ -53,7 +57,6 @@ static void showException(Exception& e){
     }else
           printf("Last line input: %s\n",runtime->ang->getLastLine());
     runtime->clearStack();
-    e.run->ang->globalUnlock();
     if(e.fatal)
         exit(1);
     
@@ -64,6 +67,7 @@ static void showException(Exception& e){
 #define F_FUTURE 4
 #define F_DEPRECATED 8
 
+#if !NOLINEEDITING
 // autocompletion data generator
 class AngortAutocomplete : public completer::Iterator {
     const char *strstart;
@@ -83,14 +87,21 @@ public:
         return s;
     }
 };
+#endif
     
 
 bool debugOnSignal=false;
 
+// this symbol needs to be defined if editline wasn't compiled with
+// UNICODE support, as it wasn't on earlier versions of Ubuntu.
 
+#if(EDITLINE_NOUNICODE)
 const char *getPrompt(){
     extern Value promptCallback;
-    
+#else
+const wchar_t *getPrompt(){
+    extern Value promptCallback;
+#endif
     static char buf[256];
     char pchar=0;
     if(runtime->ang->isDefining())
@@ -113,7 +124,22 @@ const char *getPrompt(){
                 GarbageCollected::getGlobalCount(),
                 runtime->stack.ct,pchar);
     }
+#if(EDITLINE_NOUNICODE)
     return buf;
+#else
+    // convert to wide, we have to do it here rather than leave it
+    // to EditLine because there is a bug in EditLine's prompt code
+    // (if conversion fails, a NULL is returned which print_prompt()
+    // cheerfully tries to print).
+    static wchar_t wbuf[256];
+failed:
+    int conv = mbstowcs(wbuf,buf,256);
+    if(conv != strlen(buf)){
+        strcpy(buf,"(prompt contains bad unicode) > "); 
+        goto failed;
+    }
+    return wbuf;
+#endif
 }
 
 void addDirToSearchPath(const char *data){
@@ -123,16 +149,20 @@ void addDirToSearchPath(const char *data){
     free((void *)path);
 }
 
+#if !NOLINEEDITING
 static EditLine *el=NULL;
 static History *hist=NULL;
+#endif
 
 void cliShutdown(){
+#if !NOLINEEDITING
     if(el){
         completer::shutdown(el);
         history_end(hist);
         el_end(el);
         el=NULL;
     }
+#endif
 }
 
 void cliSighandler(int s){
@@ -147,6 +177,7 @@ void cliSighandler(int s){
 }
 
 int main(int argc,char *argv[]){
+    
     struct sigaction sa;
     sa.sa_handler = cliSighandler;
     memset(&sa,0,sizeof(sa));
@@ -216,10 +247,16 @@ int main(int argc,char *argv[]){
                 exit(0);
                 break;
             case '-':
+                // If just a '--' with no following chars,
                 // copy ALL remaining arguments into stripped arg list,
-                // ignoring them here
-                for(i++;i<argc;i++)
+                // ignoring them here. Otherwise add to the args list.
+                
+                if(!arg[2]){
+                    for(i++;i<argc;i++)
+                        Types::tString->set(strippedArgs->append(),argv[i]);
+                } else 
                     Types::tString->set(strippedArgs->append(),argv[i]);
+                    
                 break;
             case 'n':flags|=F_LOOP|F_CMD;break;
             case 'e':flags|=F_CMD;break;
@@ -238,6 +275,9 @@ int main(int argc,char *argv[]){
                     printf("should be -if or -id\n");
                     exit(1);
                 }
+                break;
+            case 'L':
+                a->printLines = true;
                 break;
             case 'l':
                 a->plugin(arg+2);
@@ -328,28 +368,47 @@ int main(int argc,char *argv[]){
     
     // start up an editline instance
     
+#if !NOLINEEDITING
     el = el_init(argv[0],stdin,stdout,stderr);
-    el_set(el,EL_PROMPT,&getPrompt);
+#if(EDITLINE_NOUNICODE)
+    el_set(el,EL_PROMPT,&getPrompt); // sorry, no unicode support...
+#else
+    el_wset(el,EL_PROMPT,&getPrompt); // use wide prompt (see getPrompt for why)
+#endif
     el_set(el,EL_EDITOR,"emacs");
-    
     hist = history_init();
     HistEvent ev;
     history(hist,&ev,H_SETSIZE,800);
     el_set(el,EL_HIST,history,hist);
     if(!hist)
         printf("warning: no history\n");
-        
-    
     AngortAutocomplete comp;
     completer::setup(el,&comp,"\t\n\"\\'@><=;|&{(?! ");
+#endif
     
+        
     for(;;){
         // set up the autocomplete function and others
 //        rl_completion_entry_function = autocomplete_generator;
 //        rl_basic_word_break_characters = " \t\n\"\\'@><=;|&{(";
         
         int count;
+#if !NOLINEEDITING
         const char *line = el_gets(el,&count);
+        
+#else
+#if(EDITLINE_NOUNICODE)
+        fputs(getPrompt(),stdout);
+#else
+        fputws(getPrompt(),stdout);
+#endif
+        char inbuf[1024];
+        const char *line = fgets(inbuf,1024,stdin);
+        if(line)
+            count=strlen(line);
+        else
+            count=0;
+#endif        
         // this avoids break happening when we exit the debugger
         // after a ctrl-c.
         extern bool debuggerBreakHack;
@@ -357,13 +416,13 @@ int main(int argc,char *argv[]){
             debuggerBreakHack=false;
         else if(!line)
             break;
-
-            
         
        
         if(count>1){ // there's going to be a trailing newline
+#if !NOLINEEDITING
             if(hist)
                 history(hist,&ev,H_ENTER,line);
+#endif
             try {
                 // annoyingly, editline keeps any trailing newline
                 char *tmp = strdup(line);

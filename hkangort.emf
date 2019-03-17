@@ -57,7 +57,6 @@ set-variable .fhook-angort.collapse-mnext "-1"
 
     ;
     ; Keywords
-hilight   .hilight.angort 1 "for" .scheme.keyword
 hilight   .hilight.angort 1 "if" .scheme.keyword
 hilight   .hilight.angort 1 "then" .scheme.keyword
 hilight   .hilight.angort 1 "else" .scheme.keyword

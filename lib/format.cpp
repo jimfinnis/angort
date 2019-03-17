@@ -92,6 +92,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
     const char *format = Types::tString->getData(formatVal);
     
     ArrayListIterator<Value> iter(items);
+    ReadLock lock(items);
     iter.first();
     
     unsigned int width,precision;
@@ -103,7 +104,7 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
         precision=0;
         width=0;
         if(*f=='%'){
-            const char *p = f++;
+            ++f;
             if(*f=='-')f++;
             while(isdigit(*f))
                 width = (width*10) + (*f++ - '0');
@@ -112,13 +113,10 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 while(isdigit(*f))
                     precision = (precision*10) + (*f++ - '0');
             }
-            while(*f && *f!='%' && !isalpha(*f))
-                ;
             if((*f=='l' || *f=='z') && (f[1]=='d' || f[1]=='u' || f[1]=='x'))
                 ++f; // skip length flag (dealt with in pass 2)
             switch(*f){
             case 'c':
-                iter.next();
                 // fall through
             case '%':
                 size++;
@@ -141,15 +139,13 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
                 iter.next();
                 break;
             }
-            default://unknown code; just add the rest of the string in. Ugh.
-                size+=strlen(p);
-                goto expand;
-                break;
+            default://unknown code; throw.
+                throw RUNT(EX_BADPARAM,"").set("unknown format in format specification: %c",*f);
             }
         } else
             size++;
     }
-expand:
+    
     // now allocate a temporary buffer
     char *base=(char *)malloc(size+2);
     memset(base,0,size+1);
@@ -159,10 +155,10 @@ expand:
     iter.first();
     for(const char *f = format;*f;f++){
         if(*f=='%'){
+            f++;
             bool isLong=false;
             bool zeropad=false;
             bool negpad=false;
-            const char *p = f++;
             precision=-9999; // rogue value for "no precision"
             width=0;
             if(*f=='-'){
@@ -188,6 +184,9 @@ expand:
             }
             
             switch(*f){
+            case '%':
+                *s++ = '%';
+                break;
             case 'c':
                 *s++ = iter.current()->toInt();
                 iter.next();
@@ -239,9 +238,7 @@ expand:
                 break;
             }
             default:
-                strcpy(s,p);
-                s+=strlen(s);
-                goto end;
+                throw RUNT(EX_WTF,"unknown spec char in pass 2 of format - should have been caught in pass 1");
             }
         } else
             *s++ = *f;

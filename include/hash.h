@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "angort.h"
+#include "lock.h"
 
 namespace angort {
 
@@ -64,10 +65,10 @@ struct HashEnt {
 /// implementation at http://www.laurentluce.com/?p=249
 /// Also the original source code is in dictobject.c
 
-class Hash {
+class Hash : public Lockable {
 public:
     
-    Hash(){
+    Hash() : Lockable("hash"){
 #ifdef DEBUG
         miss=0;
 #endif
@@ -267,6 +268,12 @@ public:
     void setSymFloat(const char *s,float f){
         Value v;
         Types::tFloat->set(&v,f);
+        setSym(s,&v);
+    }
+    /// helper for setting double with symbol keys
+    void setSymDouble(const char *s,double f){
+        Value v;
+        Types::tDouble->set(&v,f);
         setSym(s,&v);
     }
     /// helper for setting strings with symbol keys

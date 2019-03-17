@@ -94,8 +94,16 @@ float StringType::toFloat(const Value *v) const {
     return atof(getData(v));
 }
 
+double StringType::toDouble(const Value *v) const {
+    return atof(getData(v));
+}
+
 int StringType::toInt(const Value *v) const {
     return atoi(getData(v));
+}
+
+long StringType::toLong(const Value *v) const {
+    return atol(getData(v));
 }
 
 uint32_t StringType::getHash(Value *v)const{
@@ -227,5 +235,31 @@ void StringType::toSelf(Value *out,const Value *v) const {
 Iterator<Value *> *StringType::makeValueIterator(Value *v)const{
     return new StringIterator(v);
 }
+
+int StringType::getIndexOfContainedItem(Value *v,Value *item)const {
+    const StringBuffer &b = StringBuffer(v);
+    const wchar_t *haystack = b.getWideBuffer();
+    const StringBuffer &b2 = StringBuffer(item);
+    const wchar_t *needle = b2.getWideBuffer();
+    
+    const wchar_t *res = wcsstr(haystack,needle);
+    int out = res ? res-haystack: -1;
+    free((void *)needle);
+    free((void *)haystack);
+    return out;
+}
+
+bool StringType::contains(Value *v,Value *item) const {
+    const StringBuffer &b = StringBuffer(v);
+    const wchar_t *haystack = b.getWideBuffer();
+    const StringBuffer &b2 = StringBuffer(item);
+    const wchar_t *needle = b2.getWideBuffer();
+    
+    const wchar_t *res = wcsstr(haystack,needle);
+    free((void *)needle);
+    free((void *)haystack);
+    return res!=NULL;
+}
+
 
 }

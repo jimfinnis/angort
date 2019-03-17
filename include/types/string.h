@@ -33,6 +33,8 @@ public:
     
     virtual float toFloat(const Value *v) const;
     virtual int toInt(const Value *v) const;
+    virtual long toLong(const Value *v) const;
+    virtual double toDouble(const Value *v) const;
 
     /// get a hash key
     virtual uint32_t getHash(Value *v)const;
@@ -42,6 +44,11 @@ public:
     virtual void removeAndReturn(Value *coll,Value *k,Value *result)const{
         throw RUNT("ex$string","cannot remove from string");
     }
+    
+    /// return the index of item is in the collection (uses the same
+    /// equality test as hash keys).If not present, returns -1.
+    virtual int getIndexOfContainedItem(Value *v,Value *item)const;
+    virtual bool contains(Value *v,Value *item) const;
     
     virtual Iterator<Value *> *makeValueIterator(Value *v)const;
     

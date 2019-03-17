@@ -45,18 +45,6 @@ inline int wstrlen(const char *s){
         a->pushInt(p-haystack.get());
 }
 
-%word toint (string -- int) string to integer
-{
-    Value *v = a->stack.peekptr();
-    Types::tInteger->set(v,v->toInt());
-}
-        
-%word tofloat (string -- float) string to float
-{
-    Value *v = a->stack.peekptr();
-    Types::tFloat->set(v,v->toFloat());
-}
-        
 
 %word chr (integer -- string) convert integer to ASCII char (as single-character string)
 {
@@ -120,7 +108,8 @@ numeric types. The list contains the items to be substituted into the string.
     f.copy(a->popval());
     l.copy(a->popval());
     
-    format(a->pushval(),&f,Types::tList->get(&l));
+    ArrayList<Value> *lst = Types::tList->get(&l); // format() will lock
+    format(a->pushval(),&f,lst);
 }
 
 %word sx (v -- s) convert a value to hex string
@@ -162,10 +151,8 @@ numeric types. The list contains the items to be substituted into the string.
         newstr[i]=L' ';
     wcscpy(newstr+i,buf);
     
-//    Angort::globalLock();
     wcstombs(sbuf,newstr,1023);
     Types::tString->set(v,sbuf);
-//    Angort::globalUnlock();
     free(newstr);
 }
 
@@ -193,10 +180,8 @@ numeric types. The list contains the items to be substituted into the string.
         newstr[len+i]=L' ';
     newstr[padding]=0;
     
-//    Angort::globalLock();
     wcstombs(sbuf,newstr,1023);
     Types::tString->set(v,sbuf);
-//    Angort::globalUnlock();
     
     free(newstr);
 }
@@ -216,10 +201,44 @@ numeric types. The list contains the items to be substituted into the string.
     
     // might not actually be a string.
     buf[maxlen]=0;
-//    Angort::globalLock();
     wcstombs(sbuf,buf,1023);
     Types::tString->set(v,sbuf);
-//    Angort::globalUnlock();
+}
+
+inline int wordlen(const wchar_t * s){
+    const wchar_t *p;
+    for(p = s; *s && *s!=' ' && *s!='\t' && *s!='\n'; s++){}
+    return(s-p);
+}
+%word wrap (string maxlen -- string) word wrap to max characters, inserting breaks. Tabs are one space!
+{
+    int maxlen = a->popInt();
+    Value *v = a->stack.peekptr();
+    const StringBuffer &sb = v->toString();
+    const char *src = sb.get();
+    int len = wstrlen(src);
+    
+    wchar_t *s = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    int rv = mbstowcs(s,src,len+1);
+    if(rv<0){
+        a->pushNone();
+        return;
+    }
+    int llen=0;
+    for(wchar_t *p = s;*p;p++,llen++){
+        if(*p=='\n'){
+            llen=0;
+        } else if(*p==' ' || *p=='\t'){
+            if(llen + wordlen(p+1) > maxlen){
+                *p='\n';
+                llen=0;
+            }
+        }
+    }
+    
+    char *ss = (char *)malloc(len+1);
+    rv=wcstombs(ss,s,len+1);
+    Types::tString->set(v,ss);
 }
 
 %word split (string delim -- list) split a string on a single-character delimiter 
@@ -230,6 +249,8 @@ numeric types. The list contains the items to be substituted into the string.
     const char *s = strdup(strb.get());
     char delim = params[1]->toString().get()[0];
     ArrayList<Value> *list = Types::tList->set(a->pushval());
+    
+    WriteLock lock=WL(list);
     
     // must be the size of the longest string
     char *buf = (char *)malloc(strlen(s)+1);
@@ -242,13 +263,14 @@ numeric types. The list contains the items to be substituted into the string.
             memcpy(buf,p,s-p);
             buf[s-p]=0;
             Types::tString->set(list->append(),buf);
-            if(!*s){free((void *)base);return;}
+            if(!*s)break;//{free((void *)base);return;}
             s++;
             p=s;
         } else
             s++;
     }
     free((void *)buf);
+    free((void *)base);
 }
 
 %wordargs substr sii (str start count -- str) get a substring.
@@ -270,11 +292,28 @@ if start negative calculate start from end. See also "slice".
         s+=p1;
         if(p2<=0){
             p2=len+p2-p1;
-//            printf("**len=%d, p1=%d, p2=%d\n",len,p1,p2);
         }
-        if(p2>0)s[p2]=0;
+        
+        if(p2>len)p2=len;
+        if(p2>0 && p1+p2<len)s[p2]=0;
         char *s2 = (char *)alloca(rv-p1+1);
         wcstombs(s2,s,rv-p1+1);
         a->pushString(s2);
     }
 }        
+
+%wordargs trim s (s --) trim surrounding whitespace
+{
+    int len = wstrlen(p0);
+    wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    mbstowcs(buf,p0,len+1);
+    
+    wchar_t *s = buf;
+    while(iswspace(*s))s++;
+    wchar_t *wordend = s;
+    while(!iswspace(*wordend))wordend++;
+    *wordend = 0;
+    char *s2 = (char *)alloca(wordend-s+1);
+    wcstombs(s2,s,wordend-s+1);
+    a->pushString(s2);
+}

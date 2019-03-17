@@ -90,6 +90,9 @@ public:
     virtual class GarbageCollected *getGC(Value *v) const{
         return NULL;
     }
+     
+    /// return a lockable for this value (i.e. underlying list or hash, typically) or NULL
+    virtual class Lockable *getLockable(Value *v) const { return NULL; }
           
     
     /// set name of type, add to global type list
@@ -209,7 +212,13 @@ public:
     /// return the index of item is in the collection (uses the same
     /// equality test as hash keys).If not present, returns -1.
     virtual int getIndexOfContainedItem(Value *v,Value *item)const;
-        
+    
+    /// does an iterable contain something? The default operation just
+    /// walks through the iterable, but hashes and ranges can be
+    /// smarter. In fact, only list should do this!
+    virtual bool contains(Value *v,Value *item) const {
+        return getIndexOfContainedItem(v,item)>=0;
+    }
     
     /// set a value in a collection, if this type is one
     virtual void setValue(Value *coll,Value *k,Value *v)const{

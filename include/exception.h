@@ -174,6 +174,10 @@ public:
     ParameterTypeException(int paramNo, const char *expected, const char *got) : Exception(EX_BADPARAM){
         snprintf(error,1024,"Bad parameter %d, expected %s but got %s",paramNo,expected,got);
     }
+    // here, if we have a dummy boolean parameter, we could have used None too.
+    ParameterTypeException(int paramNo, const char *expected, const char *got,bool dummy) : Exception(EX_BADPARAM){
+        snprintf(error,1024,"Bad parameter %d, expected %s or none but got %s",paramNo,expected,got);
+    }
 };
 
 }

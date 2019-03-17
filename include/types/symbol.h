@@ -9,13 +9,15 @@
 #ifndef __ANGORTSYMBOL_H
 #define __ANGORTSYMBOL_H
 
+#include "../lock.h"
+
 namespace angort {
 
 /// symbol (i.e. string identified by ID) type
 
-class SymbolType : public Type {
+class SymbolType : public Type, public Lockable {
 public:
-    SymbolType(){
+    SymbolType() : Lockable("symbols"){
         add("symbol","SYMB");
         makeStringable();
     }

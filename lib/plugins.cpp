@@ -72,12 +72,20 @@ void Runtime::popParams(Value **out,const char *spec,const Type *type0,
         case 'b':
         case 'A':
         case 'B':
+            // special types - a or A is type0, b or B is type1. If the character is lower
+            // case we permit NONE.
+            // which of the two possible special types?
             tt = (*p=='a' || *p=='A')?type0:type1;
             if(!tt)
                 throw ParameterTypeException(i,"unsupplied special type specified in parameter check",v->t->name);
-            // if the parameter is T, we don't allow NONE through.
-            if(v->t != tt && (!v->isNone() || *p=='a' || *p=='a'))
-                throw ParameterTypeException(i,tt->name,v->t->name);
+            // if the parameter is upper case, we don't allow NONE through.
+            if(*p=='A' || *p=='B'){
+                if(v->t != tt)
+                    throw ParameterTypeException(i,tt->name,v->t->name);
+            } else {
+                if((v->t != tt) && v->t != Types::tNone)
+                    throw ParameterTypeException(i,tt->name,v->t->name,true);
+            }
             break;
                 
         case 'v':
@@ -107,6 +115,18 @@ int Angort::plugin(const char *name){
     const char *path;
     char buf[256];
     
+    // if we have this library already, don't reload: just return
+    // the old namespace ID. We don't just do a namespace check because
+    // loading things into a namespace multiple times is OK (but actually
+    // impossible to do because libraryname=namespacename)
+    
+    if(loadedLibraries.find(name)){
+        ReadLock rlnames(&names);
+        Namespace *sp = names.getSpaceByName(name);
+        return sp->idx;
+    }
+        
+    
     snprintf(buf,256,"%s.angso",name);
     path = findFile(buf);
     
@@ -133,7 +153,9 @@ int Angort::plugin(const char *name){
     
     // init the plugin and get the data, and register it.
     LibraryDef *info = (*init)(this);
-    
+    {
+        loadedLibraries.set(name,LL_PLUGIN);
+    }
     return registerLibrary(info);
 }
 

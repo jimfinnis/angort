@@ -24,6 +24,8 @@ void sighandler(int sig){
 
 namespace angort {
 
+bool boojum=false;
+
 /// define a property to set and get the auto cycle detection interval.
 /// It will be called "autogc".
 
@@ -36,10 +38,9 @@ public:
     }
     
     virtual void postSet(){
-        run->ang->globalLock();
+        WriteLock lock=WL(&globalLock);
         run->ang->autoCycleInterval = v.toInt();
         run->autoCycleCount = run->ang->autoCycleInterval;
-        run->ang->globalUnlock();
     }
     
     virtual void preGet(){
@@ -69,7 +70,7 @@ public:
     }
 };
 
-// assumes (nsid name --) on the stack
+// assumes (nsid name --) on the stack. Must be locked!
 static NamespaceEnt *getNSEnt(Runtime *a){
     const StringBuffer &s = a->popString();
     int nsid = Types::tNSID->get(a->popval());
@@ -199,6 +200,20 @@ removing them.
 {
     static int snarkct=0;
     printf("SNARK %d\n",snarkct++);
+}
+
+%word boojum ( ) used during debugging; sets the boojum global
+{
+    WriteLock lock = WL(&globalLock);
+    printf("Setting boojum\n");
+    boojum=true;
+}
+
+%word endboojum ( ) used during debugging; clears the boojum global
+{
+    WriteLock lock = WL(&globalLock);
+    printf("Clearing boojum\n");
+    boojum=false;
 }
 
 %word none ( -- none ) stack a None value
@@ -424,6 +439,7 @@ Returns the total number of garbage collected objects in the system.
 Gets the value of a global variable by name.
 {
     int id = a->ang->findOrCreateGlobal(p0);
+    ReadLock lock(&a->ang->names);
     Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
     if(v->t == Types::tProp){
@@ -437,6 +453,7 @@ Gets the value of a global variable by name.
 %wordargs setglobal vs (val string -- val) set a global by name
 Sets the value of a global variable by name.
 {
+    WriteLock lock=WL(&a->ang->names);
     int id = a->ang->findOrCreateGlobal(p1);
     Value *v = a->ang->names.getVal(id);
     // have to deal with properties too. Ugly.
@@ -696,6 +713,8 @@ This is the same as "??name".
 List all words in a given namespace, showing the help texts for all
 of them.
 {
+    // this may lock the namespace for quite some time.
+    ReadLock lock(&a->ang->names);
     Namespace *s = a->ang->names.getSpaceByName(a->popString().get());
     for(int i=0;i<s->count();i++){
         NamespaceEnt *e = s->getEnt(i);
@@ -724,6 +743,7 @@ Lists the names of all Angort types, including the internal ones
 }
 
 
+
 %word gc (--) perform a major garbage detect and cycle removal
 Runs a major garbage detect, which includes detecting cycles. This
 is automatically run every "autogc" ticks, so you may need to do this
@@ -734,19 +754,42 @@ structures which refer to themselves).
     a->gc();
 }
 
-%word nspace (name -- nsid) get a namespace by name
-Return a namespace ID for a given namespace. Throws ex$notfound if there
-is no such namespace.
+%word getns (-- nsid) get the current namespace ID
+Gets the NSID of the namespace to which names are currently being written.
 {
+    ReadLock lock(&a->ang->names);
+    Types::tNSID->set(a->pushval(),a->ang->names.getCurrent());
+}
+
+%word nsname (nsid -- name) get the name of a namespace
+{
+    ReadLock lock(&a->ang->names);
+    int idx = Types::tNSID->get(a->popval());
+    const char *s = a->ang->names.spaces.getName(idx);
+    a->pushString(s);
+}
+        
+    
+    
+    
+
+%word nspace (name -- nsid|none) get a namespace by name
+Return a namespace ID for a given namespace or NONE.
+{
+    ReadLock lock(&a->ang->names);
     const StringBuffer& name = a->popString();
-    Namespace *ns = a->ang->names.getSpaceByName(name.get());
-    Types::tNSID->set(a->pushval(),ns->idx);
+    int idx = a->ang->names.spaces.get(name.get());
+    if(idx<0)
+        a->pushNone();
+    else
+        Types::tNSID->set(a->pushval(),idx);
 }
 
 %word nspaces (-- list) return a list of all namespaces in index order
 Returns a list names of all namespaces, in the order in which they
 were created.
 {
+    ReadLock lock(&a->ang->names);
     ArrayList<Value> *list=Types::tList->set(a->pushval());
     a->ang->names.spaces.appendNamesToList(list);
 }
@@ -755,6 +798,7 @@ were created.
 Returns a list of names from a namespace whose handle has been obtained
 with "nspace".
 {
+    ReadLock lock(&a->ang->names);
     int idx = Types::tNSID->get(a->popval());
     Namespace *ns = a->ang->names.getSpaceByIdx(idx);
     if(!ns)a->pushNone();
@@ -769,6 +813,7 @@ with "nspace".
 Returns true if the identifier is private inside the given namespace, which
 is identified by a nsid returned by "nspace".
 {
+    ReadLock lock(&a->ang->names);
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isPriv?1:0);
     
@@ -777,6 +822,7 @@ is identified by a nsid returned by "nspace".
 Returns true if the identifier is modifiable inside the given namespace, which
 is identified by a nsid returned by "nspace".
 {
+    ReadLock lock(&a->ang->names);
     NamespaceEnt *ent = getNSEnt(a);
     a->pushInt(ent->isConst?1:0);
     
@@ -786,6 +832,7 @@ is identified by a nsid returned by "nspace".
 Looks up an identifier in a namespace, which is identified by a nsid
 returned by "nspace", and returns its value.
 {
+    ReadLock lock(&a->ang->names);
     NamespaceEnt *ent = getNSEnt(a);
     a->pushval()->copy(&ent->v);
 }
@@ -816,14 +863,28 @@ returned by "nspace", and returns its value.
 
 %word tolong (val -- long) -- convert value to long int
 {
-    Types::tLong->set(a->pushval(),a->popval()->toLong());
+    Value *v = a->stack.peekptr();
+    Types::tLong->set(v,v->toLong());
 }
 
 %word todouble (val -- double) -- convert value to double
 {
-    Types::tDouble->set(a->pushval(),a->popval()->toDouble());
+    Value *v = a->stack.peekptr();
+    Types::tDouble->set(v,v->toDouble());
 }
 
+%word toint (string -- int) string to integer
+{
+    Value *v = a->stack.peekptr();
+    Types::tInteger->set(v,v->toInt());
+}
+        
+%word tofloat (string -- float) string to float
+{
+    Value *v = a->stack.peekptr();
+    Types::tFloat->set(v,v->toFloat());
+}
+        
 
 %word endpackage (-- namespaceID) mark end of package, only when used within a single script
 For packages which are part of a long script, this marks the end. Normally
@@ -834,7 +895,7 @@ the end of a package is marked by the end of the file.
 }
 
 
-%word dumpframe () debugging - dump the frame variables
+%word dumpframe () debugging - dump the frame variables and GC objects
 Prints internal debugging data.
 {
     a->dumpFrame();
@@ -946,6 +1007,7 @@ into the default namespace, making them available without full
 qualification. The idiom for this is typically:
 `libname nspace [`s1,`s2..] import
 {
+    WriteLock lock=WL(&a->ang->names);
     a->checkzerothread();
     if(a->stack.peekptr()->t==Types::tNSID){
         int nsid = Types::tNSID->get(a->popval());
@@ -958,13 +1020,48 @@ qualification. The idiom for this is typically:
         throw SyntaxException("expected package list or package in import");
 }
 
+%wordargs eval ls (list string -- result or none) evaluate an Angort string
+Evaluates an Angort string in its own compile and runtime context
+(so locals aren't accessible). Arguments may be passed in a list
+which is exploded onto the stack: [1,2,3] becomes (1 2 3 --)
+If the stack is not empty at end, the top item is pushed, otherwise none
+is pushed.
+{
+    // sadly this isn't threadsafe, because there's only one compile context
+    // stack, so we're going to lock everything by locking the names.
+    WriteLock lock = WL(&a->ang->names);
+    
+    // compile the string
+    Value code;
+    a->ang->compile(p1,&code);
+    
+    // get a new runtime 
+    Runtime r(a->ang,"eval"); 
+    
+    // push the list elements
+    int len = p0->count();
+    for(int i=0;i<len;i++){
+        r.pushval()->copy(p0->get(i));
+    }
+    // run the code
+    r.trace = a->trace; // make sure we're debugging if the parent is
+    r.runValue(&code);
+    
+    // get top item and transfer or push none
+    if(r.stack.isempty())
+        a->pushNone();
+    else
+        a->pushval()->copy(r.popval());
+}
 
-/*%word showclosure (cl --)
+%word showclosure (cl --)
 {
     Value *v = a->popval();
     if(v->t == Types::tClosure)
         v->v.closure->show("Show command");
-}*/
+}
+
+
 
 %shared
 %init

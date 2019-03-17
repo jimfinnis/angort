@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 2.6)
 
+project(ANGORTLIB)
+
+
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX)
-    
-
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
-set(CMAKE_CXX_FLAGS "-Woverloaded-virtual -pthread")
-set(CMAKE_C_FLAGS "-pthread")
-
-project(ANGORTLIB)
+    
+add_compile_options("-Woverloaded-virtual")
 
 # would be awesome if these could live in an angort cmake module
 
@@ -59,19 +57,33 @@ include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
 add_definitions(-Wall)
 #add_definitions(-g)
 
-add_words_files(stdWords.cpp   stdColl.cpp  stdString.cpp  stdMath.cpp
-stdEnv.cpp future.cpp deprecated.cpp)
+add_words_files(libStd.cpp libColl.cpp libString.cpp libMath.cpp
+libEnv.cpp future.cpp deprecated.cpp)
+
+if(POSIXTHREADS)
+    add_words_files(libThread.cpp)
+endif()
 
 set(SOURCE angort.cpp tokeniser.cpp tokens.cpp types.cpp namespace.cpp
-    cycle.cpp   binop.cpp   plugins.cpp    format.cpp    stringbuf.cpp
+    cycle.cpp binop.cpp plugins.cpp format.cpp stringbuf.cpp
     filefind.cpp value.cpp
-    types/closure.cpp    types/int.cpp    types/float.cpp     types/string.cpp
-    types/range.cpp      types/code.cpp   types/iter.cpp      types/list.cpp
-    types/hashtype.cpp         types/symbol.cpp       types/native.cpp
+    types/closure.cpp types/int.cpp types/float.cpp types/string.cpp
+    types/range.cpp types/code.cpp types/iter.cpp types/list.cpp
+    types/hashtype.cpp types/symbol.cpp types/native.cpp
     types/long.cpp types/double.cpp types/nsid.cpp
     ${WORDFILELIST})
 
 add_library(angort ${SOURCE})
+
+if(POSIXTHREADS)
+    message("POSIX threads enabled")
+    target_compile_options(angort PUBLIC "-pthread")
+endif(POSIXTHREADS)
+
+if(PROFILE)
+    message("profiling enabled")
+    target_compile_options(angort PUBLIC "-pg")
+endif()
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(angort dl m)

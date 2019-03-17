@@ -61,12 +61,20 @@ template <> void RangeType<int>::set(Value *v,Range<int> *r)const{
     incRef(v);
 }
 
-template<> bool RangeType<int>::isIn(Value *v,Value *item)const{
+template<> bool RangeType<int>::contains(Value *v,Value *item)const{
     Range<int> *r = v->v.irange;
     int i = item->toInt();
     if(i<r->start || i>=r->end)
         return false;
     return ((i-r->start)%r->step)==0;
+}
+
+template<> int RangeType<int>::getIndexOfContainedItem(Value *v,Value *item)const{
+    Range<int> *r = v->v.irange;
+    int i = item->toInt();
+    if(i<r->start || i>=r->end)
+        return -1;
+    return ((i-r->start)/r->step);
 }
 
 template<> void RangeType<float>::clone(Value *out,const Value *in,bool deep)const {
@@ -202,8 +210,20 @@ template <> Iterator<Value *> *Range<float>::makeValueIterator()const{
     return new FloatRangeIterator(this);
 }
 
-template<> bool RangeType<float>::isIn(Value *v,Value *item)const{
+template<> bool RangeType<float>::contains(Value *v,Value *item)const{
+    Range<int> *r = v->v.irange;
+    int i = item->toFloat();
+    if(i<r->start || i>=r->end)
+        return -1;
+    return ((i-r->start)/r->step);
     throw RUNT("ex$range","cannot determine membership of float range");
 }
 
+template<> int RangeType<float>::getIndexOfContainedItem(Value *v,Value *item)const{
+    Range<int> *r = v->v.irange;
+    int i = item->toFloat();
+    if(i<r->start || i>=r->end)
+        return -1;
+    return ((i-r->start)/r->step);
+}
 }

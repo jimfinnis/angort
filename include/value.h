@@ -58,12 +58,14 @@ struct Value {
     }
     
     
-    ~Value(){
+    virtual ~Value(){
         clr();
     }
     
     /// decrement reference count and set type to NONE. 
     inline void clr(){
+        extern Lockable globalLock;
+//        WriteLock lock = WL(&globalLock);
         if(t&&t!=Types::tNone){
             if(GarbageCollected *gc = t->getGC(this)){
                 if(gc->refct<=0)
@@ -72,9 +74,16 @@ struct Value {
             t->decRef(this);
             t=Types::tNone;
         }
-        
     }
     
+    /// called on GC object contents inside a cycle detect to avoid
+    /// recursive deletion, before the GC actually happens.
+    void wipeIfInGCCycle(){
+        if(GarbageCollected *gc = t->getGC(this)){
+            if(gc->inCycle)t=Types::tNone;
+        }
+    }
+
     /// decrement the reference count and deallocate if zero and is a type with extra stuff
     inline void decRef(){
         t->decRef(this);
@@ -148,6 +157,10 @@ struct Value {
         if(src==this)
             return;
         
+        // there are two copy methods here. The first is a strange thing
+        // which works and might be slow. The second is untested but seems
+        // to work, but for now I'll stick with the first.
+#if 1
         // we do this weird stuff to avoid situation where we try to copy 
         // a value out of a GC into a value which holds the GC itself with
         // one reference. Here, the GC would actually get deleted by clr()
@@ -159,14 +172,18 @@ struct Value {
         old.t = t;
         old.v = v;
         old.incRef();
-        
-        
         clr();
-        
         t = src->t;
         v = src->v;
         incRef();
         // "old" will decref on destruction
+#else
+        ((Value *)src)->incRef();
+        clr();
+        t = src->t;
+        v = src->v;
+#endif
+        
     }
     
     /// copy of a type but this time a true copy, rather than a copy
@@ -204,6 +221,11 @@ struct Value {
     /// make sure the string gets copied on copy-create
     Value(const Value &src){
         copy(&src);
+    }
+    
+    /// return a lockable for this value (i.e. underlying list or hash, typically) or NULL
+    virtual class Lockable *getLockable() const{
+        return t->getLockable((Value *)this);
     }
 };
 

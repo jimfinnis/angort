@@ -25,11 +25,15 @@ typedef void (*NativeFunc)(class Runtime *a);
 #include "types.h"
 #include "value.h"
 #include "namespace.h"
+#include "lock.h"
 
 namespace angort {
 
 /// true to compile debugging data into opcodes
 #define SOURCEDATA 1
+
+/// true  for closure debugging
+#define DEBCLOSURES 0
 
 /// total number of local variables
 #define VBLOCKSIZE 4096
@@ -198,6 +202,7 @@ class CompileContext {
     /// to scan through existing variables too!
     void convertToClosure(const char *name);
     
+    
     int addClosureListEnt(CodeBlock *c,int n){
         cdprintf("adding new closure list entry, codeblock %p number %d",c,n);
         ClosureListEnt *p = new ClosureListEnt(c,n);
@@ -233,7 +238,7 @@ class CompileContext {
         int i=0;
         ClosureListEnt *p;
         for(p=closureList;p;p=p->next,i++){
-            cdprintf("Closure list entry %d: codeblock %p, index %d",i,p->c,p->i);
+            printf("Closure list entry %d: codeblock %p, index %d",i,p->c,p->i);
         }
         
     }
@@ -277,8 +282,9 @@ public:
         reset(NULL,NULL);
     }
     
+    
     void cdprintf(const char *s,...){
-#if 0
+#if DEBCLOSURES
         char buf[256];
         va_list args;
         va_start(args,s);
@@ -516,6 +522,21 @@ struct CodeBlock {
     Type **paramTypes; 
     
     bool used; //!< true if the codeblock ends up being used (so the context mustn't delete it)
+    
+    void dump(){
+        printf("Codeblock dump for %p\n",this);
+        printf("%d locals of %d are params, bits %x closed\n",locals,
+               params,localsClosed);
+        printf("Closure block size %d, closure table size %d\n",
+               closureBlockSize,closureTableSize);
+        if(closureTableSize && closureTable){
+            printf("Closure table: \n");
+            for(int i=0;i<closureTableSize;i++)
+                printf("%3d  %2d levels up, index %d\n",
+                       i,closureTable[i].levelsUp,
+                       closureTable[i].idx);
+        }
+    }
 };
 
 
@@ -611,18 +632,6 @@ struct Frame {
         clos.clr();
         loopIterCt=0;
     }
-};
-
-
-/// thread hook class - the thread library installs one of these
-/// into Angort using setThreadHookObject(). Annoyingly this has
-/// to be global, because it's used in various places if present.
-
-class ThreadHookObject {
-public:
-    // single global mutex, nestable
-    virtual void globalLock() = 0;
-    virtual void globalUnlock() = 0;
 };
 
 /// runtime data
@@ -860,6 +869,9 @@ public:
 };
 
 
+/// global lock
+extern Lockable globalLock;
+
 
 /// This is the main Angort class, of which there should be only
 /// one instance.
@@ -944,7 +956,12 @@ private:
     /// look for a file in the search path. Will attempt to use wordexp
     /// to do shell expansions of the path if it is available.
     const char *findFile(const char *name);
-    
+        
+    /// true if the compiler is skipping lines due to compileif
+    bool isSkipping;
+    /// true if we are between compileif..endcompileif
+    bool inCompileIf;
+
     /// autocomplete state
     ArrayList<const char *> *acList;
     int acIndex;
@@ -954,34 +971,16 @@ private:
     /// heredoc string being build
     char *hereDocString;
     
-    /// the global thread hook object, which may be NULL.
-    /// It's static because it gets used in various places.
+    /// Hash of loaded libraries; the integer value is given in some consts below.
+    /// Mainly used to avoid library reload.
+    StringMap<int> loadedLibraries;
+    static const int LL_PLUGIN = 0; // native C++ lib
+    static const int LL_PACKAGE = 1;  // angort package
     
-    static ThreadHookObject *threadHookObj;
-
 public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
-    
-    /// set the object we use to manipulate threads. Note it's static.
-    static void setThreadHookObject(ThreadHookObject *tho){
-        threadHookObj = tho;
-    }
-    
-    // if a thread API is installed, these run the various
-    // thread handling methods using it.
-    
-    
-    /// lock the global lock (used in quite a few places)
-    inline static void globalLock(){
-        if(threadHookObj)threadHookObj->globalLock();
-    }
-    /// unlock the global lock (used in quite a few places)
-    inline static void globalUnlock(){
-        if(threadHookObj)threadHookObj->globalUnlock();
-    }
-    
 
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){

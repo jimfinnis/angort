@@ -18,6 +18,7 @@ struct HashObject: public GarbageCollected {
     
     virtual Iterator<Value *> *makeKeyIterator()const;
     virtual Iterator<Value *> *makeValueIterator()const;
+    virtual void wipeContents();
     HashObject();
     ~HashObject();
 };
@@ -43,16 +44,17 @@ public:
     /// set a value to an existing hash
     virtual void set(Value *v,HashObject *lo)const;
     
-    virtual bool isIn(Value *v,Value *item)const;
-    
     virtual void setValue(Value *coll,Value *k,Value *v)const;
     virtual void getValue(Value *coll,Value *k,Value *result)const;
     virtual int getCount(Value *coll)const;
+    virtual int getIndexOfContainedItem(Value *v,Value *item)const;
+    virtual bool contains(Value *v,Value *item) const;
     virtual void removeAndReturn(Value *coll,Value *k,Value *result)const;
     virtual void slice(Value *out,Value *coll,int start,int len)const{
         throw RUNT("ex$nocol","cannot get slice of hash");
     }
     virtual void clone(Value *out,const Value *in,bool deep=false)const;
+    virtual class Lockable *getLockable(Value *v) const;
 };
 
 }    

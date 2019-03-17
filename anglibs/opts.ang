@@ -30,6 +30,7 @@ package opts
 :typeequal |wanted,got:|
     cases
         ?wanted ?got = if 1 case
+        ?wanted `double = ?got `integer = and if 1 case
         ?wanted `float = ?got `integer = and if 1 case
         ?wanted `bool = ?got `integer = and if 1 case
         0 otherwise    
@@ -55,7 +56,7 @@ package opts
 # the symbol of a type
 
 :asserttype |hash,key:|
-    ?key ?hash get <<[`bool,`string,`integer,`list,`float]>> in not if
+    ?key ?hash get <<[`bool,`string,`symbol,`integer,`list,`float,`double]>> in not if
         [?key,?hash?`name] "%s in definition %s is not a type" format
         `opts$notatypeindefs throw
     then
@@ -119,10 +120,14 @@ package opts
         ?t `float = if 
             ?v dup ?opt assertnumber tofloat
             case
+        ?t `double = if 
+            ?v dup ?opt assertnumber todouble
+            case
         ?t `integer = if 
             ?v dup ?opt assertint toint
             case
         ?t `string = if ?v tostr case
+        ?t `symbol = if ?v tosymbol case
         ?t `bool = if 
             ?v dup ?opt assertint toint
             case
@@ -163,7 +168,7 @@ package opts
          ) filter2 !optstrings !argstrings
          
          # remove the leading "-" from the optstrings
-         ?optstrings (1 -1 substr) map !optstrings
+         ?optstrings (1 0 substr) map !optstrings
          0!curidx
          # go through optstrings by index, keep checking the end
          # hasn't been reached because we'll be modding the lst
@@ -172,7 +177,7 @@ package opts
              ?curidx ?optstrings get !str
              0 ?str get "-" = if
                  # long opt, drop leading char
-                 ?str 1 -1 substr !str
+                 ?str 1 0 substr !str
                  # and get it
                  ?optlist ?str getoptbyname !opt
                  # had it before?

@@ -6,19 +6,23 @@
 #include "angort.h"
 #include "debtoks.h"
 #include "../lib/opcodes.h"
-
-#include <histedit.h>
 #include <signal.h>
 
+#if !NOLINEEDITING
+#include <histedit.h>
 #include "completer.h"
+#endif
+
 
 using namespace angort;
 
 bool debuggerBreakHack=false;
 
+#if !NOLINEEDITING
 // we have our own instance of editline
 static EditLine *el=NULL;
 static History *hist=NULL;
+#endif
 Tokeniser tok;
 
 static const char *getprompt(){return "] ";}
@@ -153,6 +157,7 @@ static void process(const char *line,Runtime *a){
 }
 
 // autocompletion data generator
+#if !NOLINEEDITING
 class DebuggerAutocomplete : public completer::Iterator {
     int idx,l;
     const char *strstart;
@@ -170,6 +175,7 @@ public:
         return debtoks[idx++].word;
     }
 };
+#endif
 
 
 }
@@ -186,6 +192,7 @@ static void debugSighandler(int s)
 
 void basicDebugger(Runtime *a){
     struct sigaction sa,oldsa;
+    memset(&sa,0,sizeof(sa));
     sa.sa_handler = debugSighandler;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGSEGV,&sa,&oldsa);
@@ -208,7 +215,7 @@ void basicDebugger(Runtime *a){
         a->printStoredTrace();
     }
     
-    
+#if !NOLINEEDITING    
     HistEvent ev;
     // make our editline
     el = el_init("angort-debugger",stdin,stdout,stderr);
@@ -220,19 +227,32 @@ void basicDebugger(Runtime *a){
         el_set(el,EL_HIST,history,hist);
         if(!hist)
             printf("warning: no history\n");
-        
-        
     }
+    
     static debugger::DebuggerAutocomplete compr;
     completer::setup(el,&compr,"\t\n ");
+#endif
     
     debugger::exitDebug=false;
     while(!debugger::exitDebug){
         int count;
         debuggerBreakHack=true;
+#if NOLINEEDITING
+        char inbuf[1024];
+        fputs(getprompt(),stdout);
+        const char *line = fgets(inbuf,1024,stdin);
+        if(line)
+            count=strlen(line);
+        else
+            count=0;
+#else
         const char *line = el_gets(el,&count);
+#endif   
         if(!line)break;
         debuggerBreakHack=false;
+#if NOLINEEDITING
+        debugger::process(line,a);
+#else
         if(hist){
             if(count>1){ // trailing newline
                 history(hist,&ev,H_ENTER,line);
@@ -244,11 +264,14 @@ void basicDebugger(Runtime *a){
         } else {
             debugger::process(line,a);
         }
+#endif
     }
     putchar('\r');
     
     sigaction(SIGSEGV,&oldsa,NULL);
     sigaction(SIGINT,&oldsa,NULL);
+#if !NOLINEEDITING
     el_end(el);
+#endif
 }
 

@@ -80,7 +80,9 @@ def : T_DEF
 defconst : T_DEFCONST
 recurse : T_RECURSE
 self : T_SELF
-
+compileif : T_COMPILEIF
+elsecompileif : T_ELSECOMPILEIF
+endcompileif: T_ENDCOMPILEIF
 cases : T_CASES
 case : T_CASE
 otherwise : T_OTHERWISE

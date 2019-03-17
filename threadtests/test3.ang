@@ -1,5 +1,5 @@
 
-[`time,`thread,`io] each {i library drop}
+[`time,`io] each {i library drop}
 
 # calculate sum of the factorials of the first 10 nonzero ints.
 # Finds each factorial in a thread.
@@ -21,4 +21,4 @@
     0 swap (+) reduce.
 ;
 
-main quit
+{main} quit

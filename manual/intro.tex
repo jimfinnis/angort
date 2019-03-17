@@ -243,3 +243,17 @@ graphics support and JACK MIDI support. Many of these have been written for
 somewhat esoteric purposes as I have needed them.
 
 
+\subsubsection{Notes on line editing}
+As noted above, Angort requires \texttt{libedit} to perform
+line editing. If you do not have this, Angort can still be built
+by specifying
+\begin{v}
+cmake .. -DNOLINEEDITING
+\end{v}
+If \texttt{libedit} is present, and you get an error about \texttt{el\_wset} not
+being defined, the library has not been compiled with Unicode support.
+To work around this, specify
+\begin{v}
+cmake .. -DEDITLINE_NOUNICODE
+\end{v}
+to enforce the use of 8-bit functions.

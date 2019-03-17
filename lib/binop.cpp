@@ -14,8 +14,11 @@ namespace angort {
 /// split it apart and and the items individually.
 
 static void addListOrValueToList(ArrayList<Value> *list,Value *a){
+    WriteLock lock=WL(list);
     if(a->getType() == Types::tList){
-        ArrayListIterator<Value> iter(Types::tList->get(a));
+        ArrayList<Value> *src = Types::tList->get(a);
+        ReadLock lock(src);
+        ArrayListIterator<Value> iter(src);
         
         for(iter.first();!iter.isDone();iter.next()){
             list->append()->copy(iter.current());
@@ -381,7 +384,7 @@ void Runtime::binop(Value *a,Value *b,int opcode){
         case OP_ADD:
             p = a->toLong();
             q = b->toLong();
-            Types::tLong->set(pushval(),p%q);break;
+            Types::tLong->set(pushval(),p+q);break;
         case OP_SUB:
             p = a->toLong();
             q = b->toLong();
@@ -402,7 +405,7 @@ void Runtime::binop(Value *a,Value *b,int opcode){
         case OP_LT:
             p = a->toLong();
             q = b->toLong();
-            pushInt(p>q);break;
+            pushInt(p<q);break;
         case OP_GE:
             p = a->toLong();
             q = b->toLong();

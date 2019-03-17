@@ -9,6 +9,8 @@
 #ifndef __ANGORTGC_H
 #define __ANGORTGC_H
 
+#include "lock.h"
+
 namespace angort {
 
 struct Value;
@@ -22,11 +24,13 @@ typedef uint16_t refct_t; //!< reference count - make sure it's unsigned
 /// a garbage collected entity. This is not a subclass of Value or Type, but a Value may
 /// reference one via the v.gc field.
 
-class GarbageCollected {
+class GarbageCollected : public Lockable {
     static int globalCount;
 public:
     
-    /// set refct to zero, add to cycle detection system
+    /// set refct to zero, add to cycle detection system (with debugging name)
+    GarbageCollected(const char *name);
+    /// set refct to zero, add to cycle detection system 
     GarbageCollected();
     /// remove from cycle detection system
     virtual ~GarbageCollected();
@@ -40,6 +44,9 @@ public:
     /// the reference count
     refct_t refct;
     
+    /// true if we've been found in a GC cycle and we're being deleted
+    bool inCycle;
+    
     /// the reference count used by the cycle detector. The name
     /// comes from the original doc (see CycleDetector).
     refct_t gc_refs;
@@ -52,20 +59,28 @@ public:
     
     /// increment the refct, throwing an exception if it wraps
     void incRefCt(){
+        WriteLock lock = WL(this);
         refct++;
-        dprintf("++ incrementing count for %p, now %d\n",this,refct);
+        dprintf("++ incrementing count for %s:%p, now %d\n",lockablename,this,refct);
         if(refct==0)
             throw RUNT(EX_REFS,"ref count too large");
     }
 
     /// decrement the reference count returning true if it became zero
     bool decRefCt(){
+        WriteLock lock = WL(this);
         if(refct<=0)
-            throw RUNT(EX_REFS,"").set("ERROR - already deleted: %p!",this);
+            throw RUNT(EX_REFS,"").set("ERROR - already deleted: %s:%p!",lockablename,this);
         --refct;
-        dprintf("-- decrementing count for %p, now %d\n",this,refct);
+        dprintf("-- decrementing count for %s:%p, now %d\n",lockablename,this,refct);
         return refct==0;
     }
+    
+    /// called from inside the cycle delete code to safely wipe
+    /// the object's contents, leaving NO REFERENCES to GC objects.
+    /// This avoids recursive deletion in cycle detection.
+    /// Typically, all Value contents will have wipeIfInGCCycle() called.
+    virtual void wipeContents() {}
     
     
     /// many GC objects are containers for references to other objects - return a reference

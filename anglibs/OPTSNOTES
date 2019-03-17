@@ -43,7 +43,8 @@ that (the script name) and returns the result.
 
 Parsing:
 
-    opts$mkparse (cmdname optlist arglist -- results) 
+
+    opts$process (cmdname optlist arglist -- args) 
 
 Results is a hash containing the value of each option and
 argument keyed by name. Any unprocessed args are in remnants.

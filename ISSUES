@@ -1,3 +1,19 @@
+*** NESTED CLOSURE BUG ***
+    :test |a:|
+        ((?a *)map)map;
+
+    [[1]] 2 test.
+
+fails inside closure init, because there is no block allocated (it's NULL).
+A workaround is to force the outer function to close on the variable by
+invoking it in the outer lambda:
+    :test |a:|
+        (?a drop(?a *)map)map;
+
+LOCALDEC/LOCALINC etc don't work as closures. Need to reorganise 
+opcodes to automatically be able to remap local variable funcs
+to closure funcs.
+
 Not yet documented:
     redir/endredir (and other IO)
     barewords
@@ -13,7 +29,11 @@ Not yet documented:
     split (string)
     Parameter type checking
     yield and routines! Must be anon
-    various new words: fst snd etc, explode..
+    various new words: fst snd etc, explode, eval..
+    compileif! Dear god..
+    Mechanisms for package/library reload prevention. Package is nasty.
+
+
     
 *** Signed/unsigned ints! 
     - readu32 just converts to a signed 32, it should at least push as long.

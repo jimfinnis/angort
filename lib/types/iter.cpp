@@ -10,7 +10,7 @@
 
 namespace angort {
 
-IteratorObject::IteratorObject(Iterator<Value *> *iter, Value *src) : GarbageCollected () {
+IteratorObject::IteratorObject(Iterator<Value *> *iter, Value *src) : GarbageCollected ("iter") {
     iterator = iter;
     iterable = new Value;
     current = new Value;

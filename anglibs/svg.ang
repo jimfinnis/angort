@@ -174,6 +174,18 @@ none "txtoattr" def # forward declare
     ?s appendst
     [] tag) mkgen
 
+`dottedline (|x1,y1,x2,y2,?d,s:|
+    ?x1 ?y1 runchain !x1 !y1
+    ?x2 ?y2 runchain !x2 !y2
+    "line" [% `x1 ?x1,
+            `y1 ?y1,
+            `x2 ?x2,
+            `y2 ?y2,
+            "stroke-dasharray" ?d
+            ]
+    ?s appendst
+    [] tag) mkgen
+
 `text (|x,y,h,a,str,s:| # a="middle","start" or "end"
     ?x ?y runchain !x !y
     "text" [% `x ?x,
@@ -332,7 +344,18 @@ none "txtoattr" def # forward declare
         then
     then
     `smallend ?c makemarker markerstyleEnd pushstyle
-    `markerArrowSEnd markerstyleEnd pushstyle
+    line
+    popstyle
+;
+
+:arrowmarker |s:c| :"(x1 y1 x2 y2 markertype --) single ended arrow"
+    "black"!c
+    ?StyleStack len  0 = if
+        ?StyleStack last ?`stroke isnone not if
+            ?StyleStack last?`stroke
+        then
+    then
+    ?s ?c makemarker markerstyleEnd pushstyle
     line
     popstyle
 ;
@@ -382,10 +405,18 @@ new
 # print the whole shebang to stdout, i.e. the entire shapelist
 
 :out |w,h:|
-    ?w ?h 
+    ?w ?h
     ["defs" [%] [] ?MarkerDefs each {ival,} tag]
     ?ShapeList + svg.
 ;
+
+# groups: an example
+#   [%`width 0.1, `stroke "black", `fill "black"] svg$pushgroup
+#   ...draw stuff...
+#   [10 svg$scaletx] svg$popgroup # group is on stack, no longer adding shapes to group
+#   svg$group # add stacked group to output
+#   100 100 svg$out # and output everything 
+
 
 # start a new group, setting its style. The group elements
 # will not be added to the shape list.
@@ -408,9 +439,8 @@ new
 # takes a transform list, which can be built with
 # the tx commands.
 :group |tlist,g:|
-    "g" [%
-         "transform" ?tlist txtoattr
-         ] ?g snd ?StyleStack last + appendst 
+    "g" [%] ?tlist len if "transform" ?tlist txtoattr, then
+    ?g snd ?StyleStack last + appendst 
     ?g fst
     tag ?ShapeList push;
 
@@ -419,3 +449,54 @@ new
 :popdrawgroup
     0 0 popgroup group;
 
+
+################## Handy colour and list stuff
+
+
+:interplist |v/double,l:n,idx,t,lastidx|
+    :"(double list -- ) Interpolate between values in a list, given 0-1"
+    ?v 0.0l >= ?v 1.0l <= and not if
+        "Value not in range 0-1 : " 
+        ?v +
+        `ex$badinterp throw
+    then
+    # first, scale from 0-(n-1)
+    ?l len 1- !lastidx
+    ?v ?lastidx *
+    # the integer part of that is our first index.
+    dup toint !idx
+    # the float part is the interpolation parameter.
+    ?idx - !t
+    
+    ?idx ?lastidx = if
+        # here we must have specified 1 for v
+        ?idx ?l get
+    else
+        # do the interpolation
+        ?idx 1+ ?l get todouble ?t *
+        ?idx ?l get todouble 1.0l ?t - * +
+    then
+    
+;
+
+
+:genpalette |l:r,g,b|
+    :"convert a list of colour triplets [[r,g,b]..] into 3 lists of colour data [[r,r,r...],[g,g,g...],[b,b,b...]] for easier interpolation"
+
+    []!r []!g []!b
+    ?l each{
+        i explode ?b push ?g push ?r push
+    }
+    [?r,?g,?b]
+;
+
+
+:interpcol |v,p:|
+    :"given a palette from genpalette, interpolate a colour from a value in 0-1"
+    ?p (?v swap interplist) map
+;    
+    
+:triple2col |t:r,g,b|
+    :"turn a 0-255 colour triplet into an SVG colour spec"
+    ?t (toint) map "#%02x%02x%02x" format
+;
