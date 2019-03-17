@@ -74,7 +74,10 @@ Build with
 This will build the executable in build/cli/angort. You can install by
 copying this into a binary directory, or just run it from there. You
 will need to install the libedit dev files, but that's the only
-dependency. (Why not GNU readline? The GPL, that's why.)
+dependency. (Why not GNU readline? The GPL, that's why.) This can be done
+with
+    sudo apt install libedit-dev
+
 
 
 ##Immediate mode
