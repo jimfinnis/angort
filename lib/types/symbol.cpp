@@ -8,7 +8,7 @@
 
 #include "angort.h"
 
-#define MAXSYMBOLLEN 32
+#define MAXSYMBOLLEN 128
 
 namespace angort {
 struct SymbolName {
