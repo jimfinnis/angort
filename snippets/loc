@@ -165,6 +165,10 @@ package locpub
     ["e " ?t +, "\\." ?t + "$" + mkaddfilter] ?Filters push
     runfilters;
 
+:fh
+    ["h", "HOME" getenv mkaddfilter] ?Filters push
+    runfilters;
+
 
 
 

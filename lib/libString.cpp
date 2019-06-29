@@ -321,9 +321,9 @@ if start negative calculate start from end. See also "slice".
     mbstowcs(buf,p0,len+1);
     
     wchar_t *s = buf;
-    while(iswspace(*s))s++;
+    while(*s && iswspace(*s))s++;
     wchar_t *wordend = s;
-    while(!iswspace(*wordend))wordend++;
+    while(*wordend && !iswspace(*wordend))wordend++;
     *wordend = 0;
     char *s2 = (char *)alloca(wordend-s+1);
     wcstombs(s2,s,wordend-s+1);
