@@ -55,6 +55,7 @@ struct Value {
     /// use clr instead.
     inline void init(){
         t = Types::tNone;
+        v.i=0;
     }
     
     

@@ -48,8 +48,16 @@ require "util.ang" drop
     ?term regex$compile !rx
     (fst ?rx regex$match len);
 
+:mkaddfilteri |term:rx|
+    ?term regex$compileicase !rx
+    (fst ?rx regex$match len);
+
 :mksubfilter |term:rx|
     ?term regex$compile !rx
+    (fst ?rx regex$match len not);
+
+:mksubfilteri |term:rx|
+    ?term regex$compileicase !rx
     (fst ?rx regex$match len not);
 
 :mkcontentfilter |term:|
@@ -150,9 +158,18 @@ package locpub
     :"(s -- ) positive filter"
     ["+ " ?t +, ?t mkaddfilter] ?Filters push
     runfilters;
+:fpi |t:| 
+    :"(s -- ) positive filter (case independent)"
+    ["+ " ?t +, ?t mkaddfilteri] ?Filters push
+    runfilters;
+
 :fn |t:| 
     :"(s -- ) negative filter"
     ["- " ?t +, ?t mksubfilter] ?Filters push
+    runfilters;
+:fni |t:| 
+    :"(s -- ) negative filter (case independent)"
+    ["- " ?t +, ?t mksubfilteri] ?Filters push
     runfilters;
 
 :fc |t:|
