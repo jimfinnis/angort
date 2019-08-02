@@ -89,6 +89,10 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(angort dl m)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
+set(LINK_LIBS -langort)
+set(PCFILE ${CMAKE_CURRENT_BINARY_DIR}/angort.pc)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/angort.pc.cmakein
+    ${PCFILE} @ONLY)
 
 install(TARGETS angort
     LIBRARY DESTINATION lib
@@ -102,3 +106,5 @@ install(DIRECTORY
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     
     
+set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+install(FILES ${PCFILE} DESTINATION "${INSTALL_PKGCONFIG_DIR}")

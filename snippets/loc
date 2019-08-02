@@ -8,6 +8,8 @@
 [`time, `regex, `sys, `io] each { i library drop}
 `future nspace [`slice] import
 
+# 1 sys$debug
+
 require "util.ang" drop
 
 # generate the main list - a file list consists of a list of tuples,
