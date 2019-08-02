@@ -89,7 +89,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(angort dl m)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-set(LINK_LIBS -langort)
+set(LINK_LIBS "-langort -ldl")
 set(PCFILE ${CMAKE_CURRENT_BINARY_DIR}/angort.pc)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/angort.pc.cmakein
     ${PCFILE} @ONLY)
