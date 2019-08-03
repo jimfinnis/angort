@@ -181,8 +181,8 @@ innermost loop in which they appear.
 
 \subsubsection{Iterator loops}
 \indw{i}\index{loop!iterator}
-Iterator loops loop over an \emph{iterable} value. These are currently ranges,
-hashes and lists. They are delimited by curly braces like infinite loops,
+Iterator loops loop over an \emph{iterable} value. These typically currently ranges,
+hashes and lists, but ints and longs are also iterable (see below). They are delimited by curly braces like infinite loops,
 but are preceded by the 
 \texttt{each} word. This pops the iterable off the stack and makes an
 iterator out of it, over which the loop runs. The iterator exists for as 
@@ -237,6 +237,25 @@ will print ``key=value'' for each entry. Here, \texttt{ival} gets the value
 (as opposed to the key)
 of the current pair in the iterator, 
 and \texttt{p} prints without a newline.
+
+\subsubsection{Iterating ints and longs}
+Ints and longs are also iterable, which might seem a little odd,
+but acts as a handy shorthand. If you create an iterator over a positive int
+or long $n$, it will count up from 0 to $n-1$. If it's negative, it will
+count down from 0 to $n+1$. This means instead of doing this to run
+a piece of code 10 times:
+\begin{lstlisting}
+0 10 range each {...}
+\end{lstlisting}
+you can do this:
+\begin{lstlisting}
+10 each {...}
+\end{lstlisting}
+Inside the loop the value of both \texttt{i} and \texttt{iidx} is the
+current iterator value; \texttt{iidx} has no value and will be an error
+(cannot get value of item in non-collection).
+
+
 
 \subsubsection{Nested iterator loops}
 \label{nestit}

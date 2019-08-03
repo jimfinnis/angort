@@ -45,6 +45,16 @@ public:
         return idx;
     }
     
+    virtual void alias(const char *newname,const char *oldname){
+        int idx = get(oldname);
+        if(idx<0)
+            throw RUNT(EX_NOTFOUND,"").set("name does not exist for alias: %s",oldname);
+        if(get(newname)>=0)
+            throw RUNT(EX_DEFINED,"").set("name already exists for alias: %s",newname);
+        locations.set(newname,idx);
+    }
+    
+    
     T *getEnt(int idx){
         try{
             return entries.get(idx);
@@ -255,6 +265,11 @@ public:
     }
     
     //////////////////// manipulating namespaces /////////////////////
+    
+    /// create alias for namespace
+    void alias(const char *newname,const char *oldname){
+        spaces.alias(newname,oldname);
+    }
     
     /// create a new idx and return it
     int create(const char *name){

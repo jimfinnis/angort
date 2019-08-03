@@ -1020,6 +1020,11 @@ qualification. The idiom for this is typically:
         throw SyntaxException("expected package list or package in import");
 }
 
+%wordargs alias ss (newname oldname --) create a copy of a namespace with a different name
+{
+    a->ang->names.alias(p0,p1);
+}
+
 %wordargs eval ls (list string -- result or none) evaluate an Angort string
 Evaluates an Angort string in its own compile and runtime context
 (so locals aren't accessible). Arguments may be passed in a list

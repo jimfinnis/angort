@@ -82,4 +82,44 @@ void IntegerType::increment(Value *v,int step) const {
     v->v.i += step;
 }
 
+
+class IntegerIterator : public Iterator<Value *> {
+private:
+    Value val; // result
+    int top;
+public:
+    IntegerIterator(const Value *v){
+        top = v->v.i;
+        Types::tInteger->set(&val,0);
+    }
+    virtual ~IntegerIterator(){}
+    virtual void first(){
+        val.v.i = 0;
+    }
+    virtual void next(){
+        if(top<0)
+            val.v.i--;
+        else
+            val.v.i++;
+    }
+    virtual bool isDone() const {
+        if(top<0)
+            return val.v.i <= top;
+        else
+            return val.v.i >= top;
+    }
+    virtual Value *current() {
+        return &val;
+    }
+    virtual int index() const {
+        return val.v.i;
+    }
+};
+
+
+Iterator<Value *> *IntegerType::makeValueIterator(Value *v)const{
+    return new IntegerIterator(v);
+}
+
+
 }

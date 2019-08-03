@@ -83,4 +83,43 @@ void LongType::increment(Value *v,int step) const {
     v->v.l += step;
 }
 
+class LongIterator : public Iterator<Value *> {
+private:
+    Value val; // result
+    long top;
+public:
+    LongIterator(const Value *v){
+        top = v->v.i;
+        Types::tLong->set(&val,0);
+    }
+    virtual ~LongIterator(){}
+    virtual void first(){
+        val.v.i = 0;
+    }
+    virtual void next(){
+        if(top<0)
+            val.v.i--;
+        else
+            val.v.i++;
+    }
+    virtual bool isDone() const {
+        if(top<0)
+            return val.v.i <= top;
+        else
+            return val.v.i >= top;
+    }
+    virtual Value *current() {
+        return &val;
+    }
+    virtual int index() const {
+        return val.v.i;
+    }
+};
+
+
+Iterator<Value *> *LongType::makeValueIterator(Value *v)const{
+    return new LongIterator(v);
+}
+
+
 }

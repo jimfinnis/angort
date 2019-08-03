@@ -243,7 +243,6 @@ void format(Value *out,Value *formatVal,ArrayList<Value> *items){
         } else
             *s++ = *f;
     }
-end:
     *s=0;
     Types::tString->set(out,base);
     free(base);

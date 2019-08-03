@@ -39,6 +39,9 @@ public:
     virtual double toDouble(const Value *v) const;
     virtual void toSelf(Value *out,const Value *v) const;
     virtual void increment(Value *v,int step) const;
+
+    virtual Iterator<Value *> *makeValueIterator(Value *v)const;
+
 protected:
     virtual const char *toString(bool *allocated,const Value *v) const ;
 };
