@@ -790,6 +790,12 @@ public:
     void pushString(const char *s){
         Types::tString->set(stack.pushptr(),s);
     }
+    void pushCharAsString(char c){
+        char buf[2];
+        buf[0]=c;
+        buf[1]=0;
+        Types::tString->set(stack.pushptr(),buf);
+    }
     
     void pushNone(){
         stack.pushptr()->clr();

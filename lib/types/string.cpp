@@ -68,6 +68,10 @@ void StringType::set(Value *v,const char *s)const{
     strcpy(dest,s);
 }
 
+char *StringType::setAllocateOnly(Value *v,int len)const{
+    return allocate(v,len+1,this);
+}
+
 void StringType::setwithlen(Value *v,const char *s,int len)const{
     char *dest = allocate(v,len+1,this);
     memcpy(dest,s,len);

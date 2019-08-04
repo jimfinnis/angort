@@ -30,6 +30,23 @@
 # called p0 and p1, which are floats. Angort values are converted
 # if appropriate and possible - check the generated code to see how.
 #
+# Standard typechars are:
+#    n : float
+#    L : long
+#    b : bool
+#    i : int
+#    d : double
+#    c : callable
+#    C : callable or None
+#    v : any value
+#    l : list
+#    h : hash
+#    s : string
+#    S : symbol
+#    y : string or None
+#    
+#
+#
 # Special types can also be used. Assuming you have declared type
 # objects called tFoo and tBar, you could do
 #
@@ -116,6 +133,7 @@ sub latexescapes {
 
 open(WORDSFILE,">words");
 open(WORDSTEXFILE,">words.tex");
+open(WORDSMDFILE,">words.md");
 
 $waitingforfuncstart=0;
 while(<>){
@@ -124,6 +142,7 @@ while(<>){
         ($dummy,$libname)=split(/\s/,$_,2);
         $nsname = "_angortlib_ns_$libname";
         print WORDSTEXFILE "\\section{$libname}\n";
+        print WORDSMDFILE "## Namespace $libname\n";
         print "namespace $nsname {\n";
     }elsif(/^%type/){
         ($dummy,$type,$typeobj,$class) = split(/\s/,$_,4);
@@ -149,6 +168,7 @@ while(<>){
         $curword=$word;
         print WORDSFILE "$word,";
         print WORDSTEXFILE "\\index{$libname\\\$$word}\\subsection{$word}\n";
+        print WORDSMDFILE "### $word\n";
         print "static void _word__$word"."(angort::Runtime *a)\n";
         # output a function def and opening curly bracket,
         # and the initial arg fetch
@@ -207,6 +227,7 @@ while(<>){
         $curword=$word;
         print WORDSFILE "$word,";
         print WORDSTEXFILE "\\index{$libname\\\$$word}\\subsection{$word}\n";
+        print WORDSMDFILE "### $word\n";
         # output a function def and opening curly bracket
         print "static void _word__$word"."(angort::Runtime *a){\n";
         $waitingforfuncstart=1;
@@ -235,11 +256,18 @@ while(<>){
             $waitingforfuncstart=0;
             $t = $descs{$curword};
             # substitute nice things for LaTeX
-            $t = latexescapes($t);
+            $ttex = latexescapes($t);
+            $t =~ s/\\n/\n/g; # make sure newlines are newlines
             # extract the first line.
+            ($firstlinetex,$ttex) = split(/\n/,$ttex,2);
             ($firstline,$t) = split(/\n/,$t,2);
-            print WORDSTEXFILE $firstline."\n\n";
-            print WORDSTEXFILE $t."\n";
+            print WORDSTEXFILE $firstlinetex."\n\n";
+            print WORDSTEXFILE $ttex."\n";
+            print WORDSMDFILE $firstline."\n";
+            if(length($t)){
+                print WORDSMDFILE $t."\n";
+            }
+            print WORDSMDFILE "\n";
         }else{
             print "$_\n";
         }

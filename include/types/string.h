@@ -27,6 +27,8 @@ public:
     /// the length (for certain kind of unicode strings)
     void setwithlen(Value *v,const char *s,int len) const;
     void setPreAllocated(Value *v,BlockAllocHeader *b)const;
+    // just allocate and return ptr to head (will add 1 for terminator)
+    char *setAllocateOnly(Value *v,int len) const;
     
     /// get length of string
     virtual int getCount(Value *coll)const;
