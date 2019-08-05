@@ -192,6 +192,15 @@ Generate a skew-normal distributed random number as a double.
     a->pushDouble(skewnormal(a,p0,p1,p2));
 }
 
+%wordargs tointbase si (string base -- n) convert string to int given the base
+{
+    a->pushInt(strtol(p0,NULL,p1));
+}
+%wordargs tolongbase si (string base -- n) convert string to long given the base
+{
+    a->pushLong(strtol(p0,NULL,p1));
+}
+
 %init
 {
     // set up a constant PI
