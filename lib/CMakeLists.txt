@@ -9,7 +9,15 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     
 add_compile_options("-Woverloaded-virtual")
 
+# if you need these, do a clean build.
+
+file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/allwords.md)
+file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/allwords.tex)
+
+
+
 # would be awesome if these could live in an angort cmake module
+
 
 set(WORDFILELIST)
 # this macro generates a custom build step which takes the files passed in,
@@ -27,7 +35,7 @@ set(WORDFILELIST)
 
 macro(add_words_files)
     add_custom_command(
-        OUTPUT wordslist allwords.tex
+        OUTPUT wordslist allwords.tex allwords.md
         COMMAND rm wordslist
         COMMAND rm allwords.tex
         )
@@ -39,6 +47,7 @@ macro(add_words_files)
             COMMAND perl  ../../makeWords.pl  ${CMAKE_SOURCE_DIR}/lib/${file}>${file}.cpp
             COMMAND cat words >>wordslist
             COMMAND cat words.tex >>allwords.tex
+            COMMAND cat words.md >>allwords.md
         )
         set(WORDFILELIST ${WORDFILELIST} ${file}.cpp)
     endforeach(file)

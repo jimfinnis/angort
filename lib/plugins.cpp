@@ -25,6 +25,7 @@ void Runtime::popParams(Value **out,const char *spec,const Type *type0,
 //        printf("Argument %d: %s\n",i,v->toString().get());
         
         switch(*p){
+        case 'q':
         case 'n':
         case 'd':
         case 'i':

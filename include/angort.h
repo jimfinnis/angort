@@ -14,6 +14,10 @@ namespace angort {
 
 typedef void (*NativeFunc)(class Runtime *a);
 
+// initfuncs have an extra argument saying whether they 
+// should display text on startup to stderr
+typedef void (*InitFunc)(class Runtime *a,bool showinit);
+
 }
 
 #include <stdint.h>
@@ -80,7 +84,7 @@ struct LibraryDef {
     const char *name; //!< library name (i.e. the angort Namespace)
     WordDef *wordList; //!< list of words, terminated with a null name
     BinopDef *binopList; //!< list of binops, terminated with null lhs
-    NativeFunc initfunc; //!< possibly null initialisation function
+    InitFunc initfunc; //!< possibly null initialisation function
     NativeFunc shutdownfunc; //!< possibly null shutdown function
 };
     
@@ -983,10 +987,21 @@ private:
     static const int LL_PLUGIN = 0; // native C++ lib
     static const int LL_PACKAGE = 1;  // angort package
     
+    /// if true (which it is by default), plugin library %init functions
+    /// to which it is passed should print some init text. See angortplugins
+    /// code for examples. Change with setShowInit(), or the setshowinit word.
+    bool showinit;
+    
 public:
     Runtime *run; //!< the default runtime used by the main thread
     /// debugger hook, invoked by the "brk" word
     NativeFunc debuggerHook;
+    
+    /// change whether %init functions should print init messages
+    /// to stderr; called by setshowinit word.
+    void setShowInit(bool s){
+        showinit = s;
+    }
 
     /// replace the debugger hook
     void setDebuggerHook(NativeFunc f){

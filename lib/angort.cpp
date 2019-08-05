@@ -105,6 +105,7 @@ Angort::Angort() {
         // and that's the namespace we're working in
         names.push(stdNamespace);
     }
+    showinit = true;
     lineNumber=1;
     running = true;
     isSkipping = false;
@@ -2438,7 +2439,7 @@ int Angort::registerLibrary(LibraryDef *lib,bool import){
     }
     
     if(lib->initfunc){
-        (*lib->initfunc)(run);
+        (*lib->initfunc)(run,showinit);
     }
     
     // register the binops AFTER we init the function, so the

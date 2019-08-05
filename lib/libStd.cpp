@@ -1066,6 +1066,11 @@ is pushed.
         v->v.closure->show("Show command");
 }
 
+%wordargs setshowinit q (bool --) change whether libraries should print in %init
+{
+    a->ang->setShowInit(p0);
+}
+
 
 
 %shared
@@ -1074,4 +1079,3 @@ is pushed.
     a->ang->registerProperty("autogc",new angort::AutoGCProperty(a));
     a->ang->registerProperty("searchpath",new angort::SearchPathProperty(a));
 }
-    

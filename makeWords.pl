@@ -33,7 +33,7 @@
 # Standard typechars are:
 #    n : float
 #    L : long
-#    b : bool
+#    q : bool (i.e. numeric will be converted to bool)
 #    i : int
 #    d : double
 #    c : callable
@@ -44,6 +44,8 @@
 #    s : string
 #    S : symbol
 #    y : string or None
+#    A,B: required special type A or B (see below!)
+#    a,b: optional special type A or B (i.e. can be none)
 #    
 #
 #
@@ -189,7 +191,7 @@ while(<>){
                 print "float p$i = _parms[$i]->toFloat();\n"
             }elsif($c eq 'L'){
                 print "long p$i = _parms[$i]->toLong();\n"
-            }elsif($c eq 'b'){
+            }elsif($c eq 'q'){
                 print "bool p$i = _parms[$i]->toBool();\n"
             }elsif($c eq 'i'){
                 print "int p$i = _parms[$i]->toInt();\n"
@@ -241,7 +243,7 @@ while(<>){
         push(@binops,$bname);
         print "static void _binop__$bname(angort::Runtime *a,angort::Value *lhs,angort::Value *rhs)\n";
     }elsif(/^%init/){
-        print "static void __init__(angort::Runtime *a)\n";
+        print "static void __init__(angort::Runtime *a,bool showinit)\n";
         $hasinit = 1;
     }elsif(/^%shutdown/){
         print "static void __shutdown__(angort::Runtime *a)\n";

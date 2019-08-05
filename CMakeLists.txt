@@ -20,8 +20,6 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 message("Writing config")
 configure_file(${ANGORT_SOURCE_DIR}/config.h.in ${ANGORT_SOURCE_DIR}/include/config.h)
 
-
-
 link_directories(${ANGORT_SOURCE_DIR}/lib)
 
 add_subdirectory(cli)
