@@ -21,6 +21,16 @@ using namespace angort;
     a->pushDouble(atan2(p0,p1));
 }
 
+%word floor (x -- floor of x)
+{
+    FN(floor);
+}
+%word ceil (x -- ceiling of x)
+{
+    FN(ceil);
+}
+
+
 %word round (x -- x to nearest int, as a double)
 {
     FN(round);

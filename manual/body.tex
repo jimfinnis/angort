@@ -672,6 +672,14 @@ package name and then skipping to the \texttt{endpackage}, all without
 actually tokenising and running code. The disadvantages of not making
 a parse tree.
 
+\subsubsection{Namespace aliases}
+Sometimes it's useful to make an alias of a namespace, for example when a namespace
+whose members are frequently used has a long name. To do this, use
+\begin{v}
+`newname `oldname alias
+\end{v}
+
+
 \subsection{Importing packages into the default space}
 \indw{import}
 With the NSID returned by \texttt{require} 
@@ -707,6 +715,7 @@ import &(nsid symbollist --) & import some public definitions from a namespace i
 names & (nsid -- symbollist) & get a list of names in a namespace\\
 ispriv & (nsid name -- bool) & return true if a name is private in the namespace\\
 isconst & (nsid name -- bool) & return true if a name is constant in the namespace\\
+alias & (newname oldname --) & create a namespace alias\\
 \hline
 \end{tabular}
 \end{center}
