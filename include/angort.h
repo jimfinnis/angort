@@ -1028,8 +1028,14 @@ public:
     /// value.
     void setGlobal(const char *name,const char *val){
         int g = findOrCreateGlobal(name);
-//        printf("Global: %d\n",g);
         Types::tString->set(names.getVal(g),val);
+    }
+    /// this is used by external programs which use angort as a 
+    /// library to find/create a global and set it to an int
+    /// value.
+    void setGlobal(const char *name,int v){
+        int g = findOrCreateGlobal(name);
+        Types::tInteger->set(names.getVal(g),v);
     }
     
     /// add a plugin (Linux only, uses shared libraries). Returns

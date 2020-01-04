@@ -178,7 +178,8 @@ types for iterators and deleted objects in a hash.
 Integers can also have a base character, `b', `x'/`h', `o' or `d', which
 goes before the optional 'l' for 'long.' \textbf{Note that} all numbers
 must start with a digit, so a leading zero will be required for some 
-hex numbers (e.g. `0ffh' not `ffh').
+hex numbers (e.g. `0ffh' not `ffh'). Numbers with leading `0x' will
+be accepted as hexadecimal for compatibility with C.
 
 \subsection{Booleans}
 Booleans in Angort are represented by integers -- zero is false, non-zero

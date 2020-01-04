@@ -283,14 +283,22 @@ loop:
             // or an exponent? (Also indicates float - and keep the ptr)
             exponent = strchr(val.s,'e');
             
+            
+            
             // get the (possibly new) end char for the base.
             char endchar = val.s[len-1];
-            if(isalpha(endchar)){
+            
+            // check the special '0x..' case
+            if(strlen(val.s)>=2 && val.s[0]=='0' && val.s[1]=='x'){
+                val.i=strtol(val.s+2,NULL,16);
+                curtype = isLong ? longtoken : inttoken;
+                return curtype;
+            } else if(isalpha(endchar)){
                 if(gotpoint && !exponent){ // can't have a base char on a float/double
                     seterror();
                     return -1; 
                 }else{
-                    // evaluate
+                    // evaluate.
                     long x;
                     switch(tolower(endchar)){
                     case 'd':x=atol(val.s);break;
