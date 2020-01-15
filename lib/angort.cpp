@@ -652,7 +652,11 @@ void Runtime::run(const Instruction *startip){
                 }
                     break;
                 case OP_CLOSUREGET:
-                    if(currClosure.t != Types::tClosure)throw WTF;
+                    if(!currClosure.t)throw WTF;
+                    else if(currClosure.t == Types::tNone)
+                        throw RUNT(EX_SYNTAX,"current closure is \"none\" : attempt to use local in constexpr?");
+                    else if(currClosure.t != Types::tClosure)
+                        throw RUNT(EX_WTF,"").set("weird type in closure: %s",currClosure.t->name);
                     a = currClosure.v.closure->map[ip->d.i];
 #if DEBCLOSURES
                     currClosure.v.closure->show("VarGet");
