@@ -4,6 +4,12 @@
  * 
  */
 
+%doc
+This library deals with collections: lists and hashes. There may
+also be some functions in here which also deal with strings, because
+for some functions (such as head and tail) strings are collections.
+%doc
+
 #include "angort.h"
 #include "hash.h"
 #include "opcodes.h"
@@ -68,18 +74,6 @@ struct FuncComparator : public ArrayListComparator<Value> {
 }
 
 %name coll
-
-%word dumplist (list --) Dump a list
-Write the contents of a list crudely to stdout. Consider using
-util$show instead, from the util package.
-{
-    ArrayList<Value> *list = Types::tList->get(a->popval());
-    ReadLock lock(list);
-    for(int i=0;i<list->count();i++){
-        const StringBuffer& s = list->get(i)->toString();
-        printf("%d: %s\n",i,s.get());
-    }
-}
 
 %wordargs head vi (coll/str n -- list) get the first n items/chars of a list or string
 If a list, get the first n items into a new list - returns a list even if the length

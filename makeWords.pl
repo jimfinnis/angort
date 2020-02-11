@@ -3,6 +3,12 @@
 # Generate a list of word definitions (WordDef structures)
 # from a CPP file with the following markup:
 #
+# %doc
+# some documentation for the manual about the whole CPP file,
+# which gets automatically put into the doc files when %name is read;
+# therefore it must always be before %name
+# %doc
+#
 # %name name 
 #
 # is the name of the output structure (which will have _wordlist_...
@@ -96,6 +102,7 @@
 # A structure called will be defined, which can
 # be imported into Angort using the RegisterLibrary() method.
 #
+# %shared
 # If you require a shared library, use the %shared directive - this
 # will add an init() function which will link the library into
 # Angort on load.
@@ -136,16 +143,28 @@ sub latexescapes {
 open(WORDSFILE,">words");
 open(WORDSTEXFILE,">words.tex");
 open(WORDSMDFILE,">words.md");
-
+$readingdoc=0;
+$libdoc="";
 $waitingforfuncstart=0;
+
 while(<>){
     chop;
-    if(/^%name/){
+    if($readingdoc){
+        if(/^%doc/){ # must occur before %name, terminates with %doc too.
+            $readingdoc=0;
+        } else {
+            $libdoc.=$_."\n";
+        }
+    }elsif(/^%name/){
         ($dummy,$libname)=split(/\s/,$_,2);
         $nsname = "_angortlib_ns_$libname";
         print WORDSTEXFILE "\\section{$libname}\n";
+        print WORDSTEXFILE $libdoc;
+        $libdoc="";
         print WORDSMDFILE "## Namespace $libname\n";
         print "namespace $nsname {\n";
+    }elsif(/^%doc/){
+        $readingdoc=1;
     }elsif(/^%type/){
         ($dummy,$type,$typeobj,$class) = split(/\s/,$_,4);
         my @dat = ($typeobj,$class);

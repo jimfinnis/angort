@@ -4,6 +4,14 @@
  *
  */
 
+%doc
+This library deals with multithreaded Angort and will only function
+when the CMake POSIXTHREADS option is set. This functionality is
+extremely buggy and still seems prone to race conditions. I advise
+strongly that you don't use it, and it's unlikely I'll have time to 
+fix it.
+%doc
+
 #include <pthread.h>
 #include "angort.h"
 #include "wrappers.h"

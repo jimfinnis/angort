@@ -1,5 +1,12 @@
 #include "angort.h"
 
+%doc
+This library deals with the operating system environment, but not
+all OS functions are here --- some are in the special sys plugin
+library. Here, we only deal with the command line argument list
+and environment variables.
+%doc
+
 using namespace angort;
 
 

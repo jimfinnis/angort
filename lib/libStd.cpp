@@ -13,6 +13,11 @@
 #include <unistd.h>
 #include <time.h>
 
+%doc
+This library contains the most common Angort functions or
+those which don't easily fit into one of the special categories.
+%doc
+
 using namespace angort;
 
 void sighandler(int sig){
@@ -669,6 +674,13 @@ Return true if an iterator created with "mkiter" has completed.
     Value *p = a->stack.peekptr();
     Iterator<Value *>* i = Types::tIter->get(p);
     Types::tInteger->set(p,i->isDone()?1:0);
+}
+    
+%word iteridx (iterator -- int) return iterator index (see iidx)
+{
+    Value *p = a->stack.peekptr();
+    Iterator<Value *>* i = Types::tIter->get(p);
+    Types::tInteger->set(p,i->index());
 }
     
 

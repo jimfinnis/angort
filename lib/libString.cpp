@@ -4,6 +4,11 @@
  *
  */
 
+%doc
+This library deals with strings, and tries to do so in a Unicode-friendly
+way.
+%doc
+
 #include "angort.h"
 #include <wchar.h>
 #include <wctype.h>

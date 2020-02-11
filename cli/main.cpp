@@ -18,7 +18,7 @@
 
 
 // keep this up to date!
-static const char *copyString="(c) Jim Finnis 2012-2017";
+static const char *copyString="(c) Jim Finnis 2012-2020";
 static const char *usageString=
 "\nUsage: angort [-?] [-n] [-e] [-d] [-D] [-b] [-if] [-in]\n"
 "        [-llib] [-llib]..\n\n"

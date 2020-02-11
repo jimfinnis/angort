@@ -3,6 +3,10 @@
 #include <time.h>
 #include "angort.h"
 
+%doc
+Maths functions live here.
+%doc
+
 using namespace angort;
 /*
  * Mappings for (some) standard maths library functions
