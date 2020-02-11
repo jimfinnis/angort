@@ -285,6 +285,38 @@ inline int wordlen(const wchar_t * s){
     free((void *)base);
 }
 
+%wordargs splitwhitespace s (str -- list) split string by whitespace
+{
+    int len = wstrlen(p0);
+    wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
+    mbstowcs(buf,p0,len+1);
+    ArrayList<Value> *list = Types::tList->set(a->pushval());
+    WriteLock lock=WL(list);
+    
+    wchar_t *s = buf;
+    wchar_t *outbuf = (wchar_t *)alloca(len+1);
+    char *outbufc = (char *)alloca(len*2+1); // a bit big, but there we go.
+    wchar_t *outp = outbuf;
+    
+    while(*s){
+        // skip initial whitespace
+        while(*s && iswspace(*s))s++;
+        if(!*s)break;
+        // copy to end of word (or string)
+        while(*s && !iswspace(*s)){
+            *outp++ = *s++;
+        }
+        // terminate
+        *outp++ = 0;
+        // convert
+        wcstombs(outbufc,outbuf,outp-outbuf);
+        // append
+        Types::tString->set(list->append(),outbufc);
+        // reset
+        outp=outbuf;
+    }
+}
+
 %wordargs substr sii (str start count -- str) get a substring.
 If count less than or equal to 0 calculate count from end, 
 if start negative calculate start from end. See also "slice".
