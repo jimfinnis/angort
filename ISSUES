@@ -10,6 +10,18 @@ invoking it in the outer lambda:
     :test |a:|
         (?a drop(?a *)map)map;
 
+The underlying cause is, I think, that the above kind of program creates a
+three level structure:
+    * test,
+    * an outer lambda without any parameters or locals
+    * an inner lambda which uses a parameter to "test".
+Thus "test" and the inner lambda get closures created, but the outer lambda
+doesn't. This screws up the "levels" the closure system uses.
+Possibilities: 
+    * create a "fake" closure for all codeblocks which are above a closure
+    * find some way of "skipping" levels.
+
+
 LOCALDEC/LOCALINC etc don't work as closures. Need to reorganise 
 opcodes to automatically be able to remap local variable funcs
 to closure funcs.

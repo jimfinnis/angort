@@ -67,9 +67,8 @@ public:
         t=NULL;
     }
     
-    void lock(Lockable *_t){
+    void lock(const Lockable *_t){
 #if ANGORT_POSIXLOCKS
-        t = _t;
         t = (Lockable *)_t;
         if(t){
             lockprintf("READLOCK START on %s %p\n",t->getLockableName(),&t->lock);

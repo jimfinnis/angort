@@ -1279,7 +1279,7 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
 }
 
 void CompileContext::closeAllLocals(){
-    cdprintf("YIELD DETECTED: CLOSING ALL LOCALS");
+    cdprintf("CLOSING ALL LOCALS");
     for(int i=0;i<localTokenCt;i++){
         convertToClosure(localTokens[i]);
     }
@@ -1293,7 +1293,7 @@ void CompileContext::convertToClosure(const char *name){
         if(!strcmp(localTokens[previdx],name))break;
     cdprintf("Previous index (i.e. local index) of this variable is %d",previdx);
     
-    if(previdx==localTokenCt)throw WTF;
+    if(previdx==localTokenCt)throw WTF; // didn't find it.
     // got it. Now set this as a closure.
     if((1<<previdx) & localsClosed){
         cdprintf("%s is already closed",name);
@@ -1373,6 +1373,7 @@ void CompileContext::convertToClosure(const char *name){
             cdprintf("  decremented to %d",inst->d.i);
         }
     }
+    
     cdprintf("Exiting convertToClosure()");
 }
 

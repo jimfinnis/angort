@@ -8,24 +8,36 @@
 #include "angort.h"
 #include "cycle.h"
 
+//#define CLOSUREDEBUG
+
+static void closprintf(const char *s,...){
+#ifdef CLOSUREDEBUG
+    char buf[256];
+    va_list args;
+    va_start(args,s);
+    vsprintf(buf,s,args);
+    printf("[context %p with cb %p]  %s\n",this,cb,buf);
+#endif
+}
+
 namespace angort {
 
 Closure::Closure(Closure *p) : GarbageCollected("closure") {
     parent = p;
     ip = NULL;
     if(p)p->incRefCt();
-//    printf("allocating closure %p, parent %p\n",this,parent);
+    closprintf("allocating closure %p, parent %p\n",this,parent);
 }
 
 void Closure::init(const CodeBlock *c){
     cb = c;
     
-//    printf("creating closure %p for codeblock %p, parent closure %p\n",this,cb,parent);
-    
-//    printf("Chain:\n");
-//    for(Closure *qq=parent;qq;qq=qq->parent)
-//        printf("  - %p\n",qq);
-    
+    closprintf("creating closure %p for codeblock %p, parent closure %p\n",this,cb,parent);
+#ifdef CLOSUREDEBUG    
+    printf("Chain:\n");
+    for(Closure *qq=parent;qq;qq=qq->parent)
+        printf("  - %p\n",qq);
+#endif    
     if(cb->closureBlockSize)
         block = new Value[cb->closureBlockSize];
     else
@@ -41,7 +53,7 @@ void Closure::init(const CodeBlock *c){
     map = new Value * [cb->closureTableSize];
     blocksUsed = new Closure * [cb->closureTableSize];
     
-//    printf("Closure %p has %d entries\n",this,cb->closureTableSize);
+    closprintf("Closure %p has %d entries\n",this,cb->closureTableSize);
     
     for(int i=0;i<cb->closureTableSize;i++){
         // iterate through each item, finding
@@ -56,10 +68,11 @@ void Closure::init(const CodeBlock *c){
         // number of levels up the parent chain
         // to find it.
         
-//        printf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
+        closprintf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
         
         Closure *reffed=this;
         for(int j=0;j<lev;j++){
+            closprintf("  Reffed closure block level %d is %p, parent %p\n",j,reffed,reffed->parent);
             if(!reffed){
                 if(block){
                     block = NULL;
@@ -73,13 +86,14 @@ void Closure::init(const CodeBlock *c){
                 throw RUNT("ex$closure","Attempt to close over variable in unavailable containing block");
             }
             reffed=reffed->parent;
-//            printf("  Ref jump %p\n",reffed);
         }
-        
-        if(!reffed->block)throw WTF;
+        if(!reffed)
+            throw RUNT(EX_WTF,"closure init WTF: reffed closure is null");
+        if(!reffed->block)
+            throw RUNT(EX_WTF,"closure init WTF: reffed closure's codeblock is null");
         map[i] = reffed->block+idx;
         
-//        printf("  Value currently %s\n",map[i]->toString().get());
+        closprintf("  Value currently %s\n",map[i]->toString().get());
         
         // and we increment the refcount on the block
         // if the block is in a different closure
@@ -97,7 +111,7 @@ void Closure::wipeContents(){
 
 
 Closure::~Closure(){
-    //printf("deleting closure %p\n",this);
+    closprintf("deleting closure %p\n",this);
     if(block)delete [] block;
     if(!CycleDetector::getInstance()->isInDeleteCycle()){
         // we do not do recursive deletion if we're deleting
@@ -111,11 +125,11 @@ Closure::~Closure(){
         // dereference the blocks we have access to
         if(blocksUsed){ // (b) could be null for a bad closure (see note (a) above)
             for(int i=0;i<cb->closureTableSize;i++){
-                //printf("decrementing referenced closure\n  ");
+                closprintf("decrementing referenced closure\n  ");
                 // self-ref doesn't count (see above)
                 if(blocksUsed[i] && blocksUsed[i]->decRefCt())
                     delete blocksUsed[i];
-                //printf("done decrementing referenced closure\n");
+                closprintf("done decrementing referenced closure\n");
             }
         }
     }
@@ -199,11 +213,11 @@ void Closure::decReferentsCycleRefCounts(){
     // the closure blocks referred to, and the parent
     
     for(int i=0;i<cb->closureTableSize;i++){
-        //printf("Decrementing %p\n",blocksUsed[i]);
+        closprintf("Decrementing %p\n",blocksUsed[i]);
         if(blocksUsed[i]){
             blocksUsed[i]->gc_refs--;
-            //printf("decrementing cycle count for block use on %p, now %d\n",blocksUsed[i],
-            //       blocksUsed[i]->gc_refs);
+            closprintf("decrementing cycle count for block use on %p, now %d\n",blocksUsed[i],
+                   blocksUsed[i]->gc_refs);
         }
     }
     if(parent)

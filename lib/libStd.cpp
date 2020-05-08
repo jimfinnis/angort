@@ -326,13 +326,23 @@ with a stack dump. Slows down the program!
     a->trace = a->popInt()!=0;
 }
 
-%word disasm (name -- ) disassemble word
+%word disasm (name|codeblock|closure -- ) disassemble word
 Print to stdout the instructions for a named Angort function.
 {
     //todo threads - might cause weirdness if invoked in another thread, so
     //turning it off there
     a->checkzerothread();
-    a->ang->disasm(a->popString().get());
+    
+    Value *v = a->popval();
+    if(v->t == Types::tString)
+        a->ang->disasm(v->v.s);
+    else if(v->t == Types::tClosure)
+        a->ang->disasm(v->v.closure->cb);
+    else if(v->t == Types::tCode)
+        a->ang->disasm(v->v.cb);
+    else 
+        throw RUNT(EX_BADPARAM,"bad type for 'disasm'");
+        
 }
 
 %word assertdebug (bool --) turn assertion printout on/off
