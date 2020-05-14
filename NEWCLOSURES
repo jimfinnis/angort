@@ -42,6 +42,17 @@ Compile time:
     This data always goes into CodeBlocks. In practice, the closure
     table actually shows levels up the return stack you need to 
     go to get to the required closure block!
+    
+Dummy closures:
+    In the situation where there are three nested functions, and the
+    middle one doesn't use any variables declared in the outer, you
+    can end up with a closure inside a codeblock inside a closure.
+    This used to cause a crash, because Angort would get confused about
+    where it was in the stack. To avoid this, popCompileContext() now
+    forces all contexts in the stack to be closures even when they don't
+    need it. There's a little overhead here, in that a dummy closure
+    table will be created (in makeClosureTable), with a small dummy
+    closure table at runtime (Closure::init).
  
 Create time:
     Creating an instance of a function is done when a named function is

@@ -165,10 +165,36 @@ mkcounter !b
 1 2 mkcrash120817b !F
 3 4 ?F@ "1,2,3,4" = "crash120817b" assert
 0!F
-0 0 0 0 0 0 0 0 0 # stuff left on the stack?
-clear
-ct.
+clear 0 0 0 0 0 0 0 0 0 0 0 0 clear
+gc
+"GCCOUNT=" p gccount p nl
+
+
+# this tests the closure-codeblock-closure nesting bug that
+# has been around for a couple of years, and is hopefully fixed
+# by dummy closure blocks
+
+:mkcrash140520 |a:|
+    
+    # outer function takes a list and runs the inner function on its
+    # elements, each of which should be lists.
+    (
+        # inner function takes a list and multiplies all elements by the
+        # parameter.
+        (?a *)map
+    ) map
+;
+
+# should give [[2,4,6],[8,10,12]]
+[[1,2,3],[4,5,6]] 2 mkcrash140520
+[[2,4,6],[8,10,12]] eq "mkcrash140520" assert
+
+clear 0 0 0 0 0 0 0 0 0 0 0 0 clear
 "GCCOUNT=" p gccount p nl
 ?BaseGC gccount = "GC count clear at end of closure tests" assert
+
+
+
+
 
 quit

@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.11.0"
+#define ANGORT_VERSION "4.12.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -1261,18 +1261,33 @@ ClosureTableEnt *CompileContext::makeClosureTable(int *count){
     
     ClosureTableEnt *table = new ClosureTableEnt[closureListCt];
     ClosureTableEnt *t = table;
+    
+    // go through the list of closure entries resolving each
+    // list entry to make an entry in the table - these will
+    // be tuples of (levelup,idx) where levelup is how many levels
+    // up the closure stack we will find the variable, and idx is
+    // where in that closure's block it will be. There may also
+    // be dummy entries in the list, which will have a null codeblock;
+    // these will have a (-1,-1) table entry.
+    
     for(ClosureListEnt *p=closureList;p;p=p->next){
-        // work out how far up the stack the entry is
-        int level=0;
-        CompileContext *cc;
-        for(cc=this;cc;cc=cc->parent){
-            if(cc->cb==p->c)break;
-            level++;
+        if(p->c == NULL){
+            // dummy entry
+            t->levelsUp = -1;
+            t->idx = -1;
+        } else {
+            // work out how far up the stack the entry is
+            int level=0;
+            CompileContext *cc;
+            for(cc=this;cc;cc=cc->parent){
+                if(cc->cb==p->c)break;
+                level++;
+            }
+            if(!cc)throw WTF; // didn't find it, and it should be there!
+            t->levelsUp = level;
+            t->idx = p->i;
+            cdprintf("Closure table : Setting entry %d to level %d, index %d",(int)(t-table),level,t->idx);
         }
-        if(!cc)throw WTF; // didn't find it, and it should be there!
-        t->levelsUp = level;
-        t->idx = p->i;
-        cdprintf("Closure table : Setting entry %d to level %d, index %d",(int)(t-table),level,t->idx);
         t++;
     }
     return table;

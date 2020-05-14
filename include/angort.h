@@ -268,7 +268,9 @@ public:
     /// they are referred to in subfunctions are therefore should be stored
     /// in a closure.
     uint32_t localsClosed;
-    /// this should be the number of bits set in localsClosed
+    /// this should be the number of bits set in localsClosed, so
+    /// it's the number of variables local to this codeblock which
+    /// are closed
     int closureCt;
     
     Stack<ArrayList<Catch>,4> catchSetStack; //!< stack for exception compiling
@@ -296,7 +298,23 @@ public:
         printf("[context %p with cb %p]  %s\n",this,cb,buf);
 #endif
     }
+    
+    /// this is based on the size of the closure list,
+    /// which counts closed-over locals and locals of ancestors
+    bool isClosure(){
+        return closureListCt > 0;
+    }
         
+    /// ensures this context has a closure to avoid
+    /// "closure-notclosure-closure" in the hierarchy,
+    /// which creates a bug.
+    void ensureClosed(){
+        if(!isClosure()){
+            // create a dummy entry in the closure list
+            addClosureListEnt(NULL,-1);
+        }
+    }
+    
     
     void dump();
     
@@ -947,6 +965,22 @@ private:
     /// its code. We do not reset it.
     CompileContext *popCompileContext(){
         context->checkStacksAtEnd();
+        
+        // we also need to walk up the context stack and
+        // ensure that all contexts are closed (i.e. compile
+        // to closures) if this one is. This avoids the hellish
+        // "closure bug" where having a closure inside a codeblock
+        // inside a closure causes a crash. In some cases this will
+        // require creating a dummy closure, which generates the data
+        // structures but doesn't actually close any variables.
+        
+        if(context->isClosure()){
+            for(int i=0;i<contextStack.ct;i++){
+                CompileContext *cc = contextStack.peekptr(i);
+                cc->ensureClosed();
+            }
+        }
+        
         CompileContext *p = context;
         contextStack.popptr();
         context = contextStack.peekptr();

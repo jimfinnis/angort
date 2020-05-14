@@ -456,7 +456,75 @@ removed item is returned.
             outlist->append()->copy(v);
     }
     a->pushval()->copy(&out);
+}
+
+static bool equalityCheck(Runtime *ang,Value *a,Value *b){
+    if(a->t == Types::tList){
+        if(b->t != Types::tList)
+            return false;
+        else {
+            ArrayList<Value> *listA = Types::tList->get(a);
+            ArrayList<Value> *listB = Types::tList->get(b);
+            ReadLock lockA(listA);
+            ReadLock lockB(listB);
+            if(listA->count() != listB->count())
+                return false;
+            for(int i=0;i<listA->count();i++){
+                Value *p = listA->get(i);
+                Value *q = listB->get(i);
+                if(!equalityCheck(ang,p,q))
+                    return false;
+            }
+        }
+        return true;
+    } else if(a->t == Types::tHash) {
+        if(b->t != Types::tHash)
+            return false;
+        else {
+            Hash *hashA = Types::tHash->get(a);
+            Hash *hashB = Types::tHash->get(b);
+            ReadLock lockA(hashA);
+            ReadLock lockB(hashB);
+            if(hashA->count()!=hashB->count())
+                return false;
+            // A and B are the same size, so if B has a key
+            // which isn't in A, A must have a key which isn't
+            // in B. We only have to do the equality check by
+            // looking at all the keys in A and making sure they
+            // exist with the same value in B.
+            HashKeyIterator i(hashA);
+            for(i.first();!i.isDone();i.next()){
+                if(!hashA->find(i.current()))
+                    throw WTF;
+                Value *p = hashA->getval();
+                if(!hashB->find(i.current()))
+                    return false;
+                Value *q = hashB->getval();
+                if(!equalityCheck(ang,p,q))
+                    return false;
+            }
+        }
+        return true;
+    } else {
+        // standard equality check with coercion.
+        ang->binop(a,b,OP_EQUALS);
+        return ang->popInt();
+    }
+            
+            
+}
+
+%word eq (item item -- bool) equality testing by traversal
+Normal "=" just uses identity checking for deep collections;
+this word will test the structures for equality. For the primitive
+elements, the appropriate binop will be used and coercions
+made (so "1" will equal 1).
+{
+    Value v0,v1;
+    v0.copy(a->popval());
+    v1.copy(a->popval());
     
+    a->pushInt(equalityCheck(a,&v0,&v1)?1:0);
 }
 
 

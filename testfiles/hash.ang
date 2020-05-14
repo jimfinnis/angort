@@ -23,18 +23,6 @@
 "foo" ?H get 4 = "hash1" assert
 1 "foo" ?H set
 
-:eq |x,y:| # quick list equiv check
-    ?x type "list"=
-    ?y type "list"= and
-    ?x len ?y len = and
-    not if 0 stop then
-    0 ?x len range each {
-        i ?x get i ?y get =
-        not if 0 stop then
-    }
-    1
-;
-
 [1,2,3] ?H!`q
 ?H 2 basecheck
 ?H?`q [1,2,3] eq "hash3" assert
@@ -54,7 +42,6 @@
 2 ?I!`a
 ?I 7 basecheck
 
-
 [% `foo 1, `bar 2] [%`baz 3] + !H
 
 ?H len 3 = "hadd1" assert
@@ -69,6 +56,16 @@
 `bar ?L in "hiter2" assert
 `baz ?L in "hiter2" assert
 
+[%`a 1, `b 2, `c 3] !A
+[%`a 1, `b 2, `c 3] !B
+[%`a 1, `b 2, `c 4] !C
+[%`a 1, `d 2, `c 3] !D
+[%`a 1, `d 2, `c "3"] !E
+
+?A ?B eq "heq1" assert
+?A ?C eq not "heq2" assert
+?C ?D eq not "heq3" assert
+?D ?E eq "heq4" assert # type coercion in eq
  
 
 quit

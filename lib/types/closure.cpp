@@ -44,7 +44,9 @@ void Closure::init(const CodeBlock *c){
         block = NULL;
     
     // this should never happen because new closures
-    // should not be created for bare codeblocks.
+    // should not be created for bare codeblocks (even dummy closures
+    // have a single closure table entry)
+    
     if(!cb->closureTableSize)throw WTF;
     
     // easy part done, now to create the map
@@ -62,46 +64,56 @@ void Closure::init(const CodeBlock *c){
         int lev = cb->closureTable[i].levelsUp;
         int idx = cb->closureTable[i].idx;
         
-        // this is another closure (or possibly
-        // the same one) whose block contains the
-        // value we want. We walk the appropriate
-        // number of levels up the parent chain
-        // to find it.
-        
-        closprintf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
-        
-        Closure *reffed=this;
-        for(int j=0;j<lev;j++){
-            closprintf("  Reffed closure block level %d is %p, parent %p\n",j,reffed,reffed->parent);
-            if(!reffed){
-                if(block){
-                    block = NULL;
-                    delete[]  block;
+        if(lev<0){
+            // in this case, this is part of a dummy closure. We just
+            // do the minimum we can get away with, which is create
+            // a dummy map entry.
+            blocksUsed[i]=NULL;
+            map[i] = NULL;
+        } else {
+            
+            // this is another closure (or possibly
+            // the same one) whose block contains the
+            // value we want. We walk the appropriate
+            // number of levels up the parent chain
+            // to find it.
+            
+            closprintf("Building map for %p. Looking for lev %d, idx %d\n",this,lev,idx);
+            
+            Closure *reffed=this;
+            for(int j=0;j<lev;j++){
+                closprintf("  Reffed closure block level %d is %p, parent %p\n",j,reffed,reffed->parent);
+                if(!reffed){
+                    // An error has occurred.
+                    if(block){
+                        block = NULL;
+                        delete[]  block;
+                    }
+                    delete[] map;
+                    delete[] blocksUsed;
+                    blocksUsed =NULL;
+                    map=NULL;
+                    // note (a) - can leave a nasty closure which needs destroying carefully at note (b)
+                    throw RUNT("ex$closure","Attempt to close over variable in unavailable containing block");
                 }
-                delete[] map;
-                delete[] blocksUsed;
-                blocksUsed =NULL;
-                map=NULL;
-                // note (a) - can leave a nasty closure which needs destroying carefully at note (b)
-                throw RUNT("ex$closure","Attempt to close over variable in unavailable containing block");
+                reffed=reffed->parent;
             }
-            reffed=reffed->parent;
-        }
-        if(!reffed)
-            throw RUNT(EX_WTF,"closure init WTF: reffed closure is null");
-        if(!reffed->block)
-            throw RUNT(EX_WTF,"closure init WTF: reffed closure's codeblock is null");
-        map[i] = reffed->block+idx;
-        
-        closprintf("  Value currently %s\n",map[i]->toString().get());
-        
-        // and we increment the refcount on the block
-        // if the block is in a different closure
-        if(this!=reffed){
-            blocksUsed[i] = reffed;
-            reffed->incRefCt();
-        } else blocksUsed[i]=NULL; // self-refs are NULL
-    }    
+            if(!reffed)
+                throw RUNT(EX_WTF,"closure init WTF: reffed closure is null");
+            if(!reffed->block)
+                throw RUNT(EX_WTF,"closure init WTF: reffed closure's codeblock is null");
+            map[i] = reffed->block+idx;
+            
+            closprintf("  Value currently %s\n",map[i]->toString().get());
+            
+            // and we increment the refcount on the block
+            // if the block is in a different closure
+            if(this!=reffed){
+                blocksUsed[i] = reffed;
+                reffed->incRefCt();
+            } else blocksUsed[i]=NULL; // self-refs are NULL
+        }    
+    }
 }
 
 void Closure::wipeContents(){
@@ -217,7 +229,7 @@ void Closure::decReferentsCycleRefCounts(){
         if(blocksUsed[i]){
             blocksUsed[i]->gc_refs--;
             closprintf("decrementing cycle count for block use on %p, now %d\n",blocksUsed[i],
-                   blocksUsed[i]->gc_refs);
+                       blocksUsed[i]->gc_refs);
         }
     }
     if(parent)

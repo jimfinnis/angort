@@ -20,19 +20,11 @@
 3.0 ?L in not "listin3" assert
 10 ?L in not "listin4" assert
 
+# test of equality operator on list (and others)
 
-# slices
-:eq |x,y:| # quick list equiv check
-    ?x type "list"=
-    ?y type "list"= and
-    ?x len ?y len = and
-    not if 0 stop then
-    0 ?x len range each {
-        i ?x get i ?y get =
-        not if 0 stop then
-    }
-    1
-;
+1 2 eq not "listeq0a" assert
+2 2 eq "listeq0b" assert
+1 "1" eq "listeq0c" assert # equality coercion still works in "eq"
 
 "fish" [1,2,3,4,5] eq not "listeq0" assert
 "fish" [1,2,3,4,5] swap eq not "listeq01" assert
@@ -41,6 +33,10 @@
 [1,2,2,4,5] [1,2,3,4,5] eq not "listeq2" assert
 
 [1,2,3] [1,2] eq not "listeq3" assert
+
+[1,2,[3,4]] [1,2,[3,4]] eq "listeq4" assert
+[1,2,[3,4]] [1,2,[5,4]] eq not "listeq4" assert
+
 
 :sl dup "," intercalate.; # for debugging
 
