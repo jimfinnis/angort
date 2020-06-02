@@ -149,6 +149,12 @@ public:
         SyntaxException("filename expected") {}
 };
 
+class NamespaceExpectedException : public SyntaxException {
+public:
+    NamespaceExpectedException() : 
+        SyntaxException("namespace name expected") {}
+};
+
 class FileNotFoundException : public Exception {
 public:
     char fname[1024];
@@ -158,8 +164,19 @@ public:
         strncpy(fname,name,1023);
         
     }
-    
 };
+
+class UnknownNamespaceException : public Exception {
+public:
+    char nname[1024];
+    
+    UnknownNamespaceException(const char *name) :  Exception(EX_NOTFOUND) {
+        snprintf(error,1023,"unknown namespace : %s",name);
+        strncpy(nname,name,1023);
+        
+    }
+};
+    
 
 class AssertException : public Exception {
 public:
@@ -179,6 +196,7 @@ public:
         snprintf(error,1024,"Bad parameter %d, expected %s or none but got %s",paramNo,expected,got);
     }
 };
+
 
 }
 

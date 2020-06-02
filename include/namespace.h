@@ -253,6 +253,9 @@ private:
     /// of the way namespaces move around, being in an arraylist.
     ArrayList<int> importedNamespaces;
     
+    /// 'with' namespaces, which are in a stack
+    Stack<int,8> withNamespaces;
+    
 public:
     NamespaceBase<Namespace> spaces; //< a namespace of namespaces!
     
@@ -311,6 +314,21 @@ public:
     
     int getCurrent(){
         return currentIdx;
+    }
+    
+    //////////////////// 'with' namespaces //////////////////////////
+    
+    void pushWith(const char *name){
+        int nsidx = spaces.get(name);
+        if(nsidx<0)
+            throw UnknownNamespaceException(name);
+        withNamespaces.push(nsidx);
+        printf("Pushed namespace %d\n",nsidx);
+    }
+    
+    void popWith(){
+        if(withNamespaces.ct)
+            withNamespaces.pop();
     }
     
     //////////////////// manipulating the current namespace ///////////

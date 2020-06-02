@@ -97,3 +97,5 @@ throw : T_THROW
 inc : T_INC
 dec : T_DEC
 brk : T_BRK
+with : T_WITH
+endwith : T_ENDWITH

@@ -11,7 +11,7 @@
 //                      (incs on backcompat retaining features).
 //                      (incs on bug fixing patches)
 
-#define ANGORT_VERSION "4.12.0"
+#define ANGORT_VERSION "4.13.0"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -2275,6 +2275,17 @@ void Angort::feed(const char *buf){
                     printf("%s: %s\n",tok.getstring(),s);
                 }
                 break;
+            case T_WITH:
+                if(tok.getnext()!=T_IDENT)
+                    throw NamespaceExpectedException();
+                names.pushWith(tok.getstring());
+                break;
+            case T_ENDWITH:
+                names.popWith();
+                break;
+                
+                
+                
             default:
                 throw SyntaxException(NULL).set("unhandled token: %s",
                                                 tok.getstring());

@@ -62,6 +62,21 @@ int NamespaceManager::get(const char *name, bool scanImports){
             if(idx>=0)
                 return idx;
         }
+        // identically scan the 'with' stack
+        for(int i=0;i<withNamespaces.ct;i++){
+            int nsidx = withNamespaces.peek(i);
+            Namespace *ns = spaces.getEnt(nsidx);
+            printf("scanning %d (%s)\n",nsidx,spaces.getName(nsidx));
+            printf("found %d\n",ns->get(name));
+            // getFromNamespace only returns items; here we haven't implicitly
+            // imported so we have to do the check manually.
+            int idx = ns->get(name);
+            if(idx>=0){
+                NamespaceEnt *ent = ns->getEnt(idx);
+                if(!ent->isPriv) // only permit public items
+                    return makeIndex(ns->idx,idx);
+            }
+        }
     }
     return -1; // not found
 }
