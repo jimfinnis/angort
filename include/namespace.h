@@ -323,7 +323,6 @@ public:
         if(nsidx<0)
             throw UnknownNamespaceException(name);
         withNamespaces.push(nsidx);
-        printf("Pushed namespace %d\n",nsidx);
     }
     
     void popWith(){
