@@ -58,7 +58,7 @@ endmacro(add_words_files)
 add_custom_command(
     OUTPUT tokens.cpp tokens.h
     DEPENDS tokens
-    COMMAND python ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/lib/tokens tokens)
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/lib/tokens tokens)
 
 include_directories(${ANGORT_SOURCE_DIR}/include ${ANGORT_SOURCE_DIR}/lib
     ${ANGORT_SOURCE_DIR}/build/lib)

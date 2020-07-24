@@ -194,7 +194,18 @@ clear 0 0 0 0 0 0 0 0 0 0 0 0 clear
 ?BaseGC gccount = "GC count clear at end of closure tests" assert
 
 
+#
+# Bug which never occurred in the wild - convertToClosure didn't
+# convert inc/dec operations on locals. This rarely causes a 
+# problem because parseVarAccess normally does closes things, but
+# sometimes not (e.g. in "yield", which converts all variables).
+#
+:mkcrash240720 |a:|
+    !+a
+    ?a yield
+;
 
+0 mkcrash240720 1 = "mkcrash270720" assert
 
 
 quit

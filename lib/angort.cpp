@@ -1300,6 +1300,20 @@ void CompileContext::closeAllLocals(){
     }
 }
 
+void CompileContext::convertOp(int oldlocalidx,int newlocalidx,int fromcode,int tocode){
+    char buf[1024];
+    Instruction *inst=compileBuf;
+    for(int i=0;i<compileCt;i++,inst++){
+        cdprintf("   %s  %d",inst->getDetails(buf,1024),inst->d.i);
+        if(inst->opcode == fromcode && inst->d.i == oldlocalidx){
+            cdprintf("Rehashing to %d",newlocalidx);
+            inst->opcode = tocode;
+            inst->d.i = newlocalidx;
+        }
+    }
+}
+
+
 void CompileContext::convertToClosure(const char *name){
     cdprintf("Convert to closure for cb %p, %s",cb,name);
     // find which local this is
@@ -1341,26 +1355,17 @@ void CompileContext::convertToClosure(const char *name){
     // but there may be closures here already, so set the local
     // index for the closures to the most recent entry in that table.
     cdprintf("local index %d set to %d",previdx,closureListCt-1);
-    localIndices[previdx] = closureListCt-1;
+    int newLocalIndex = localIndices[previdx] = closureListCt-1;
     
     // convert all access of the local into the closure
     Instruction *inst = compileBuf;
     cdprintf("Beginning scan to convert local %d into closure %d",
-             localIndex,localIndices[previdx]);
-    for(int i=0;i<compileCt;i++,inst++){
-        char buf[1024];
-        cdprintf("   %s  %d",inst->getDetails(buf,1024),inst->d.i);
-        if(inst->opcode == OP_LOCALGET && inst->d.i == localIndex) {
-            inst->opcode = OP_CLOSUREGET;
-            cdprintf("Rehashing to %d",localIndices[previdx]);
-            inst->d.i = localIndices[previdx];
-        }
-        if(inst->opcode == OP_LOCALSET && inst->d.i == localIndex) {
-            inst->opcode = OP_CLOSURESET;
-            cdprintf("Rehashing to %d",localIndices[previdx]);
-            inst->d.i = localIndices[previdx];
-        }
-    }
+             localIndex,newLocalIndex);
+    
+    convertOp(localIndex,newLocalIndex,OP_LOCALGET,OP_CLOSUREGET);
+    convertOp(localIndex,newLocalIndex,OP_LOCALSET,OP_CLOSURESET);
+    convertOp(localIndex,newLocalIndex,OP_LOCALINC,OP_CLOSUREINC);
+    convertOp(localIndex,newLocalIndex,OP_LOCALDEC,OP_CLOSUREDEC);
     cdprintf("Ending scan");
     
     // now decrement all indices of locals greater than this.
@@ -1382,7 +1387,12 @@ void CompileContext::convertToClosure(const char *name){
     for(int i=0;i<compileCt;i++,inst++){
         char buf[1024];
         cdprintf("scanning instruction   %s  %d",inst->getDetails(buf,1024),inst->d.i);
-        if((inst->opcode == OP_LOCALGET || inst->opcode == OP_LOCALSET) &&
+        if((
+            inst->opcode == OP_LOCALGET || 
+            inst->opcode == OP_LOCALINC || 
+            inst->opcode == OP_LOCALDEC || 
+            inst->opcode == OP_LOCALSET
+            ) &&
            inst->d.i > localIndex){
             inst->d.i--;
             cdprintf("  decremented to %d",inst->d.i);

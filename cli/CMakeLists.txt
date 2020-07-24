@@ -50,7 +50,7 @@ add_words_files(cliWords.cpp)
 add_custom_command(
     OUTPUT debtoks.cpp debtoks.h
     DEPENDS debtoks
-    COMMAND python ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/cli/debtoks debtoks)
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/lib/gentoks ${CMAKE_SOURCE_DIR}/cli/debtoks debtoks)
 
 
 

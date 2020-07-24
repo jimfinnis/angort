@@ -315,6 +315,12 @@ public:
         }
     }
     
+    /// convert an opcode to a different opcode if the opcode's int field is oldlocalidx
+    /// and changing that field to newlocalidx. Used in converting opcodes from
+    /// locals to closures if they haven't already been done in parseVarAccess.
+    
+    void convertOp(int oldlocalidx,int newlocalidx,int fromcode,int tocode);
+    
     
     void dump();
     
