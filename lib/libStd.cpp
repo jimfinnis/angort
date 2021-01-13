@@ -207,6 +207,15 @@ removing them.
     printf("SNARK %d\n",snarkct++);
 }
 
+%word esnark ( ) used during debugging; prints an autoincremented count to stderr
+Simply prints SNARK N, where N increments at every call. These are added
+to programs during debugging, so that one can "hunt the snarks" when
+removing them.
+{
+    static int snarkct=0;
+    fprintf(stderr,"SNARK %d\n",snarkct++);
+}
+
 %word boojum ( ) used during debugging; sets the boojum global
 {
     WriteLock lock = WL(&globalLock);
