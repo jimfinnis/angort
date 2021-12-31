@@ -362,7 +362,7 @@ int main(int argc,char *argv[]){
     // then read lines from input
     
     runtime->assertDebug=true;
-    printf("Angort version %s %s\nUse '??word' to get help on a word.\n",
+    fprintf(stderr,"Angort version %s %s\nUse '??word' to get help on a word.\n",
            copyString,
            a->getVersion());
     

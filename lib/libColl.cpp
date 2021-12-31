@@ -700,6 +700,44 @@ none, non-iterable types will throw ex$noiter.
     else a->pushInt(i);
 }
 
+%wordargs slice vii (iterable start end -- iterable) produce a slice of a string or list
+Return a slice of a string or list, returning another string or or list,
+given the start and end positions. The end index is exclusive; that element
+will not be included. Inappropriate types will throw ex$notcoll.
+If length of the iterable is greater than the length required, then the
+output will be truncated to the remainder of the iterable.
+Negative indices count from just past the end, so -1 is the last
+element. A zero end index thus means the end.
+Empty results will be returned if the requested slice does not intersect
+the iterable.
+{
+    Value iterable;
+    iterable.copy(p0);
+    int start = p1;
+    int len = p2;
+    
+    Value *res = a->pushval();
+    iterable.t->slice(res,&iterable,start,len);
+}
+
+%wordargs slicelen vii (iterable start len -- iterable) produce a slice of a string or list
+Return a slice of a string or list, returning another string or or list,
+given the start and length. Inappropriate types will throw ex$notcoll.
+If length of the iterable  is greater than the length requested, then the
+slice will go to the end. If the start<0 it is counted from the end.
+Empty results will be returned if the requested slice does not intersect
+the iterable.
+{
+    Value iterable;
+    iterable.copy(p0);
+    int start = p1;
+    int len = p2;
+    
+    Value *res = a->pushval();
+    iterable.t->slice_dep(res,&iterable,start,len);
+}
+
+/*
 %word slice (iterable start len -- iterable) produce a slice of a string or list
 Return a slice of a string or list, returning another string or or list,
 given the start and length. Inappropriate types will throw ex$notcoll.
@@ -710,7 +748,7 @@ the iterable.
 {
     throw RUNT(EX_FAILED,"default 'slice' - import future or deprecated");
 }
-
+*/
 %word clone (in -- out) construct a shallow copy of a collection
 Create a new collection (list or hash) of the same type, where
 each item is a shallow copy. For example, copying a list of lists

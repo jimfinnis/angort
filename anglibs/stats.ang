@@ -35,11 +35,11 @@ package stats
     :"(list -- upper median lower) find quartiles (Tukey hinge method)"
     ?list clone !list ?list sort
     ?list len 1 band if
-        ?list 0 ?list len 2/ 1+ deprecated$slice !h1
-        ?list ?list len 2/ -1 deprecated$slice !h2
+        ?list 0 ?list len 2/ 1+ slicelen !h1
+        ?list ?list len 2/ -1 slicelen !h2
     else
-        ?list 0 ?list len 2/ deprecated$slice !h1
-        ?list ?list len 2/ -1 deprecated$slice !h2
+        ?list 0 ?list len 2/ slicelen !h1
+        ?list ?list len 2/ -1 slicelen !h2
     then
     ?h2 mediansorted
     ?list mediansorted

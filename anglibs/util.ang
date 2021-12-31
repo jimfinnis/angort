@@ -31,7 +31,7 @@ public
     args
     args len ?list len -
     ?list len
-    deprecated$slice reverse explode
+    slicelen reverse explode
 ;
 
 
