@@ -1,5 +1,3 @@
-`future nspace [`slice] import
-
 "foo" "foo" = "streq" assert
 "foob" "foo" != "streq" assert
 "foo" "bar" + "foobar" = "strconc" assert

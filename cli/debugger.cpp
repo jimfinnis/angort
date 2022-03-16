@@ -54,7 +54,7 @@ static void disasm(Runtime *a){
     const Instruction *base = a->wordbase;
     for(;;){
         int opcode = ip->opcode;
-        a->showop(ip++,base,a->ip);
+        a->showop(ip++,0,base,a->ip);
         printf("\n");
         if(opcode == OP_END)break;
     }

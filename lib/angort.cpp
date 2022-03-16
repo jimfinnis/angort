@@ -226,13 +226,19 @@ void Angort::shutdown(){
     }
 }
 
-void Runtime::showop(const Instruction *ip,const Instruction *base,
+void Runtime::showop(const Instruction *ip,int indent,const Instruction *base,
                      const Instruction *curr){
     ReadLock lock(&ang->names);
     if(!base)base=wordbase;
-    char buf[128];
+    char buf[128],indentStr[32];
     Value tmp;
-    printf("%s%s %3d %8p [%s:%d] : %04d : %s (%d) ",
+    indent = (indent<31)?indent:31;
+    if(indent>0)
+        memset(indentStr,' ',indent);
+    indentStr[indent]=0;
+    
+    // print the start of the string
+    printf("%s%s%s %3d %8p [%s:%d] : %04d : %s (%d) ",indentStr,
 #if SOURCEDATA
            ip->brk ? "B " : "  ",
 #else
@@ -249,6 +255,8 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
            (int)(ip-base),
            opcodenames[ip->opcode],
            ip->opcode);
+    
+    // print extra data at the end of the line
     switch(ip->opcode){
     case OP_FUNC:
         Types::tNative->set(&tmp,ip->d.func);
@@ -309,6 +317,10 @@ void Runtime::showop(const Instruction *ip,const Instruction *base,
                    Types::tSymbol->getString(ip->d.i));
             break;
         }
+    case OP_LITERALCODE:
+        printf("code follows:\n"); // end the line
+        ang->disasm(ip->d.cb, indent+4);
+        break;
     default:break;
     }
     tmp.clr();
@@ -572,7 +584,7 @@ void Runtime::run(const Instruction *startip){
                 
                 int opcode = ip->opcode;
                 if(trace){
-                    showop(ip,wordbase);
+                    showop(ip,0,wordbase);
                     printf(" ST [%d] : ",stack.ct);
                     for(int i=0;i<stack.ct;i++){
                         const StringBuffer &sb = stack.peekptr(i)->toString();
@@ -2342,13 +2354,14 @@ void Angort::clearAtEndOfFeed(){
     run->clearAtEOF();
 }    
 
-void Angort::disasm(const CodeBlock *cb){
+void Angort::disasm(const CodeBlock *cb, int indent){
     const Instruction *ip = cb->ip;
     const Instruction *base = ip;
     for(;;){
         int opcode = ip->opcode;
-        run->showop(ip++,base);
-        printf("\n");
+        run->showop(ip++,indent,base);
+        if(opcode != OP_END || indent==0)
+            printf("\n");
         if(opcode == OP_END)break;
     }
 }
