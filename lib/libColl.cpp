@@ -737,18 +737,6 @@ the iterable.
     iterable.t->slice_dep(res,&iterable,start,len);
 }
 
-/*
-%word slice (iterable start len -- iterable) produce a slice of a string or list
-Return a slice of a string or list, returning another string or or list,
-given the start and length. Inappropriate types will throw ex$notcoll.
-If length of the iterable  is greater than the length requested, then the
-slice will go to the end. If the start<0 it is counted from the end.
-Empty results will be returned if the requested slice does not intersect
-the iterable.
-{
-    throw RUNT(EX_FAILED,"default 'slice' - import future or deprecated");
-}
-*/
 %word clone (in -- out) construct a shallow copy of a collection
 Create a new collection (list or hash) of the same type, where
 each item is a shallow copy. For example, copying a list of lists
