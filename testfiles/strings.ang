@@ -8,6 +8,22 @@
 ?Long 20 wrap "\n" split !T
 ?T each {i len 20 <= "wrap" assert}
 
+
+"foo bar baz" [" ",-1] split explode
+"baz" = "split1" assert
+"bar" = "split2" assert
+"foo" = "split3" assert
+"foo-bar-baz" "-" split explode
+"baz" = "splitb1" assert
+"bar" = "splitb2" assert
+"foo" = "splitb3" assert
+
+"foo bar baz" [" ",1] split 
+"bar baz" = "splitc1" assert
+"foo" = "splitc2" assert
+
+
+
 ?T " " intercalate len ?Long len = "wrap2" assert
 
 global a

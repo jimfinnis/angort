@@ -258,29 +258,45 @@ inline int wordlen(const wchar_t * s){
     Types::tString->set(v,ss);
 }
 
-%word split (string delim -- list) split a string on a single-character delimiter 
+%word split (string delim/max -- list) split a string on a single-character delimiter or with limit
+delim can be either a delimiter or [delim,max] where max is the maximum
+number of splits.
 {
     Value *params[2];
-    a->popParams(params,"ss");
+    a->popParams(params,"sv");
     const StringBuffer& strb=params[0]->toString();
     const char *s = strdup(strb.get());
-    char delim = params[1]->toString().get()[0];
+    char delim;
+    int limit = -1;
     ArrayList<Value> *list = Types::tList->set(a->pushval());
     
     WriteLock lock=WL(list);
+    // param 1 is either a string or a list - if the latter, we split into delim and max splits
+    
+    if(params[1]->t == Types::tList){
+        ArrayList<Value> *lst = Types::tList->get(params[1]);
+        delim = lst->get(0)->toString().get()[0];
+        limit = lst->get(1)->toInt();
+    } else {
+        delim = params[1]->toString().get()[0];
+    }
+    
     
     // must be the size of the longest string
     char *buf = (char *)malloc(strlen(s)+1);
     const char *p=s;
     const char *base=s;
     
-    
-    for(;;){
+    for(int splitct=0;;){
         if(*s==delim || !*s){
             memcpy(buf,p,s-p);
             buf[s-p]=0;
             Types::tString->set(list->append(),buf);
             if(!*s)break;//{free((void *)base);return;}
+            if(++splitct == limit){
+                // turn off the delimiter, avoiding more splits
+                delim=0;
+            }
             s++;
             p=s;
         } else
