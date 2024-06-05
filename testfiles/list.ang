@@ -2,7 +2,6 @@
 # list tests, need expanding
 #
 
-`future nspace [`slice] import
 
 [1,2,3] pop 3= "pop item" assert
 
