@@ -715,7 +715,7 @@ public:
      
     /// show an instruction (might seem weird that it's in Runtime, but it
     /// uses wordbase).
-    void showop(const Instruction *ip,const Instruction *base=NULL,
+    void showop(const Instruction *ip,int indent=0,const Instruction *base=NULL,
                 const Instruction *curr=NULL);
     /// used to run a codeblock - works by doing call() and then run() until exit.
     /// Will not push return stack.
@@ -1171,7 +1171,7 @@ public:
     void disasm(const char *name);
     
     /// disassemble a codeblock
-    void disasm(const CodeBlock *cb);
+    void disasm(const CodeBlock *cb, int indent=0);
     
     /// list all words, globals and consts
     void list();
