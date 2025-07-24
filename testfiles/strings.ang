@@ -18,7 +18,7 @@
 "bar" = "splitb2" assert
 "foo" = "splitb3" assert
 
-"foo bar baz" [" ",1] split 
+"foo bar baz" [" ",1] split explode 
 "bar baz" = "splitc1" assert
 "foo" = "splitc2" assert
 
@@ -71,6 +71,12 @@ global b
 "fo" "foo" in "strin3" assert
 "oo" "foo" in "strin4" assert
 "" "foo" in "strin5" assert
+
+"foo bar " trim "foo bar" = "trim1" assert
+"foo bar" trim "foo bar" = "trim2" assert
+"  foo bar" trim "foo bar" = "trim3" assert
+"  foo bar \n " trim "foo bar" = "trim4" assert
+" \n\t foo baz \n " trim "foo baz" = "trim5" assert
 
 quit
 

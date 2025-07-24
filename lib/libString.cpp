@@ -373,12 +373,19 @@ if start negative calculate start from end. See also "slice".
     wchar_t *buf = (wchar_t *)alloca((len+1)*sizeof(wchar_t));
     mbstowcs(buf,p0,len+1);
     
-    wchar_t *s = buf;
-    while(*s && iswspace(*s))s++;
-    wchar_t *wordend = s;
-    while(*wordend && !iswspace(*wordend))wordend++;
-    *wordend = 0;
-    char *s2 = (char *)alloca(wordend-s+1);
-    wcstombs(s2,s,wordend-s+1);
+    
+    wchar_t *s = buf;  // start of string
+    while(*s && iswspace(*s))s++; // move first non-whitespace
+    
+    wchar_t *end = buf+len-1; // end of string (last char)
+    // now move end of string back to first non whitespace
+    if(iswspace(*end)){
+        while(end>s && iswspace(*end))end--;
+        end[1] = 0;
+    }
+    end++; // make room for terminator
+    char *s2 = (char *)alloca(end-s+1);
+    
+    wcstombs(s2,s,end-s+1);
     a->pushString(s2);
 }
